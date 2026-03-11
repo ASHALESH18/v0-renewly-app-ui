@@ -1,0 +1,203 @@
+'use client'
+
+import { motion } from 'framer-motion'
+import { 
+  MoreHorizontal, 
+  RefreshCw, 
+  Users, 
+  CreditCard,
+  Calendar
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import type { Subscription } from '@/lib/data'
+import { cardLift, springs, staggerItem } from './motion'
+
+interface SubscriptionCardProps {
+  subscription: Subscription
+  index?: number
+  onClick?: () => void
+}
+
+export function SubscriptionCard({ subscription, index = 0, onClick }: SubscriptionCardProps) {
+  const daysUntilRenewal = getDaysUntilRenewal(subscription.nextRenewal)
+  const isUrgent = daysUntilRenewal <= 3
+  const billingLabel = getBillingLabel(subscription.billingCycle)
+
+  return (
+    <motion.div
+      variants={staggerItem}
+      initial="initial"
+      animate="animate"
+      whileHover="hover"
+      whileTap="tap"
+      custom={index}
+      transition={{ ...springs.gentle, delay: index * 0.05 }}
+      onClick={onClick}
+      className="cursor-pointer"
+    >
+      <motion.div
+        variants={cardLift}
+        className="relative overflow-hidden rounded-2xl bg-card border border-border p-5 shadow-card"
+      >
+        {/* Subtle gradient accent based on brand color */}
+        <div 
+          className="absolute top-0 left-0 right-0 h-1 opacity-80"
+          style={{ background: subscription.color }}
+        />
+
+        <div className="flex items-start gap-4">
+          {/* Logo */}
+          <div 
+            className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-semibold text-lg shrink-0"
+            style={{ backgroundColor: subscription.color }}
+          >
+            {subscription.logo}
+          </div>
+
+          {/* Details */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="font-semibold text-foreground truncate">
+                  {subscription.name}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {subscription.category}
+                </p>
+              </div>
+              <button 
+                className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+
+            {/* Amount and cycle */}
+            <div className="mt-3 flex items-baseline gap-1">
+              <span className="text-xl font-semibold text-foreground">
+                {subscription.currency}{subscription.amount.toLocaleString('en-IN')}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                /{billingLabel}
+              </span>
+            </div>
+
+            {/* Meta info */}
+            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              {/* Next renewal */}
+              <div className={cn(
+                'flex items-center gap-1.5',
+                isUrgent && 'text-crimson'
+              )}>
+                <Calendar className="w-3.5 h-3.5" />
+                <span>
+                  {isUrgent 
+                    ? `${daysUntilRenewal === 0 ? 'Today' : `${daysUntilRenewal}d left`}`
+                    : formatDate(subscription.nextRenewal)
+                  }
+                </span>
+              </div>
+
+              {/* Auto-renew */}
+              {subscription.autoRenew && (
+                <div className="flex items-center gap-1.5 text-emerald">
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Auto</span>
+                </div>
+              )}
+
+              {/* Shared */}
+              {subscription.isShared && subscription.sharedWith && (
+                <div className="flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5" />
+                  <span>{subscription.sharedWith}</span>
+                </div>
+              )}
+
+              {/* Payment method */}
+              <div className="flex items-center gap-1.5">
+                <CreditCard className="w-3.5 h-3.5" />
+                <span className="truncate max-w-[100px]">{subscription.paymentMethod}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+// Compact card variant for lists
+interface SubscriptionCardCompactProps {
+  subscription: Subscription
+  onClick?: () => void
+}
+
+export function SubscriptionCardCompact({ subscription, onClick }: SubscriptionCardCompactProps) {
+  const daysUntilRenewal = getDaysUntilRenewal(subscription.nextRenewal)
+  const isUrgent = daysUntilRenewal <= 3
+
+  return (
+    <motion.div
+      whileHover={{ scale: 1.01, x: 4 }}
+      whileTap={{ scale: 0.99 }}
+      onClick={onClick}
+      className="flex items-center gap-4 p-4 rounded-xl bg-card border border-border cursor-pointer"
+    >
+      <div 
+        className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-semibold shrink-0"
+        style={{ backgroundColor: subscription.color }}
+      >
+        {subscription.logo}
+      </div>
+      
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-foreground truncate">{subscription.name}</p>
+        <p className="text-xs text-muted-foreground">{subscription.category}</p>
+      </div>
+
+      <div className="text-right shrink-0">
+        <p className="font-semibold text-foreground">
+          {subscription.currency}{subscription.amount.toLocaleString('en-IN')}
+        </p>
+        <p className={cn(
+          'text-xs',
+          isUrgent ? 'text-crimson' : 'text-muted-foreground'
+        )}>
+          {daysUntilRenewal === 0 
+            ? 'Due today' 
+            : `${daysUntilRenewal}d left`
+          }
+        </p>
+      </div>
+    </motion.div>
+  )
+}
+
+// Helper functions
+function getDaysUntilRenewal(dateStr: string): number {
+  const renewalDate = new Date(dateStr)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  renewalDate.setHours(0, 0, 0, 0)
+  const diffTime = renewalDate.getTime() - today.getTime()
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+}
+
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+  })
+}
+
+function getBillingLabel(cycle: Subscription['billingCycle']): string {
+  switch (cycle) {
+    case 'weekly': return 'wk'
+    case 'monthly': return 'mo'
+    case 'quarterly': return 'qtr'
+    case 'yearly': return 'yr'
+    default: return 'mo'
+  }
+}

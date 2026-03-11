@@ -1,0 +1,183 @@
+'use client'
+
+import { motion } from 'framer-motion'
+import { Bell, Search, Settings, User } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { springs } from './motion'
+import { userProfile } from '@/lib/data'
+
+interface HeaderProps {
+  title?: string
+  subtitle?: string
+  showSearch?: boolean
+  showNotifications?: boolean
+  showProfile?: boolean
+  onSearchClick?: () => void
+  onNotificationClick?: () => void
+  onProfileClick?: () => void
+  onSettingsClick?: () => void
+  notificationCount?: number
+  transparent?: boolean
+  className?: string
+}
+
+export function Header({
+  title,
+  subtitle,
+  showSearch = true,
+  showNotifications = true,
+  showProfile = true,
+  onSearchClick,
+  onNotificationClick,
+  onProfileClick,
+  onSettingsClick,
+  notificationCount = 0,
+  transparent = false,
+  className,
+}: HeaderProps) {
+  return (
+    <motion.header
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={springs.gentle}
+      className={cn(
+        'sticky top-0 z-30 px-4 py-4 lg:px-6',
+        !transparent && 'glass-strong',
+        className
+      )}
+    >
+      <div className="flex items-center justify-between gap-4">
+        {/* Left side - Title or Logo */}
+        <div className="flex-1 min-w-0">
+          {title ? (
+            <div>
+              <h1 className="text-xl font-semibold text-foreground truncate">
+                {title}
+              </h1>
+              {subtitle && (
+                <p className="text-sm text-muted-foreground truncate">
+                  {subtitle}
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg gold-gradient flex items-center justify-center lg:hidden">
+                <span className="text-obsidian font-semibold text-sm">R</span>
+              </div>
+              <div className="lg:hidden">
+                <p className="text-sm text-muted-foreground">Good morning,</p>
+                <p className="font-semibold text-foreground">{userProfile.name.split(' ')[0]}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right side - Actions */}
+        <div className="flex items-center gap-2">
+          {showSearch && (
+            <HeaderButton onClick={onSearchClick}>
+              <Search className="w-5 h-5" />
+            </HeaderButton>
+          )}
+          
+          {showNotifications && (
+            <HeaderButton onClick={onNotificationClick} badge={notificationCount}>
+              <Bell className="w-5 h-5" />
+            </HeaderButton>
+          )}
+
+          {showProfile && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onProfileClick}
+              className="w-10 h-10 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center text-gold font-medium text-sm"
+            >
+              {userProfile.avatar}
+            </motion.button>
+          )}
+
+          {onSettingsClick && (
+            <HeaderButton onClick={onSettingsClick}>
+              <Settings className="w-5 h-5" />
+            </HeaderButton>
+          )}
+        </div>
+      </div>
+    </motion.header>
+  )
+}
+
+interface HeaderButtonProps {
+  children: React.ReactNode
+  onClick?: () => void
+  badge?: number
+}
+
+function HeaderButton({ children, onClick, badge }: HeaderButtonProps) {
+  return (
+    <motion.button
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={onClick}
+      className="relative w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+    >
+      {children}
+      {badge !== undefined && badge > 0 && (
+        <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-crimson text-[10px] font-semibold text-ivory flex items-center justify-center">
+          {badge > 9 ? '9+' : badge}
+        </span>
+      )}
+    </motion.button>
+  )
+}
+
+// Search overlay component
+interface SearchOverlayProps {
+  isOpen: boolean
+  onClose: () => void
+  searchQuery: string
+  onSearchChange: (query: string) => void
+}
+
+export function SearchOverlay({ 
+  isOpen, 
+  onClose, 
+  searchQuery, 
+  onSearchChange 
+}: SearchOverlayProps) {
+  if (!isOpen) return null
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 bg-background/95 backdrop-blur-xl"
+    >
+      <div className="p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex-1 relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search subscriptions..."
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              autoFocus
+              className="w-full h-12 pl-12 pr-4 rounded-xl bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50"
+            />
+          </div>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={onClose}
+            className="px-4 py-3 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Cancel
+          </motion.button>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
