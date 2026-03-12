@@ -8,7 +8,7 @@ import {
   Smartphone, Mail, Lock, Palette, Download
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { fadeInUp, springs } from '@/components/motion'
+import { springs } from '@/components/motion'
 import { Switch } from '@/components/ui/switch'
 
 interface SettingItem {
