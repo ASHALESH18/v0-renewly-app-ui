@@ -8,7 +8,7 @@ import {
   Smartphone, Mail, Lock, Palette, Download
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { FadeIn, StaggerContainer, StaggerItem } from '@/components/motion'
+import { fadeInUp, springs } from '@/components/motion'
 import { Switch } from '@/components/ui/switch'
 
 interface SettingItem {
@@ -104,13 +104,22 @@ export function SettingsScreen() {
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="px-4 pt-12 pb-6">
-        <FadeIn>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={springs.gentle}
+        >
           <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
-        </FadeIn>
+        </motion.div>
       </div>
       
       {/* Profile Card */}
-      <FadeIn delay={0.1} className="px-4 mb-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ ...springs.gentle, delay: 0.1 }}
+        className="px-4 mb-6"
+      >
         <div className="p-4 rounded-2xl glass">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full bg-gold/20 flex items-center justify-center">
@@ -127,12 +136,17 @@ export function SettingsScreen() {
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </div>
         </div>
-      </FadeIn>
+      </motion.div>
       
       {/* Settings Sections */}
       <div className="px-4 space-y-6">
         {sections.map((section, sectionIndex) => (
-          <FadeIn key={section.title} delay={0.1 + sectionIndex * 0.05}>
+          <motion.div
+            key={section.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...springs.gentle, delay: 0.1 + sectionIndex * 0.05 }}
+          >
             <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3 px-1">
               {section.title}
             </h3>
@@ -183,11 +197,15 @@ export function SettingsScreen() {
                 )
               })}
             </div>
-          </FadeIn>
+          </motion.div>
         ))}
         
         {/* Sign Out Button */}
-        <FadeIn delay={0.4}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...springs.gentle, delay: 0.4 }}
+        >
           <motion.button
             whileTap={{ scale: 0.98 }}
             className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl glass text-crimson hover:bg-crimson/10 transition-colors"
@@ -195,7 +213,7 @@ export function SettingsScreen() {
             <LogOut className="w-5 h-5" />
             <span className="font-medium">Sign Out</span>
           </motion.button>
-        </FadeIn>
+        </motion.div>
         
         {/* Version */}
         <p className="text-center text-xs text-muted-foreground py-4">
