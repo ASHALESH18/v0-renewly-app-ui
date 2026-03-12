@@ -374,6 +374,25 @@ export const categoryBreakdown = [
   { category: 'Productivity', amount: 333, percentage: 4 },
 ]
 
+export const popularServices = [
+  { id: 'netflix', name: 'Netflix', logo: 'N', color: '#E50914', category: 'Entertainment' as SubscriptionCategory },
+  { id: 'spotify', name: 'Spotify', logo: 'S', color: '#1DB954', category: 'Music' as SubscriptionCategory },
+  { id: 'prime', name: 'Amazon Prime', logo: 'P', color: '#00A8E1', category: 'Entertainment' as SubscriptionCategory },
+  { id: 'youtube', name: 'YouTube Premium', logo: 'Y', color: '#FF0000', category: 'Entertainment' as SubscriptionCategory },
+  { id: 'chatgpt', name: 'ChatGPT Plus', logo: 'G', color: '#10A37F', category: 'AI & Tools' as SubscriptionCategory },
+  { id: 'disney', name: 'Disney+ Hotstar', logo: 'D', color: '#113CCF', category: 'Entertainment' as SubscriptionCategory },
+  { id: 'apple-music', name: 'Apple Music', logo: 'A', color: '#FC3C44', category: 'Music' as SubscriptionCategory },
+  { id: 'google-one', name: 'Google One', logo: 'G', color: '#4285F4', category: 'Storage' as SubscriptionCategory },
+  { id: 'notion', name: 'Notion', logo: 'N', color: '#000000', category: 'Productivity' as SubscriptionCategory },
+  { id: 'figma', name: 'Figma', logo: 'F', color: '#F24E1E', category: 'Productivity' as SubscriptionCategory },
+  { id: 'canva', name: 'Canva Pro', logo: 'C', color: '#00C4CC', category: 'Productivity' as SubscriptionCategory },
+  { id: 'cultfit', name: 'Cult.fit', logo: 'C', color: '#FF6B6B', category: 'Fitness' as SubscriptionCategory },
+  { id: 'zee5', name: 'ZEE5', logo: 'Z', color: '#8230C6', category: 'Entertainment' as SubscriptionCategory },
+  { id: 'jio', name: 'JioCinema', logo: 'J', color: '#E60000', category: 'Entertainment' as SubscriptionCategory },
+  { id: 'linkedin', name: 'LinkedIn Premium', logo: 'in', color: '#0A66C2', category: 'Productivity' as SubscriptionCategory },
+  { id: 'dropbox', name: 'Dropbox', logo: 'D', color: '#0061FF', category: 'Storage' as SubscriptionCategory },
+]
+
 export const faqItems = [
   {
     question: 'How does Renewly track my subscriptions?',
