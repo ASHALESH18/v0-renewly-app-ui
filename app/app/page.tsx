@@ -44,11 +44,7 @@ export default function AppPage() {
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
 
       {/* Add subscription sheet */}
-      <AnimatePresence>
-        {showAddSheet && (
-          <AddSubscriptionSheet onClose={() => setShowAddSheet(false)} />
-        )}
-      </AnimatePresence>
+      <AddSubscriptionSheet open={showAddSheet} onClose={() => setShowAddSheet(false)} />
     </div>
   )
 }
