@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, Calendar, AlertTriangle, TrendingUp, Check, Trash2, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { FadeIn, StaggerContainer, StaggerItem } from '@/components/motion'
+import { StaggerList, staggerItem } from '@/components/motion'
 
 interface Notification {
   id: string
@@ -164,7 +164,7 @@ export function NotificationsScreen() {
       
       {/* Notifications List */}
       <div className="px-4 py-4">
-        <StaggerContainer className="space-y-3">
+        <StaggerList className="space-y-3">
           <AnimatePresence mode="popLayout">
             {filteredItems.map((notification) => {
               const config = typeConfig[notification.type]
@@ -241,7 +241,11 @@ export function NotificationsScreen() {
           </AnimatePresence>
           
           {filteredItems.length === 0 && (
-            <FadeIn className="flex flex-col items-center justify-center py-16">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center justify-center py-16"
+            >
               <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4">
                 <Bell className="w-8 h-8 text-muted-foreground" />
               </div>
@@ -252,9 +256,9 @@ export function NotificationsScreen() {
                   : "You don't have any notifications yet"
                 }
               </p>
-            </FadeIn>
+            </motion.div>
           )}
-        </StaggerContainer>
+        </StaggerList>
       </div>
     </div>
   )
