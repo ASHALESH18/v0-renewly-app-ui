@@ -50,7 +50,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
   const handleSelectService = (service: typeof popularServices[0]) => {
     setSelectedService(service)
     setSelectedCategory(service.category)
-    setAmount(service.defaultPrice?.toString() || '')
+    setAmount('')
     setStep('details')
   }
   
@@ -165,12 +165,12 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                             onClick={() => handleSelectService(service)}
                             className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-secondary/50 transition-colors"
                           >
-                            <div 
-                              className="w-12 h-12 rounded-xl flex items-center justify-center text-xl"
-                              style={{ backgroundColor: service.color + '20' }}
-                            >
-                              {service.icon}
-                            </div>
+                          <div 
+                            className="w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold"
+                            style={{ backgroundColor: service.color + '20', color: service.color }}
+                          >
+                            {service.logo}
+                          </div>
                             <span className="text-xs text-foreground text-center truncate w-full">
                               {service.name}
                             </span>
@@ -220,10 +220,10 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                     {selectedService && (
                       <div className="flex items-center gap-4 p-4 rounded-xl bg-secondary/50">
                         <div 
-                          className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl"
-                          style={{ backgroundColor: selectedService.color + '20' }}
+                          className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-bold"
+                          style={{ backgroundColor: selectedService.color + '20', color: selectedService.color }}
                         >
-                          {selectedService.icon}
+                          {selectedService.logo}
                         </div>
                         <div>
                           <h3 className="text-lg font-semibold text-foreground">{selectedService.name}</h3>
