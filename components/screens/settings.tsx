@@ -154,17 +154,10 @@ export function SettingsScreen() {
               {section.items.map((item, itemIndex) => {
                 const Icon = item.icon
                 const isLast = itemIndex === section.items.length - 1
+                const isToggle = item.type === 'toggle'
                 
-                return (
-                  <motion.button
-                    key={item.label}
-                    whileTap={{ scale: 0.98 }}
-                    className={cn(
-                      "w-full flex items-center gap-4 p-4 hover:bg-secondary/30 transition-colors",
-                      !isLast && "border-b border-border"
-                    )}
-                    onClick={() => item.type === 'toggle' && handleToggle(item.label)}
-                  >
+                const content = (
+                  <>
                     <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center">
                       <Icon className="w-5 h-5 text-foreground" />
                     </div>
@@ -193,6 +186,36 @@ export function SettingsScreen() {
                         {item.badge}
                       </span>
                     )}
+                  </>
+                )
+                
+                // Use div for toggle items to avoid nested buttons (Switch is a button)
+                if (isToggle) {
+                  return (
+                    <motion.div
+                      key={item.label}
+                      whileTap={{ scale: 0.98 }}
+                      className={cn(
+                        "w-full flex items-center gap-4 p-4 hover:bg-secondary/30 transition-colors cursor-pointer",
+                        !isLast && "border-b border-border"
+                      )}
+                      onClick={() => handleToggle(item.label)}
+                    >
+                      {content}
+                    </motion.div>
+                  )
+                }
+                
+                return (
+                  <motion.button
+                    key={item.label}
+                    whileTap={{ scale: 0.98 }}
+                    className={cn(
+                      "w-full flex items-center gap-4 p-4 hover:bg-secondary/30 transition-colors",
+                      !isLast && "border-b border-border"
+                    )}
+                  >
+                    {content}
                   </motion.button>
                 )
               })}
