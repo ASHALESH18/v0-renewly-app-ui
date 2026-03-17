@@ -9,7 +9,8 @@ import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react'
 import { AuthLayout } from '@/components/auth/auth-layout'
 import { SocialButtons } from '@/components/auth/social-buttons'
 import { springs } from '@/components/motion'
-import { signInWithEmail, resendConfirmationEmail } from '@/lib/supabase/actions'
+import { createClient } from '@/lib/supabase/client'
+import { getURL } from '@/lib/supabase/url'
 
 function SignInPageContent() {
   const router = useRouter()
@@ -32,19 +33,34 @@ function SignInPageContent() {
     setIsLoading(true)
 
     try {
-      const result = await signInWithEmail(formData.email, formData.password, next)
+      const supabase = createClient()
       
-      if (result.ok && result.redirectTo) {
-        // Successful sign-in - navigate to app
-        router.replace(result.redirectTo)
-        router.refresh()
-      } else if (!result.ok) {
-        // Sign-in failed - show error message
-        setError(result.message || 'Failed to sign in')
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      })
+
+      if (signInError) {
+        // Provide user-friendly error messages
+        if (signInError.message.includes('Email not confirmed')) {
+          setError('Please confirm your email before signing in. Check your inbox for a confirmation link.')
+        } else if (signInError.message.includes('Invalid login credentials')) {
+          setError('Invalid email or password. Please try again.')
+        } else {
+          setError(signInError.message || 'Failed to sign in')
+        }
         setIsLoading(false)
+        return
       }
+
+      // Successful sign-in - navigate to app
+      // Use replace to avoid going back to sign-in, then refresh to update auth state
+      router.replace(next)
+      // Delay refresh slightly to ensure navigation is queued first
+      setTimeout(() => {
+        router.refresh()
+      }, 0)
     } catch (err) {
-      // Fallback for unexpected errors
       setError(err instanceof Error ? err.message : 'Failed to sign in')
       setIsLoading(false)
     }
@@ -53,11 +69,20 @@ function SignInPageContent() {
   const handleResendConfirmation = async () => {
     setIsResending(true)
     try {
-      const result = await resendConfirmationEmail(formData.email)
-      if (result.ok) {
-        setError('Confirmation email sent! Check your inbox.')
+      const supabase = createClient()
+
+      const { error: resendError } = await supabase.auth.resend({
+        type: 'signup',
+        email: formData.email,
+        options: {
+          emailRedirectTo: getURL('auth/callback?next=/app'),
+        },
+      })
+
+      if (resendError) {
+        setError(resendError.message || 'Failed to resend confirmation email')
       } else {
-        setError(result.message || 'Failed to resend confirmation email')
+        setError('Confirmation email sent! Check your inbox.')
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to resend confirmation email')

@@ -8,7 +8,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Check } from 'lucide-react'
 import { AuthLayout } from '@/components/auth/auth-layout'
 import { SocialButtons } from '@/components/auth/social-buttons'
-import { signUpWithEmail } from '@/lib/supabase/actions'
+import { createClient } from '@/lib/supabase/client'
+import { getURL } from '@/lib/supabase/url'
 
 function SignUpPageContent() {
   const router = useRouter()
@@ -39,18 +40,36 @@ function SignUpPageContent() {
     setIsLoading(true)
 
     try {
-      const result = await signUpWithEmail(formData.email, formData.password, next)
-      
-      if (result.ok && result.requiresEmailConfirmation) {
-        // Email confirmation required - show confirmation screen
+      const supabase = createClient()
+
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            name: formData.name,
+          },
+          emailRedirectTo: getURL('auth/callback?next=/app'),
+        },
+      })
+
+      if (signUpError) {
+        setError(signUpError.message || 'Failed to create account')
+        setIsLoading(false)
+        return
+      }
+
+      // Check if we need email confirmation or if we got a session immediately
+      if (data.user && !data.session) {
+        // Email confirmation is required
         setConfirmationSent(true)
-        setConfirmedEmail(result.email || formData.email)
+        setConfirmedEmail(formData.email)
         // Auto-redirect after showing confirmation
         setTimeout(() => router.push(next), 2000)
-      } else if (!result.ok) {
-        // Sign-up failed - show error message
-        setError(result.message || 'Failed to create account')
-        setIsLoading(false)
+      } else if (data.session) {
+        // Session created immediately - go to app
+        router.replace('/app')
+        router.refresh()
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create account')
