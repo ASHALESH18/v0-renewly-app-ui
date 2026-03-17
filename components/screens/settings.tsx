@@ -12,6 +12,7 @@ import { springs } from '@/components/motion'
 import { Switch } from '@/components/ui/switch'
 import useStore from '@/lib/store'
 import { exportSubscriptions } from '@/lib/export'
+import { signOut } from '@/lib/supabase/actions'
 
 interface SettingItem {
   icon: React.ElementType
@@ -294,6 +295,13 @@ export function SettingsScreen() {
           transition={{ ...springs.gentle, delay: 0.4 }}
         >
           <motion.button
+            onClick={async () => {
+              try {
+                await signOut()
+              } catch (err) {
+                console.error('Sign out failed:', err)
+              }
+            }}
             whileTap={{ scale: 0.98 }}
             className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl glass text-crimson hover:bg-crimson/10 transition-colors cursor-pointer"
           >
