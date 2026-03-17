@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Suspense } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -9,7 +10,7 @@ import { AuthLayout } from '@/components/auth/auth-layout'
 import { SocialButtons } from '@/components/auth/social-buttons'
 import { signUpWithEmail } from '@/lib/supabase/actions'
 
-export default function SignUpPage() {
+function SignUpPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const next = searchParams.get('next') || '/app'
@@ -254,5 +255,13 @@ export default function SignUpPage() {
         </p>
       </form>
     </AuthLayout>
+  )
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignUpPageContent />
+    </Suspense>
   )
 }
