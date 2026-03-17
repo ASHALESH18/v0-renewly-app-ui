@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
@@ -9,26 +9,32 @@ export async function updateSession(request: NextRequest) {
   })
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 
   if (!supabaseUrl || !supabaseKey) {
     return response
   }
 
-  const supabase = createServerClient(supabaseUrl, supabaseKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll()
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options)
-        })
-      },
+  const supabase = createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
     },
   })
 
-  // Refresh the session to update the auth state
+  // Restore session from cookies if available
+  const authCookie = request.cookies.get('sb-auth-token')
+  if (authCookie?.value) {
+    try {
+      const session = JSON.parse(authCookie.value)
+      await supabase.auth.setSession(session)
+    } catch (err) {
+      // Invalid session cookie, continue without session
+    }
+  }
+
+  // Get user from session
   const { data: { user } } = await supabase.auth.getUser()
 
   const path = request.nextUrl.pathname
