@@ -35,7 +35,7 @@ function SignInPageContent() {
     try {
       const supabase = createClient()
       
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       })
@@ -54,8 +54,12 @@ function SignInPageContent() {
       }
 
       // Successful sign-in - navigate to app
+      // Use replace to avoid going back to sign-in, then refresh to update auth state
       router.replace(next)
-      router.refresh()
+      // Delay refresh slightly to ensure navigation is queued first
+      setTimeout(() => {
+        router.refresh()
+      }, 0)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign in')
       setIsLoading(false)

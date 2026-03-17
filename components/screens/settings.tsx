@@ -304,7 +304,10 @@ export function SettingsScreen() {
                 
                 if (!error) {
                   router.replace('/auth/sign-in')
-                  router.refresh()
+                  // Delay refresh to ensure navigation is queued first
+                  setTimeout(() => {
+                    router.refresh()
+                  }, 0)
                 } else {
                   console.error('Sign out failed:', error)
                 }
