@@ -39,12 +39,19 @@ function SignUpPageContent() {
     setIsLoading(true)
 
     try {
-      await signUpWithEmail(formData.email, formData.password, next)
-      // If we get here, email confirmation is disabled - redirect to app
-      setConfirmationSent(true)
-      setConfirmedEmail(formData.email)
-      // Auto-redirect after showing confirmation
-      setTimeout(() => router.push(next), 2000)
+      const result = await signUpWithEmail(formData.email, formData.password, next)
+      
+      if (result.ok && result.requiresEmailConfirmation) {
+        // Email confirmation required - show confirmation screen
+        setConfirmationSent(true)
+        setConfirmedEmail(result.email || formData.email)
+        // Auto-redirect after showing confirmation
+        setTimeout(() => router.push(next), 2000)
+      } else if (!result.ok) {
+        // Sign-up failed - show error message
+        setError(result.message || 'Failed to create account')
+        setIsLoading(false)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create account')
       setIsLoading(false)

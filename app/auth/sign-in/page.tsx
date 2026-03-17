@@ -32,8 +32,19 @@ function SignInPageContent() {
     setIsLoading(true)
 
     try {
-      await signInWithEmail(formData.email, formData.password, next)
+      const result = await signInWithEmail(formData.email, formData.password, next)
+      
+      if (result.ok && result.redirectTo) {
+        // Successful sign-in - navigate to app
+        router.replace(result.redirectTo)
+        router.refresh()
+      } else if (!result.ok) {
+        // Sign-in failed - show error message
+        setError(result.message || 'Failed to sign in')
+        setIsLoading(false)
+      }
     } catch (err) {
+      // Fallback for unexpected errors
       setError(err instanceof Error ? err.message : 'Failed to sign in')
       setIsLoading(false)
     }
@@ -42,8 +53,12 @@ function SignInPageContent() {
   const handleResendConfirmation = async () => {
     setIsResending(true)
     try {
-      await resendConfirmationEmail(formData.email)
-      setError('Confirmation email sent! Check your inbox.')
+      const result = await resendConfirmationEmail(formData.email)
+      if (result.ok) {
+        setError('Confirmation email sent! Check your inbox.')
+      } else {
+        setError(result.message || 'Failed to resend confirmation email')
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to resend confirmation email')
     } finally {
