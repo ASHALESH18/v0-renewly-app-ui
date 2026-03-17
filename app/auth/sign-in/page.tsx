@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Suspense } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -10,7 +11,7 @@ import { SocialButtons } from '@/components/auth/social-buttons'
 import { springs } from '@/components/motion'
 import { signInWithEmail, resendConfirmationEmail } from '@/lib/supabase/actions'
 
-export default function SignInPage() {
+function SignInPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const next = searchParams.get('next') || '/app'
@@ -185,5 +186,13 @@ export default function SignInPage() {
         </p>
       </form>
     </AuthLayout>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignInPageContent />
+    </Suspense>
   )
 }
