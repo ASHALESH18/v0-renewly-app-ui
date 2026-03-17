@@ -40,6 +40,13 @@ export async function signInWithEmail(email: string, password: string, next?: st
   })
 
   if (error) {
+    // Provide helpful error messages for common cases
+    if (error.message.includes('Email not confirmed')) {
+      throw new Error('Please confirm your email before signing in. Check your inbox for a confirmation link.')
+    }
+    if (error.message.includes('Invalid login credentials')) {
+      throw new Error('Invalid email or password. Please try again.')
+    }
     throw new Error(error.message)
   }
 
@@ -56,6 +63,34 @@ export async function resetPassword(email: string) {
   if (error) {
     throw new Error(error.message)
   }
+}
+
+export async function resendConfirmationEmail(email: string) {
+  const supabase = await createClient()
+
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+    options: {
+      emailRedirectTo: `${getAppUrl()}/auth/callback`,
+    },
+  })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+}
+
+export async function signOut() {
+  const supabase = await createClient()
+  
+  const { error } = await supabase.auth.signOut()
+  
+  if (error) {
+    throw new Error(error.message)
+  }
+  
+  redirect('/auth/sign-in')
 }
 
 export async function updatePassword(newPassword: string) {
