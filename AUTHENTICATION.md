@@ -132,9 +132,9 @@ The server client (`lib/supabase/server.ts`) is already set up and ready to quer
 
 ## Architecture Notes
 
-- Browser client uses `@supabase/ssr` for cookie-based sessions
-- Server client refreshes sessions via middleware
-- All auth actions are server-only (no client credentials)
+- Browser and server clients use `@supabase/supabase-js` for authentication
+- Middleware checks for auth cookies to protect routes
+- All auth actions are server-only (no client credentials exposed)
 - Errors are user-friendly without exposing technical details
 - Loading states prevent double-submission
 - Session persists across page refreshes via cookies
