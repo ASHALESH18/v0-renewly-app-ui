@@ -1,6 +1,7 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Home, 
   PieChart, 
@@ -8,7 +9,9 @@ import {
   Bell, 
   Settings,
   Calendar,
-  FileText
+  FileText,
+  MoreHorizontal,
+  X
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from './motion'
@@ -18,79 +21,183 @@ interface BottomNavProps {
   onTabChange: (tab: string) => void
 }
 
-const navItems = [
+const primaryNavItems = [
   { id: 'dashboard', icon: Home, label: 'Home' },
   { id: 'calendar', icon: Calendar, label: 'Calendar' },
   { id: 'add', icon: Plus, label: 'Add', isAction: true },
   { id: 'analytics', icon: PieChart, label: 'Analytics' },
-  { id: 'leak-report', icon: FileText, label: 'Report' },
+]
+
+const moreNavItems = [
+  { id: 'leak-report', icon: FileText, label: 'Leak Report' },
+  { id: 'notifications', icon: Bell, label: 'Notifications' },
+  { id: 'settings', icon: Settings, label: 'Settings' },
 ]
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
-  return (
-    <motion.nav
-      initial={{ y: 100 }}
-      animate={{ y: 0 }}
-      transition={springs.gentle}
-      className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
-    >
-      {/* Glass background */}
-      <div className="glass-strong mx-4 mb-4 rounded-2xl">
-        <div className="flex items-center justify-around px-2 py-3">
-          {navItems.map((item) => {
-            const isActive = activeTab === item.id
-            const Icon = item.icon
+  const [showMore, setShowMore] = useState(false)
 
-            if (item.isAction) {
+  return (
+    <>
+      <motion.nav
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        transition={springs.gentle}
+        className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
+      >
+        {/* Glass background */}
+        <div className="glass-strong mx-4 mb-4 rounded-2xl">
+          <div className="flex items-center justify-around px-2 py-3">
+            {primaryNavItems.map((item) => {
+              const isActive = activeTab === item.id
+              const Icon = item.icon
+
+              if (item.isAction) {
+                return (
+                  <motion.button
+                    key={item.id}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => onTabChange(item.id)}
+                    className="relative -mt-6"
+                  >
+                    <div className="w-14 h-14 rounded-full gold-gradient flex items-center justify-center shadow-luxury">
+                      <Icon className="w-6 h-6 text-obsidian" />
+                    </div>
+                  </motion.button>
+                )
+              }
+
               return (
                 <motion.button
                   key={item.id}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => onTabChange(item.id)}
-                  className="relative -mt-6"
+                  className="relative flex flex-col items-center gap-1 px-3 py-2"
                 >
-                  <div className="w-14 h-14 rounded-full gold-gradient flex items-center justify-center shadow-luxury">
-                    <Icon className="w-6 h-6 text-obsidian" />
-                  </div>
+                  <Icon 
+                    className={cn(
+                      'w-5 h-5 transition-colors duration-200',
+                      isActive ? 'text-gold' : 'text-platinum'
+                    )} 
+                  />
+                  <span 
+                    className={cn(
+                      'text-[10px] font-medium transition-colors duration-200',
+                      isActive ? 'text-gold' : 'text-platinum'
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute -bottom-1 w-1 h-1 rounded-full bg-gold"
+                      transition={springs.snappy}
+                    />
+                  )}
                 </motion.button>
               )
-            }
+            })}
 
-            return (
-              <motion.button
-                key={item.id}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => onTabChange(item.id)}
-                className="relative flex flex-col items-center gap-1 px-3 py-2"
-              >
-                <Icon 
-                  className={cn(
-                    'w-5 h-5 transition-colors duration-200',
-                    isActive ? 'text-gold' : 'text-platinum'
-                  )} 
-                />
-                <span 
-                  className={cn(
-                    'text-[10px] font-medium transition-colors duration-200',
-                    isActive ? 'text-gold' : 'text-platinum'
-                  )}
-                >
-                  {item.label}
-                </span>
-                {isActive && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute -bottom-1 w-1 h-1 rounded-full bg-gold"
-                    transition={springs.snappy}
-                  />
+            {/* More button */}
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setShowMore(!showMore)}
+              className="relative flex flex-col items-center gap-1 px-3 py-2"
+            >
+              <MoreHorizontal 
+                className={cn(
+                  'w-5 h-5 transition-colors duration-200',
+                  showMore ? 'text-gold' : 'text-platinum'
+                )} 
+              />
+              <span 
+                className={cn(
+                  'text-[10px] font-medium transition-colors duration-200',
+                  showMore ? 'text-gold' : 'text-platinum'
                 )}
-              </motion.button>
-            )
-          })}
+              >
+                More
+              </span>
+              {showMore && (
+                <motion.div
+                  layoutId="activeTab"
+                  className="absolute -bottom-1 w-1 h-1 rounded-full bg-gold"
+                  transition={springs.snappy}
+                />
+              )}
+            </motion.button>
+          </div>
         </div>
-      </div>
-    </motion.nav>
+      </motion.nav>
+
+      {/* More menu sheet */}
+      <AnimatePresence>
+        {showMore && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowMore(false)}
+              className="fixed inset-0 z-40 bg-obsidian/40 backdrop-blur-sm lg:hidden"
+            />
+            
+            <motion.div
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={springs.gentle}
+              className="fixed bottom-24 left-4 right-4 z-40 glass-strong rounded-2xl p-3 space-y-1 lg:hidden"
+            >
+              <div className="flex items-center justify-between px-2 py-2">
+                <span className="text-sm font-medium text-muted-foreground">More Options</span>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowMore(false)}
+                  className="p-1 rounded-lg hover:bg-secondary transition-colors"
+                >
+                  <X className="w-4 h-4 text-muted-foreground" />
+                </motion.button>
+              </div>
+
+              {moreNavItems.map((item) => {
+                const isActive = activeTab === item.id
+                const Icon = item.icon
+
+                return (
+                  <motion.button
+                    key={item.id}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      onTabChange(item.id)
+                      setShowMore(false)
+                    }}
+                    className={cn(
+                      'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors',
+                      isActive 
+                        ? 'bg-gold/10 text-gold' 
+                        : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
+                    )}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="font-medium flex-1 text-left">{item.label}</span>
+                    {isActive && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="w-2 h-2 rounded-full bg-gold"
+                      />
+                    )}
+                  </motion.button>
+                )
+              })}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   )
 }
 

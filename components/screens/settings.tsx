@@ -5,11 +5,13 @@ import { motion } from 'framer-motion'
 import { 
   User, Bell, CreditCard, Shield, Moon, Sun, Globe, 
   HelpCircle, FileText, LogOut, ChevronRight, Crown,
-  Smartphone, Mail, Lock, Palette, Download
+  Smartphone, Mail, Lock, Palette, Download, Copy, FileJson
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from '@/components/motion'
 import { Switch } from '@/components/ui/switch'
+import useStore from '@/lib/store'
+import { exportSubscriptions } from '@/lib/export'
 
 interface SettingItem {
   icon: React.ElementType
@@ -30,7 +32,10 @@ export function SettingsScreen() {
   const [pushNotifications, setPushNotifications] = useState(true)
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [biometricAuth, setBiometricAuth] = useState(false)
+  const [showExportOptions, setShowExportOptions] = useState(false)
   
+  const subscriptions = useStore((state) => state.subscriptions)
+  const addToast = useStore((state) => state.addToast)
   const sections: SettingSection[] = [
     {
       title: 'Account',
@@ -88,6 +93,26 @@ export function SettingsScreen() {
         setBiometricAuth(!biometricAuth)
         break
     }
+  }
+
+  const handleExportCSV = () => {
+    exportSubscriptions(subscriptions, 'csv')
+    addToast({
+      type: 'success',
+      title: 'Export complete',
+      message: 'Your subscriptions have been exported as CSV.'
+    })
+    setShowExportOptions(false)
+  }
+
+  const handleExportJSON = () => {
+    exportSubscriptions(subscriptions, 'json')
+    addToast({
+      type: 'success',
+      title: 'Export complete',
+      message: 'Your subscriptions have been exported as JSON.'
+    })
+    setShowExportOptions(false)
   }
   
   const getToggleValue = (label: string) => {
@@ -211,9 +236,14 @@ export function SettingsScreen() {
                     key={item.label}
                     whileTap={{ scale: 0.98 }}
                     className={cn(
-                      "w-full flex items-center gap-4 p-4 hover:bg-secondary/30 transition-colors",
+                      "w-full flex items-center gap-4 p-4 hover:bg-secondary/30 transition-colors cursor-pointer",
                       !isLast && "border-b border-border"
                     )}
+                    onClick={() => {
+                      if (item.label === 'Export Data') {
+                        setShowExportOptions(!showExportOptions)
+                      }
+                    }}
                   >
                     {content}
                   </motion.button>
@@ -222,6 +252,40 @@ export function SettingsScreen() {
             </div>
           </motion.div>
         ))}
+        {/* Export Options */}
+        {showExportOptions && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl glass overflow-hidden"
+          >
+            <button
+              onClick={handleExportCSV}
+              className="w-full flex items-center gap-4 p-4 hover:bg-secondary/30 transition-colors text-left border-b border-border"
+            >
+              <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center">
+                <Download className="w-5 h-5 text-foreground" />
+              </div>
+              <div className="flex-1">
+                <span className="text-foreground font-medium">Export as CSV</span>
+                <p className="text-sm text-muted-foreground">Spreadsheet format</p>
+              </div>
+            </button>
+            
+            <button
+              onClick={handleExportJSON}
+              className="w-full flex items-center gap-4 p-4 hover:bg-secondary/30 transition-colors text-left"
+            >
+              <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center">
+                <FileJson className="w-5 h-5 text-foreground" />
+              </div>
+              <div className="flex-1">
+                <span className="text-foreground font-medium">Export as JSON</span>
+                <p className="text-sm text-muted-foreground">For backup & import</p>
+              </div>
+            </button>
+          </motion.div>
+        )}
         
         {/* Sign Out Button */}
         <motion.div
@@ -231,7 +295,7 @@ export function SettingsScreen() {
         >
           <motion.button
             whileTap={{ scale: 0.98 }}
-            className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl glass text-crimson hover:bg-crimson/10 transition-colors"
+            className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl glass text-crimson hover:bg-crimson/10 transition-colors cursor-pointer"
           >
             <LogOut className="w-5 h-5" />
             <span className="font-medium">Sign Out</span>

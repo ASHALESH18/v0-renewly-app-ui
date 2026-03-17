@@ -2,15 +2,15 @@
 
 import { motion } from 'framer-motion'
 import { 
-  MoreHorizontal, 
   RefreshCw, 
   Users, 
   CreditCard,
   Calendar
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Subscription } from '@/lib/data'
+import type { Subscription } from '@/lib/types'
 import { cardLift, springs, staggerItem } from './motion'
+import { SubscriptionActions } from './subscription-actions'
 
 interface SubscriptionCardProps {
   subscription: Subscription
@@ -19,7 +19,7 @@ interface SubscriptionCardProps {
 }
 
 export function SubscriptionCard({ subscription, index = 0, onClick }: SubscriptionCardProps) {
-  const daysUntilRenewal = getDaysUntilRenewal(subscription.nextRenewal)
+  const daysUntilRenewal = subscription.renewalDate ? getDaysUntilRenewal(subscription.renewalDate) : 0
   const isUrgent = daysUntilRenewal <= 3
   const billingLabel = getBillingLabel(subscription.billingCycle)
 
@@ -35,17 +35,30 @@ export function SubscriptionCard({ subscription, index = 0, onClick }: Subscript
       onClick={onClick}
       className="cursor-pointer"
     >
-      <motion.div
-        variants={cardLift}
-        className="relative overflow-hidden rounded-2xl bg-card border border-border p-5 shadow-card"
-      >
-        {/* Subtle gradient accent based on brand color */}
-        <div 
-          className="absolute top-0 left-0 right-0 h-1 opacity-80"
+    <motion.div
+      variants={cardLift}
+      whileHover={{ y: -4, boxShadow: '0 12px 32px -8px rgba(199, 163, 106, 0.15)' }}
+      className="relative overflow-hidden rounded-2xl bg-card border border-border p-5 shadow-card transition-shadow"
+    >
+        {/* Animated gradient accent overlay on hover */}
+        <motion.div 
+          className="absolute top-0 left-0 right-0 h-1 opacity-0 group-hover:opacity-100"
           style={{ background: subscription.color }}
+          initial={{ opacity: 0 }}
+          whileHover={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
         />
 
-        <div className="flex items-start gap-4">
+        {/* Subtle shine effect on hover */}
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent"
+          initial={{ x: '-100%' }}
+          whileHover={{ x: '100%' }}
+          transition={{ duration: 0.8, ease: 'easeInOut' }}
+          style={{ pointerEvents: 'none', opacity: 0.05 }}
+        />
+
+        <div className="relative z-10 flex items-start gap-4">
           {/* Logo */}
           <div 
             className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-semibold text-lg shrink-0"
@@ -65,12 +78,12 @@ export function SubscriptionCard({ subscription, index = 0, onClick }: Subscript
                   {subscription.category}
                 </p>
               </div>
-              <button 
-                className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+              <div 
+                className="p-1.5 rounded-lg cursor-pointer"
                 onClick={(e) => e.stopPropagation()}
               >
-                <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
-              </button>
+                <SubscriptionActions subscription={subscription} />
+              </div>
             </div>
 
             {/* Amount and cycle */}
@@ -94,32 +107,25 @@ export function SubscriptionCard({ subscription, index = 0, onClick }: Subscript
                 <span>
                   {isUrgent 
                     ? `${daysUntilRenewal === 0 ? 'Today' : `${daysUntilRenewal}d left`}`
-                    : formatDate(subscription.nextRenewal)
+                    : subscription.renewalDate ? formatDate(subscription.renewalDate) : 'N/A'
                   }
                 </span>
               </div>
 
-              {/* Auto-renew */}
-              {subscription.autoRenew && (
-                <div className="flex items-center gap-1.5 text-emerald">
+              {/* Status badge */}
+              {subscription.status === 'paused' && (
+                <div className="flex items-center gap-1.5 text-gold">
                   <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Auto</span>
+                  <span>Paused</span>
                 </div>
               )}
 
-              {/* Shared */}
-              {subscription.isShared && subscription.sharedWith && (
-                <div className="flex items-center gap-1.5">
+              {subscription.status === 'unused' && (
+                <div className="flex items-center gap-1.5 text-muted-foreground">
                   <Users className="w-3.5 h-3.5" />
-                  <span>{subscription.sharedWith}</span>
+                  <span>Unused</span>
                 </div>
               )}
-
-              {/* Payment method */}
-              <div className="flex items-center gap-1.5">
-                <CreditCard className="w-3.5 h-3.5" />
-                <span className="truncate max-w-[100px]">{subscription.paymentMethod}</span>
-              </div>
             </div>
           </div>
         </div>
@@ -135,7 +141,7 @@ interface SubscriptionCardCompactProps {
 }
 
 export function SubscriptionCardCompact({ subscription, onClick }: SubscriptionCardCompactProps) {
-  const daysUntilRenewal = getDaysUntilRenewal(subscription.nextRenewal)
+  const daysUntilRenewal = subscription.renewalDate ? getDaysUntilRenewal(subscription.renewalDate) : 0
   const isUrgent = daysUntilRenewal <= 3
 
   return (
@@ -192,8 +198,9 @@ function formatDate(dateStr: string): string {
   })
 }
 
-function getBillingLabel(cycle: Subscription['billingCycle']): string {
+function getBillingLabel(cycle: string): string {
   switch (cycle) {
+    case 'daily': return 'day'
     case 'weekly': return 'wk'
     case 'monthly': return 'mo'
     case 'quarterly': return 'qtr'

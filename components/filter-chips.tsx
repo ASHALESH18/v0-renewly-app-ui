@@ -33,7 +33,7 @@ export function FilterChips({ chips, selectedChip, onChipSelect }: FilterChipsPr
             transition={{ ...springs.snappy, delay: index * 0.03 }}
             onClick={() => onChipSelect(chip.id)}
             className={cn(
-              'relative px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors',
+              'relative px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors cursor-pointer',
               isSelected
                 ? 'bg-gold text-obsidian'
                 : 'bg-muted text-muted-foreground hover:text-foreground'
@@ -82,7 +82,7 @@ export function SegmentedControl({
             key={segment.id}
             onClick={() => onSegmentSelect(segment.id)}
             className={cn(
-              'relative px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+              'relative px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer',
               fullWidth && 'flex-1',
               isSelected ? 'text-foreground' : 'text-muted-foreground'
             )}
@@ -114,7 +114,7 @@ export function Toggle({ enabled, onToggle, label, description }: ToggleProps) {
   return (
     <button
       onClick={onToggle}
-      className="flex items-center justify-between gap-4 w-full py-2"
+      className="flex items-center justify-between gap-4 w-full py-2 cursor-pointer"
     >
       {(label || description) && (
         <div className="flex-1 text-left">
