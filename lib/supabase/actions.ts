@@ -124,3 +124,11 @@ export async function getUser() {
 
   return user
 }
+
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return user
+}
