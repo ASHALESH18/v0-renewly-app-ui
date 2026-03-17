@@ -12,7 +12,7 @@ import { springs } from '@/components/motion'
 import { Switch } from '@/components/ui/switch'
 import useStore from '@/lib/store'
 import { exportSubscriptions } from '@/lib/export'
-import { signOut } from '@/lib/supabase/actions'
+import { logoutUser } from '@/lib/supabase/actions'
 
 interface SettingItem {
   icon: React.ElementType
@@ -297,7 +297,7 @@ export function SettingsScreen() {
           <motion.button
             onClick={async () => {
               try {
-                await signOut()
+                await logoutUser()
               } catch (err) {
                 console.error('Sign out failed:', err)
               }

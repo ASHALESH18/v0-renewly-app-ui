@@ -26,9 +26,6 @@ export async function signUpWithEmail(
   if (error) {
     throw new Error(error.message)
   }
-
-  // If email confirmation is disabled, we'll redirect after user confirms in callback
-  // If enabled, we'll show a confirmation screen
 }
 
 export async function signInWithEmail(email: string, password: string, next?: string) {
@@ -40,6 +37,12 @@ export async function signInWithEmail(email: string, password: string, next?: st
   })
 
   if (error) {
+    if (error.message.includes('Email not confirmed')) {
+      throw new Error('Please confirm your email before signing in. Check your inbox for a confirmation link.')
+    }
+    if (error.message.includes('Invalid login credentials')) {
+      throw new Error('Invalid email or password. Please try again.')
+    }
     throw new Error(error.message)
   }
 
@@ -58,6 +61,34 @@ export async function resetPassword(email: string) {
   }
 }
 
+export async function resendConfirmationEmail(email: string) {
+  const supabase = await createClient()
+
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+    options: {
+      emailRedirectTo: `${getAppUrl()}/auth/callback`,
+    },
+  })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+}
+
+export async function logoutUser() {
+  const supabase = await createClient()
+  
+  const { error } = await supabase.auth.signOut()
+  
+  if (error) {
+    throw new Error(error.message)
+  }
+  
+  redirect('/auth/sign-in')
+}
+
 export async function updatePassword(newPassword: string) {
   const supabase = await createClient()
 
@@ -70,18 +101,6 @@ export async function updatePassword(newPassword: string) {
   }
 
   redirect('/app')
-}
-
-export async function signOut() {
-  const supabase = await createClient()
-
-  const { error } = await supabase.auth.signOut()
-
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  redirect('/auth/sign-in')
 }
 
 export async function getSession() {
@@ -98,6 +117,14 @@ export async function getSession() {
 export async function getUser() {
   const supabase = await createClient()
   const { data: { user }, error } = await supabase.auth.getUser()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return user
+}
+
 
   if (error) {
     throw new Error(error.message)
