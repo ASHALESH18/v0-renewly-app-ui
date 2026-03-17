@@ -100,58 +100,6 @@ export default function ForgotPasswordPage() {
   )
 }
 
-
-  if (isSubmitted) {
-    return (
-      <AuthLayout
-        title="Check your email"
-        subtitle="We've sent a password reset link to your email"
-      >
-        <div className="text-center py-4">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-            className="w-16 h-16 rounded-full bg-emerald/20 flex items-center justify-center mx-auto mb-6"
-          >
-            <CheckCircle className="w-8 h-8 text-emerald" />
-          </motion.div>
-          
-          <p className="text-platinum mb-6">
-            {"We've sent a password reset link to "}
-            <span className="text-ivory font-medium">{email}</span>
-          </p>
-
-          <p className="text-sm text-platinum mb-8">
-            {"Didn't receive the email? Check your spam folder or "}
-            <button 
-              onClick={() => setIsSubmitted(false)}
-              className="text-gold hover:text-gold/80"
-            >
-              try again
-            </button>
-          </p>
-
-          <Link href="/auth/sign-in">
-            <motion.button
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-              className="w-full h-12 rounded-xl gold-gradient text-obsidian font-semibold shadow-luxury"
-            >
-              Back to sign in
-            </motion.button>
-          </Link>
-        </div>
-      </AuthLayout>
-    )
-  }
-
-  return (
-    <AuthLayout
-      title="Forgot password?"
-      subtitle="No worries, we'll send you reset instructions"
-    >
-      <form onSubmit={handleSubmit} className="space-y-5">
         {/* Email field */}
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-ivory mb-2">
