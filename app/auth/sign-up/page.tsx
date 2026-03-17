@@ -7,9 +7,6 @@ import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react'
 import { AuthLayout } from '@/components/auth/auth-layout'
 import { SocialButtons } from '@/components/auth/social-buttons'
-import { authPageMetadata } from '@/lib/metadata'
-
-export const metadata = authPageMetadata.signUp
 
 export default function SignUpPage() {
   const router = useRouter()

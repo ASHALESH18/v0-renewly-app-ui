@@ -78,12 +78,12 @@ export function SubscriptionCard({ subscription, index = 0, onClick }: Subscript
                   {subscription.category}
                 </p>
               </div>
-              <button 
-                className="p-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer"
+              <div 
+                className="p-1.5 rounded-lg cursor-pointer"
                 onClick={(e) => e.stopPropagation()}
               >
                 <SubscriptionActions subscription={subscription} />
-              </button>
+              </div>
             </div>
 
             {/* Amount and cycle */}

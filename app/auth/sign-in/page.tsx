@@ -8,9 +8,6 @@ import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
 import { AuthLayout } from '@/components/auth/auth-layout'
 import { SocialButtons } from '@/components/auth/social-buttons'
 import { springs } from '@/components/motion'
-import { authPageMetadata } from '@/lib/metadata'
-
-export const metadata = authPageMetadata.signIn
 
 export default function SignInPage() {
   const router = useRouter()
