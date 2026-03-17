@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion'
 import { 
-  MoreHorizontal, 
   RefreshCw, 
   Users, 
   CreditCard,
@@ -11,6 +10,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { Subscription } from '@/lib/types'
 import { cardLift, springs, staggerItem } from './motion'
+import { SubscriptionActions } from './subscription-actions'
 
 interface SubscriptionCardProps {
   subscription: Subscription
@@ -82,7 +82,7 @@ export function SubscriptionCard({ subscription, index = 0, onClick }: Subscript
                 className="p-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer"
                 onClick={(e) => e.stopPropagation()}
               >
-                <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                <SubscriptionActions subscription={subscription} />
               </button>
             </div>
 

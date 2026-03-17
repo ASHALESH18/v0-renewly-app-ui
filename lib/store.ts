@@ -5,21 +5,39 @@ import { persist } from 'zustand/middleware'
 import { Subscription } from './types'
 import { initialSubscriptions } from './init-data'
 
+export interface Toast {
+  id: string
+  type: 'success' | 'error' | 'info'
+  title: string
+  message?: string
+}
+
 export interface AppState {
   subscriptions: Subscription[]
   notificationSettings: {
     emailReminders: boolean
     pushNotifications: boolean
     leakAlerts: boolean
+    reminderDays: number
+    currency: string
   }
   theme: 'light' | 'dark'
+  userProfile: {
+    name: string
+    email: string
+    plan: 'free' | 'premium'
+  }
+  toasts: Toast[]
   
   // Actions
   addSubscription: (subscription: Omit<Subscription, 'id'>) => void
   updateSubscription: (id: string, subscription: Partial<Subscription>) => void
   deleteSubscription: (id: string) => void
   updateNotificationSettings: (settings: Partial<AppState['notificationSettings']>) => void
+  updateUserProfile: (profile: Partial<AppState['userProfile']>) => void
   setTheme: (theme: 'light' | 'dark') => void
+  addToast: (toast: Omit<Toast, 'id'>) => void
+  removeToast: (id: string) => void
   initializeWithDefaults: () => void
 }
 
@@ -31,8 +49,16 @@ const useStore = create<AppState>()(
         emailReminders: true,
         pushNotifications: true,
         leakAlerts: true,
+        reminderDays: 3,
+        currency: 'INR',
       },
       theme: 'dark',
+      userProfile: {
+        name: 'Ashish',
+        email: 'ashish@example.com',
+        plan: 'free',
+      },
+      toasts: [],
       
       addSubscription: (subscription) => set((state) => ({
         subscriptions: [
@@ -58,7 +84,26 @@ const useStore = create<AppState>()(
         notificationSettings: { ...state.notificationSettings, ...settings }
       })),
       
+      updateUserProfile: (profile) => set((state) => ({
+        userProfile: { ...state.userProfile, ...profile }
+      })),
+      
       setTheme: (theme) => set({ theme }),
+      
+      addToast: (toast) => set((state) => {
+        const id = Date.now().toString()
+        // Auto-remove after 4 seconds
+        setTimeout(() => {
+          get().removeToast(id)
+        }, 4000)
+        return {
+          toasts: [...state.toasts, { ...toast, id }]
+        }
+      }),
+      
+      removeToast: (id) => set((state) => ({
+        toasts: state.toasts.filter(t => t.id !== id)
+      })),
       
       initializeWithDefaults: () => set((state) => {
         // Only initialize if no subscriptions exist

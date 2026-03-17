@@ -24,7 +24,7 @@ const viewSegments = [
   { id: 'list', label: 'List' },
 ]
 
-export function DashboardScreen() {
+export function DashboardScreen({ onAddClick }: { onAddClick: () => void }) {
   const [showSearch, setShowSearch] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useState('all')
@@ -33,6 +33,7 @@ export function DashboardScreen() {
 
   // Get data from store
   const subscriptions = useStore((state) => state.subscriptions)
+  const addToast = useStore((state) => state.addToast)
   const metrics = selectMetrics(useStore.getState())
   const upcoming = selectUpcomingRenewals(useStore.getState())
 
