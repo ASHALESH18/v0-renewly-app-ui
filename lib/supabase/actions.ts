@@ -26,9 +26,6 @@ export async function signUpWithEmail(
   if (error) {
     throw new Error(error.message)
   }
-
-  // If email confirmation is disabled, we'll redirect after user confirms in callback
-  // If enabled, we'll show a confirmation screen
 }
 
 export async function signInWithEmail(email: string, password: string, next?: string) {
@@ -40,7 +37,6 @@ export async function signInWithEmail(email: string, password: string, next?: st
   })
 
   if (error) {
-    // Provide helpful error messages for common cases
     if (error.message.includes('Email not confirmed')) {
       throw new Error('Please confirm your email before signing in. Check your inbox for a confirmation link.')
     }
@@ -81,7 +77,7 @@ export async function resendConfirmationEmail(email: string) {
   }
 }
 
-export async function signOut() {
+export async function logoutUser() {
   const supabase = await createClient()
   
   const { error } = await supabase.auth.signOut()
