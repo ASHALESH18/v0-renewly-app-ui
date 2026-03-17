@@ -13,7 +13,7 @@ import { springs } from '@/components/motion'
 import { Switch } from '@/components/ui/switch'
 import useStore from '@/lib/store'
 import { exportSubscriptions } from '@/lib/export'
-import { logoutUser } from '@/lib/supabase/actions'
+import { createClient } from '@/lib/supabase/client'
 
 interface SettingItem {
   icon: React.ElementType
@@ -299,10 +299,14 @@ export function SettingsScreen() {
           <motion.button
             onClick={async () => {
               try {
-                const result = await logoutUser()
-                if (result.ok && result.redirectTo) {
-                  router.replace(result.redirectTo)
+                const supabase = createClient()
+                const { error } = await supabase.auth.signOut()
+                
+                if (!error) {
+                  router.replace('/auth/sign-in')
                   router.refresh()
+                } else {
+                  console.error('Sign out failed:', error)
                 }
               } catch (err) {
                 console.error('Sign out failed:', err)

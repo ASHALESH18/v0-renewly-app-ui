@@ -5,9 +5,11 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { Eye, EyeOff, Lock, AlertCircle, Check } from 'lucide-react'
 import { AuthLayout } from '@/components/auth/auth-layout'
-import { updatePassword } from '@/lib/supabase/actions'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
 export default function ResetPasswordPage() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -35,8 +37,23 @@ export default function ResetPasswordPage() {
     setIsLoading(true)
 
     try {
-      await updatePassword(formData.password)
+      const supabase = createClient()
+
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: formData.password,
+      })
+
+      if (updateError) {
+        setError(updateError.message || 'Failed to reset password')
+        setIsLoading(false)
+        return
+      }
+
       setIsSuccess(true)
+      // Auto-redirect after showing success
+      setTimeout(() => {
+        router.replace('/auth/sign-in')
+      }, 2000)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reset password')
       setIsLoading(false)
