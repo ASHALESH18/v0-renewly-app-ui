@@ -27,59 +27,6 @@ export default function ForgotPasswordPage() {
     }
   }
 
-  if (isSubmitted) {
-    return (
-      <AuthLayout
-        title="Check your email"
-        subtitle="We've sent a password reset link to your email"
-      >
-        <div className="text-center py-4 space-y-6">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-            className="w-16 h-16 rounded-full bg-gold/20 flex items-center justify-center mx-auto"
-          >
-            <CheckCircle className="w-8 h-8 text-gold" />
-          </motion.div>
-          
-          <p className="text-platinum">
-            {"We've sent a password reset link to "}
-            <span className="text-ivory font-medium">{email}</span>
-          </p>
-
-          <p className="text-sm text-platinum">
-            {"Follow the link in your email to reset your password. "}
-            <br />
-            {"It expires in 24 hours."}
-          </p>
-
-          <div className="pt-4 border-t border-glass-border space-y-4">
-            <p className="text-sm text-platinum">
-              {"Didn't receive the email? Check your spam folder or "}
-              <button 
-                onClick={() => setIsSubmitted(false)}
-                className="text-gold hover:text-gold/80 font-medium"
-              >
-                try again
-              </button>
-            </p>
-
-            <Link href="/auth/sign-in">
-              <motion.button
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                className="w-full h-12 rounded-xl gold-gradient text-obsidian font-semibold shadow-luxury"
-              >
-                Back to sign in
-              </motion.button>
-            </Link>
-          </div>
-        </div>
-      </AuthLayout>
-    )
-  }
-
   return (
     <AuthLayout
       title="Forgot password?"
@@ -152,6 +99,7 @@ export default function ForgotPasswordPage() {
     </AuthLayout>
   )
 }
+
 
   if (isSubmitted) {
     return (
