@@ -35,17 +35,30 @@ export function SubscriptionCard({ subscription, index = 0, onClick }: Subscript
       onClick={onClick}
       className="cursor-pointer"
     >
-      <motion.div
-        variants={cardLift}
-        className="relative overflow-hidden rounded-2xl bg-card border border-border p-5 shadow-card"
-      >
-        {/* Subtle gradient accent based on brand color */}
-        <div 
-          className="absolute top-0 left-0 right-0 h-1 opacity-80"
+    <motion.div
+      variants={cardLift}
+      whileHover={{ y: -4, boxShadow: '0 12px 32px -8px rgba(199, 163, 106, 0.15)' }}
+      className="relative overflow-hidden rounded-2xl bg-card border border-border p-5 shadow-card transition-shadow"
+    >
+        {/* Animated gradient accent overlay on hover */}
+        <motion.div 
+          className="absolute top-0 left-0 right-0 h-1 opacity-0 group-hover:opacity-100"
           style={{ background: subscription.color }}
+          initial={{ opacity: 0 }}
+          whileHover={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
         />
 
-        <div className="flex items-start gap-4">
+        {/* Subtle shine effect on hover */}
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent"
+          initial={{ x: '-100%' }}
+          whileHover={{ x: '100%' }}
+          transition={{ duration: 0.8, ease: 'easeInOut' }}
+          style={{ pointerEvents: 'none', opacity: 0.05 }}
+        />
+
+        <div className="relative z-10 flex items-start gap-4">
           {/* Logo */}
           <div 
             className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-semibold text-lg shrink-0"

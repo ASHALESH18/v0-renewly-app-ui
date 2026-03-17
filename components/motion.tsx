@@ -348,3 +348,70 @@ export function ProgressRing({
     </svg>
   )
 }
+
+// Premium screen transitions with stagger
+export const screenTransition: Variants = {
+  initial: { opacity: 0, y: 12 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: 'easeOut',
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -12,
+    transition: {
+      duration: 0.3,
+      ease: 'easeIn',
+    },
+  },
+}
+
+// Success animation for actions
+export const successCheckmark: Variants = {
+  initial: { scale: 0, rotate: -45 },
+  animate: { 
+    scale: 1, 
+    rotate: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 300,
+      damping: 20,
+    },
+  },
+}
+
+// Ripple effect for button press
+export const rippleVariants: Variants = {
+  initial: { scale: 0, opacity: 1 },
+  animate: { scale: 4, opacity: 0 },
+}
+
+// List item enter animation with cascading delay
+export const cascadingItem: Variants = {
+  initial: { opacity: 0, x: -20 },
+  animate: (index: number) => ({
+    opacity: 1,
+    x: 0,
+    transition: {
+      delay: index * 0.08,
+      duration: 0.4,
+      ease: 'easeOut',
+    },
+  }),
+  exit: { opacity: 0, x: 20 },
+}
+
+// Badge/tag entrance animation
+export const badgeEntrance: Variants = {
+  initial: { scale: 0, opacity: 0 },
+  animate: { 
+    scale: 1, 
+    opacity: 1,
+    transition: springs.snappy,
+  },
+  exit: { scale: 0, opacity: 0 },
+}

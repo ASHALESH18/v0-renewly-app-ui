@@ -1,6 +1,7 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Home, 
   PieChart, 
@@ -8,7 +9,9 @@ import {
   Bell, 
   Settings,
   Calendar,
-  FileText
+  FileText,
+  MoreHorizontal,
+  X
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from './motion'
@@ -18,12 +21,17 @@ interface BottomNavProps {
   onTabChange: (tab: string) => void
 }
 
-const navItems = [
+const primaryNavItems = [
   { id: 'dashboard', icon: Home, label: 'Home' },
   { id: 'calendar', icon: Calendar, label: 'Calendar' },
   { id: 'add', icon: Plus, label: 'Add', isAction: true },
   { id: 'analytics', icon: PieChart, label: 'Analytics' },
-  { id: 'leak-report', icon: FileText, label: 'Report' },
+]
+
+const moreNavItems = [
+  { id: 'leak-report', icon: FileText, label: 'Leak Report' },
+  { id: 'notifications', icon: Bell, label: 'Notifications' },
+  { id: 'settings', icon: Settings, label: 'Settings' },
 ]
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
