@@ -33,9 +33,7 @@ export default function SignUpPage() {
     if (!formData.agreeToTerms) {
       setError('Please agree to the Terms of Service and Privacy Policy')
       return
-    }
-
-    setIsLoading(true)
+}
 
     try {
       await signUpWithEmail(formData.email, formData.password, next)
