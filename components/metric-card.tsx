@@ -5,6 +5,11 @@ import { type LucideIcon, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs, staggerItem } from './motion'
 
+// Consistent number formatter that works on server and client
+function formatNumber(value: number): string {
+  return value.toLocaleString('en-US')
+}
+
 interface MetricCardProps {
   title: string
   value: string | number
@@ -62,7 +67,7 @@ export function MetricCard({
             transition={{ delay: index * 0.08 + 0.2 }}
           >
             {prefix}
-            {typeof value === 'number' ? value.toLocaleString('en-IN') : value}
+            {typeof value === 'number' ? formatNumber(value) : value}
             {suffix && <span className="text-lg text-muted-foreground ml-1">{suffix}</span>}
           </motion.p>
           
@@ -135,7 +140,7 @@ export function HeroMetric({ value, prefix = '', label, sublabel }: HeroMetricPr
         transition={{ delay: 0.2, ...springs.gentle }}
       >
         {prefix}
-        {typeof value === 'number' ? value.toLocaleString('en-IN') : value}
+        {typeof value === 'number' ? formatNumber(value) : value}
       </motion.p>
       <p className="mt-2 text-foreground font-medium">{label}</p>
       {sublabel && (
@@ -156,7 +161,7 @@ export function MiniMetric({ value, label, prefix = '' }: MiniMetricProps) {
   return (
     <div className="flex items-baseline gap-2">
       <span className="text-lg font-semibold text-foreground">
-        {prefix}{typeof value === 'number' ? value.toLocaleString('en-IN') : value}
+        {prefix}{typeof value === 'number' ? formatNumber(value) : value}
       </span>
       <span className="text-sm text-muted-foreground">{label}</span>
     </div>

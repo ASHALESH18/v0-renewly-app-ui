@@ -10,10 +10,26 @@ import { cn } from '@/lib/utils'
 import { popularServices } from '@/lib/data'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import useStore from '@/lib/store'
+import type { SubscriptionCategory, BillingCycle } from '@/lib/types'
 
 interface AddSubscriptionSheetProps {
   open: boolean
   onClose: () => void
+}
+
+// Map lowercase categories to typed categories
+const categoryMap: Record<string, SubscriptionCategory> = {
+  'streaming': 'Entertainment',
+  'music': 'Music',
+  'productivity': 'Productivity',
+  'cloud': 'Storage',
+  'fitness': 'Fitness',
+  'news': 'News & Magazines',
+  'gaming': 'Entertainment',
+  'other': 'Other',
+  'entertainment': 'Entertainment',
+  'ai': 'AI & Tools',
 }
 
 const categories = [
@@ -27,7 +43,7 @@ const categories = [
   { id: 'other', label: 'Other', icon: '📦' },
 ]
 
-const billingCycles = [
+const billingCycles: { id: BillingCycle; label: string }[] = [
   { id: 'weekly', label: 'Weekly' },
   { id: 'monthly', label: 'Monthly' },
   { id: 'quarterly', label: 'Quarterly' },
@@ -38,10 +54,14 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
   const [step, setStep] = useState<'select' | 'details'>('select')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedService, setSelectedService] = useState<typeof popularServices[0] | null>(null)
-  const [selectedCategory, setSelectedCategory] = useState('')
-  const [selectedCycle, setSelectedCycle] = useState('monthly')
+  const [customName, setCustomName] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<SubscriptionCategory>('Entertainment')
+  const [selectedCycle, setSelectedCycle] = useState<BillingCycle>('monthly')
   const [amount, setAmount] = useState('')
   const [nextBilling, setNextBilling] = useState('')
+  
+  const addSubscription = useStore((state) => state.addSubscription)
+  const addToast = useStore((state) => state.addToast)
   
   const filteredServices = popularServices.filter(service =>
     service.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -49,7 +69,8 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
   
   const handleSelectService = (service: typeof popularServices[0]) => {
     setSelectedService(service)
-    setSelectedCategory(service.category)
+    const mappedCategory = categoryMap[service.category.toLowerCase()] || 'Other'
+    setSelectedCategory(mappedCategory as SubscriptionCategory)
     setAmount('')
     setStep('details')
   }
@@ -60,13 +81,40 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
   }
   
   const handleSave = () => {
-    // In a real app, this would save to the database
+    if (!amount || !nextBilling) {
+      addToast({
+        type: 'error',
+        title: 'Missing information',
+        message: 'Please fill in amount and renewal date'
+      })
+      return
+    }
+
+    const subscription = addSubscription({
+      name: selectedService?.name || customName || 'New Subscription',
+      category: selectedCategory,
+      amount: parseFloat(amount),
+      currency: '₹',
+      billingCycle: selectedCycle,
+      status: 'active',
+      renewalDate: nextBilling,
+      color: selectedService?.color,
+      logo: selectedService?.logo,
+    })
+
+    addToast({
+      type: 'success',
+      title: 'Subscription added',
+      message: `${selectedService?.name || customName} has been added to your subscriptions`
+    })
+
     onClose()
     // Reset state
     setStep('select')
     setSearchQuery('')
     setSelectedService(null)
-    setSelectedCategory('')
+    setCustomName('')
+    setSelectedCategory('Entertainment')
     setSelectedCycle('monthly')
     setAmount('')
     setNextBilling('')
@@ -79,6 +127,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
       setStep('select')
       setSearchQuery('')
       setSelectedService(null)
+      setCustomName('')
     }, 300)
   }
   
@@ -239,6 +288,8 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                           Service Name
                         </label>
                         <Input
+                          value={customName}
+                          onChange={(e) => setCustomName(e.target.value)}
                           placeholder="e.g., My Subscription"
                           className="h-12 bg-secondary border-0 rounded-xl text-foreground"
                         />

@@ -10,11 +10,15 @@ import { LeakReportScreen } from '@/components/screens/leak-report'
 import { NotificationsScreen } from '@/components/screens/notifications'
 import { SettingsScreen } from '@/components/screens/settings'
 import { AddSubscriptionSheet } from '@/components/screens/add-subscription'
+import { SubscriptionDetailSheet } from '@/components/screens/subscription-detail'
 import useStore from '@/lib/store'
+import type { Subscription } from '@/lib/types'
 
 export default function AppPage() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [showAddSheet, setShowAddSheet] = useState(false)
+  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null)
+  const [showDetailSheet, setShowDetailSheet] = useState(false)
   const initializeWithDefaults = useStore((state) => state.initializeWithDefaults)
 
   // Initialize store with default data on first load
@@ -30,6 +34,11 @@ export default function AppPage() {
     }
   }
 
+  const handleSelectSubscription = (subscription: Subscription) => {
+    setSelectedSubscription(subscription)
+    setShowDetailSheet(true)
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Desktop sidebar */}
@@ -38,7 +47,9 @@ export default function AppPage() {
       {/* Main content area */}
       <main className="lg:ml-[280px] pb-24 lg:pb-0">
         <AnimatePresence mode="wait">
-          {activeTab === 'dashboard' && <DashboardScreen key="dashboard" />}
+          {activeTab === 'dashboard' && (
+            <DashboardScreen key="dashboard" onSubscriptionSelect={handleSelectSubscription} />
+          )}
           {activeTab === 'calendar' && <CalendarScreen key="calendar" />}
           {activeTab === 'analytics' && <AnalyticsScreen key="analytics" />}
           {activeTab === 'leak-report' && <LeakReportScreen key="leak-report" />}
@@ -52,6 +63,16 @@ export default function AppPage() {
 
       {/* Add subscription sheet */}
       <AddSubscriptionSheet open={showAddSheet} onClose={() => setShowAddSheet(false)} />
+
+      {/* Subscription detail/edit sheet */}
+      <SubscriptionDetailSheet
+        subscription={selectedSubscription}
+        open={showDetailSheet}
+        onClose={() => {
+          setShowDetailSheet(false)
+          setSelectedSubscription(null)
+        }}
+      />
     </div>
   )
 }

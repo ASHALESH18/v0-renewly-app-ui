@@ -18,13 +18,20 @@ import { PageTransition, StaggerList, staggerItem, springs } from '@/components/
 import useStore, { selectMetrics, selectUpcomingRenewals } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { useCountUp } from '@/lib/hooks/use-count-up'
+import type { Subscription } from '@/lib/types'
 
 const viewSegments = [
   { id: 'cards', label: 'Cards' },
   { id: 'list', label: 'List' },
 ]
 
-export function DashboardScreen({ onAddClick }: { onAddClick: () => void }) {
+export function DashboardScreen({ 
+  onAddClick, 
+  onSubscriptionSelect 
+}: { 
+  onAddClick: () => void
+  onSubscriptionSelect?: (subscription: Subscription) => void
+}) {
   const [showSearch, setShowSearch] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useState('all')
@@ -271,6 +278,7 @@ export function DashboardScreen({ onAddClick }: { onAddClick: () => void }) {
                 key={subscription.id}
                 subscription={subscription}
                 index={index}
+                onClick={() => onSubscriptionSelect?.(subscription)}
               />
             ) : (
               <motion.div
@@ -280,6 +288,8 @@ export function DashboardScreen({ onAddClick }: { onAddClick: () => void }) {
                 animate="animate"
                 custom={index}
                 transition={{ ...springs.gentle, delay: index * 0.05 }}
+                onClick={() => onSubscriptionSelect?.(subscription)}
+                className="cursor-pointer"
               >
                 <SubscriptionCardCompact subscription={subscription} />
               </motion.div>
