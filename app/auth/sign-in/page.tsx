@@ -3,16 +3,22 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react'
 import { AuthLayout } from '@/components/auth/auth-layout'
 import { SocialButtons } from '@/components/auth/social-buttons'
 import { springs } from '@/components/motion'
+import { signInWithEmail } from '@/lib/supabase/actions'
 
 export default function SignInPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const next = searchParams.get('next') || '/app'
+  const errorParam = searchParams.get('error')
+
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(errorParam || null)
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -20,11 +26,15 @@ export default function SignInPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
     setIsLoading(true)
-    
-    // Simulate auth
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    router.push('/app')
+
+    try {
+      await signInWithEmail(formData.email, formData.password, next)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to sign in')
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -33,6 +43,18 @@ export default function SignInPage() {
       subtitle="Sign in to continue managing your subscriptions"
     >
       <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Error message */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20"
+          >
+            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-red-300">{error}</p>
+          </motion.div>
+        )}
+
         {/* Email field */}
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-ivory mb-2">
@@ -44,10 +66,14 @@ export default function SignInPage() {
               id="email"
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, email: e.target.value })
+                setError(null)
+              }}
               placeholder="you@example.com"
               required
-              className="w-full h-12 pl-12 pr-4 rounded-xl bg-slate border border-glass-border text-ivory placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
+              disabled={isLoading}
+              className="w-full h-12 pl-12 pr-4 rounded-xl bg-slate border border-glass-border text-ivory placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
         </div>
@@ -71,15 +97,20 @@ export default function SignInPage() {
               id="password"
               type={showPassword ? 'text' : 'password'}
               value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, password: e.target.value })
+                setError(null)
+              }}
               placeholder="Enter your password"
               required
-              className="w-full h-12 pl-12 pr-12 rounded-xl bg-slate border border-glass-border text-ivory placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
+              disabled={isLoading}
+              className="w-full h-12 pl-12 pr-12 rounded-xl bg-slate border border-glass-border text-ivory placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-platinum hover:text-ivory transition-colors"
+              disabled={isLoading}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-platinum hover:text-ivory transition-colors disabled:opacity-50"
             >
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
@@ -89,9 +120,9 @@ export default function SignInPage() {
         {/* Submit button */}
         <motion.button
           type="submit"
-          disabled={isLoading}
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
+          disabled={isLoading || !formData.email || !formData.password}
+          whileHover={{ scale: !isLoading ? 1.01 : 1 }}
+          whileTap={{ scale: !isLoading ? 0.99 : 1 }}
           className="w-full h-12 rounded-xl gold-gradient text-obsidian font-semibold shadow-luxury disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
         >
           {isLoading ? (
