@@ -257,36 +257,6 @@ export default function SignUpPage() {
   )
 }
 
-  return (
-    <AuthLayout
-      title="Create an account"
-      subtitle="Start your journey to financial clarity"
-    >
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Name field */}
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-ivory mb-2">
-            Full name
-          </label>
-          <div className="relative">
-            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-platinum" />
-            <input
-              id="name"
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Enter your name"
-              required
-              className="w-full h-12 pl-12 pr-4 rounded-xl bg-slate border border-glass-border text-ivory placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
-            />
-          </div>
-        </div>
-
-        {/* Email field */}
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-ivory mb-2">
-            Email
-          </label>
           <div className="relative">
             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-platinum" />
             <input
