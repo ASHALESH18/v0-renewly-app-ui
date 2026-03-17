@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
   CreditCard, 
@@ -29,11 +29,17 @@ export function DashboardScreen() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [viewMode, setViewMode] = useState('cards')
+  const [mounted, setMounted] = useState(false)
 
   // Get data from store
   const subscriptions = useStore((state) => state.subscriptions)
   const metrics = selectMetrics(useStore.getState())
   const upcoming = selectUpcomingRenewals(useStore.getState())
+
+  // Prevent hydration mismatch
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Build filter chips dynamically from subscriptions
   const categories = [...new Set(subscriptions.map(s => s.category))]
@@ -80,94 +86,96 @@ export function DashboardScreen() {
 
       <div className="px-4 lg:px-6 space-y-6 pb-8">
         {/* Premium hero card with animated metrics */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={springs.gentle}
-          className="rounded-3xl glass-strong p-6 md:p-8 overflow-hidden relative"
-        >
-          {/* Animated background gradient accent */}
-          <div className="absolute inset-0 opacity-30">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-gold/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          </div>
-
-          <div className="relative z-10">
-            <motion.h2
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.1 }}
-              className="text-sm font-medium text-gold mb-2"
-            >
-              Your Financial Overview
-            </motion.h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
-              <AnimatedMetricItem
-                label="Monthly Spend"
-                value={Math.round(metrics.totalMonthly)}
-                prefix="₹"
-                delay={0.2}
-              />
-              <AnimatedMetricItem
-                label="Annual Projected"
-                value={Math.round(metrics.totalYearly)}
-                prefix="₹"
-                delay={0.3}
-              />
-              <AnimatedMetricItem
-                label="Potential Savings"
-                value={Math.round(metrics.savingsPotential)}
-                prefix="₹"
-                suffix="/month"
-                delay={0.4}
-              />
+        {mounted && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={springs.gentle}
+            className="rounded-3xl glass-strong p-6 md:p-8 overflow-hidden relative"
+          >
+            {/* Animated background gradient accent */}
+            <div className="absolute inset-0 opacity-30">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-gold/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             </div>
 
-            {/* Leak score indicator */}
-            <div className="flex items-center justify-between pt-6 border-t border-glass-border">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Subscription Health</p>
-                <p className="text-lg font-semibold text-foreground">
-                  {metrics.leakScore > 70 
-                    ? '🚨 Review Subscriptions' 
-                    : metrics.leakScore > 40 
-                    ? '⚠️ Some Unused Services' 
-                    : '✓ Well Optimized'}
-                </p>
+            <div className="relative z-10">
+              <motion.h2
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.1 }}
+                className="text-sm font-medium text-gold mb-2"
+              >
+                Your Financial Overview
+              </motion.h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
+                <AnimatedMetricItem
+                  label="Monthly Spend"
+                  value={Math.round(metrics.totalMonthly)}
+                  prefix="₹"
+                  delay={0.2}
+                />
+                <AnimatedMetricItem
+                  label="Annual Projected"
+                  value={Math.round(metrics.totalYearly)}
+                  prefix="₹"
+                  delay={0.3}
+                />
+                <AnimatedMetricItem
+                  label="Potential Savings"
+                  value={Math.round(metrics.savingsPotential)}
+                  prefix="₹"
+                  suffix="/month"
+                  delay={0.4}
+                />
               </div>
-              <div className="relative w-16 h-16">
-                <svg className="w-full h-full transform -rotate-90">
-                  <circle
-                    cx="32"
-                    cy="32"
-                    r="28"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.1)"
-                    strokeWidth="4"
-                  />
-                  <motion.circle
-                    cx="32"
-                    cy="32"
-                    r="28"
-                    fill="none"
-                    stroke="#C7A36A"
-                    strokeWidth="4"
-                    strokeDasharray={`${2 * Math.PI * 28}`}
-                    initial={{ strokeDashoffset: 2 * Math.PI * 28 }}
-                    animate={{ 
-                      strokeDashoffset: 2 * Math.PI * 28 * (1 - metrics.leakScore / 100)
-                    }}
-                    transition={{ delay: 0.5, duration: 1.5, ease: 'easeOut' }}
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-sm font-semibold">
-                  {metrics.leakScore}%
-                </span>
+
+              {/* Leak score indicator */}
+              <div className="flex items-center justify-between pt-6 border-t border-glass-border">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Subscription Health</p>
+                  <p className="text-lg font-semibold text-foreground">
+                    {metrics.leakScore > 70 
+                      ? '🚨 Review Subscriptions' 
+                      : metrics.leakScore > 40 
+                      ? '⚠️ Some Unused Services' 
+                      : '✓ Well Optimized'}
+                  </p>
+                </div>
+                <div className="relative w-16 h-16">
+                  <svg className="w-full h-full transform -rotate-90">
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      fill="none"
+                      stroke="rgba(255,255,255,0.1)"
+                      strokeWidth="4"
+                    />
+                    <motion.circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      fill="none"
+                      stroke="#C7A36A"
+                      strokeWidth="4"
+                      strokeDasharray={`${2 * Math.PI * 28}`}
+                      initial={{ strokeDashoffset: 2 * Math.PI * 28 }}
+                      animate={{ 
+                        strokeDashoffset: 2 * Math.PI * 28 * (1 - metrics.leakScore / 100)
+                      }}
+                      transition={{ delay: 0.5, duration: 1.5, ease: 'easeOut' }}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="absolute inset-0 flex items-center justify-center text-sm font-semibold">
+                    {metrics.leakScore}%
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
 
         {/* Metrics grid */}
         <StaggerList className="grid grid-cols-2 gap-4">
