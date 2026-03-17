@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { 
   User, Bell, CreditCard, Shield, Moon, Sun, Globe, 
@@ -29,6 +30,7 @@ interface SettingSection {
 }
 
 export function SettingsScreen() {
+  const router = useRouter()
   const [darkMode, setDarkMode] = useState(true)
   const [pushNotifications, setPushNotifications] = useState(true)
   const [emailNotifications, setEmailNotifications] = useState(true)
@@ -297,7 +299,11 @@ export function SettingsScreen() {
           <motion.button
             onClick={async () => {
               try {
-                await logoutUser()
+                const result = await logoutUser()
+                if (result.ok && result.redirectTo) {
+                  router.replace(result.redirectTo)
+                  router.refresh()
+                }
               } catch (err) {
                 console.error('Sign out failed:', err)
               }

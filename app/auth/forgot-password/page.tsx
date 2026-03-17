@@ -19,8 +19,13 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
 
     try {
-      await resetPassword(email)
-      setIsSubmitted(true)
+      const result = await resetPassword(email)
+      if (result.ok) {
+        setIsSubmitted(true)
+      } else {
+        setError(result.message || 'Failed to send reset email')
+        setIsLoading(false)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send reset email')
       setIsLoading(false)

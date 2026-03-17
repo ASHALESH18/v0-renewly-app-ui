@@ -1,18 +1,33 @@
 'use server'
 
 import { createClient } from './server'
-import { redirect } from 'next/navigation'
 
 const getAppUrl = () => {
-  return process.env.NEXT_PUBLIC_APP_URL || 
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
+  
+  if (!appUrl) {
+    // Development fallback - only use localhost in dev
+    return process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'http://localhost:3000'
+  }
+  
+  return appUrl
+}
+
+export interface AuthResult {
+  ok: boolean
+  redirectTo?: string
+  message?: string
+  requiresEmailConfirmation?: boolean
+  email?: string
 }
 
 export async function signUpWithEmail(
   email: string,
   password: string,
   next?: string
-) {
+): Promise<AuthResult> {
   const supabase = await createClient()
 
   const { error } = await supabase.auth.signUp({
@@ -24,11 +39,24 @@ export async function signUpWithEmail(
   })
 
   if (error) {
-    throw new Error(error.message)
+    return {
+      ok: false,
+      message: error.message,
+    }
+  }
+
+  return {
+    ok: true,
+    requiresEmailConfirmation: true,
+    email,
   }
 }
 
-export async function signInWithEmail(email: string, password: string, next?: string) {
+export async function signInWithEmail(
+  email: string,
+  password: string,
+  next?: string
+): Promise<AuthResult> {
   const supabase = await createClient()
 
   const { error } = await supabase.auth.signInWithPassword({
@@ -37,19 +65,28 @@ export async function signInWithEmail(email: string, password: string, next?: st
   })
 
   if (error) {
+    let message = error.message
     if (error.message.includes('Email not confirmed')) {
-      throw new Error('Please confirm your email before signing in. Check your inbox for a confirmation link.')
+      message = 'Please confirm your email before signing in. Check your inbox for a confirmation link.'
+    } else if (error.message.includes('Invalid login credentials')) {
+      message = 'Invalid email or password. Please try again.'
     }
-    if (error.message.includes('Invalid login credentials')) {
-      throw new Error('Invalid email or password. Please try again.')
+    
+    return {
+      ok: false,
+      message,
+      requiresEmailConfirmation: error.message.includes('Email not confirmed'),
+      email,
     }
-    throw new Error(error.message)
   }
 
-  redirect(next && next.startsWith('/app') ? next : '/app')
+  return {
+    ok: true,
+    redirectTo: next && next.startsWith('/app') ? next : '/app',
+  }
 }
 
-export async function resetPassword(email: string) {
+export async function resetPassword(email: string): Promise<AuthResult> {
   const supabase = await createClient()
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -57,11 +94,19 @@ export async function resetPassword(email: string) {
   })
 
   if (error) {
-    throw new Error(error.message)
+    return {
+      ok: false,
+      message: error.message,
+    }
+  }
+
+  return {
+    ok: true,
+    message: 'Password reset email sent. Check your inbox.',
   }
 }
 
-export async function resendConfirmationEmail(email: string) {
+export async function resendConfirmationEmail(email: string): Promise<AuthResult> {
   const supabase = await createClient()
 
   const { error } = await supabase.auth.resend({
@@ -73,23 +118,37 @@ export async function resendConfirmationEmail(email: string) {
   })
 
   if (error) {
-    throw new Error(error.message)
+    return {
+      ok: false,
+      message: error.message,
+    }
+  }
+
+  return {
+    ok: true,
+    message: 'Confirmation email sent! Check your inbox.',
   }
 }
 
-export async function logoutUser() {
+export async function logoutUser(): Promise<AuthResult> {
   const supabase = await createClient()
   
   const { error } = await supabase.auth.signOut()
   
   if (error) {
-    throw new Error(error.message)
+    return {
+      ok: false,
+      message: error.message,
+    }
   }
   
-  redirect('/auth/sign-in')
+  return {
+    ok: true,
+    redirectTo: '/auth/sign-in',
+  }
 }
 
-export async function updatePassword(newPassword: string) {
+export async function updatePassword(newPassword: string): Promise<AuthResult> {
   const supabase = await createClient()
 
   const { error } = await supabase.auth.updateUser({
@@ -97,10 +156,17 @@ export async function updatePassword(newPassword: string) {
   })
 
   if (error) {
-    throw new Error(error.message)
+    return {
+      ok: false,
+      message: error.message,
+    }
   }
 
-  redirect('/app')
+  return {
+    ok: true,
+    redirectTo: '/app',
+    message: 'Password updated successfully.',
+  }
 }
 
 export async function getSession() {
@@ -124,3 +190,4 @@ export async function getUser() {
 
   return user
 }
+
