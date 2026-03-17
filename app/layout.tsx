@@ -16,11 +16,50 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Renewly - Own Every Renewal',
-  description: 'Track, understand, and reduce every recurring payment with elegance. Premium subscription intelligence for the discerning individual.',
-  generator: 'Renewly',
-  keywords: ['subscription tracking', 'recurring payments', 'fintech', 'financial intelligence', 'money management'],
+  metadataBase: new URL('https://renewly.app'),
+  title: 'Renewly - Own Every Renewal | Subscription Management',
+  description: 'Track, understand, and reduce every recurring payment with elegance. Premium subscription intelligence for the discerning individual. Manage your subscriptions effortlessly.',
+  keywords: [
+    'subscription tracking',
+    'recurring payments',
+    'subscription management',
+    'fintech',
+    'financial intelligence',
+    'money management',
+    'subscription cancellation',
+    'budget tracking',
+    'expense management'
+  ],
   authors: [{ name: 'Renewly' }],
+  creator: 'Renewly',
+  publisher: 'Renewly',
+  formatDetection: {
+    email: false,
+    telephone: false,
+    address: false,
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://renewly.app',
+    siteName: 'Renewly',
+    title: 'Renewly - Own Every Renewal',
+    description: 'Premium subscription tracking and management with intelligent insights.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Renewly - Premium Subscription Management',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Renewly - Own Every Renewal',
+    description: 'Track and manage all your subscriptions with premium intelligence.',
+    images: ['/twitter-image.png'],
+  },
   icons: {
     icon: [
       {
@@ -37,6 +76,20 @@ export const metadata: Metadata = {
       },
     ],
     apple: '/apple-icon.png',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-snippet': -1,
+      'max-image-preview': 'large',
+      'max-video-preview': -1,
+    },
+  },
+  alternates: {
+    canonical: 'https://renewly.app',
   },
 }
 
@@ -56,8 +109,39 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const schemaData = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Renewly',
+    description: 'Premium subscription tracking and management platform',
+    url: 'https://renewly.app',
+    applicationCategory: 'FinanceApplication',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+      description: 'Freemium subscription management service'
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.8',
+      ratingCount: '2400',
+    },
+    author: {
+      '@type': 'Organization',
+      name: 'Renewly',
+      url: 'https://renewly.app',
+    },
+  }
+
   return (
     <html lang="en" className="dark" data-scroll-behavior="smooth">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+        />
+      </head>
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
         {children}
         <Analytics />

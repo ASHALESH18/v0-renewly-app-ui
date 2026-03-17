@@ -5,6 +5,9 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react'
 import { AuthLayout } from '@/components/auth/auth-layout'
+import { authPageMetadata } from '@/lib/metadata'
+
+export const metadata = authPageMetadata.forgotPassword
 
 export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false)
