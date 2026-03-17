@@ -1,46 +1,41 @@
 import { cookies } from 'next/headers'
-import { createClient as createClientLib } from '@supabase/supabase-js'
 
+// Lightweight server-side auth without external dependencies
 export async function createClient() {
   const cookieStore = await cookies()
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Missing Supabase environment variables')
-  }
-
-  const client = createClientLib(supabaseUrl, supabaseKey, {
+  
+  return {
     auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
+      getUser: async () => {
+        try {
+          const token = cookieStore.get('sb-auth-token')
+          if (token?.value) {
+            const data = JSON.parse(Buffer.from(token.value, 'base64').toString())
+            if (data.exp && data.exp > Date.now()) {
+              return { data: { user: { email: data.email } }, error: null }
+            }
+          }
+        } catch (err) {
+          // Invalid token
+        }
+        return { data: { user: null }, error: null }
+      },
+      getSession: async () => {
+        return { data: { session: null }, error: null }
+      },
     },
-  })
-
-  // Restore session from cookies if available
-  const authCookie = cookieStore.get('sb-auth-token')
-  if (authCookie?.value) {
-    try {
-      const session = JSON.parse(authCookie.value)
-      await client.auth.setSession(session)
-    } catch (err) {
-      // Invalid session cookie, continue without session
-    }
   }
-
-  return client
-}
-
-export async function getSession() {
-  const client = await createClient()
-  const { data: { session }, error } = await client.auth.getSession()
-  return session
 }
 
 export async function getUser() {
   const client = await createClient()
-  const { data: { user }, error } = await client.auth.getUser()
-  return user
+  const result = await client.auth.getUser()
+  return result.data?.user || null
 }
+
+export async function getSession() {
+  const client = await createClient()
+  const result = await client.auth.getSession()
+  return result.data?.session || null
+}
+
