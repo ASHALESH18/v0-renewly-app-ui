@@ -211,7 +211,7 @@ export function SettingsScreen() {
                     key={item.label}
                     whileTap={{ scale: 0.98 }}
                     className={cn(
-                      "w-full flex items-center gap-4 p-4 hover:bg-secondary/30 transition-colors",
+                      "w-full flex items-center gap-4 p-4 hover:bg-secondary/30 transition-colors cursor-pointer",
                       !isLast && "border-b border-border"
                     )}
                   >
@@ -231,7 +231,7 @@ export function SettingsScreen() {
         >
           <motion.button
             whileTap={{ scale: 0.98 }}
-            className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl glass text-crimson hover:bg-crimson/10 transition-colors"
+            className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl glass text-crimson hover:bg-crimson/10 transition-colors cursor-pointer"
           >
             <LogOut className="w-5 h-5" />
             <span className="font-medium">Sign Out</span>

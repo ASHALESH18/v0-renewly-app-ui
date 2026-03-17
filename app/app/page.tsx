@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { BottomNav, SidebarNav } from '@/components/bottom-nav'
 import { DashboardScreen } from '@/components/screens/dashboard'
@@ -10,10 +10,17 @@ import { LeakReportScreen } from '@/components/screens/leak-report'
 import { NotificationsScreen } from '@/components/screens/notifications'
 import { SettingsScreen } from '@/components/screens/settings'
 import { AddSubscriptionSheet } from '@/components/screens/add-subscription'
+import useStore from '@/lib/store'
 
 export default function AppPage() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [showAddSheet, setShowAddSheet] = useState(false)
+  const initializeWithDefaults = useStore((state) => state.initializeWithDefaults)
+
+  // Initialize store with default data on first load
+  useEffect(() => {
+    initializeWithDefaults()
+  }, [])
 
   const handleTabChange = (tab: string) => {
     if (tab === 'add') {

@@ -9,7 +9,7 @@ import {
   Calendar
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Subscription } from '@/lib/data'
+import type { Subscription } from '@/lib/types'
 import { cardLift, springs, staggerItem } from './motion'
 
 interface SubscriptionCardProps {
@@ -19,7 +19,7 @@ interface SubscriptionCardProps {
 }
 
 export function SubscriptionCard({ subscription, index = 0, onClick }: SubscriptionCardProps) {
-  const daysUntilRenewal = getDaysUntilRenewal(subscription.nextRenewal)
+  const daysUntilRenewal = subscription.renewalDate ? getDaysUntilRenewal(subscription.renewalDate) : 0
   const isUrgent = daysUntilRenewal <= 3
   const billingLabel = getBillingLabel(subscription.billingCycle)
 
@@ -66,7 +66,7 @@ export function SubscriptionCard({ subscription, index = 0, onClick }: Subscript
                 </p>
               </div>
               <button 
-                className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+                className="p-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer"
                 onClick={(e) => e.stopPropagation()}
               >
                 <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
@@ -94,32 +94,25 @@ export function SubscriptionCard({ subscription, index = 0, onClick }: Subscript
                 <span>
                   {isUrgent 
                     ? `${daysUntilRenewal === 0 ? 'Today' : `${daysUntilRenewal}d left`}`
-                    : formatDate(subscription.nextRenewal)
+                    : subscription.renewalDate ? formatDate(subscription.renewalDate) : 'N/A'
                   }
                 </span>
               </div>
 
-              {/* Auto-renew */}
-              {subscription.autoRenew && (
-                <div className="flex items-center gap-1.5 text-emerald">
+              {/* Status badge */}
+              {subscription.status === 'paused' && (
+                <div className="flex items-center gap-1.5 text-gold">
                   <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Auto</span>
+                  <span>Paused</span>
                 </div>
               )}
 
-              {/* Shared */}
-              {subscription.isShared && subscription.sharedWith && (
-                <div className="flex items-center gap-1.5">
+              {subscription.status === 'unused' && (
+                <div className="flex items-center gap-1.5 text-muted-foreground">
                   <Users className="w-3.5 h-3.5" />
-                  <span>{subscription.sharedWith}</span>
+                  <span>Unused</span>
                 </div>
               )}
-
-              {/* Payment method */}
-              <div className="flex items-center gap-1.5">
-                <CreditCard className="w-3.5 h-3.5" />
-                <span className="truncate max-w-[100px]">{subscription.paymentMethod}</span>
-              </div>
             </div>
           </div>
         </div>
@@ -135,7 +128,7 @@ interface SubscriptionCardCompactProps {
 }
 
 export function SubscriptionCardCompact({ subscription, onClick }: SubscriptionCardCompactProps) {
-  const daysUntilRenewal = getDaysUntilRenewal(subscription.nextRenewal)
+  const daysUntilRenewal = subscription.renewalDate ? getDaysUntilRenewal(subscription.renewalDate) : 0
   const isUrgent = daysUntilRenewal <= 3
 
   return (
@@ -192,8 +185,9 @@ function formatDate(dateStr: string): string {
   })
 }
 
-function getBillingLabel(cycle: Subscription['billingCycle']): string {
+function getBillingLabel(cycle: string): string {
   switch (cycle) {
+    case 'daily': return 'day'
     case 'weekly': return 'wk'
     case 'monthly': return 'mo'
     case 'quarterly': return 'qtr'

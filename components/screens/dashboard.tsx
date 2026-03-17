@@ -15,16 +15,8 @@ import { MetricCard } from '@/components/metric-card'
 import { SubscriptionCard, SubscriptionCardCompact } from '@/components/subscription-card'
 import { FilterChips, SegmentedControl } from '@/components/filter-chips'
 import { PageTransition, StaggerList, staggerItem, springs } from '@/components/motion'
-import { subscriptions, leakReport, notifications, categories } from '@/lib/data'
+import useStore, { selectMetrics, selectUpcomingRenewals } from '@/lib/store'
 import { cn } from '@/lib/utils'
-
-const filterChips = [
-  { id: 'all', label: 'All', count: subscriptions.length },
-  { id: 'upcoming', label: 'Upcoming' },
-  { id: 'Entertainment', label: 'Entertainment' },
-  { id: 'Productivity', label: 'Productivity' },
-  { id: 'Music', label: 'Music' },
-]
 
 const viewSegments = [
   { id: 'cards', label: 'Cards' },
@@ -37,14 +29,29 @@ export function DashboardScreen() {
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [viewMode, setViewMode] = useState('cards')
 
-  const unreadNotifications = notifications.filter(n => !n.read).length
+  // Get data from store
+  const subscriptions = useStore((state) => state.subscriptions)
+  const metrics = selectMetrics(useStore.getState())
+  const upcoming = selectUpcomingRenewals(useStore.getState())
+
+  // Build filter chips dynamically from subscriptions
+  const categories = [...new Set(subscriptions.map(s => s.category))]
+  const filterChips = [
+    { id: 'all', label: 'All', count: subscriptions.length },
+    { id: 'upcoming', label: 'Upcoming', count: upcoming.length },
+    ...categories.map(cat => ({ 
+      id: cat, 
+      label: cat, 
+      count: subscriptions.filter(s => s.category === cat).length 
+    }))
+  ]
 
   // Filter subscriptions based on selected filter
   const filteredSubscriptions = subscriptions.filter(sub => {
     if (selectedFilter === 'all') return true
     if (selectedFilter === 'upcoming') {
-      const days = getDaysUntil(sub.nextRenewal)
-      return days <= 7
+      const days = getDaysUntil(sub.renewalDate || '')
+      return days <= 7 && days > 0
     }
     return sub.category === selectedFilter
   })
@@ -59,7 +66,7 @@ export function DashboardScreen() {
     <PageTransition className="min-h-screen">
       <Header 
         showProfile
-        notificationCount={unreadNotifications}
+        notificationCount={0}
         onSearchClick={() => setShowSearch(true)}
       />
 
@@ -75,7 +82,7 @@ export function DashboardScreen() {
         <StaggerList className="grid grid-cols-2 gap-4">
           <MetricCard
             title="Monthly Recurring"
-            value={leakReport.monthlySpend}
+            value={Math.round(metrics.totalMonthly)}
             prefix="₹"
             change={-12}
             changeLabel="vs last month"
@@ -85,7 +92,7 @@ export function DashboardScreen() {
           />
           <MetricCard
             title="Yearly Projected"
-            value={leakReport.yearlyProjected}
+            value={Math.round(metrics.totalYearly)}
             prefix="₹"
             icon={Calendar}
             iconColor="#2E5E52"
@@ -93,7 +100,7 @@ export function DashboardScreen() {
           />
           <MetricCard
             title="Active Subscriptions"
-            value={leakReport.activeSubscriptions}
+            value={metrics.activeSubscriptions}
             suffix=" services"
             icon={Sparkles}
             iconColor="#BCC2CC"
@@ -101,9 +108,9 @@ export function DashboardScreen() {
           />
           <MetricCard
             title="Possible Savings"
-            value={leakReport.possibleSavings}
+            value={Math.round(metrics.savingsPotential)}
             prefix="₹"
-            suffix="/yr"
+            suffix="/mo"
             icon={TrendingDown}
             iconColor="#2E5E52"
             index={3}
@@ -116,7 +123,7 @@ export function DashboardScreen() {
           variants={staggerItem}
           initial="initial"
           animate="animate"
-          className="rounded-2xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20 p-4"
+          className="rounded-2xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20 p-4 cursor-pointer hover:from-gold/15 hover:to-gold/10 transition-colors"
         >
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3">
@@ -126,7 +133,9 @@ export function DashboardScreen() {
               <div>
                 <p className="font-medium text-foreground mb-1">Smart Insight</p>
                 <p className="text-sm text-muted-foreground">
-                  {leakReport.observations[0]}
+                  {metrics.leakScore > 0 
+                    ? `You could save ₹${metrics.savingsPotential} monthly by reviewing unused subscriptions.`
+                    : 'All your subscriptions are being actively used. Great job!'}
                 </p>
               </div>
             </div>
@@ -185,43 +194,43 @@ export function DashboardScreen() {
             className="text-center py-12"
           >
             <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No subscriptions found</p>
+            <p className="text-muted-foreground">
+              {subscriptions.length === 0 ? 'No subscriptions yet' : 'No subscriptions match your search'}
+            </p>
           </motion.div>
         )}
 
         {/* Upcoming renewals section */}
-        <div className="pt-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">
-              Upcoming Renewals
-            </h2>
-            <button className="text-sm text-gold font-medium">
-              View all
-            </button>
-          </div>
+        {upcoming.length > 0 && (
+          <div className="pt-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-foreground">
+                Upcoming Renewals
+              </h2>
+              <button className="text-sm text-gold font-medium cursor-pointer hover:text-gold/80 transition-colors">
+                View all
+              </button>
+            </div>
 
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {subscriptions
-              .filter(sub => getDaysUntil(sub.nextRenewal) <= 14)
-              .sort((a, b) => getDaysUntil(a.nextRenewal) - getDaysUntil(b.nextRenewal))
-              .slice(0, 5)
-              .map((sub, index) => (
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              {upcoming.slice(0, 5).map((sub, index) => (
                 <UpcomingCard key={sub.id} subscription={sub} index={index} />
               ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </PageTransition>
   )
 }
 
 interface UpcomingCardProps {
-  subscription: typeof subscriptions[0]
+  subscription: any
   index: number
 }
 
 function UpcomingCard({ subscription, index }: UpcomingCardProps) {
-  const daysUntil = getDaysUntil(subscription.nextRenewal)
+  const daysUntil = getDaysUntil(subscription.renewalDate || '')
   const isUrgent = daysUntil <= 3
 
   return (
@@ -231,17 +240,17 @@ function UpcomingCard({ subscription, index }: UpcomingCardProps) {
       transition={{ delay: 0.3 + index * 0.1, ...springs.gentle }}
       whileHover={{ y: -2 }}
       className={cn(
-        'flex-shrink-0 w-36 p-4 rounded-xl border',
+        'flex-shrink-0 w-36 p-4 rounded-xl border cursor-pointer transition-all',
         isUrgent 
-          ? 'bg-crimson/10 border-crimson/20' 
-          : 'bg-card border-border'
+          ? 'bg-crimson/10 border-crimson/20 hover:border-crimson/40' 
+          : 'bg-card border-border hover:border-gold/40'
       )}
     >
       <div 
         className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-medium text-sm mb-3"
-        style={{ backgroundColor: subscription.color }}
+        style={{ backgroundColor: subscription.color || '#C7A36A' }}
       >
-        {subscription.logo}
+        {subscription.logo || subscription.name.charAt(0)}
       </div>
       <p className="font-medium text-foreground text-sm truncate">
         {subscription.name}
@@ -253,13 +262,14 @@ function UpcomingCard({ subscription, index }: UpcomingCardProps) {
         {daysUntil === 0 ? 'Due today' : `${daysUntil} days left`}
       </p>
       <p className="text-sm font-semibold text-foreground mt-2">
-        {subscription.currency}{subscription.amount.toLocaleString('en-IN')}
+        ₹{subscription.amount.toLocaleString('en-IN')}
       </p>
     </motion.div>
   )
 }
 
 function getDaysUntil(dateStr: string): number {
+  if (!dateStr) return 0
   const date = new Date(dateStr)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
