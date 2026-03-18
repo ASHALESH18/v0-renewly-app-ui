@@ -236,6 +236,7 @@ export function SettingsScreen() {
                   )
                 }
                 
+                return (
                   <motion.button
                     key={item.label}
                     whileTap={{ scale: 0.98 }}
