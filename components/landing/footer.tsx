@@ -9,6 +9,7 @@ const footerLinks = {
   product: [
     { label: 'Features', href: '#' },
     { label: 'Pricing', href: '#' },
+    { label: 'Enterprise', href: '/contact-sales' },
     { label: 'Download', href: '#' },
     { label: 'Changelog', href: '#' },
   ],
@@ -20,7 +21,8 @@ const footerLinks = {
   ],
   resources: [
     { label: 'Help Center', href: '#' },
-    { label: 'Contact', href: '#' },
+    { label: 'Contact Sales', href: '/contact-sales' },
+    { label: 'Request Demo', href: '/request-demo' },
     { label: 'Privacy', href: '#' },
     { label: 'Terms', href: '#' },
   ],

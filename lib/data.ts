@@ -353,6 +353,29 @@ export const pricingPlans = [
     ],
     popular: true,
   },
+  {
+    name: 'Enterprise',
+    price: null,
+    currency: '₹',
+    period: 'month',
+    pricingText: 'Custom pricing',
+    features: [
+      'Organization workspace for teams',
+      'Unlimited members & scalable seats',
+      'Centralized subscription inventory',
+      'Shared renewal calendar',
+      'Admin visibility across teams',
+      'Team-level analytics & reports',
+      'Export & reporting capabilities',
+      'Priority support with SLA',
+      'Audit-ready activity history',
+      'SSO & SCIM (coming soon)',
+      'Dedicated account manager',
+      'Custom integrations',
+    ],
+    popular: false,
+    enterprise: true,
+  },
 ]
 
 // Analytics data for charts

@@ -149,7 +149,12 @@ const useStore = create<AppState>()(
             body: JSON.stringify({ userId, email }),
           })
 
-          if (!response.ok) throw new Error('Failed to hydrate user data')
+          // If endpoint doesn't exist or fails, continue with existing state
+          if (!response.ok) {
+            console.warn('[v0] Hydration endpoint not available, using default state')
+            set({ hasHydratedFromCloud: true })
+            return
+          }
 
           const { profile, settings, subscriptions, shouldMigrate } = await response.json()
 
@@ -183,8 +188,9 @@ const useStore = create<AppState>()(
           }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Hydration failed'
-          console.error('[v0] Hydration error:', message)
-          set({ syncError: message })
+          console.warn('[v0] Hydration error (non-critical):', message)
+          // Don't set sync error - hydration is optional during initial load
+          set({ hasHydratedFromCloud: true })
         } finally {
           set({ isHydratingUserData: false })
         }

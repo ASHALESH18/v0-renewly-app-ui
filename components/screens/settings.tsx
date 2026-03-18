@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch'
 import useStore from '@/lib/store'
 import { exportSubscriptions } from '@/lib/export'
 import { createClient } from '@/lib/supabase/client'
+import { PlanSelectionSheet } from '@/components/plan-selection-sheet'
 
 interface SettingItem {
   icon: React.ElementType
@@ -36,6 +37,7 @@ export function SettingsScreen() {
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [biometricAuth, setBiometricAuth] = useState(false)
   const [showExportOptions, setShowExportOptions] = useState(false)
+  const [showPlanSheet, setShowPlanSheet] = useState(false)
   
   const subscriptions = useStore((state) => state.subscriptions)
   const addToast = useStore((state) => state.addToast)
@@ -44,7 +46,7 @@ export function SettingsScreen() {
       title: 'Account',
       items: [
         { icon: User, label: 'Profile', description: 'Name, email, avatar', type: 'link' },
-        { icon: Crown, label: 'Subscription', description: 'Premium Plan', type: 'badge', badge: 'Active' },
+        { icon: Crown, label: 'Subscription', description: 'Free • Pro • Family • Enterprise', type: 'link' },
         { icon: CreditCard, label: 'Payment Methods', description: 'Manage cards & billing', type: 'link' },
       ]
     },
@@ -234,7 +236,6 @@ export function SettingsScreen() {
                   )
                 }
                 
-                return (
                   <motion.button
                     key={item.label}
                     whileTap={{ scale: 0.98 }}
@@ -245,6 +246,8 @@ export function SettingsScreen() {
                     onClick={() => {
                       if (item.label === 'Export Data') {
                         setShowExportOptions(!showExportOptions)
+                      } else if (item.label === 'Subscription') {
+                        setShowPlanSheet(!showPlanSheet)
                       }
                     }}
                   >
@@ -255,6 +258,15 @@ export function SettingsScreen() {
             </div>
           </motion.div>
         ))}
+        
+        {/* Plan Selection Sheet */}
+        {showPlanSheet && (
+          <PlanSelectionSheet 
+            onClose={() => setShowPlanSheet(false)}
+            currentPlan="pro"
+          />
+        )}
+        
         {/* Export Options */}
         {showExportOptions && (
           <motion.div
