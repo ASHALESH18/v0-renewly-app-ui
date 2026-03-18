@@ -5,12 +5,14 @@ import { useRef, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from '../motion'
-import { faqItems } from '@/lib/data'
+import { useFAQItems } from '@/lib/hooks/use-remote-data'
 
 export function FAQ() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
   const [openIndex, setOpenIndex] = useState<number | null>(null)
+  
+  const { faqItems, isLoading } = useFAQItems()
 
   return (
     <section ref={ref} className="py-24 lg:py-32 px-4 bg-obsidian relative overflow-hidden">

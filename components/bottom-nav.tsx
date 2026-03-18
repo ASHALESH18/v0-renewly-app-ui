@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Link from 'next/link'
 import { 
   Home, 
   PieChart, 
@@ -18,23 +19,22 @@ import { springs } from './motion'
 
 interface BottomNavProps {
   activeTab: string
-  onTabChange: (tab: string) => void
 }
 
 const primaryNavItems = [
-  { id: 'dashboard', icon: Home, label: 'Home' },
-  { id: 'calendar', icon: Calendar, label: 'Calendar' },
+  { id: 'dashboard', icon: Home, label: 'Home', href: '/app/dashboard' },
+  { id: 'calendar', icon: Calendar, label: 'Calendar', href: '/app/calendar' },
   { id: 'add', icon: Plus, label: 'Add', isAction: true },
-  { id: 'analytics', icon: PieChart, label: 'Analytics' },
+  { id: 'analytics', icon: PieChart, label: 'Analytics', href: '/app/analytics' },
 ]
 
 const moreNavItems = [
-  { id: 'leak-report', icon: FileText, label: 'Leak Report' },
-  { id: 'notifications', icon: Bell, label: 'Notifications' },
-  { id: 'settings', icon: Settings, label: 'Settings' },
+  { id: 'leak-report', icon: FileText, label: 'Leak Report', href: '/app/leak-report' },
+  { id: 'notifications', icon: Bell, label: 'Notifications', href: '/app/notifications' },
+  { id: 'settings', icon: Settings, label: 'Settings', href: '/app/settings' },
 ]
 
-export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
+export function BottomNav({ activeTab }: BottomNavProps) {
   const [showMore, setShowMore] = useState(false)
 
   return (
@@ -58,7 +58,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
                     key={item.id}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => onTabChange(item.id)}
+                    // TODO: Handle add subscription action
                     className="relative -mt-6"
                   >
                     <div className="w-14 h-14 rounded-full gold-gradient flex items-center justify-center shadow-luxury">
@@ -69,34 +69,34 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
               }
 
               return (
-                <motion.button
-                  key={item.id}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => onTabChange(item.id)}
-                  className="relative flex flex-col items-center gap-1 px-3 py-2"
-                >
-                  <Icon 
-                    className={cn(
-                      'w-5 h-5 transition-colors duration-200',
-                      isActive ? 'text-gold' : 'text-platinum'
-                    )} 
-                  />
-                  <span 
-                    className={cn(
-                      'text-[10px] font-medium transition-colors duration-200',
-                      isActive ? 'text-gold' : 'text-platinum'
-                    )}
+                <Link key={item.id} href={item.href!}>
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    className="relative flex flex-col items-center gap-1 px-3 py-2"
                   >
-                    {item.label}
-                  </span>
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute -bottom-1 w-1 h-1 rounded-full bg-gold"
-                      transition={springs.snappy}
+                    <Icon 
+                      className={cn(
+                        'w-5 h-5 transition-colors duration-200',
+                        isActive ? 'text-gold' : 'text-platinum'
+                      )} 
                     />
-                  )}
-                </motion.button>
+                    <span 
+                      className={cn(
+                        'text-[10px] font-medium transition-colors duration-200',
+                        isActive ? 'text-gold' : 'text-platinum'
+                      )}
+                    >
+                      {item.label}
+                    </span>
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeTab"
+                        className="absolute -bottom-1 w-1 h-1 rounded-full bg-gold"
+                        transition={springs.snappy}
+                      />
+                    )}
+                  </motion.button>
+                </Link>
               )
             })}
 
@@ -167,30 +167,27 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
                 const Icon = item.icon
 
                 return (
-                  <motion.button
-                    key={item.id}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      onTabChange(item.id)
-                      setShowMore(false)
-                    }}
-                    className={cn(
-                      'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors',
-                      isActive 
-                        ? 'bg-gold/10 text-gold' 
-                        : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
-                    )}
-                  >
-                    <Icon className="w-5 h-5" />
-                    <span className="font-medium flex-1 text-left">{item.label}</span>
-                    {isActive && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="w-2 h-2 rounded-full bg-gold"
-                      />
-                    )}
-                  </motion.button>
+                  <Link key={item.id} href={item.href!}>
+                    <motion.button
+                      whileTap={{ scale: 0.98 }}
+                      className={cn(
+                        'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors',
+                        isActive 
+                          ? 'bg-gold/10 text-gold' 
+                          : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
+                      )}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span className="font-medium flex-1 text-left">{item.label}</span>
+                      {isActive && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="w-2 h-2 rounded-full bg-gold"
+                        />
+                      )}
+                    </motion.button>
+                  </Link>
                 )
               })}
             </motion.div>
@@ -204,19 +201,18 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
 // Desktop sidebar navigation
 interface SidebarNavProps {
   activeTab: string
-  onTabChange: (tab: string) => void
 }
 
 const sidebarItems = [
-  { id: 'dashboard', icon: Home, label: 'Dashboard' },
-  { id: 'calendar', icon: Calendar, label: 'Calendar' },
-  { id: 'analytics', icon: PieChart, label: 'Analytics' },
-  { id: 'leak-report', icon: FileText, label: 'Leak Report' },
-  { id: 'notifications', icon: Bell, label: 'Notifications' },
-  { id: 'settings', icon: Settings, label: 'Settings' },
+  { id: 'dashboard', icon: Home, label: 'Dashboard', href: '/app/dashboard' },
+  { id: 'calendar', icon: Calendar, label: 'Calendar', href: '/app/calendar' },
+  { id: 'analytics', icon: PieChart, label: 'Analytics', href: '/app/analytics' },
+  { id: 'leak-report', icon: FileText, label: 'Leak Report', href: '/app/leak-report' },
+  { id: 'notifications', icon: Bell, label: 'Notifications', href: '/app/notifications' },
+  { id: 'settings', icon: Settings, label: 'Settings', href: '/app/settings' },
 ]
 
-export function SidebarNav({ activeTab, onTabChange }: SidebarNavProps) {
+export function SidebarNav({ activeTab }: SidebarNavProps) {
   return (
     <motion.aside
       initial={{ x: -280 }}
@@ -244,28 +240,28 @@ export function SidebarNav({ activeTab, onTabChange }: SidebarNavProps) {
           const Icon = item.icon
 
           return (
-            <motion.button
-              key={item.id}
-              whileHover={{ x: 4 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => onTabChange(item.id)}
-              className={cn(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200',
-                isActive 
-                  ? 'bg-gold/10 text-gold' 
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-              )}
-            >
-              <Icon className="w-5 h-5" />
-              <span className="font-medium">{item.label}</span>
-              {isActive && (
-                <motion.div
-                  layoutId="activeSidebar"
-                  className="ml-auto w-1.5 h-1.5 rounded-full bg-gold"
-                  transition={springs.snappy}
-                />
-              )}
-            </motion.button>
+            <Link key={item.id} href={item.href}>
+              <motion.button
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.98 }}
+                className={cn(
+                  'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200',
+                  isActive 
+                    ? 'bg-gold/10 text-gold' 
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                )}
+              >
+                <Icon className="w-5 h-5" />
+                <span className="font-medium">{item.label}</span>
+                {isActive && (
+                  <motion.div
+                    layoutId="activeSidebar"
+                    className="ml-auto w-1.5 h-1.5 rounded-full bg-gold"
+                    transition={springs.snappy}
+                  />
+                )}
+              </motion.button>
+            </Link>
           )
         })}
       </nav>
@@ -275,7 +271,7 @@ export function SidebarNav({ activeTab, onTabChange }: SidebarNavProps) {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          onClick={() => onTabChange('add')}
+          // TODO: Handle add subscription modal/sheet action
           className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl gold-gradient text-obsidian font-semibold shadow-luxury"
         >
           <Plus className="w-5 h-5" />

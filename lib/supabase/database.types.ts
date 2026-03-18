@@ -4,7 +4,11 @@ export interface ProfileRow {
   full_name: string | null
   email: string
   avatar_url: string | null
-  plan: 'free' | 'premium'
+  avatar_seed: string | null
+  plan: 'free' | 'pro' | 'family' | 'enterprise'
+  country_code: string | null
+  locale: string | null
+  time_zone: string | null
   created_at: string
   updated_at: string
 }
@@ -14,6 +18,9 @@ export interface UserSettingsRow {
   currency_code: string
   theme: 'light' | 'dark'
   language: string
+  country_code: string | null
+  locale: string | null
+  time_zone: string | null
   reminder_days: number
   push_notifications: boolean
   email_notifications: boolean

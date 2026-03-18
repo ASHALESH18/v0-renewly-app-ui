@@ -6,7 +6,8 @@ import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react'
 import { Header } from '@/components/header'
 import { PageTransition, springs, staggerItem, StaggerList } from '@/components/motion'
 import { SegmentedControl } from '@/components/filter-chips'
-import { calendarEvents, subscriptions } from '@/lib/data'
+import { useCalendarEvents } from '@/lib/hooks/use-remote-data'
+import useStore from '@/lib/store'
 import { cn } from '@/lib/utils'
 
 const viewSegments = [
@@ -23,9 +24,12 @@ const MONTHS = [
 export function CalendarScreen() {
   const [viewMode, setViewMode] = useState('month')
   const [currentDate, setCurrentDate] = useState(new Date(2026, 2, 12)) // March 12, 2026
-
-  const currentMonth = currentDate.getMonth()
+  
+  const { calendarEvents, isLoading } = useCalendarEvents()
+  const subscriptions = useStore((state) => state.subscriptions)
+  
   const currentYear = currentDate.getFullYear()
+  const currentMonth = currentDate.getMonth()
   
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay()

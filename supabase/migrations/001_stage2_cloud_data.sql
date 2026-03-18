@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     full_name TEXT,
     email TEXT NOT NULL,
     avatar_url TEXT,
-    plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'premium')),
+    plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'pro', 'family', 'enterprise')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
