@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Share2, 
@@ -34,7 +34,17 @@ export function LeakReportScreen({
 
   // Get live data from store
   const subscriptions = useStore((state) => state.subscriptions)
-  const metrics = useStore((state) => state.getMetrics())
+  
+  // Memoize metrics calculation to prevent infinite loop
+  const metrics = useMemo(() => {
+    const totalMonthly = subscriptions.reduce((sum, sub) => sum + (sub.price || sub.amount || 0), 0)
+    const totalYearly = totalMonthly * 12
+    const savingsPotential = subscriptions
+      .filter(sub => sub.status === 'unused')
+      .reduce((sum, sub) => sum + (sub.price || sub.amount || 0), 0)
+    
+    return { totalMonthly, totalYearly, savingsPotential }
+  }, [subscriptions])
   
   // Calculate leak data
   const leakData = (() => {
