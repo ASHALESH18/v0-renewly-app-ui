@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { 
@@ -15,6 +15,9 @@ import useStore from '@/lib/store'
 import { exportSubscriptions } from '@/lib/export'
 import { createClient } from '@/lib/supabase/client'
 import { PlanSelectionSheet } from '@/components/plan-selection-sheet'
+import { ProfileSheet } from '@/components/profile-sheet'
+import { generateAvatar } from '@/lib/avatar-utils'
+import { getCountryName } from '@/lib/locale-utils'
 
 interface SettingItem {
   icon: React.ElementType
@@ -32,46 +35,64 @@ interface SettingSection {
 
 export function SettingsScreen() {
   const router = useRouter()
-  const [darkMode, setDarkMode] = useState(true)
-  const [pushNotifications, setPushNotifications] = useState(true)
-  const [emailNotifications, setEmailNotifications] = useState(true)
-  const [biometricAuth, setBiometricAuth] = useState(false)
   const [showExportOptions, setShowExportOptions] = useState(false)
   const [showPlanSheet, setShowPlanSheet] = useState(false)
+  const [showProfileSheet, setShowProfileSheet] = useState(false)
   
+  // Get real user data from store
+  const userProfile = useStore((state) => state.userProfile)
+  const notificationSettings = useStore((state) => state.notificationSettings)
   const subscriptions = useStore((state) => state.subscriptions)
   const addToast = useStore((state) => state.addToast)
+  const updateNotificationSettings = useStore((state) => state.updateNotificationSettings)
+  
+  // Generate avatar URL
+  const avatarUrl = useMemo(() => {
+    if (!userProfile) return null
+    const seed = userProfile.avatarSeed || userProfile.email || 'default'
+    return generateAvatar({ seed, size: 64 })
+  }, [userProfile?.email, userProfile?.avatarSeed])
+  
+  // Get plan display name
+  const planNames: Record<string, string> = {
+    free: 'Free Plan',
+    pro: 'Pro Member',
+    family: 'Family Plan',
+    enterprise: 'Enterprise',
+  }
+  const planName = userProfile?.plan ? planNames[userProfile.plan] : 'Free Plan'
+  
   const sections: SettingSection[] = [
     {
       title: 'Account',
       items: [
         { icon: User, label: 'Profile', description: 'Name, email, avatar', type: 'link' },
-        { icon: Crown, label: 'Subscription', description: 'Free • Pro • Family • Enterprise', type: 'link' },
+        { icon: Crown, label: 'Subscription', description: planName, type: 'link' },
         { icon: CreditCard, label: 'Payment Methods', description: 'Manage cards & billing', type: 'link' },
       ]
     },
     {
       title: 'Notifications',
       items: [
-        { icon: Bell, label: 'Push Notifications', type: 'toggle', value: pushNotifications },
-        { icon: Mail, label: 'Email Notifications', type: 'toggle', value: emailNotifications },
-        { icon: Smartphone, label: 'Reminder Timing', description: '3 days before renewal', type: 'link' },
+        { icon: Bell, label: 'Push Notifications', type: 'toggle', value: notificationSettings.pushNotifications },
+        { icon: Mail, label: 'Email Notifications', type: 'toggle', value: notificationSettings.emailNotifications },
+        { icon: Smartphone, label: 'Reminder Timing', description: `${notificationSettings.reminderDays} days before renewal`, type: 'link' },
       ]
     },
     {
       title: 'Security',
       items: [
         { icon: Lock, label: 'Change Password', type: 'link' },
-        { icon: Shield, label: 'Face ID / Touch ID', type: 'toggle', value: biometricAuth },
+        { icon: Shield, label: 'Face ID / Touch ID', type: 'toggle', value: notificationSettings.biometricEnabled },
         { icon: Download, label: 'Export Data', description: 'Download your data', type: 'link' },
       ]
     },
     {
       title: 'Appearance',
       items: [
-        { icon: darkMode ? Moon : Sun, label: 'Dark Mode', type: 'toggle', value: darkMode },
+        { icon: notificationSettings.theme === 'dark' ? Moon : Sun, label: 'Dark Mode', type: 'toggle', value: notificationSettings.theme === 'dark' },
         { icon: Palette, label: 'Theme', description: 'Obsidian Reserve', type: 'link' },
-        { icon: Globe, label: 'Language', description: 'English (US)', type: 'link' },
+        { icon: Globe, label: 'Language', description: notificationSettings.language === 'en' ? 'English' : notificationSettings.language, type: 'link' },
       ]
     },
     {
@@ -82,23 +103,6 @@ export function SettingsScreen() {
       ]
     }
   ]
-  
-  const handleToggle = (label: string) => {
-    switch(label) {
-      case 'Dark Mode':
-        setDarkMode(!darkMode)
-        break
-      case 'Push Notifications':
-        setPushNotifications(!pushNotifications)
-        break
-      case 'Email Notifications':
-        setEmailNotifications(!emailNotifications)
-        break
-      case 'Face ID / Touch ID':
-        setBiometricAuth(!biometricAuth)
-        break
-    }
-  }
 
   const handleExportCSV = () => {
     exportSubscriptions(subscriptions, 'csv')
@@ -122,12 +126,14 @@ export function SettingsScreen() {
   
   const getToggleValue = (label: string) => {
     switch(label) {
-      case 'Dark Mode': return darkMode
-      case 'Push Notifications': return pushNotifications
-      case 'Email Notifications': return emailNotifications
-      case 'Face ID / Touch ID': return biometricAuth
+      case 'Dark Mode': return notificationSettings.theme === 'dark'
+      case 'Push Notifications': return notificationSettings.pushNotifications
+      case 'Email Notifications': return notificationSettings.emailNotifications
+      case 'Face ID / Touch ID': return notificationSettings.biometricEnabled
       default: return false
     }
+  }
+  }
   }
   
   return (
@@ -144,29 +150,44 @@ export function SettingsScreen() {
       </div>
       
       {/* Profile Card */}
-      <motion.div
+      <motion.button
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ ...springs.gentle, delay: 0.1 }}
-        className="px-4 mb-6"
+        onClick={() => setShowProfileSheet(true)}
+        className="px-4 mb-6 w-full text-left hover:opacity-80 transition-opacity"
       >
         <div className="p-4 rounded-2xl glass">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-gold/20 flex items-center justify-center">
-              <span className="text-2xl font-semibold text-gold">AJ</span>
-            </div>
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={userProfile?.name || 'Profile'}
+                className="w-16 h-16 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-gold/20 flex items-center justify-center">
+                <span className="text-2xl font-semibold text-gold">
+                  {userProfile?.name?.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
             <div className="flex-1">
-              <h2 className="text-lg font-semibold text-foreground">Alex Johnson</h2>
-              <p className="text-sm text-muted-foreground">alex@example.com</p>
+              <h2 className="text-lg font-semibold text-foreground">
+                {userProfile?.name || 'User'}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {userProfile?.email || 'No email'}
+              </p>
               <div className="flex items-center gap-2 mt-1">
                 <Crown className="w-4 h-4 text-gold" />
-                <span className="text-xs font-medium text-gold">Premium Member</span>
+                <span className="text-xs font-medium text-gold">{planName}</span>
               </div>
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </div>
         </div>
-      </motion.div>
+      </motion.button>
       
       {/* Settings Sections */}
       <div className="px-4 space-y-6">
@@ -250,6 +271,8 @@ export function SettingsScreen() {
                         setShowExportOptions(!showExportOptions)
                       } else if (item.label === 'Subscription') {
                         setShowPlanSheet(!showPlanSheet)
+                      } else if (item.label === 'Profile') {
+                        setShowProfileSheet(true)
                       }
                     }}
                   >
@@ -265,9 +288,23 @@ export function SettingsScreen() {
         {showPlanSheet && (
           <PlanSelectionSheet 
             onClose={() => setShowPlanSheet(false)}
-            currentPlan="pro"
+            currentPlan={userProfile?.plan || 'free'}
           />
         )}
+
+        {/* Profile Sheet */}
+        <ProfileSheet
+          isOpen={showProfileSheet}
+          onClose={() => setShowProfileSheet(false)}
+          onSave={async (profile) => {
+            // TODO: Implement profile save to Supabase
+            addToast({
+              type: 'success',
+              title: 'Profile updated',
+              message: 'Your profile has been saved.'
+            })
+          }}
+        />
         {showExportOptions && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}

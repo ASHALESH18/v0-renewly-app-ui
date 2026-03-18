@@ -7,24 +7,24 @@ import Link from 'next/link'
 
 const footerLinks = {
   product: [
-    { label: 'Features', href: '#' },
-    { label: 'Pricing', href: '#' },
+    { label: 'Features', href: '#features' },
+    { label: 'Pricing', href: '#pricing' },
     { label: 'Enterprise', href: '/contact-sales' },
-    { label: 'Download', href: '#' },
-    { label: 'Changelog', href: '#' },
+    { label: 'Download', href: '/download' },
+    { label: 'Changelog', href: '/changelog' },
   ],
   company: [
-    { label: 'About', href: '#' },
-    { label: 'Blog', href: '#' },
-    { label: 'Careers', href: '#' },
-    { label: 'Press', href: '#' },
+    { label: 'About', href: '/about' },
+    { label: 'Blog', href: '/blog' },
+    { label: 'Careers', href: '/careers' },
+    { label: 'Press', href: '/press' },
   ],
   resources: [
-    { label: 'Help Center', href: '#' },
-    { label: 'Contact Sales', href: '/contact-sales' },
+    { label: 'Help Center', href: '/help' },
+    { label: 'Contact Support', href: '/contact' },
     { label: 'Request Demo', href: '/request-demo' },
-    { label: 'Privacy', href: '#' },
-    { label: 'Terms', href: '#' },
+    { label: 'Privacy', href: '/privacy' },
+    { label: 'Terms', href: '/terms' },
   ],
 }
 
@@ -125,10 +125,10 @@ export function Footer() {
             © 2026 Renewly. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
-            <Link href="#" className="text-sm text-platinum hover:text-gold transition-colors">
+            <Link href="/privacy" className="text-sm text-platinum hover:text-gold transition-colors">
               Privacy Policy
             </Link>
-            <Link href="#" className="text-sm text-platinum hover:text-gold transition-colors">
+            <Link href="/terms" className="text-sm text-platinum hover:text-gold transition-colors">
               Terms of Service
             </Link>
           </div>

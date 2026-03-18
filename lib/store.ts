@@ -17,7 +17,11 @@ export interface Toast {
 export interface UserProfile {
   email: string
   name: string
-  plan: 'free' | 'premium'
+  plan: 'free' | 'pro' | 'family' | 'enterprise'
+  countryCode?: string
+  locale?: string
+  timeZone?: string
+  avatarSeed?: string
 }
 
 export interface NotificationSettings {
@@ -29,6 +33,8 @@ export interface NotificationSettings {
   theme: 'light' | 'dark'
   language: string
   biometricEnabled: boolean
+  countryCode?: string
+  locale?: string
 }
 
 export interface AppState {
