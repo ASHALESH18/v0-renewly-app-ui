@@ -143,6 +143,7 @@ export function Pricing() {
             )
           })}
         </motion.div>
+        </motion.div>
       </div>
     </section>
   )
