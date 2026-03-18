@@ -236,6 +236,7 @@ export function SettingsScreen() {
                   )
                 }
                 
+                // Default: render as button
                 return (
                   <motion.button
                     key={item.label}
@@ -267,8 +268,6 @@ export function SettingsScreen() {
             currentPlan="pro"
           />
         )}
-        
-        {/* Export Options */}
         {showExportOptions && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
