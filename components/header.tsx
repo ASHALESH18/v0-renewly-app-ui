@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { Bell, Search, Settings, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from './motion'
-import { userProfile } from '@/lib/data'
+import useStore from '@/lib/store'
 
 interface HeaderProps {
   title?: string
@@ -35,6 +35,10 @@ export function Header({
   transparent = false,
   className,
 }: HeaderProps) {
+  const userProfile = useStore((state) => state.userProfile)
+  const firstName = userProfile?.name?.split(' ')[0] || 'User'
+  const avatar = firstName.charAt(0).toUpperCase()
+
   return (
     <motion.header
       initial={{ y: -20, opacity: 0 }}
@@ -67,7 +71,7 @@ export function Header({
               </div>
               <div className="lg:hidden">
                 <p className="text-sm text-muted-foreground">Good morning,</p>
-                <p className="font-semibold text-foreground">{userProfile.name.split(' ')[0]}</p>
+                <p className="font-semibold text-foreground">{firstName}</p>
               </div>
             </div>
           )}
@@ -92,9 +96,9 @@ export function Header({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={onProfileClick}
-              className="w-10 h-10 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center text-gold font-medium text-sm"
+              className="w-10 h-10 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center text-gold font-medium text-sm hover:bg-gold/20 transition-colors"
             >
-              {userProfile.avatar}
+              {avatar}
             </motion.button>
           )}
 
