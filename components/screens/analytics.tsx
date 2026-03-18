@@ -6,7 +6,8 @@ import { Header } from '@/components/header'
 import { PageTransition, springs, staggerItem, StaggerList } from '@/components/motion'
 import { SegmentedControl } from '@/components/filter-chips'
 import { useState } from 'react'
-import { monthlySpendData, categoryBreakdown, subscriptions, leakReport } from '@/lib/data'
+import { useAnalyticsData } from '@/lib/hooks/use-remote-data'
+import useStore from '@/lib/store'
 import { 
   AreaChart, 
   Area, 
@@ -32,10 +33,15 @@ const COLORS = ['#C7A36A', '#2E5E52', '#7A3940', '#BCC2CC', '#F4EFE7']
 
 export function AnalyticsScreen() {
   const [timeRange, setTimeRange] = useState('6m')
+  
+  const { monthlySpendData, categoryBreakdown, isLoading } = useAnalyticsData()
+  const subscriptions = useStore((state) => state.subscriptions)
 
-  const totalSpend = monthlySpendData.reduce((sum, m) => sum + m.amount, 0)
+  const totalSpend = monthlySpendData.reduce((sum: number, m: any) => sum + m.amount, 0)
   const avgSpend = Math.round(totalSpend / monthlySpendData.length)
-  const lastMonthChange = ((monthlySpendData[5].amount - monthlySpendData[4].amount) / monthlySpendData[4].amount * 100).toFixed(1)
+  const lastMonthChange = monthlySpendData.length >= 5 
+    ? ((monthlySpendData[monthlySpendData.length - 1].amount - monthlySpendData[monthlySpendData.length - 2].amount) / monthlySpendData[monthlySpendData.length - 2].amount * 100).toFixed(1)
+    : '0'
 
   return (
     <PageTransition className="min-h-screen">

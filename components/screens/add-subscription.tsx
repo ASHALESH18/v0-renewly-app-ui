@@ -7,7 +7,7 @@ import {
   Bell, Camera, Link2, ChevronRight, Check
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { popularServices } from '@/lib/data'
+import { usePopularServices } from '@/lib/hooks/use-remote-data'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { DatePickerField } from '@/components/date-picker-field'
@@ -55,7 +55,8 @@ const billingCycles: { id: BillingCycle; label: string }[] = [
 export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProps) {
   const [step, setStep] = useState<'select' | 'details'>('select')
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedService, setSelectedService] = useState<typeof popularServices[0] | null>(null)
+  const { popularServices, isLoading } = usePopularServices()
+  const [selectedService, setSelectedService] = useState<any | null>(null)
   const [customName, setCustomName] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<SubscriptionCategory>('Entertainment')
   const [selectedCycle, setSelectedCycle] = useState<BillingCycle>('monthly')
@@ -74,7 +75,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
     service.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
   
-  const handleSelectService = (service: typeof popularServices[0]) => {
+  const handleSelectService = (service: any) => {
     setSelectedService(service)
     const mappedCategory = categoryMap[service.category.toLowerCase()] || 'Other'
     setSelectedCategory(mappedCategory as SubscriptionCategory)

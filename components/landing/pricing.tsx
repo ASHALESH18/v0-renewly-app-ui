@@ -10,7 +10,7 @@ import Link from 'next/link'
 export function Pricing() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
-  
+
   const plans = getAllPlans()
 
   return (
@@ -143,6 +143,7 @@ export function Pricing() {
             )
           })}
         </motion.div>
+      </div>
     </section>
   )
 }
