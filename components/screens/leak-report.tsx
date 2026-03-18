@@ -18,7 +18,13 @@ import useStore, { selectLeakReportData, selectMetrics, selectUpcomingRenewals }
 import { useCountUp } from '@/lib/hooks/use-count-up'
 import { cn } from '@/lib/utils'
 
-export function LeakReportScreen() {
+export function LeakReportScreen({ 
+  onNavigateTab,
+  onProfileClick
+}: {
+  onNavigateTab?: (tab: string) => void
+  onProfileClick?: () => void
+} = {}) {
   const [mounted, setMounted] = useState(false)
   const [copied, setCopied] = useState(false)
   

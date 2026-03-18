@@ -26,11 +26,15 @@ const viewSegments = [
 ]
 
 export function DashboardScreen({ 
-  onAddClick, 
-  onSubscriptionSelect 
+  onSubscriptionSelect,
+  onNavigateTab,
+  onProfileClick,
+  onNotificationClick
 }: { 
-  onAddClick: () => void
   onSubscriptionSelect?: (subscription: Subscription) => void
+  onNavigateTab?: (tab: string) => void
+  onProfileClick?: () => void
+  onNotificationClick?: () => void
 }) {
   const [showSearch, setShowSearch] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')

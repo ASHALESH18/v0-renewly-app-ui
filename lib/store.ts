@@ -272,3 +272,53 @@ const useStore = create<AppState>()(
 )
 
 export default useStore
+
+/**
+ * Store Selector Functions
+ * These are used by components to derive data from the store
+ */
+
+export function selectMetrics(state: AppState) {
+  return state.getMetrics()
+}
+
+export function selectUpcomingRenewals(state: AppState) {
+  return state.subscriptions
+    .filter(sub => {
+      const daysUntilRenewal = Math.ceil(
+        (new Date(sub.nextRenewalDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+      )
+      return daysUntilRenewal <= 30 && daysUntilRenewal > 0
+    })
+    .sort((a, b) => new Date(a.nextRenewalDate).getTime() - new Date(b.nextRenewalDate).getTime())
+}
+
+export function selectLeakReportData(state: AppState) {
+  const subscriptions = state.subscriptions
+  const categories: Record<string, number> = {}
+  let mostExpensiveCategory = ''
+  let mostExpensiveAmount = 0
+
+  subscriptions.forEach(sub => {
+    categories[sub.category] = (categories[sub.category] || 0) + (sub.price || 0)
+    if ((sub.price || 0) > mostExpensiveAmount) {
+      mostExpensiveAmount = sub.price || 0
+      mostExpensiveCategory = sub.category
+    }
+  })
+
+  const unusedSubscriptions = subscriptions.filter(sub => !sub.isActive)
+
+  return {
+    categorySpending: Object.entries(categories).map(([category, amount]) => ({
+      category,
+      amount,
+      percentage: state.subscriptions.length > 0 
+        ? (amount / state.subscriptions.reduce((sum, s) => sum + (s.price || 0), 0)) * 100 
+        : 0,
+    })),
+    mostExpensiveCategory,
+    unusedSubscriptionsCount: unusedSubscriptions.length,
+    potentialSavings: unusedSubscriptions.reduce((sum, sub) => sum + (sub.price || 0), 0),
+  }
+}
