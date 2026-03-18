@@ -133,8 +133,6 @@ export function SettingsScreen() {
       default: return false
     }
   }
-  }
-  }
   
   return (
     <div className="min-h-screen bg-background pb-24">
