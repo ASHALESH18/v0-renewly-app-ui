@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { 
   CreditCard, 
@@ -45,17 +45,38 @@ export function DashboardScreen({
   // Get data from store
   const subscriptions = useStore((state) => state.subscriptions)
   const addToast = useStore((state) => state.addToast)
-  const metrics = useStore((state) => state.getMetrics())
   
+  // Memoize metrics calculation to prevent infinite loops
+  const metrics = useMemo(() => {
+    const totalMonthly = subscriptions.reduce((sum, sub) => sum + (sub.price || 0), 0)
+    const totalYearly = totalMonthly * 12
+    const activeSubscriptions = subscriptions.filter(sub => sub.isActive).length
+    const unused = subscriptions.filter(sub => !sub.isActive)
+    const savingsPotential = unused.reduce((sum, sub) => sum + (sub.price || 0), 0)
+    const leakScore = subscriptions.length > 0 
+      ? Math.max(0, 100 - (unused.length / subscriptions.length) * 100)
+      : 100
+    
+    return { 
+      totalMonthly, 
+      totalYearly,
+      activeSubscriptions,
+      savingsPotential,
+      leakScore
+    }
+  }, [subscriptions])
+
   // Calculate upcoming renewals
-  const upcoming = subscriptions
-    .filter(sub => {
-      const daysUntilRenewal = Math.ceil(
-        (new Date(sub.nextRenewalDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-      )
-      return daysUntilRenewal <= 30 && daysUntilRenewal > 0
-    })
-    .sort((a, b) => new Date(a.nextRenewalDate).getTime() - new Date(b.nextRenewalDate).getTime())
+  const upcoming = useMemo(() => {
+    return subscriptions
+      .filter(sub => {
+        const daysUntilRenewal = Math.ceil(
+          (new Date(sub.nextRenewalDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+        )
+        return daysUntilRenewal <= 30 && daysUntilRenewal > 0
+      })
+      .sort((a, b) => new Date(a.nextRenewalDate).getTime() - new Date(b.nextRenewalDate).getTime())
+  }, [subscriptions])
 
   // Prevent hydration mismatch
   React.useEffect(() => {
