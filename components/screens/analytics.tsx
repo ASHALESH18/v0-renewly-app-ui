@@ -38,8 +38,9 @@ export function AnalyticsScreen() {
   const subscriptions = useStore((state) => state.subscriptions)
 
   const totalSpend = monthlySpendData.reduce((sum: number, m: any) => sum + m.amount, 0)
-  const avgSpend = Math.round(totalSpend / monthlySpendData.length)
-  const lastMonthChange = monthlySpendData.length >= 5 
+  const avgSpend = monthlySpendData.length > 0 ? Math.round(totalSpend / monthlySpendData.length) : 0
+  const yearlyProjected = avgSpend * 12
+  const lastMonthChange = monthlySpendData.length >= 2 
     ? ((monthlySpendData[monthlySpendData.length - 1].amount - monthlySpendData[monthlySpendData.length - 2].amount) / monthlySpendData[monthlySpendData.length - 2].amount * 100).toFixed(1)
     : '0'
 
@@ -212,7 +213,7 @@ export function AnalyticsScreen() {
           <h3 className="font-semibold text-foreground mb-4">Yearly Projection</h3>
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-semibold text-gold">
-              ₹{leakReport.yearlyProjected.toLocaleString('en-IN')}
+              ₹{yearlyProjected.toLocaleString('en-IN')}
             </span>
             <span className="text-muted-foreground">projected spend</span>
           </div>
