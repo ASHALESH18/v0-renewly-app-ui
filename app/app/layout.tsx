@@ -1,21 +1,21 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getUser } from '@/lib/supabase/server'
 
 export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
-  
   // Check if user is authenticated
-  const { data: { user }, error } = await supabase.auth.getUser()
+  const user = await getUser()
 
-  if (error || !user) {
+  if (!user) {
     // User is not authenticated - redirect to sign-in
+    // The middleware will catch this earlier, but this is a safety check
     redirect('/auth/sign-in?next=/app')
   }
 
   // User is authenticated - render the app
   return <>{children}</>
 }
+
