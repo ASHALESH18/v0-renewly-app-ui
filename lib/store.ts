@@ -267,6 +267,16 @@ const useStore = create<AppState>()(
       partialize: (state) => ({
         theme: state.theme,
       }),
+      migrate: (persistedState: any, version: number) => {
+        // Handle version migrations
+        if (version < 2) {
+          // From v1 to v2: clear cloud-dependent state
+          return {
+            theme: persistedState?.theme || 'dark',
+          }
+        }
+        return persistedState
+      },
     }
   )
 )

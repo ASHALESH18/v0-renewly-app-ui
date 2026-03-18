@@ -15,7 +15,7 @@ import { MetricCard } from '@/components/metric-card'
 import { SubscriptionCard, SubscriptionCardCompact } from '@/components/subscription-card'
 import { FilterChips, SegmentedControl } from '@/components/filter-chips'
 import { PageTransition, StaggerList, staggerItem, springs } from '@/components/motion'
-import useStore, { selectMetrics, selectUpcomingRenewals } from '@/lib/store'
+import useStore from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { useCountUp } from '@/lib/hooks/use-count-up'
 import type { Subscription } from '@/lib/types'
@@ -45,8 +45,17 @@ export function DashboardScreen({
   // Get data from store
   const subscriptions = useStore((state) => state.subscriptions)
   const addToast = useStore((state) => state.addToast)
-  const metrics = selectMetrics(useStore.getState())
-  const upcoming = selectUpcomingRenewals(useStore.getState())
+  const metrics = useStore((state) => state.getMetrics())
+  
+  // Calculate upcoming renewals
+  const upcoming = subscriptions
+    .filter(sub => {
+      const daysUntilRenewal = Math.ceil(
+        (new Date(sub.nextRenewalDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+      )
+      return daysUntilRenewal <= 30 && daysUntilRenewal > 0
+    })
+    .sort((a, b) => new Date(a.nextRenewalDate).getTime() - new Date(b.nextRenewalDate).getTime())
 
   // Prevent hydration mismatch
   React.useEffect(() => {

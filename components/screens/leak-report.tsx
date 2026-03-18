@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { Header } from '@/components/header'
 import { PageTransition, springs, staggerItem, StaggerList } from '@/components/motion'
-import useStore, { selectLeakReportData, selectMetrics, selectUpcomingRenewals } from '@/lib/store'
+import useStore from '@/lib/store'
 import { useCountUp } from '@/lib/hooks/use-count-up'
 import { cn } from '@/lib/utils'
 
@@ -34,9 +34,51 @@ export function LeakReportScreen({
 
   // Get live data from store
   const subscriptions = useStore((state) => state.subscriptions)
-  const metrics = selectMetrics(useStore.getState())
-  const leakData = selectLeakReportData(useStore.getState())
-  const upcoming = selectUpcomingRenewals(useStore.getState())
+  const metrics = useStore((state) => state.getMetrics())
+  
+  // Calculate leak data
+  const leakData = (() => {
+    const categories: Record<string, number> = {}
+    let mostExpensiveCategory = ''
+    let mostExpensiveAmount = 0
+    let overallScore = 100
+
+    subscriptions.forEach(sub => {
+      categories[sub.category] = (categories[sub.category] || 0) + (sub.price || 0)
+      if ((sub.price || 0) > mostExpensiveAmount) {
+        mostExpensiveAmount = sub.price || 0
+        mostExpensiveCategory = sub.category
+      }
+      if (sub.status === 'unused') overallScore -= 20
+      if (sub.status === 'paused') overallScore -= 5
+    })
+
+    const unusedSubscriptions = subscriptions.filter(sub => sub.status === 'unused')
+
+    return {
+      overallScore: Math.max(0, overallScore),
+      categorySpending: Object.entries(categories).map(([category, amount]) => ({
+        category,
+        amount,
+        percentage: subscriptions.length > 0 
+          ? (amount / subscriptions.reduce((sum, s) => sum + (s.price || 0), 0)) * 100 
+          : 0,
+      })),
+      mostExpensiveCategory,
+      unusedSubscriptionsCount: unusedSubscriptions.length,
+      potentialSavings: unusedSubscriptions.reduce((sum, sub) => sum + (sub.price || 0), 0),
+    }
+  })()
+  
+  // Calculate upcoming renewals
+  const upcoming = subscriptions
+    .filter(sub => {
+      const daysUntilRenewal = Math.ceil(
+        (new Date(sub.nextRenewalDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+      )
+      return daysUntilRenewal <= 30 && daysUntilRenewal > 0
+    })
+    .sort((a, b) => new Date(a.nextRenewalDate).getTime() - new Date(b.nextRenewalDate).getTime())
 
   if (!mounted) {
     return (
