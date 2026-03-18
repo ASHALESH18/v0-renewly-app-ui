@@ -41,7 +41,7 @@ export function Pricing() {
           variants={staggerContainer}
           initial="initial"
           animate={isInView ? 'animate' : 'initial'}
-          className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto"
+          className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto"
         >
           {/* Free plan */}
           <motion.div
@@ -134,6 +134,53 @@ export function Pricing() {
             <div className="absolute -bottom-20 -right-20 w-40 h-40 rounded-full bg-gold/10 blur-2xl" />
           </motion.div>
         </motion.div>
+
+          {/* Enterprise plan */}
+          <motion.div
+            variants={staggerItem}
+            className="rounded-2xl bg-slate/50 border border-glass-border p-6 md:p-8 flex flex-col"
+          >
+            <p className="text-sm text-platinum mb-2">Enterprise</p>
+            <div className="flex items-baseline gap-1 mb-2">
+              <span className="text-4xl font-semibold text-ivory">Custom</span>
+            </div>
+            <p className="text-xs text-platinum mb-6">
+              Pricing based on your team size
+            </p>
+            
+            <p className="text-sm text-platinum mb-6">
+              For teams and organizations that need advanced collaboration and security.
+            </p>
+
+            <Link href="/contact-sales">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-3 rounded-xl border border-gold/50 text-gold font-medium hover:bg-gold/10 transition-colors mb-2"
+              >
+                Contact Sales
+              </motion.button>
+            </Link>
+
+            <Link href="/request-demo">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-3 rounded-xl border border-glass-border text-platinum font-medium hover:bg-glass transition-colors mb-8"
+              >
+                Request Demo
+              </motion.button>
+            </Link>
+
+            <div className="space-y-4">
+              {pricingPlans[2].features.map((feature) => (
+                <div key={feature} className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-gold shrink-0 mt-0.5" />
+                  <span className="text-sm text-platinum">{feature}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
       </div>
     </section>
   )

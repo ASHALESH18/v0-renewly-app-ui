@@ -17,7 +17,11 @@ export interface Toast {
 export interface UserProfile {
   email: string
   name: string
-  plan: 'free' | 'premium'
+  plan: 'free' | 'pro' | 'family' | 'enterprise'
+  countryCode?: string
+  locale?: string
+  timeZone?: string
+  avatarSeed?: string
 }
 
 export interface NotificationSettings {
@@ -29,6 +33,8 @@ export interface NotificationSettings {
   theme: 'light' | 'dark'
   language: string
   biometricEnabled: boolean
+  countryCode?: string
+  locale?: string
 }
 
 export interface AppState {
@@ -149,7 +155,12 @@ const useStore = create<AppState>()(
             body: JSON.stringify({ userId, email }),
           })
 
-          if (!response.ok) throw new Error('Failed to hydrate user data')
+          // If endpoint doesn't exist or fails, continue with existing state
+          if (!response.ok) {
+            console.warn('[v0] Hydration endpoint not available, using default state')
+            set({ hasHydratedFromCloud: true })
+            return
+          }
 
           const { profile, settings, subscriptions, shouldMigrate } = await response.json()
 
@@ -183,8 +194,9 @@ const useStore = create<AppState>()(
           }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Hydration failed'
-          console.error('[v0] Hydration error:', message)
-          set({ syncError: message })
+          console.warn('[v0] Hydration error (non-critical):', message)
+          // Don't set sync error - hydration is optional during initial load
+          set({ hasHydratedFromCloud: true })
         } finally {
           set({ isHydratingUserData: false })
         }

@@ -43,7 +43,11 @@ export function LeakReportScreen({
       .filter(sub => sub.status === 'unused')
       .reduce((sum, sub) => sum + (sub.price || sub.amount || 0), 0)
     
-    return { totalMonthly, totalYearly, savingsPotential }
+    return { 
+      totalMonthly: totalMonthly || 0, 
+      totalYearly: totalYearly || 0, 
+      savingsPotential: savingsPotential || 0 
+    }
   }, [subscriptions])
   
   // Calculate leak data

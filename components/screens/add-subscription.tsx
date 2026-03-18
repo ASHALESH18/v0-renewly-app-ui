@@ -10,7 +10,9 @@ import { cn } from '@/lib/utils'
 import { popularServices } from '@/lib/data'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { DatePickerField } from '@/components/date-picker-field'
 import useStore from '@/lib/store'
+import { currencies } from '@/lib/locale-utils'
 import type { SubscriptionCategory, BillingCycle } from '@/lib/types'
 
 interface AddSubscriptionSheetProps {
@@ -58,10 +60,15 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
   const [selectedCategory, setSelectedCategory] = useState<SubscriptionCategory>('Entertainment')
   const [selectedCycle, setSelectedCycle] = useState<BillingCycle>('monthly')
   const [amount, setAmount] = useState('')
+  const [currency, setCurrency] = useState('INR')
   const [nextBilling, setNextBilling] = useState('')
   
   const addSubscription = useStore((state) => state.addSubscription)
   const addToast = useStore((state) => state.addToast)
+  const notificationSettings = useStore((state) => state.notificationSettings)
+  
+  // Use user's preferred currency from settings, fallback to INR
+  const defaultCurrency = notificationSettings?.currencyCode || 'INR'
   
   const filteredServices = popularServices.filter(service =>
     service.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -72,11 +79,13 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
     const mappedCategory = categoryMap[service.category.toLowerCase()] || 'Other'
     setSelectedCategory(mappedCategory as SubscriptionCategory)
     setAmount('')
+    setCurrency(defaultCurrency)
     setStep('details')
   }
   
   const handleCreateCustom = () => {
     setSelectedService(null)
+    setCurrency(defaultCurrency)
     setStep('details')
   }
   
@@ -94,7 +103,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
       name: selectedService?.name || customName || 'New Subscription',
       category: selectedCategory,
       amount: parseFloat(amount),
-      currency: '₹',
+      currency: currency,
       billingCycle: selectedCycle,
       status: 'active',
       renewalDate: nextBilling,
@@ -117,6 +126,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
     setSelectedCategory('Entertainment')
     setSelectedCycle('monthly')
     setAmount('')
+    setCurrency(defaultCurrency)
     setNextBilling('')
   }
   
@@ -296,21 +306,37 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                       </div>
                     )}
                     
-                    {/* Amount */}
-                    <div>
+                    {/* Amount and Currency */}
+                    <div className="space-y-2">
                       <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                        Amount
+                        Amount & Currency
                       </label>
-                      <div className="relative">
-                        <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <Input
-                          type="number"
-                          value={amount}
-                          onChange={(e) => setAmount(e.target.value)}
-                          placeholder="0.00"
-                          className="pl-12 h-12 bg-secondary border-0 rounded-xl text-foreground text-lg font-semibold"
-                        />
+                      <div className="flex gap-3">
+                        <div className="relative flex-1">
+                          <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+                          <Input
+                            type="number"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            placeholder="0.00"
+                            className="pl-12 h-12 bg-secondary border-0 rounded-xl text-foreground text-lg font-semibold"
+                          />
+                        </div>
+                        <select
+                          value={currency}
+                          onChange={(e) => setCurrency(e.target.value)}
+                          className="h-12 px-3 bg-secondary border-0 rounded-xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all"
+                        >
+                          {currencies.map((curr) => (
+                            <option key={curr.code} value={curr.code}>
+                              {curr.code}
+                            </option>
+                          ))}
+                        </select>
                       </div>
+                      <p className="text-xs text-muted-foreground">
+                        Selected: {currencies.find(c => c.code === currency)?.name}
+                      </p>
                     </div>
                     
                     {/* Billing Cycle */}
@@ -337,20 +363,13 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                     </div>
                     
                     {/* Next Billing Date */}
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                        Next Billing Date
-                      </label>
-                      <div className="relative">
-                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <Input
-                          type="date"
-                          value={nextBilling}
-                          onChange={(e) => setNextBilling(e.target.value)}
-                          className="pl-12 h-12 bg-secondary border-0 rounded-xl text-foreground"
-                        />
-                      </div>
-                    </div>
+                    <DatePickerField
+                      label="Next Billing Date"
+                      value={nextBilling}
+                      onChange={setNextBilling}
+                      locale={notificationSettings?.language === 'es' ? 'es-ES' : notificationSettings?.language === 'fr' ? 'fr-FR' : 'en-IN'}
+                      placeholder="Select renewal date"
+                    />
                     
                     {/* Category (only for custom) */}
                     {!selectedService && (

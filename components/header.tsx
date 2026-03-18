@@ -1,10 +1,13 @@
 'use client'
 
+import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Bell, Search, Settings, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from './motion'
 import useStore from '@/lib/store'
+import { generateAvatar } from '@/lib/avatar-utils'
+import { ProfileMenu } from './profile-menu'
 
 interface HeaderProps {
   title?: string
@@ -35,9 +38,17 @@ export function Header({
   transparent = false,
   className,
 }: HeaderProps) {
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
   const userProfile = useStore((state) => state.userProfile)
   const firstName = userProfile?.name?.split(' ')[0] || 'User'
   const avatar = firstName.charAt(0).toUpperCase()
+  
+  // Generate avatar URL deterministically
+  const avatarUrl = useMemo(() => {
+    if (!userProfile) return null
+    const seed = userProfile.avatarSeed || userProfile.email || 'default'
+    return generateAvatar({ seed, size: 256 })
+  }, [userProfile?.email, userProfile?.avatarSeed])
 
   return (
     <motion.header
@@ -91,16 +102,36 @@ export function Header({
             </HeaderButton>
           )}
 
-          {showProfile && (
+        {showProfile && (
+          <div className="relative">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={onProfileClick}
-              className="w-10 h-10 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center text-gold font-medium text-sm hover:bg-gold/20 transition-colors"
+              onClick={() => {
+                setIsProfileMenuOpen(!isProfileMenuOpen)
+                onProfileClick?.()
+              }}
+              className="w-10 h-10 rounded-full overflow-hidden border-2 border-gold/30 hover:border-gold/50 transition-colors"
             >
-              {avatar}
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={userProfile?.name || 'Profile'}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gold/10 flex items-center justify-center text-gold font-medium text-sm">
+                  {avatar}
+                </div>
+              )}
             </motion.button>
-          )}
+            <ProfileMenu
+              isOpen={isProfileMenuOpen}
+              onClose={() => setIsProfileMenuOpen(false)}
+              avatarUrl={avatarUrl || undefined}
+            />
+          </div>
+        )}
 
           {onSettingsClick && (
             <HeaderButton onClick={onSettingsClick}>
