@@ -18,7 +18,6 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
   const [isLoadingAuth, setIsLoadingAuth] = useState(true)
 
   const hydrateAuthenticatedUserData = useStore((state) => state.hydrateAuthenticatedUserData)
-  const setCurrentUser = useStore((state) => state.setCurrentUser)
 
   // Extract section from pathname: /app/dashboard -> dashboard
   const pathSegments = pathname.split('/')
@@ -32,7 +31,6 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
         const { data: { user } } = await supabase.auth.getUser()
 
         if (user?.email) {
-          setCurrentUser(user.id, user.email)
           await hydrateAuthenticatedUserData(user.id, user.email)
         }
       } catch (error) {
