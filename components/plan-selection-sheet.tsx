@@ -1,8 +1,9 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Check, ChevronRight, Sparkles, Star } from 'lucide-react'
+import { Check, ChevronRight, Sparkles } from 'lucide-react'
 import { springs } from '@/components/motion'
+import { getAllPlans } from '@/lib/plans'
 import Link from 'next/link'
 
 export interface PlanSheetProps {
@@ -11,68 +12,7 @@ export interface PlanSheetProps {
 }
 
 export function PlanSelectionSheet({ onClose, currentPlan = 'free' }: PlanSheetProps) {
-  const plans = [
-    {
-      id: 'free',
-      name: 'Free',
-      price: 0,
-      period: 'forever',
-      description: 'Perfect for getting started',
-      features: [
-        'Track up to 10 subscriptions',
-        'Basic renewal reminders',
-        'Monthly spend overview',
-      ],
-    },
-    {
-      id: 'pro',
-      name: 'Pro',
-      price: 299,
-      period: 'month',
-      description: 'For power users',
-      features: [
-        'Unlimited subscriptions',
-        'Advanced analytics',
-        'Signature Leak Report',
-        'Export features',
-        'Multiple currencies',
-        'Priority support',
-      ],
-      popular: true,
-    },
-    {
-      id: 'family',
-      name: 'Family',
-      price: 500,
-      period: 'month',
-      description: 'Share with up to 4 members',
-      features: [
-        'Everything in Pro',
-        'Up to 4 family members',
-        'Shared renewal calendar',
-        'Family analytics',
-        'Shared reminders',
-      ],
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      price: null,
-      period: 'month',
-      pricingText: 'Custom pricing',
-      description: 'For teams and organizations',
-      features: [
-        'Everything in Pro',
-        'Organization workspace',
-        'Unlimited members',
-        'Team-level analytics',
-        'Priority support with SLA',
-        'Dedicated account manager',
-      ],
-      cta: 'Contact Sales',
-      ctaHref: '/contact-sales',
-    },
-  ]
+  const plans = getAllPlans()
 
   return (
     <motion.div
@@ -106,7 +46,7 @@ export function PlanSelectionSheet({ onClose, currentPlan = 'free' }: PlanSheetP
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <h3 className="font-semibold text-ivory">{plan.name}</h3>
-                  {plan.popular && (
+                  {plan.badge === 'popular' && (
                     <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-gold/20 text-gold text-xs font-medium">
                       <Sparkles className="w-3 h-3" />
                       Popular
@@ -118,11 +58,11 @@ export function PlanSelectionSheet({ onClose, currentPlan = 'free' }: PlanSheetP
                 <div className="flex items-baseline gap-1 mb-2">
                   {plan.price !== null ? (
                     <>
-                      <span className="text-lg font-semibold text-ivory">₹{plan.price}</span>
+                      <span className="text-lg font-semibold text-ivory">₹{plan.price.toLocaleString('en-IN')}</span>
                       <span className="text-xs text-platinum">/{plan.period}</span>
                     </>
                   ) : (
-                    <span className="text-sm text-gold font-medium">{plan.pricingText}</span>
+                    <span className="text-sm text-gold font-medium">{plan.priceText}</span>
                   )}
                 </div>
 

@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 import { 
   User, Bell, CreditCard, Shield, Moon, Sun, Globe, 
   HelpCircle, FileText, LogOut, ChevronRight, Crown,
-  Smartphone, Mail, Lock, Palette, Download, Copy, FileJson
+  Smartphone, Mail, Lock, Palette, Download, Copy, FileJson, X
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from '@/components/motion'
@@ -38,6 +38,8 @@ export function SettingsScreen() {
   const [showExportOptions, setShowExportOptions] = useState(false)
   const [showPlanSheet, setShowPlanSheet] = useState(false)
   const [showProfileSheet, setShowProfileSheet] = useState(false)
+  const [showReminderSheet, setShowReminderSheet] = useState(false)
+  const [showChangePasswordSheet, setShowChangePasswordSheet] = useState(false)
   
   // Get real user data from store
   const userProfile = useStore((state) => state.userProfile)
@@ -122,6 +124,23 @@ export function SettingsScreen() {
       message: 'Your subscriptions have been exported as JSON.'
     })
     setShowExportOptions(false)
+  }
+  
+  const handleToggle = (label: string) => {
+    switch(label) {
+      case 'Dark Mode': 
+        updateNotificationSettings({ theme: notificationSettings.theme === 'dark' ? 'light' : 'dark' })
+        break
+      case 'Push Notifications': 
+        updateNotificationSettings({ pushNotifications: !notificationSettings.pushNotifications })
+        break
+      case 'Email Notifications': 
+        updateNotificationSettings({ emailNotifications: !notificationSettings.emailNotifications })
+        break
+      case 'Face ID / Touch ID': 
+        updateNotificationSettings({ biometricEnabled: !notificationSettings.biometricEnabled })
+        break
+    }
   }
   
   const getToggleValue = (label: string) => {
@@ -271,6 +290,14 @@ export function SettingsScreen() {
                         setShowPlanSheet(!showPlanSheet)
                       } else if (item.label === 'Profile') {
                         setShowProfileSheet(true)
+                      } else if (item.label === 'Reminder Timing') {
+                        setShowReminderSheet(true)
+                      } else if (item.label === 'Change Password') {
+                        setShowChangePasswordSheet(true)
+                      } else if (item.label === 'Help Center') {
+                        window.location.href = '/help'
+                      } else if (item.label === 'Terms & Privacy') {
+                        setShowExportOptions(false)
                       }
                     }}
                   >
@@ -302,6 +329,137 @@ export function SettingsScreen() {
               message: 'Your profile has been saved.'
             })
           }}
+        />
+        
+        {/* Reminder Timing Sheet */}
+        {showReminderSheet && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowReminderSheet(false)}
+            className="fixed inset-0 z-40 bg-background/50 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl bg-background border-t border-border p-6"
+            >
+              <div className="max-w-md mx-auto">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-semibold text-foreground">Reminder Timing</h2>
+                  <button
+                    onClick={() => setShowReminderSheet(false)}
+                    className="w-8 h-8 rounded-lg hover:bg-muted transition-colors flex items-center justify-center"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  <label className="block">
+                    <p className="text-sm font-medium text-foreground mb-3">Remind me before renewal</p>
+                    <select
+                      defaultValue={notificationSettings.reminderDays}
+                      onChange={(e) => {
+                        const days = parseInt(e.target.value)
+                        updateNotificationSettings({ reminderDays: days })
+                        addToast({
+                          type: 'success',
+                          title: 'Reminder updated',
+                          message: `You'll be reminded ${days} days before renewal.`
+                        })
+                      }}
+                      className="w-full px-4 py-3 rounded-lg bg-muted border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors"
+                    >
+                      <option value="1">1 day</option>
+                      <option value="3">3 days</option>
+                      <option value="7">1 week</option>
+                      <option value="14">2 weeks</option>
+                      <option value="30">1 month</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+        
+        {/* Change Password Sheet */}
+        {showChangePasswordSheet && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowChangePasswordSheet(false)}
+            className="fixed inset-0 z-40 bg-background/50 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl bg-background border-t border-border p-6"
+            >
+              <div className="max-w-md mx-auto">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-semibold text-foreground">Change Password</h2>
+                  <button
+                    onClick={() => setShowChangePasswordSheet(false)}
+                    className="w-8 h-8 rounded-lg hover:bg-muted transition-colors flex items-center justify-center"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                
+                <form onSubmit={(e) => {
+                  e.preventDefault()
+                  addToast({
+                    type: 'success',
+                    title: 'Password changed',
+                    message: 'Your password has been successfully updated.'
+                  })
+                  setShowChangePasswordSheet(false)
+                }} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">Current Password</label>
+                    <input
+                      type="password"
+                      placeholder="Enter current password"
+                      className="w-full px-4 py-3 rounded-lg bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">New Password</label>
+                    <input
+                      type="password"
+                      placeholder="Enter new password"
+                      className="w-full px-4 py-3 rounded-lg bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">Confirm New Password</label>
+                    <input
+                      type="password"
+                      placeholder="Confirm new password"
+                      className="w-full px-4 py-3 rounded-lg bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full py-3 rounded-lg bg-gold text-background font-medium hover:bg-gold/90 transition-colors"
+                  >
+                    Update Password
+                  </button>
+                </form>
+              </div>
+            </motion.div>
+          </motion.div>
+        })
         />
         {showExportOptions && (
           <motion.div
