@@ -10,17 +10,15 @@ export const springs = {
   snappy: { type: 'spring', stiffness: 300, damping: 24 },
   bouncy: { type: 'spring', stiffness: 400, damping: 10 },
   smooth: { type: 'spring', stiffness: 100, damping: 20 },
-  luxury: { type: 'spring', stiffness: 80, damping: 16 }, // Smooth, weighted
-  cinematic: { type: 'spring', stiffness: 70, damping: 18 }, // Premium, careful
+  luxury: { type: 'spring', stiffness: 80, damping: 16 },
+  cinematic: { type: 'spring', stiffness: 70, damping: 18 },
 } as const
 
 // Utility to respect prefers-reduced-motion
 export const useMotionPreferences = () => {
   const prefersReducedMotion = useReducedMotion()
-  
   return {
     prefersReducedMotion,
-    // Return reduced motion variant if user prefers it
     maybeVariants: (fullVariant: Variants, reducedVariant: Variants = fadeIn) => 
       prefersReducedMotion ? reducedVariant : fullVariant,
   }
@@ -51,7 +49,7 @@ export const fadeInScale: Variants = {
   exit: { opacity: 0, scale: 0.95 },
 }
 
-// Cinematic reveals - premium, careful entrance
+// Cinematic reveals
 export const cinematicFadeInUp: Variants = {
   initial: { opacity: 0, y: 24, filter: 'blur(8px)' },
   animate: { 
@@ -195,54 +193,6 @@ export const premiumCardHover: Variants = {
     y: -2,
     transition: springs.snappy,
   },
-}
-
-// Count up animation component
-interface CountUpProps {
-  value: number
-  duration?: number
-  prefix?: string
-  suffix?: string
-  className?: string
-}
-
-export function CountUp({ 
-  value, 
-  duration = 1.5, 
-  prefix = '', 
-  suffix = '',
-  className 
-}: CountUpProps) {
-  return (
-    <motion.span
-      className={className}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
-      <motion.span
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        {prefix}
-      </motion.span>
-      <motion.span
-        initial={0}
-        animate={value}
-        transition={{ duration, ease: 'easeOut' }}
-        // @ts-expect-error motion value types
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        children={(latest: any) => Math.round(latest).toLocaleString('en-IN')}
-      />
-      <motion.span
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3, delay: duration * 0.8 }}
-      >
-        {suffix}
-      </motion.span>
-    </motion.span>
-  )
 }
 
 // Animated card wrapper
@@ -463,7 +413,6 @@ export function ProgressRing({
 
   return (
     <svg width={size} height={size} className={className}>
-      {/* Background circle */}
       <circle
         cx={size / 2}
         cy={size / 2}
@@ -473,7 +422,6 @@ export function ProgressRing({
         strokeWidth={strokeWidth}
         className="text-muted opacity-20"
       />
-      {/* Progress circle */}
       <motion.circle
         cx={size / 2}
         cy={size / 2}
@@ -607,10 +555,6 @@ export const numberReveal: Variants = {
 export const toggleVariants: Variants = {
   off: { x: 0 },
   on: { x: 24 },
-}
-
-// Export AnimatePresence for use in components
-export { AnimatePresence }
 }
 
 // Export AnimatePresence for use in components
