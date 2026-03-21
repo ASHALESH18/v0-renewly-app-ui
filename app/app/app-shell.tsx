@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { BottomNav, SidebarNav } from '@/components/bottom-nav'
 import { AddSubscriptionSheet } from '@/components/screens/add-subscription'
 import { SubscriptionDetailSheet } from '@/components/screens/subscription-detail'
+import { CinematicPageTransition } from '@/components/motion'
 import useStore from '@/lib/store'
 import { createClient } from '@/lib/supabase/client'
 import type { Subscription } from '@/lib/types'
@@ -62,10 +63,12 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
       {/* Desktop sidebar */}
       <SidebarNav activeTab={activeTab} />
 
-      {/* Main content area */}
+      {/* Main content area with page transitions */}
       <main className="lg:ml-[280px] pb-24 lg:pb-0">
         <AnimatePresence mode="wait">
-          {children}
+          <CinematicPageTransition key={pathname}>
+            {children}
+          </CinematicPageTransition>
         </AnimatePresence>
       </main>
 
