@@ -1,16 +1,12 @@
-import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerClient } from '@/lib/supabase/server'
 
-export async function POST() {
-  const supabase = await createClient()
+export async function POST(request: NextRequest) {
+  const supabase = getServerClient()
 
   await supabase.auth.signOut()
 
-  return NextResponse.redirect(new URL('/', {
-    headers: {
-      'Set-Cookie': 'sb-auth-token=; Max-Age=0; Path=/',
-    }
-  }).origin, {
-    status: 302,
-  })
+  // Redirect to homepage after sign out
+  const redirectUrl = new URL('/', request.url)
+  return NextResponse.redirect(redirectUrl, { status: 302 })
 }
