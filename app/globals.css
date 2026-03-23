@@ -4,7 +4,59 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Renewly - Obsidian Reserve Design System */
+/* === SCROLLING PERFORMANCE OPTIMIZATIONS === */
+/* Smooth scrolling with hardware acceleration */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scrollbar-gutter: stable; /* Prevent layout shift when scrollbar appears */
+}
+
+body {
+  overscroll-behavior: none;
+  position: relative;
+  width: 100%;
+}
+
+main {
+  position: relative;
+  width: 100%;
+  contain: layout;
+}
+
+/* GPU acceleration class for scroll animations */
+.scroll-animated {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+}
+
+/* Prevent double tap zoom delay on touch devices */
+input,
+select,
+textarea,
+button,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+/* Smooth transitions without blocking scroll */
+* {
+  scroll-behavior: inherit;
+}
+
+/* Enable GPU acceleration for motion elements */
+[class*="motion-"],
+[data-slot="motion"] {
+  will-change: auto;
+  backface-visibility: hidden;
+}
+
+/* === RENEWLY DESIGN SYSTEM === */
 /* Light Mode - Pearl Paper & Brushed Platinum */
 :root {
   --background: #F4EFE7;
