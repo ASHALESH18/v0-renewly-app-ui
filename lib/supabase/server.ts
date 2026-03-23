@@ -24,4 +24,6 @@ export async function getSession() {
   return session
 }
 
+// Alias for backwards compatibility
+export const createClient = getServerClient
 
