@@ -2,17 +2,23 @@
 
 import { motion, useInView, AnimatePresence } from 'framer-motion'
 import { useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from '../motion'
 import { useFAQItems } from '@/lib/hooks/use-remote-data'
 
 export function FAQ() {
+  const router = useRouter()
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   
   const { faqItems, isLoading } = useFAQItems()
+
+  const handleContactSupport = () => {
+    router.push('/contact')
+  }
 
   return (
     <section ref={ref} className="py-24 lg:py-32 px-4 bg-obsidian relative overflow-hidden">
@@ -62,9 +68,12 @@ export function FAQ() {
             Still have questions?
           </p>
           <motion.button
+            onClick={handleContactSupport}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="px-6 py-3 rounded-xl border border-gold/30 text-gold font-medium hover:bg-gold/10 transition-colors"
+            type="button"
+            aria-label="Go to contact support page"
+            className="px-6 py-3 rounded-xl border border-gold/30 text-gold font-medium hover:bg-gold/10 transition-colors cursor-pointer"
           >
             Contact support
           </motion.button>
