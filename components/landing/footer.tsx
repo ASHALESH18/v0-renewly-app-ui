@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Twitter, Instagram, Linkedin, Github } from 'lucide-react'
+import { Twitter, Instagram, Send } from 'lucide-react'
 import { springs } from '../motion'
 import Link from 'next/link'
 
@@ -28,12 +28,24 @@ const footerLinks = {
   ],
 }
 
+// Social links - only render if URLs are configured
 const socialLinks = [
-  { icon: Twitter, href: '#', label: 'Twitter' },
-  { icon: Instagram, href: '#', label: 'Instagram' },
-  { icon: Linkedin, href: '#', label: 'LinkedIn' },
-  { icon: Github, href: '#', label: 'GitHub' },
-]
+  { 
+    icon: Instagram, 
+    href: process.env.NEXT_PUBLIC_INSTAGRAM_URL || '', 
+    label: 'Instagram' 
+  },
+  { 
+    icon: Twitter, 
+    href: process.env.NEXT_PUBLIC_X_URL || process.env.NEXT_PUBLIC_TWITTER_URL || '', 
+    label: 'X' 
+  },
+  { 
+    icon: Send, 
+    href: process.env.NEXT_PUBLIC_TELEGRAM_URL || '', 
+    label: 'Telegram' 
+  },
+].filter(social => social.href) // Only render if URL is configured
 
 export function Footer() {
   return (
@@ -51,21 +63,36 @@ export function Footer() {
             <p className="text-sm text-platinum mb-6 max-w-xs">
               Own every renewal. Track, understand, and reduce every recurring payment with elegance.
             </p>
-            <div className="flex items-center gap-3">
-              {socialLinks.map((social) => (
-                <motion.a
-                  key={social.label}
-                  href={social.href}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-9 h-9 rounded-lg bg-slate/50 flex items-center justify-center text-platinum hover:text-gold hover:bg-gold/10 transition-colors"
-                  aria-label={social.label}
-                >
-                  <social.icon className="w-4 h-4" />
-                </motion.a>
-              ))}
-            </div>
-          </div>
+            
+            {/* Social icons - premium muted circular buttons with luxury hover motion */}
+            {socialLinks.length > 0 && (
+              <div className="flex items-center gap-2">
+                {socialLinks.map((social) => (
+                  <motion.a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Visit our ${social.label}`}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ ...springs.gentle }}
+                    whileHover={{ 
+                      y: -2,
+                      boxShadow: '0 8px 24px rgba(199, 163, 106, 0.12)',
+                      transition: springs.gentle
+                    }}
+                    whileTap={{ scale: 0.96 }}
+                    className="w-10 h-10 rounded-full bg-slate/30 border border-glass-border flex items-center justify-center text-muted-gold hover:text-gold transition-colors duration-300 group relative"
+                  >
+                    {/* Subtle sheen effect on hover */}
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/0 via-transparent to-white/0 group-hover:from-white/10 group-hover:via-white/5 group-hover:to-white/0 transition-all duration-300" />
+                    
+                    <social.icon className="w-4 h-4 relative z-10" />
+                  </motion.a>
+                ))}
+              </div>
+            )}
 
           {/* Product links */}
           <div>
