@@ -31,11 +31,12 @@ export function Hero() {
   return (
     <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-20 lg:py-32">
       {/* Premium background layers */}
-      <div className="absolute inset-0 bg-gradient-to-b from-obsidian via-graphite to-obsidian" />
+      <div className="absolute inset-0 bg-gradient-to-b from-obsidian via-graphite to-obsidian pointer-events-none" aria-hidden="true" />
       
       {/* Animated radial glow - breathing */}
       <motion.div 
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-gold/5 blur-3xl"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-gold/5 blur-3xl pointer-events-none"
+        aria-hidden="true"
         animate={{ 
           opacity: prefersReducedMotion ? [0.3] : [0.3, 0.5, 0.3],
           scale: prefersReducedMotion ? [1] : [1, 1.15, 1]
@@ -46,7 +47,8 @@ export function Hero() {
       {/* Ambient gold sheen - slow diagonal sweep (desktop only) */}
       {!isMobile && (
         <motion.div 
-          className="absolute inset-0 bg-gradient-to-br from-transparent via-gold/[0.08] to-transparent opacity-0"
+          className="absolute inset-0 bg-gradient-to-br from-transparent via-gold/[0.08] to-transparent opacity-0 pointer-events-none"
+          aria-hidden="true"
           animate={{ 
             opacity: prefersReducedMotion ? [0] : [0, 0.15, 0],
             x: prefersReducedMotion ? ['0%'] : ['-100%', '100%'],
@@ -57,7 +59,8 @@ export function Hero() {
 
       {/* Moving light sweep for cinematic feel */}
       <motion.div 
-        className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/20 to-transparent"
+        className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/20 to-transparent pointer-events-none"
+        aria-hidden="true"
         animate={{ 
           x: prefersReducedMotion ? ['0%'] : ['0%', '100%', '-100%'],
           opacity: prefersReducedMotion ? [0] : [0, 0.5, 0]
@@ -69,7 +72,8 @@ export function Hero() {
       {!isMobile && (
         <>
           <motion.div 
-            className="absolute top-1/4 left-1/3 w-64 h-40 rounded-2xl bg-gold/5 backdrop-blur-sm border border-gold/10 opacity-20"
+            className="absolute top-1/4 left-1/3 w-64 h-40 rounded-2xl bg-gold/5 backdrop-blur-sm border border-gold/10 opacity-20 pointer-events-none"
+            aria-hidden="true"
             animate={{ 
               y: prefersReducedMotion ? [0] : [0, 20, 0],
               opacity: prefersReducedMotion ? [0.08] : [0.08, 0.15, 0.08]
@@ -78,7 +82,8 @@ export function Hero() {
           />
 
           <motion.div 
-            className="absolute bottom-1/4 right-1/4 w-56 h-36 rounded-2xl bg-platinum/5 backdrop-blur-sm border border-platinum/10 opacity-20"
+            className="absolute bottom-1/4 right-1/4 w-56 h-36 rounded-2xl bg-platinum/5 backdrop-blur-sm border border-platinum/10 opacity-20 pointer-events-none"
+            aria-hidden="true"
             animate={{ 
               y: prefersReducedMotion ? [0] : [0, -15, 0],
               opacity: prefersReducedMotion ? [0.06] : [0.06, 0.12, 0.06]
@@ -92,6 +97,7 @@ export function Hero() {
       {!isMobile && !prefersReducedMotion && (
         <motion.svg 
           className="absolute inset-0 w-full h-full pointer-events-none opacity-0"
+          aria-hidden="true"
           animate={{ opacity: [0, 0.3, 0] }}
           transition={{ duration: 0.8, delay: 8, repeat: Infinity, repeatDelay: 12 }}
         >
@@ -117,6 +123,7 @@ export function Hero() {
       {/* Soft vignette breathing effect */}
       <motion.div 
         className="absolute inset-0 bg-radial-gradient pointer-events-none"
+        aria-hidden="true"
         style={{
           backgroundImage: 'radial-gradient(ellipse at center, transparent 0%, rgba(10, 10, 13, 0.4) 100%)'
         }}
@@ -125,7 +132,7 @@ export function Hero() {
       />
       
       {/* Subtle grid pattern */}
-      <div className="absolute inset-0 opacity-[0.02]" style={{
+      <div className="absolute inset-0 opacity-[0.02] pointer-events-none" aria-hidden="true" style={{
         backgroundImage: `linear-gradient(rgba(199, 163, 106, 0.3) 1px, transparent 1px),
                           linear-gradient(90deg, rgba(199, 163, 106, 0.3) 1px, transparent 1px)`,
         backgroundSize: '60px 60px',

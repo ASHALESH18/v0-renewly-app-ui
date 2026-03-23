@@ -14,9 +14,8 @@ export async function createSubscription(data: {
   amount: number
   currency: string
   billingCycle: string
-  nextRenewalDate: string
+  renewalDate: string
   description?: string
-  notes?: string
 }) {
   try {
     const user = await getUser()
@@ -28,13 +27,12 @@ export async function createSubscription(data: {
         user_id: user.id,
         name: data.name,
         category: data.category,
-        price: data.amount,
+        amount: data.amount,
         currency: data.currency,
         billing_cycle: data.billingCycle,
-        next_renewal_date: data.nextRenewalDate,
+        renewal_date: data.renewalDate,
         description: data.description,
-        notes: data.notes,
-        is_active: true,
+        status: 'active',
       })
       .select()
 
@@ -53,23 +51,26 @@ export async function updateSubscription(id: string, data: Partial<{
   amount: number
   currency: string
   billingCycle: string
-  nextRenewalDate: string
-  notes?: string
+  renewalDate: string
+  description: string
+  status: string
 }>) {
   try {
     const user = await getUser()
     if (!user) throw new Error('Unauthorized')
 
+    const updateData: Record<string, any> = {}
+    if (data.name !== undefined) updateData.name = data.name
+    if (data.amount !== undefined) updateData.amount = data.amount
+    if (data.currency !== undefined) updateData.currency = data.currency
+    if (data.billingCycle !== undefined) updateData.billing_cycle = data.billingCycle
+    if (data.renewalDate !== undefined) updateData.renewal_date = data.renewalDate
+    if (data.description !== undefined) updateData.description = data.description
+    if (data.status !== undefined) updateData.status = data.status
+
     const { error } = await supabase
       .from('subscriptions')
-      .update({
-        name: data.name,
-        price: data.amount,
-        currency: data.currency,
-        billing_cycle: data.billingCycle,
-        next_renewal_date: data.nextRenewalDate,
-        notes: data.notes,
-      })
+      .update(updateData)
       .eq('id', id)
       .eq('user_id', user.id)
 
