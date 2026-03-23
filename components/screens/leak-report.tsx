@@ -17,6 +17,7 @@ import { PageTransition, springs, staggerItem, StaggerList } from '@/components/
 import useStore from '@/lib/store'
 import { useCountUp } from '@/lib/hooks/use-count-up'
 import { cn } from '@/lib/utils'
+import { getLeakStatusConfig, getLeakStatusLabel } from '@/lib/leak-status-config'
 
 export function LeakReportScreen({ 
   onNavigateTab,
@@ -171,17 +172,18 @@ export function LeakReportScreen({
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const scoreColor = leakData.overallScore >= 70 
+  const scoreColor = leakData.overallScore >= 85 
     ? 'text-emerald' 
-    : leakData.overallScore >= 40 
+    : leakData.overallScore >= 70
+    ? 'text-emerald-200'
+    : leakData.overallScore >= 50 
     ? 'text-gold' 
+    : leakData.overallScore >= 30
+    ? 'text-amber-400'
     : 'text-crimson'
 
-  const scoreLabel = leakData.overallScore >= 70 
-    ? 'Healthy' 
-    : leakData.overallScore >= 40 
-    ? 'Needs Attention' 
-    : 'Critical'
+  const scoreLabel = getLeakStatusLabel(leakData.overallScore)
+  const statusConfig = getLeakStatusConfig(leakData.overallScore)
 
   const AnimatedLeakScore = () => {
     const displayValue = useCountUp(leakData.overallScore, 2000, 0)
@@ -230,15 +232,15 @@ export function LeakReportScreen({
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="flex items-center gap-3"
+                    className={cn('flex items-center gap-2 px-4 py-2 rounded-full font-semibold', 
+                      statusConfig.bgColor,
+                      statusConfig.textColor,
+                      statusConfig.borderColor,
+                      'border',
+                      statusConfig.glowStrength
+                    )}
                   >
-                    <span className={cn('text-sm font-semibold px-3 py-1 rounded-full', 
-                      scoreLabel === 'Healthy' ? 'bg-emerald/20 text-emerald' :
-                      scoreLabel === 'Needs Attention' ? 'bg-gold/20 text-gold' :
-                      'bg-crimson/20 text-crimson'
-                    )}>
-                      {scoreLabel}
-                    </span>
+                    {scoreLabel}
                   </motion.div>
                 </div>
 

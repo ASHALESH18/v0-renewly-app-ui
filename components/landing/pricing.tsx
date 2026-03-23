@@ -221,7 +221,7 @@ export function Pricing() {
                       boxShadow: isPro || isFamily ? '0 16px 32px rgba(199, 163, 106, 0.2)' : undefined
                     }}
                     whileTap={{ scale: 0.97 }}
-                    className={`w-full py-3 rounded-xl font-medium mb-8 transition-colors ${
+                    className={`w-full py-3 rounded-xl font-medium mb-8 transition-colors cursor-pointer ${
                       isPro
                         ? 'gold-gradient text-obsidian font-semibold shadow-luxury'
                         : isFamily
@@ -247,7 +247,9 @@ export function Pricing() {
                       transition={{ delay: index * 0.15 + featureIndex * 0.05 + 0.5, duration: 0.4 }}
                     >
                       <Check className={`w-5 h-5 shrink-0 mt-0.5 ${
-                        isPro || isFamily ? 'text-gold' : 'text-emerald'
+                        isPro || isFamily ? 'text-gold drop-shadow-[0_0_12px_rgba(199,163,106,0.4)]' : 
+                        plan.id === 'enterprise' ? 'text-emerald drop-shadow-[0_0_8px_rgba(80,184,160,0.35)]' :
+                        'text-emerald'
                       }`} />
                       <span className={`text-sm ${isPro || isFamily ? 'text-ivory' : 'text-platinum'}`}>
                         {feature}
