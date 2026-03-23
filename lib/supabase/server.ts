@@ -1,41 +1,46 @@
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import type { Database } from './database.types'
 
-// Lightweight server-side auth without external dependencies
 export async function createClient() {
   const cookieStore = await cookies()
-  
-  return {
-    auth: {
-      getUser: async () => {
-        try {
-          const token = cookieStore.get('sb-auth-token')
-          if (token?.value) {
-            const data = JSON.parse(Buffer.from(token.value, 'base64').toString())
-            if (data.exp && data.exp > Date.now()) {
-              return { data: { user: { email: data.email } }, error: null }
-            }
+
+  return createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing user sessions.
           }
-        } catch (err) {
-          // Invalid token
-        }
-        return { data: { user: null }, error: null }
+        },
       },
-      getSession: async () => {
-        return { data: { session: null }, error: null }
-      },
-    },
-  }
+    }
+  )
 }
 
 export async function getUser() {
-  const client = await createClient()
-  const result = await client.auth.getUser()
-  return result.data?.user || null
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  return user
 }
 
 export async function getSession() {
-  const client = await createClient()
-  const result = await client.auth.getSession()
-  return result.data?.session || null
+  const supabase = await createClient()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  return session
 }
 
