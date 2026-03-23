@@ -15,6 +15,7 @@ export interface LeakStatusConfig {
   glowStrength: string
   borderColor: string
   description: string
+  animationClass: string // For subtle breathing/shimmer effect
 }
 
 export const LEAK_STATUS_CONFIGS: Record<LeakStatusLevel, LeakStatusConfig> = {
@@ -24,9 +25,10 @@ export const LEAK_STATUS_CONFIGS: Record<LeakStatusLevel, LeakStatusConfig> = {
     textColor: 'text-emerald',
     bgColor: 'bg-emerald/15',
     glowColor: 'rgba(80, 184, 160, 0.4)',
-    glowStrength: 'drop-shadow-[0_0_12px_rgba(80,184,160,0.3)]',
-    borderColor: 'border-emerald/30',
+    glowStrength: 'drop-shadow-[0_0_14px_rgba(80,184,160,0.4)]',
+    borderColor: 'border-emerald/40',
     description: 'Your subscriptions are well-managed and optimized',
+    animationClass: 'animate-pulse-subtle',
   },
   stable: {
     label: 'Stable',
@@ -37,36 +39,40 @@ export const LEAK_STATUS_CONFIGS: Record<LeakStatusLevel, LeakStatusConfig> = {
     glowStrength: 'drop-shadow-[0_0_10px_rgba(120,200,180,0.25)]',
     borderColor: 'border-emerald/25',
     description: 'Minor optimizations possible',
+    animationClass: '',
   },
   'needs-attention': {
     label: 'Needs Attention',
     scoreRange: [50, 69],
     textColor: 'text-gold',
-    bgColor: 'bg-gold/15',
-    glowColor: 'rgba(199, 163, 106, 0.4)',
-    glowStrength: 'drop-shadow-[0_0_12px_rgba(199,163,106,0.3)]',
-    borderColor: 'border-gold/40',
+    bgColor: 'bg-gold/20',
+    glowColor: 'rgba(199, 163, 106, 0.5)',
+    glowStrength: 'drop-shadow-[0_0_14px_rgba(199,163,106,0.4)]',
+    borderColor: 'border-gold/50',
     description: 'Consider reviewing unused subscriptions',
+    animationClass: 'animate-pulse-subtle',
   },
   'at-risk': {
     label: 'At Risk',
     scoreRange: [30, 49],
     textColor: 'text-amber-400',
-    bgColor: 'bg-amber-500/15',
-    glowColor: 'rgba(245, 158, 11, 0.5)',
-    glowStrength: 'drop-shadow-[0_0_14px_rgba(245,158,11,0.35)]',
-    borderColor: 'border-amber-500/40',
+    bgColor: 'bg-amber-500/20',
+    glowColor: 'rgba(245, 158, 11, 0.6)',
+    glowStrength: 'drop-shadow-[0_0_16px_rgba(245,158,11,0.45)]',
+    borderColor: 'border-amber-500/50',
     description: 'Multiple leaks detected - immediate review recommended',
+    animationClass: 'animate-pulse-subtle',
   },
   critical: {
     label: 'Critical',
     scoreRange: [0, 29],
     textColor: 'text-crimson',
-    bgColor: 'bg-crimson/20',
-    glowColor: 'rgba(239, 68, 68, 0.5)',
-    glowStrength: 'drop-shadow-[0_0_16px_rgba(239,68,68,0.4)]',
-    borderColor: 'border-crimson/50',
+    bgColor: 'bg-crimson/25',
+    glowColor: 'rgba(239, 68, 68, 0.6)',
+    glowStrength: 'drop-shadow-[0_0_18px_rgba(239,68,68,0.5)]',
+    borderColor: 'border-crimson/60',
     description: 'Significant leaks - urgent action required',
+    animationClass: 'animate-pulse-subtle',
   },
 }
 

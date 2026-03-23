@@ -4,6 +4,7 @@ import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
 import { AlertTriangle, TrendingDown, Sparkles } from 'lucide-react'
 import { springs, ProgressRing } from '../motion'
+import { getLeakStatusConfig } from '@/lib/leak-status-config'
 
 export function LeakPreview() {
   const ref = useRef(null)
@@ -80,9 +81,14 @@ export function LeakPreview() {
                   <p className="text-sm text-platinum mb-1">Your Leak Report</p>
                   <p className="text-xs text-muted-foreground">March 2026</p>
                 </div>
-                <div className="px-3 py-1 rounded-full bg-emerald/20 text-emerald text-xs font-medium">
-                  Healthy
-                </div>
+                {(() => {
+                  const statusConfig = getLeakStatusConfig(72) // Stable score for preview
+                  return (
+                    <div className={`px-3 py-1.5 rounded-full text-xs font-medium border ${statusConfig.bgColor} ${statusConfig.textColor} ${statusConfig.borderColor} ${statusConfig.glowStrength}`}>
+                      {statusConfig.label}
+                    </div>
+                  )
+                })()}
               </div>
 
               {/* Score ring */}

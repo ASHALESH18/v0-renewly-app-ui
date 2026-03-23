@@ -237,7 +237,8 @@ export function LeakReportScreen({
                       statusConfig.textColor,
                       statusConfig.borderColor,
                       'border',
-                      statusConfig.glowStrength
+                      statusConfig.glowStrength,
+                      statusConfig.animationClass
                     )}
                   >
                     {scoreLabel}

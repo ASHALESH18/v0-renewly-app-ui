@@ -29,8 +29,8 @@ export function Hero() {
     checkMobile()
     window.addEventListener('resize', checkMobile)
     
-    // Trigger reveal sequence after mount
-    const timer = setTimeout(() => setIsLoaded(true), 100)
+    // Trigger reveal sequence after mount - faster for premium responsiveness
+    const timer = setTimeout(() => setIsLoaded(true), 50)
     
     return () => {
       window.removeEventListener('resize', checkMobile)
@@ -248,15 +248,15 @@ export function Hero() {
             initial={{ pathLength: 0, opacity: 0 }}
             animate={{ 
               pathLength: [0, 1, 1, 0],
-              opacity: [0, 0.4, 0.4, 0]
+              opacity: [0, 0.5, 0.5, 0]
             }}
             transition={{ 
-              duration: 6,
-              times: [0, 0.4, 0.6, 1],
+              duration: 4,
+              times: [0, 0.35, 0.65, 1],
               repeat: Infinity, 
-              repeatDelay: 10,
+              repeatDelay: 12,
               ease: 'easeInOut',
-              delay: 3
+              delay: 0.8
             }}
           />
           
@@ -265,17 +265,17 @@ export function Hero() {
             cx="35%"
             cy="52%"
             r="4"
-            fill="rgba(199, 163, 106, 0.5)"
+            fill="rgba(199, 163, 106, 0.6)"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ 
               scale: [0, 1.5, 0],
-              opacity: [0, 0.6, 0]
+              opacity: [0, 0.7, 0]
             }}
             transition={{ 
-              duration: 1.2,
+              duration: 1,
               repeat: Infinity, 
-              repeatDelay: 15,
-              delay: 5.5
+              repeatDelay: 16,
+              delay: 1.4
             }}
           />
           
@@ -284,17 +284,17 @@ export function Hero() {
             cx="65%"
             cy="48%"
             r="3"
-            fill="rgba(229, 228, 226, 0.4)"
+            fill="rgba(229, 228, 226, 0.5)"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ 
               scale: [0, 1.3, 0],
-              opacity: [0, 0.5, 0]
+              opacity: [0, 0.6, 0]
             }}
             transition={{ 
-              duration: 1,
+              duration: 0.9,
               repeat: Infinity, 
-              repeatDelay: 15,
-              delay: 6.8
+              repeatDelay: 16,
+              delay: 1.8
             }}
           />
         </svg>
@@ -323,9 +323,9 @@ export function Hero() {
       >
         {/* Eyebrow with pulse - reveals first */}
         <motion.div 
-          initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
+          initial={{ opacity: 0, y: 16, filter: 'blur(6px)' }}
           animate={isLoaded ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-          transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
+          transition={{ duration: 0.5, delay: 0.12, ease: 'easeOut' }}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 border border-gold/20 mb-8"
         >
           <motion.span 
@@ -344,9 +344,9 @@ export function Hero() {
           <span className="block overflow-hidden">
             <motion.span 
               className="block"
-              initial={{ opacity: 0, filter: 'blur(16px)', y: 30 }}
+              initial={{ opacity: 0, filter: 'blur(10px)', y: 24 }}
               animate={isLoaded ? { opacity: 1, filter: 'blur(0px)', y: 0 } : {}}
-              transition={{ duration: 1, delay: 0.5, ease: 'easeOut' }}
+              transition={{ duration: 0.6, delay: 0.22, ease: 'easeOut' }}
             >
               Own every
             </motion.span>
@@ -356,9 +356,9 @@ export function Hero() {
           <span className="block overflow-hidden mt-2 relative">
             <motion.span 
               className="block text-gold-gradient font-serif italic relative"
-              initial={{ opacity: 0, filter: 'blur(16px)', y: 30 }}
+              initial={{ opacity: 0, filter: 'blur(10px)', y: 24 }}
               animate={isLoaded ? { opacity: 1, filter: 'blur(0px)', y: 0 } : {}}
-              transition={{ duration: 1, delay: 0.7, ease: 'easeOut' }}
+              transition={{ duration: 0.6, delay: 0.32, ease: 'easeOut' }}
             >
               renewal.
               
@@ -367,7 +367,7 @@ export function Hero() {
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none"
                 initial={{ x: '-100%', opacity: 0 }}
                 animate={isLoaded ? { x: '200%', opacity: [0, 1, 0] } : {}}
-                transition={{ duration: 1.5, delay: 1.3, ease: 'easeInOut' }}
+                transition={{ duration: 1.2, delay: 0.6, ease: 'easeInOut' }}
               />
             </motion.span>
           </span>
@@ -375,9 +375,9 @@ export function Hero() {
 
         {/* Subheadline - reveals third */}
         <motion.p 
-          initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
+          initial={{ opacity: 0, y: 16, filter: 'blur(6px)' }}
           animate={isLoaded ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-          transition={{ duration: 0.8, delay: 0.9, ease: 'easeOut' }}
+          transition={{ duration: 0.5, delay: 0.45, ease: 'easeOut' }}
           className="mt-6 text-lg md:text-xl text-platinum max-w-2xl mx-auto leading-relaxed"
         >
           Renewly helps you track, understand, and reduce every recurring payment with elegance.
@@ -385,9 +385,9 @@ export function Hero() {
 
         {/* CTA buttons - reveal fourth */}
         <motion.div 
-          initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
+          initial={{ opacity: 0, y: 16, filter: 'blur(6px)' }}
           animate={isLoaded ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-          transition={{ duration: 0.8, delay: 1.1, ease: 'easeOut' }}
+          transition={{ duration: 0.5, delay: 0.55, ease: 'easeOut' }}
           className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <Link href="/auth/sign-in?next=/app/dashboard">
@@ -426,9 +426,9 @@ export function Hero() {
         {/* HERO PRODUCT SCENE - Premium Device Reveal */}
         {/* ============================================ */}
         <motion.div
-          initial={{ opacity: 0, y: 100, filter: 'blur(20px)' }}
+          initial={{ opacity: 0, y: 60, filter: 'blur(12px)' }}
           animate={isLoaded ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-          transition={{ delay: 1.4, duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+          transition={{ delay: 0.75, duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="mt-20 relative"
           style={{ y: prefersReducedMotion ? 0 : yNear }}
         >
@@ -443,7 +443,7 @@ export function Hero() {
               opacity: prefersReducedMotion ? 0.6 : [0.4, 0.7, 0.4],
               scale: prefersReducedMotion ? 1 : [1, 1.05, 1]
             } : {}}
-            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 1.6 }}
+            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 0.9 }}
           />
 
           {/* Phone mockup frame */}
@@ -461,7 +461,7 @@ export function Hero() {
                     '0 0 40px rgba(199, 163, 106, 0.08)'
                   ]
               } : {}}
-              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1.8 }}
+              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1.0 }}
             >
               {/* Notch */}
               <div className="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-6 bg-obsidian rounded-full" />
