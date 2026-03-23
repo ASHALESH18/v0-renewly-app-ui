@@ -1,3 +1,4 @@
+// Supabase browser client - uses @supabase/supabase-js (NOT @supabase/ssr)
 import { createClient as _createClient } from '@supabase/supabase-js'
 import type { Database } from './database.types'
 
