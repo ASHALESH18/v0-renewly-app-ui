@@ -93,8 +93,7 @@ export function Footer() {
                 ))}
               </div>
             )}
-
-          {/* Product links */}
+          </div>
           <div>
             <p className="font-medium text-ivory mb-4">Product</p>
             <ul className="space-y-3">
