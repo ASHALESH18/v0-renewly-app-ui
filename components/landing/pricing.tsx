@@ -144,7 +144,7 @@ export function Pricing() {
                   {plan.name}
                 </p>
                 
-                <div className="flex items-baseline gap-1 mb-2">
+                <div className="flex items-baseline gap-1 mb-1">
                   {plan.price !== null ? (
                     <>
                       <motion.span 
@@ -162,6 +162,18 @@ export function Pricing() {
                   )}
                 </div>
 
+                {/* Launch pricing note */}
+                {plan.launchPricing && (
+                  <motion.p 
+                    className="text-xs text-gold mb-4"
+                    initial={{ opacity: 0 }}
+                    animate={isInView ? { opacity: 1 } : {}}
+                    transition={{ delay: index * 0.1 + 0.4, duration: 0.5 }}
+                  >
+                    {plan.launchPricing.note}
+                  </motion.p>
+                )}
+
                 {plan.yearlyPrice && (
                   <motion.p 
                     className="text-xs text-platinum mb-6"
@@ -177,11 +189,23 @@ export function Pricing() {
                   {plan.description}
                 </p>
 
+                {/* Extra note for Family plan */}
+                {plan.extraNote && (
+                  <motion.p 
+                    className="text-xs text-gold/70 mb-4 italic"
+                    initial={{ opacity: 0 }}
+                    animate={isInView ? { opacity: 1 } : {}}
+                    transition={{ delay: index * 0.1 + 0.5, duration: 0.5 }}
+                  >
+                    {plan.extraNote}
+                  </motion.p>
+                )}
+
                 <Link href={plan.ctaHref || '/auth/sign-up'}>
                   <motion.button
                     whileHover={{ 
                       scale: 1.03,
-                      boxShadow: isPro ? '0 16px 32px rgba(199, 163, 106, 0.2)' : undefined
+                      boxShadow: isPro || isFamily ? '0 16px 32px rgba(199, 163, 106, 0.2)' : undefined
                     }}
                     whileTap={{ scale: 0.97 }}
                     className={`w-full py-3 rounded-xl font-medium mb-8 transition-colors ${
@@ -192,7 +216,7 @@ export function Pricing() {
                         : isFree
                         ? 'border border-glass-border text-ivory hover:bg-glass'
                         : plan.id === 'enterprise'
-                        ? 'border border-gold/50 text-gold hover:bg-gold/10'
+                        ? 'gold-gradient text-obsidian font-semibold shadow-luxury'
                         : 'border border-glass-border text-ivory hover:bg-glass'
                     }`}
                   >

@@ -66,6 +66,20 @@ export function PlanSelectionSheet({ onClose, currentPlan = 'free' }: PlanSheetP
                   )}
                 </div>
 
+                {/* Launch pricing note */}
+                {plan.launchPricing && (
+                  <p className="text-xs text-gold/70 mb-2">
+                    {plan.launchPricing.note}
+                  </p>
+                )}
+
+                {/* Extra note for Family plan */}
+                {plan.extraNote && (
+                  <p className="text-xs text-gold/70 mb-2 italic">
+                    {plan.extraNote}
+                  </p>
+                )}
+
                 <ul className="space-y-1">
                   {plan.features.slice(0, 2).map((feature) => (
                     <li key={feature} className="flex items-start gap-2 text-xs text-platinum">

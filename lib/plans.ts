@@ -12,6 +12,10 @@ export interface Plan {
   price: number | null // null for custom pricing
   period: 'forever' | 'month' | 'year'
   priceText?: string // e.g., "Custom pricing"
+  launchPricing?: {
+    oldPrice: number
+    note: string
+  }
   yearlyPrice?: number // for annual discount display
   yearlySavings?: number // for discount badge
   badge?: 'popular' | 'new' | 'limited'
@@ -20,27 +24,25 @@ export interface Plan {
   cta?: string // button text
   ctaHref?: string
   color?: string
+  extraNote?: string // e.g., "+₹99/member/month after 4"
 }
 
 export const plans: Plan[] = [
   {
     id: 'free',
     name: 'Free',
-    description: 'Perfect for getting started',
+    description: 'For getting started',
     price: 0,
     period: 'forever',
     features: [
-      'Track up to 10 subscriptions',
-      'Basic renewal reminders',
-      'Monthly spend overview',
-      'Subscription categories',
-      'Export to CSV',
+      'Track up to 2 subscriptions',
+      'Basic reminders',
+      'Manual entry only',
     ],
     limitations: [
-      'Limited analytics',
-      'No leak detection',
+      'No advanced analytics',
+      'No Leak Report',
       'No multi-currency support',
-      'Community support only',
     ],
     cta: 'Get started',
     ctaHref: '/auth/sign-up',
@@ -48,42 +50,47 @@ export const plans: Plan[] = [
   {
     id: 'pro',
     name: 'Pro',
-    description: 'For power users and individuals',
-    price: 299,
+    description: 'For individuals',
+    price: 149,
     period: 'month',
-    yearlyPrice: 2499,
-    yearlySavings: 300, // saves ₹300/year
+    launchPricing: {
+      oldPrice: 299,
+      note: 'Launch pricing — was ₹299/month'
+    },
     badge: 'popular',
     features: [
       'Unlimited subscriptions',
-      'Advanced analytics dashboard',
-      'Signature Leak Report™',
+      'Advanced analytics',
+      'Signature Leak Report',
       'Multi-currency support',
       'Smart renewal calendar',
-      'Custom notifications',
-      'Export to CSV & JSON',
-      'Priority email support',
+      'Export to CSV / JSON',
+      'Priority support',
     ],
-    cta: 'Start 14-day trial',
+    cta: 'Get started',
     ctaHref: '/auth/sign-up?plan=pro',
   },
   {
     id: 'family',
     name: 'Family',
-    description: 'Share with up to 4 members',
-    price: 500,
+    description: 'For up to 4 members',
+    price: 299,
     period: 'month',
+    launchPricing: {
+      oldPrice: 500,
+      note: 'Launch pricing — was ₹500/month'
+    },
+    extraNote: '+₹99/member/month after 4',
     features: [
       'Everything in Pro',
-      'Up to 4 family members',
+      'Up to 4 family members included',
       'Shared renewal calendar',
-      'Family spending analytics',
+      'Shared household dashboard',
+      'Shared notifications',
       'Shared expense tracking',
-      'Group notifications',
-      'Household dashboard',
       'Family reports',
     ],
-    cta: 'Start 14-day trial',
+    cta: 'Get started',
     ctaHref: '/auth/sign-up?plan=family',
   },
   {
@@ -97,13 +104,11 @@ export const plans: Plan[] = [
       'Everything in Pro',
       'Organization workspace',
       'Unlimited team members',
-      'Team-level analytics & reporting',
+      'Team analytics & reporting',
       'Admin controls & permissions',
       'Audit logs & compliance',
       'SSO & SCIM (coming soon)',
-      'Dedicated account manager',
-      'Priority support with SLA',
-      '99.9% uptime SLA',
+      'Dedicated support',
     ],
     cta: 'Contact Sales',
     ctaHref: '/contact-sales',
