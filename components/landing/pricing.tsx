@@ -144,9 +144,22 @@ export function Pricing() {
                   {plan.name}
                 </p>
                 
-                <div className="flex items-baseline gap-1 mb-1">
+                <div className="flex items-baseline gap-2 mb-2">
                   {plan.price !== null ? (
                     <>
+                      {/* Old price struck through */}
+                      {plan.originalPrice && (
+                        <motion.span 
+                          className="text-lg text-platinum/50 line-through"
+                          initial={{ opacity: 0 }}
+                          animate={isInView ? { opacity: 1 } : {}}
+                          transition={{ delay: index * 0.1 + 0.3, duration: 0.5 }}
+                        >
+                          ₹{plan.originalPrice.toLocaleString('en-IN')}
+                        </motion.span>
+                      )}
+                      
+                      {/* Current price */}
                       <motion.span 
                         className={`text-4xl font-semibold ${isPro || isFamily ? 'text-ivory' : 'text-ivory'}`}
                         initial={{ opacity: 0, y: 8 }}
@@ -162,15 +175,15 @@ export function Pricing() {
                   )}
                 </div>
 
-                {/* Launch pricing note */}
-                {plan.launchPricing && (
+                {/* Savings note */}
+                {plan.savings && (
                   <motion.p 
-                    className="text-xs text-gold mb-4"
+                    className="text-xs text-gold/80 mb-4"
                     initial={{ opacity: 0 }}
                     animate={isInView ? { opacity: 1 } : {}}
                     transition={{ delay: index * 0.1 + 0.4, duration: 0.5 }}
                   >
-                    {plan.launchPricing.note}
+                    Save ₹{plan.savings.toLocaleString('en-IN')}/month
                   </motion.p>
                 )}
 

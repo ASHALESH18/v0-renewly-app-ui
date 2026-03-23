@@ -55,9 +55,17 @@ export function PlanSelectionSheet({ onClose, currentPlan = 'free' }: PlanSheetP
                 </div>
                 <p className="text-xs text-platinum mb-2">{plan.description}</p>
                 
-                <div className="flex items-baseline gap-1 mb-2">
+                <div className="flex items-baseline gap-2 mb-2">
                   {plan.price !== null ? (
                     <>
+                      {/* Old price struck through */}
+                      {plan.originalPrice && (
+                        <span className="text-sm text-platinum/50 line-through">
+                          ₹{plan.originalPrice.toLocaleString('en-IN')}
+                        </span>
+                      )}
+                      
+                      {/* Current price */}
                       <span className="text-lg font-semibold text-ivory">₹{plan.price.toLocaleString('en-IN')}</span>
                       <span className="text-xs text-platinum">/{plan.period}</span>
                     </>
@@ -66,10 +74,10 @@ export function PlanSelectionSheet({ onClose, currentPlan = 'free' }: PlanSheetP
                   )}
                 </div>
 
-                {/* Launch pricing note */}
-                {plan.launchPricing && (
-                  <p className="text-xs text-gold/70 mb-2">
-                    {plan.launchPricing.note}
+                {/* Savings note */}
+                {plan.savings && (
+                  <p className="text-xs text-gold/80 mb-2">
+                    Save ₹{plan.savings.toLocaleString('en-IN')}/month
                   </p>
                 )}
 

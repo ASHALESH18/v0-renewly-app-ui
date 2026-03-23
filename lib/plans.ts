@@ -12,10 +12,8 @@ export interface Plan {
   price: number | null // null for custom pricing
   period: 'forever' | 'month' | 'year'
   priceText?: string // e.g., "Custom pricing"
-  launchPricing?: {
-    oldPrice: number
-    note: string
-  }
+  originalPrice?: number // for struck-through old price display
+  savings?: number // savings amount to display (e.g., 150 for "Save ₹150/month")
   yearlyPrice?: number // for annual discount display
   yearlySavings?: number // for discount badge
   badge?: 'popular' | 'new' | 'limited'
@@ -52,11 +50,9 @@ export const plans: Plan[] = [
     name: 'Pro',
     description: 'For individuals',
     price: 149,
+    originalPrice: 299,
+    savings: 150,
     period: 'month',
-    launchPricing: {
-      oldPrice: 299,
-      note: 'Launch pricing — was ₹299/month'
-    },
     badge: 'popular',
     features: [
       'Unlimited subscriptions',
@@ -75,12 +71,10 @@ export const plans: Plan[] = [
     name: 'Family',
     description: 'For up to 4 members',
     price: 299,
+    originalPrice: 499,
+    savings: 200,
     period: 'month',
-    launchPricing: {
-      oldPrice: 500,
-      note: 'Launch pricing — was ₹500/month'
-    },
-    extraNote: '+₹99/member/month after 4',
+    extraNote: '+₹99/member/month after 4 members',
     features: [
       'Everything in Pro',
       'Up to 4 family members included',
