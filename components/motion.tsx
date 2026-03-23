@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, type Variants, type HTMLMotionProps, AnimatePresence } from 'framer-motion'
-import { forwardRef, type ReactNode, useReducedMotion } from 'react'
+import { forwardRef, type ReactNode, useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 // Spring configurations for premium feel
@@ -14,9 +14,28 @@ export const springs = {
   cinematic: { type: 'spring', stiffness: 70, damping: 18 },
 } as const
 
+// Custom hook to detect prefers-reduced-motion
+const useReducedMotionMediaQuery = () => {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setPrefersReducedMotion(mediaQuery.matches)
+
+    const handleChange = (e: MediaQueryListEvent) => {
+      setPrefersReducedMotion(e.matches)
+    }
+
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [])
+
+  return prefersReducedMotion
+}
+
 // Utility to respect prefers-reduced-motion
 export const useMotionPreferences = () => {
-  const prefersReducedMotion = useReducedMotion()
+  const prefersReducedMotion = useReducedMotionMediaQuery()
   return {
     prefersReducedMotion,
     maybeVariants: (fullVariant: Variants, reducedVariant: Variants = fadeIn) => 
