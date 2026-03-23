@@ -2,14 +2,17 @@
 
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { ArrowRight, Play } from 'lucide-react'
-import { springs, staggerContainer, staggerItem, cinematicFadeInUp, magneticButtonVariants } from '../motion'
+import { springs, staggerContainer, staggerItem, cinematicFadeInUp, magneticButtonVariants, useMotionPreferences } from '../motion'
 import { DemoModal } from '@/components/demo-modal'
 import Link from 'next/link'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 
 export function Hero() {
   const ref = useRef(null)
   const [isDemoOpen, setIsDemoOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const { prefersReducedMotion } = useMotionPreferences()
+  
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['start start', 'end start']
@@ -17,6 +20,13 @@ export function Hero() {
   
   // Subtle parallax effect
   const y = useTransform(scrollYProgress, [0, 1], [0, -100])
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
   
   return (
     <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-20 lg:py-32">
@@ -27,20 +37,91 @@ export function Hero() {
       <motion.div 
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-gold/5 blur-3xl"
         animate={{ 
-          opacity: [0.3, 0.5, 0.3],
-          scale: [1, 1.15, 1]
+          opacity: prefersReducedMotion ? [0.3] : [0.3, 0.5, 0.3],
+          scale: prefersReducedMotion ? [1] : [1, 1.15, 1]
         }}
-        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 10, repeat: prefersReducedMotion ? 0 : Infinity, ease: 'easeInOut' }}
       />
+
+      {/* Ambient gold sheen - slow diagonal sweep (desktop only) */}
+      {!isMobile && (
+        <motion.div 
+          className="absolute inset-0 bg-gradient-to-br from-transparent via-gold/[0.08] to-transparent opacity-0"
+          animate={{ 
+            opacity: prefersReducedMotion ? [0] : [0, 0.15, 0],
+            x: prefersReducedMotion ? ['0%'] : ['-100%', '100%'],
+          }}
+          transition={{ duration: 14, repeat: prefersReducedMotion ? 0 : Infinity, ease: 'linear' }}
+        />
+      )}
 
       {/* Moving light sweep for cinematic feel */}
       <motion.div 
         className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/20 to-transparent"
         animate={{ 
-          x: ['0%', '100%', '-100%'],
-          opacity: [0, 0.5, 0]
+          x: prefersReducedMotion ? ['0%'] : ['0%', '100%', '-100%'],
+          opacity: prefersReducedMotion ? [0] : [0, 0.5, 0]
         }}
-        transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+        transition={{ duration: 12, repeat: prefersReducedMotion ? 0 : Infinity, ease: 'linear' }}
+      />
+
+      {/* Ghosted subscription card silhouettes (desktop only) */}
+      {!isMobile && (
+        <>
+          <motion.div 
+            className="absolute top-1/4 left-1/3 w-64 h-40 rounded-2xl bg-gold/5 backdrop-blur-sm border border-gold/10 opacity-20"
+            animate={{ 
+              y: prefersReducedMotion ? [0] : [0, 20, 0],
+              opacity: prefersReducedMotion ? [0.08] : [0.08, 0.15, 0.08]
+            }}
+            transition={{ duration: 16, repeat: prefersReducedMotion ? 0 : Infinity, ease: 'easeInOut' }}
+          />
+
+          <motion.div 
+            className="absolute bottom-1/4 right-1/4 w-56 h-36 rounded-2xl bg-platinum/5 backdrop-blur-sm border border-platinum/10 opacity-20"
+            animate={{ 
+              y: prefersReducedMotion ? [0] : [0, -15, 0],
+              opacity: prefersReducedMotion ? [0.06] : [0.06, 0.12, 0.06]
+            }}
+            transition={{ duration: 18, repeat: prefersReducedMotion ? 0 : Infinity, ease: 'easeInOut', delay: 2 }}
+          />
+        </>
+      )}
+
+      {/* Renewal pulse line - occasional elegant trace (desktop only) */}
+      {!isMobile && !prefersReducedMotion && (
+        <motion.svg 
+          className="absolute inset-0 w-full h-full pointer-events-none opacity-0"
+          animate={{ opacity: [0, 0.3, 0] }}
+          transition={{ duration: 0.8, delay: 8, repeat: Infinity, repeatDelay: 12 }}
+        >
+          <motion.path
+            d="M 0 60% Q 25% 40%, 50% 50% T 100% 60%"
+            stroke="url(#pulseGradient)"
+            strokeWidth="2"
+            fill="none"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 2, ease: 'easeInOut' }}
+          />
+          <defs>
+            <linearGradient id="pulseGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="rgba(199, 163, 106, 0)" />
+              <stop offset="50%" stopColor="rgba(199, 163, 106, 0.8)" />
+              <stop offset="100%" stopColor="rgba(199, 163, 106, 0)" />
+            </linearGradient>
+          </defs>
+        </motion.svg>
+      )}
+
+      {/* Soft vignette breathing effect */}
+      <motion.div 
+        className="absolute inset-0 bg-radial-gradient pointer-events-none"
+        style={{
+          backgroundImage: 'radial-gradient(ellipse at center, transparent 0%, rgba(10, 10, 13, 0.4) 100%)'
+        }}
+        animate={{ opacity: prefersReducedMotion ? [0.3] : [0.3, 0.5, 0.3] }}
+        transition={{ duration: 12, repeat: prefersReducedMotion ? 0 : Infinity, ease: 'easeInOut' }}
       />
       
       {/* Subtle grid pattern */}
