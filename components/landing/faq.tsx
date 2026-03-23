@@ -101,7 +101,7 @@ function FAQItem({ question, answer, isOpen, onToggle, index }: FAQItemProps) {
     >
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate/30 transition-colors"
+        className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate/40 hover:border-gold/10 transition-all duration-200 group"
       >
         <span className="font-medium text-ivory pr-4">{question}</span>
         <motion.div
@@ -109,7 +109,7 @@ function FAQItem({ question, answer, isOpen, onToggle, index }: FAQItemProps) {
           transition={springs.snappy}
           className="shrink-0"
         >
-          <ChevronDown className="w-5 h-5 text-platinum" />
+          <ChevronDown className="w-5 h-5 text-platinum group-hover:text-gold transition-colors" />
         </motion.div>
       </button>
       

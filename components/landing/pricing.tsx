@@ -248,7 +248,7 @@ export function Pricing() {
                     >
                       <Check className={`w-5 h-5 shrink-0 mt-0.5 ${
                         isPro || isFamily ? 'text-gold drop-shadow-[0_0_12px_rgba(199,163,106,0.4)]' : 
-                        plan.id === 'enterprise' ? 'text-emerald drop-shadow-[0_0_8px_rgba(80,184,160,0.35)]' :
+                        plan.id === 'enterprise' ? 'text-[#5DD9C1] drop-shadow-[0_0_14px_rgba(93,217,193,0.5)] drop-shadow-[0_0_6px_rgba(93,217,193,0.3)]' :
                         'text-emerald'
                       }`} />
                       <span className={`text-sm ${isPro || isFamily ? 'text-ivory' : 'text-platinum'}`}>

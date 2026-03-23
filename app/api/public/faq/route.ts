@@ -9,8 +9,8 @@ export async function GET() {
         answer: 'Click the "Add Subscription" button to get started. You can enter the subscription details manually or import them from your email.'
       },
       {
-        question: 'Can I share subscriptions with family?',
-        answer: 'Yes! Upgrade to the Family plan to share subscriptions with up to 4 family members.'
+        question: 'How does the Family plan work?',
+        answer: 'The Family plan includes up to 4 members with shared renewal tracking, unified reminders, and household visibility. Need more? Additional members are just +₹99/member/month beyond the first 4.'
       },
       {
         question: 'What payment methods do you support?',
