@@ -3,11 +3,13 @@
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { ArrowRight, Play } from 'lucide-react'
 import { springs, staggerContainer, staggerItem, cinematicFadeInUp, magneticButtonVariants } from '../motion'
+import { DemoModal } from '@/components/demo-modal'
 import Link from 'next/link'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 
 export function Hero() {
   const ref = useRef(null)
+  const [isDemoOpen, setIsDemoOpen] = useState(false)
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['start start', 'end start']
@@ -137,11 +139,12 @@ export function Hero() {
           </Link>
           
           <motion.button
+            onClick={() => setIsDemoOpen(true)}
             variants={magneticButtonVariants}
             initial="initial"
             whileHover="hover"
             whileTap="tap"
-            className="w-full sm:w-auto px-8 py-4 rounded-xl border border-glass-border text-ivory font-medium flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-8 py-4 rounded-xl border border-glass-border text-ivory font-medium flex items-center justify-center gap-2 cursor-pointer"
           >
             <Play className="w-4 h-4" />
             Watch demo
@@ -291,6 +294,15 @@ export function Hero() {
           />
         </motion.div>
       </motion.div>
+
+      {/* Demo Modal - lazy rendered */}
+      <DemoModal
+        isOpen={isDemoOpen}
+        onClose={() => setIsDemoOpen(false)}
+        videoUrl="" // Configure with actual YouTube URL: "https://www.youtube.com/embed/VIDEO_ID"
+        title="Renewly Demo"
+        subtitle="A quick look at how Renewly helps you own every renewal."
+      />
     </section>
   )
 }
