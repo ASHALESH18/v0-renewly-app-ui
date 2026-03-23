@@ -1,10 +1,24 @@
 import Razorpay from 'razorpay'
 import crypto from 'crypto'
+import { isBillingConfigured } from '@/lib/billing-guards'
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-})
+// Lazy initialization - only create instance when actually needed and configured
+let _razorpayInstance: Razorpay | null = null
+
+function getRazorpay(): Razorpay {
+  if (!isBillingConfigured()) {
+    throw new Error('Billing is not configured. Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET environment variables.')
+  }
+  
+  if (!_razorpayInstance) {
+    _razorpayInstance = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID!,
+      key_secret: process.env.RAZORPAY_KEY_SECRET!,
+    })
+  }
+  
+  return _razorpayInstance
+}
 
 export interface CreateOrderParams {
   amount: number // In paise (₹1 = 100 paise)
@@ -22,6 +36,7 @@ export interface CreateOrderParams {
  */
 export async function createRazorpayOrder(params: CreateOrderParams) {
   try {
+    const razorpay = getRazorpay()
     const order = await razorpay.orders.create({
       amount: params.amount,
       currency: params.currency || 'INR',
@@ -69,6 +84,7 @@ export function verifyPaymentSignature(
  */
 export async function getPaymentDetails(paymentId: string) {
   try {
+    const razorpay = getRazorpay()
     const payment = await razorpay.payments.fetch(paymentId)
     return { success: true, payment }
   } catch (error) {
