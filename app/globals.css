@@ -48,6 +48,7 @@
   --ivory: #F4EFE7;
   --platinum: #BCC2CC;
   --gold: #C7A36A;
+  --muted-gold: #8B7D6B;
   --emerald: #2E5E52;
   --crimson: #7A3940;
   --glass: rgba(255, 255, 255, 0.08);
@@ -96,6 +97,7 @@
   --ivory: #F4EFE7;
   --platinum: #BCC2CC;
   --gold: #C7A36A;
+  --muted-gold: #8B7D6B;
   --emerald: #2E5E52;
   --crimson: #7A3940;
   --glass: rgba(255, 255, 255, 0.06);
@@ -114,6 +116,7 @@
   --color-ivory: var(--ivory);
   --color-platinum: var(--platinum);
   --color-gold: var(--gold);
+  --color-muted-gold: var(--muted-gold);
   --color-emerald: var(--emerald);
   --color-crimson: var(--crimson);
   --color-glass: var(--glass);
