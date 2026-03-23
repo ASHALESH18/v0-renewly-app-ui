@@ -74,7 +74,7 @@ export const plans: Plan[] = [
     originalPrice: 499,
     savings: 200,
     period: 'month',
-    extraNote: '+₹99/member/month after 4',
+    extraNote: '+₹99/member/month after 4 members',
     features: [
       'Everything in Pro',
       'Up to 4 family members included',
