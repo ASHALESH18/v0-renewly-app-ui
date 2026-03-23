@@ -101,7 +101,7 @@ function FAQItem({ question, answer, isOpen, onToggle, index }: FAQItemProps) {
     >
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-5 text-left"
+        className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate/30 transition-colors"
       >
         <span className="font-medium text-ivory pr-4">{question}</span>
         <motion.div
