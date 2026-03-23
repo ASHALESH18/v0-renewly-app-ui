@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js'
 import { createRazorpayOrder, verifyPaymentSignature, getPaymentDetails } from '@/lib/razorpay/server'
 import { plans } from '@/lib/plans'
 import type { PlanType } from '@/lib/plan-capabilities'
+import { isBillingConfigured } from '@/lib/billing-guards'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -16,6 +17,14 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
  */
 export async function initiateUpgrade(planId: PlanType) {
   try {
+    // Check if billing is configured before attempting any payment operations
+    if (!isBillingConfigured()) {
+      return {
+        success: false,
+        error: 'Billing setup in progress. Please try again later or contact support.',
+      }
+    }
+
     const user = await getUser()
     if (!user) throw new Error('Unauthorized')
 
@@ -97,6 +106,14 @@ export async function processPayment(
   signature: string
 ) {
   try {
+    // Billing must be configured to process payments
+    if (!isBillingConfigured()) {
+      return {
+        success: false,
+        error: 'Billing system is not available. Please contact support.',
+      }
+    }
+
     const user = await getUser()
     if (!user) throw new Error('Unauthorized')
 
