@@ -1,5 +1,6 @@
 'use client'
 
+// Motion utilities - uses custom useReducedMotionSafe hook (NOT React.useReducedMotion)
 import { motion, type Variants, type HTMLMotionProps, AnimatePresence } from 'framer-motion'
 import { forwardRef, type ReactNode, useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
