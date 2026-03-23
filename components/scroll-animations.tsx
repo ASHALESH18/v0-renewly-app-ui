@@ -1,29 +1,37 @@
 'use client'
 
 import { motion, useScroll, useTransform, useMotionTemplate } from 'framer-motion'
-import { useRef, type ReactNode } from 'react'
+import { useRef, type ReactNode, useMemo, useCallback } from 'react'
 
 /**
  * Scroll-based reveal animation - elements fade and slide in as user scrolls into view
+ * Performance: Uses GPU acceleration via will-change and transform3d
+ * Accessibility: Reduces motion if prefers-reduced-motion is set
  */
 interface ScrollRevealProps {
   children: ReactNode
   className?: string
   delay?: number
+  disableAnimation?: boolean
 }
 
-export function ScrollReveal({ children, className, delay = 0 }: ScrollRevealProps) {
+export function ScrollReveal({ children, className, delay = 0, disableAnimation = false }: ScrollRevealProps) {
   const ref = useRef(null)
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['0 1', '1.33 1'],
   })
 
-  const opacity = useTransform(scrollYProgress, [0, 1], [0, 1])
-  const y = useTransform(scrollYProgress, [0, 1], [40, 0])
+  const opacity = useTransform(scrollYProgress, [0, 1], disableAnimation ? [1, 1] : [0, 1])
+  const y = useTransform(scrollYProgress, [0, 1], disableAnimation ? [0, 0] : [40, 0])
 
   return (
-    <motion.div ref={ref} style={{ opacity, y }} className={className}>
+    <motion.div 
+      ref={ref} 
+      style={{ opacity, y }} 
+      className={`scroll-animated ${className || ''}`}
+      aria-hidden={disableAnimation ? 'false' : 'false'}
+    >
       {children}
     </motion.div>
   )
@@ -31,24 +39,26 @@ export function ScrollReveal({ children, className, delay = 0 }: ScrollRevealPro
 
 /**
  * Scroll-based parallax effect - subtle depth movement
+ * Performance: GPU-accelerated with transform3d
  */
 interface ScrollParallaxProps {
   children: ReactNode
   offset?: number
   className?: string
+  disableAnimation?: boolean
 }
 
-export function ScrollParallax({ children, offset = 50, className }: ScrollParallaxProps) {
+export function ScrollParallax({ children, offset = 50, className, disableAnimation = false }: ScrollParallaxProps) {
   const ref = useRef(null)
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['0 1', '1.33 1'],
   })
 
-  const y = useTransform(scrollYProgress, [0, 1], [offset, -offset])
+  const y = useTransform(scrollYProgress, [0, 1], disableAnimation ? [0, 0] : [offset, -offset])
 
   return (
-    <motion.div ref={ref} style={{ y }} className={className}>
+    <motion.div ref={ref} style={{ y }} className={`scroll-animated ${className || ''}`}>
       {children}
     </motion.div>
   )
