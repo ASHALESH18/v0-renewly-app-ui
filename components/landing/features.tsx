@@ -10,7 +10,8 @@ import {
   Smartphone, 
   Zap,
   CreditCard,
-  TrendingDown
+  TrendingDown,
+  Globe
 } from 'lucide-react'
 import { springs, staggerContainer, staggerItem } from '../motion'
 
@@ -89,6 +90,9 @@ export function Features() {
               variants={staggerItem}
               custom={index}
               whileHover={{ y: -4, transition: springs.gentle }}
+              initial={{ opacity: 0, y: 20, filter: 'blur(4px)' }}
+              animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+              transition={{ delay: index * 0.1, duration: 0.5 }}
               className="group p-6 rounded-2xl bg-slate/50 border border-glass-border hover:border-gold/30 transition-colors"
             >
               <div className="w-12 h-12 rounded-xl bg-gold/10 flex items-center justify-center mb-4 group-hover:bg-gold/20 transition-colors">
@@ -125,20 +129,27 @@ export function Features() {
               Renewly is crafted as a premium mobile experience first. Every tap, swipe, and gesture 
               feels natural and satisfying. Manage your financial life from anywhere.
             </p>
-            <div className="flex items-center gap-6">
-              <div>
-                <p className="text-3xl font-semibold text-gold">50K+</p>
-                <p className="text-sm text-platinum">Active users</p>
+            <div className="grid grid-cols-3 gap-8">
+              <div className="flex flex-col items-start">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-gold/10 text-gold text-xs font-semibold mb-3">
+                  <Calendar className="w-4 h-4" />
+                  CALENDAR-FIRST
+                </div>
+                <p className="text-sm text-platinum">Complete control over your renewal timeline</p>
               </div>
-              <div className="w-px h-12 bg-glass-border" />
-              <div>
-                <p className="text-3xl font-semibold text-gold">₹2.5Cr</p>
-                <p className="text-sm text-platinum">Saved annually</p>
+              <div className="flex flex-col items-start">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-gold/10 text-gold text-xs font-semibold mb-3">
+                  <TrendingDown className="w-4 h-4" />
+                  LEAK DETECTION
+                </div>
+                <p className="text-sm text-platinum">Identify unused subscriptions automatically</p>
               </div>
-              <div className="w-px h-12 bg-glass-border" />
-              <div>
-                <p className="text-3xl font-semibold text-gold">4.9</p>
-                <p className="text-sm text-platinum">App Store rating</p>
+              <div className="flex flex-col items-start">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-gold/10 text-gold text-xs font-semibold mb-3">
+                  <Globe className="w-4 h-4" />
+                  MULTI-CURRENCY
+                </div>
+                <p className="text-sm text-platinum">Track subscriptions in any currency worldwide</p>
               </div>
             </div>
           </div>

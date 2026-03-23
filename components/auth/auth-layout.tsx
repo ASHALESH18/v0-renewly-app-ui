@@ -24,13 +24,21 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={springs.gentle}
-        className="relative z-10 p-4"
+        className="relative z-10 p-4 flex items-center justify-between"
       >
         <Link href="/" className="inline-flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg gold-gradient flex items-center justify-center">
             <span className="text-obsidian font-semibold text-sm">R</span>
           </div>
           <span className="font-semibold text-ivory">Renewly</span>
+        </Link>
+        
+        {/* Back to Home link */}
+        <Link 
+          href="/" 
+          className="text-sm text-platinum hover:text-gold transition-colors"
+        >
+          Back to home
         </Link>
       </motion.header>
 
