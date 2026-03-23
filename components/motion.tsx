@@ -14,31 +14,28 @@ export const springs = {
   cinematic: { type: 'spring', stiffness: 70, damping: 18 },
 } as const
 
-// Custom hook to detect prefers-reduced-motion
-const useReducedMotionMediaQuery = () => {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+// SSR-safe hook: defaults false on server, reads matchMedia after hydration
+function useReducedMotionSafe(): boolean {
+  const [reduced, setReduced] = useState(false)
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setPrefersReducedMotion(mediaQuery.matches)
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      setPrefersReducedMotion(e.matches)
-    }
-
-    mediaQuery.addEventListener('change', handleChange)
-    return () => mediaQuery.removeEventListener('change', handleChange)
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduced(mq.matches)
+    const onChange = (e: MediaQueryListEvent) => setReduced(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
   }, [])
 
-  return prefersReducedMotion
+  return reduced
 }
 
-// Utility to respect prefers-reduced-motion
-export const useMotionPreferences = () => {
-  const prefersReducedMotion = useReducedMotionMediaQuery()
+// Utility hook — use this everywhere instead of React's experimental useReducedMotion
+export function useMotionPreferences() {
+  const prefersReducedMotion = useReducedMotionSafe()
   return {
     prefersReducedMotion,
-    maybeVariants: (fullVariant: Variants, reducedVariant: Variants = fadeIn) => 
+    maybeVariants: (fullVariant: Variants, reducedVariant: Variants = fadeIn) =>
       prefersReducedMotion ? reducedVariant : fullVariant,
   }
 }

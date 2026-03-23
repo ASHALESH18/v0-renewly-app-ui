@@ -16,13 +16,11 @@ html {
 body {
   position: relative;
   width: 100%;
-  /* Removed: overscroll-behavior: none; to allow natural scroll */
 }
 
 main {
   position: relative;
   width: 100%;
-  /* Removed: contain: layout; as it can interfere with scroll behavior */
 }
 
 /* GPU acceleration class for scroll animations */
