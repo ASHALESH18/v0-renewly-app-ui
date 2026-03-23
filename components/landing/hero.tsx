@@ -1,28 +1,48 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { ArrowRight, Play } from 'lucide-react'
 import { springs, staggerContainer, staggerItem, cinematicFadeInUp, magneticButtonVariants } from '../motion'
 import Link from 'next/link'
+import { useRef } from 'react'
 
 export function Hero() {
+  const ref = useRef(null)
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ['start start', 'end start']
+  })
+  
+  // Subtle parallax effect
+  const y = useTransform(scrollYProgress, [0, 1], [0, -100])
+  
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-20 lg:py-32">
-      {/* Background gradient */}
+    <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-20 lg:py-32">
+      {/* Premium background layers */}
       <div className="absolute inset-0 bg-gradient-to-b from-obsidian via-graphite to-obsidian" />
       
-      {/* Animated radial glow - subtle breathing */}
+      {/* Animated radial glow - breathing */}
       <motion.div 
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-gold/5 blur-3xl"
         animate={{ 
-          opacity: [0.4, 0.6, 0.4],
-          scale: [1, 1.1, 1]
+          opacity: [0.3, 0.5, 0.3],
+          scale: [1, 1.15, 1]
         }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+      />
+
+      {/* Moving light sweep for cinematic feel */}
+      <motion.div 
+        className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/20 to-transparent"
+        animate={{ 
+          x: ['0%', '100%', '-100%'],
+          opacity: [0, 0.5, 0]
+        }}
+        transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
       />
       
       {/* Subtle grid pattern */}
-      <div className="absolute inset-0 opacity-[0.03]" style={{
+      <div className="absolute inset-0 opacity-[0.02]" style={{
         backgroundImage: `linear-gradient(rgba(199, 163, 106, 0.3) 1px, transparent 1px),
                           linear-gradient(90deg, rgba(199, 163, 106, 0.3) 1px, transparent 1px)`,
         backgroundSize: '60px 60px',
@@ -34,42 +54,52 @@ export function Hero() {
         animate="animate"
         className="relative z-10 max-w-4xl mx-auto text-center"
       >
-        {/* Eyebrow */}
+        {/* Eyebrow with pulse */}
         <motion.div 
           variants={staggerItem}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 border border-gold/20 mb-8"
         >
           <motion.span 
             className="w-2 h-2 rounded-full bg-gold"
-            animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
-            transition={{ duration: 2, repeat: Infinity }}
+            animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
           />
           <span className="text-sm text-gold font-medium">Now available on iOS and Android</span>
         </motion.div>
 
-        {/* Headline with luxury text reveal */}
+        {/* Headline with luxury masked reveal */}
         <motion.h1 
           variants={staggerItem}
           className="text-4xl md:text-6xl lg:text-7xl font-semibold text-ivory tracking-tight leading-[1.1]"
         >
+          {/* First line with blur reveal */}
           <span className="block overflow-hidden">
             <motion.span 
               className="block"
-              initial={{ opacity: 0, filter: 'blur(10px)' }}
-              animate={{ opacity: 1, filter: 'blur(0px)' }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
+              initial={{ opacity: 0, filter: 'blur(12px)', y: 20 }}
+              animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
+              transition={{ duration: 0.9, ease: 'easeOut' }}
             >
               Own every
             </motion.span>
           </span>
-          <span className="block overflow-hidden mt-2">
+          
+          {/* Emphasis word with gold light sweep */}
+          <span className="block overflow-hidden mt-2 relative">
             <motion.span 
-              className="block text-gold-gradient font-serif italic"
-              initial={{ opacity: 0, filter: 'blur(10px)', y: 20 }}
+              className="block text-gold-gradient font-serif italic relative"
+              initial={{ opacity: 0, filter: 'blur(12px)', y: 20 }}
               animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
-              transition={{ duration: 0.8, delay: 0.15, ease: 'easeOut' }}
+              transition={{ duration: 0.9, delay: 0.1, ease: 'easeOut' }}
             >
               renewal.
+              
+              {/* Gold light sweep across text */}
+              <motion.div 
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-gold/30 to-transparent"
+                animate={{ x: ['-100%', '200%'] }}
+                transition={{ duration: 2.5, delay: 0.7, ease: 'easeInOut' }}
+              />
             </motion.span>
           </span>
         </motion.h1>
@@ -87,7 +117,7 @@ export function Hero() {
           variants={staggerItem}
           className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <Link href="/app">
+          <Link href="/auth/sign-in?next=/app/dashboard">
             <motion.button
               variants={magneticButtonVariants}
               initial="initial"
@@ -118,17 +148,38 @@ export function Hero() {
           </motion.button>
         </motion.div>
 
-        {/* App preview with parallax and layered reveal */}
+        {/* Premium device reveal with signature animation */}
         <motion.div
-          initial={{ opacity: 0, y: 60, filter: 'blur(12px)' }}
+          initial={{ opacity: 0, y: 80, filter: 'blur(16px)' }}
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={{ delay: 0.6, duration: 0.7, ease: 'easeOut' }}
-          className="mt-16 relative"
+          transition={{ delay: 0.5, duration: 1, ease: 'easeOut' }}
+          className="mt-20 relative"
+          style={{ y }}
         >
+          {/* Soft glow backdrop layer */}
+          <motion.div 
+            className="absolute -inset-20 rounded-[60px] bg-gradient-to-b from-gold/10 to-transparent blur-3xl"
+            animate={{ 
+              opacity: [0.3, 0.6, 0.3],
+              scale: [1, 1.05, 1]
+            }}
+            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+          />
+
           {/* Phone mockup frame */}
           <div className="relative mx-auto w-[280px] md:w-[320px]">
-            {/* Phone frame */}
-            <div className="relative rounded-[40px] bg-graphite border border-glass-border p-3 shadow-luxury">
+            {/* Premium frame with depth */}
+            <motion.div 
+              className="relative rounded-[40px] bg-gradient-to-br from-graphite to-obsidian border border-gold/20 p-3 shadow-luxury"
+              animate={{ 
+                boxShadow: [
+                  '0 0 60px rgba(199, 163, 106, 0.1)',
+                  '0 0 80px rgba(199, 163, 106, 0.15)',
+                  '0 0 60px rgba(199, 163, 106, 0.1)'
+                ]
+              }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            >
               {/* Notch */}
               <div className="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-6 bg-obsidian rounded-full" />
               
@@ -157,19 +208,25 @@ export function Hero() {
                     </div>
                   </div>
 
-                  {/* Total spend card */}
+                  {/* Total spend card - signature reveal anchor */}
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.92 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.8, duration: 0.5 }}
-                    className="rounded-2xl bg-graphite border border-glass-border p-4 mb-4"
+                    initial={{ opacity: 0, scale: 0.88, filter: 'blur(4px)' }}
+                    animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                    transition={{ delay: 0.9, duration: 0.6, ease: 'easeOut' }}
+                    className="rounded-2xl bg-gradient-to-br from-slate/50 via-graphite to-slate/50 border border-gold/20 p-4 mb-4 relative overflow-hidden"
                   >
-                    <p className="text-xs text-platinum mb-1">Monthly recurring</p>
-                    <p className="text-2xl font-semibold text-gold">₹7,644</p>
-                    <p className="text-xs text-emerald mt-1">↓ 12% vs last month</p>
+                    {/* Subtle shine effect */}
+                    <motion.div 
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
+                      animate={{ x: ['-100%', '100%'] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                    />
+                    <p className="text-xs text-platinum mb-1 relative">Monthly recurring</p>
+                    <p className="text-2xl font-semibold text-gold relative">₹7,644</p>
+                    <p className="text-xs text-emerald mt-1 relative">↓ 12% vs last month</p>
                   </motion.div>
 
-                  {/* Subscription cards preview with stagger */}
+                  {/* Subscription cards - cascade reveal */}
                   <div className="space-y-3">
                     {[
                       { name: 'Netflix', color: '#E50914', amount: '649' },
@@ -178,39 +235,60 @@ export function Hero() {
                     ].map((sub, i) => (
                       <motion.div
                         key={sub.name}
-                        initial={{ opacity: 0, x: -20, filter: 'blur(4px)' }}
+                        initial={{ opacity: 0, x: -30, filter: 'blur(6px)' }}
                         animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-                        transition={{ delay: 0.95 + i * 0.12, duration: 0.4 }}
-                        className="flex items-center gap-3 p-3 rounded-xl bg-slate/50"
+                        transition={{ 
+                          delay: 1.1 + i * 0.15, 
+                          duration: 0.5,
+                          ease: 'easeOut'
+                        }}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-slate/50 border border-glass-border/50 relative overflow-hidden"
                       >
+                        {/* Card shimmer */}
+                        <motion.div 
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-gold/5 to-transparent"
+                          animate={{ x: ['-100%', '100%'] }}
+                          transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.2 }}
+                        />
+                        
                         <div 
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-medium"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-medium shrink-0 relative"
                           style={{ backgroundColor: sub.color }}
                         >
                           {sub.name[0]}
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 relative">
                           <p className="text-xs font-medium text-ivory">{sub.name}</p>
                           <p className="text-[10px] text-platinum">Renews in 5d</p>
                         </div>
-                        <p className="text-xs font-medium text-ivory">₹{sub.amount}</p>
+                        <p className="text-xs font-medium text-ivory relative">₹{sub.amount}</p>
                       </motion.div>
                     ))}
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Animated glow effect */}
+            {/* Animated glow effect - signature moment */}
             <motion.div 
-              className="absolute -inset-4 rounded-[48px] bg-gold/10 blur-2xl -z-10"
+              className="absolute -inset-4 rounded-[48px] bg-gold/10 blur-3xl -z-10"
               animate={{ 
-                opacity: [0.5, 0.8, 0.5],
-                scale: [1, 1.05, 1]
+                opacity: [0.4, 0.8, 0.4],
+                scale: [1, 1.08, 1]
               }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
             />
           </div>
+
+          {/* Gold trace line animation - signature element */}
+          <motion.div 
+            className="absolute top-24 left-1/2 -translate-x-1/2 w-1 h-24 bg-gradient-to-b from-gold/40 via-gold/20 to-transparent rounded-full"
+            animate={{ 
+              height: [0, 96, 0],
+              opacity: [0, 1, 0]
+            }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+          />
         </motion.div>
       </motion.div>
     </section>
