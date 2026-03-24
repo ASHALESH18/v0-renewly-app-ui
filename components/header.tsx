@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Bell, Search, Settings, User } from 'lucide-react'
+import { Bell, Search, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from './motion'
 import useStore from '@/lib/store'
@@ -102,36 +102,36 @@ export function Header({
             </HeaderButton>
           )}
 
-        {showProfile && (
-          <div className="relative">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                setIsProfileMenuOpen(!isProfileMenuOpen)
-                onProfileClick?.()
-              }}
-              className="w-10 h-10 rounded-full overflow-hidden border-2 border-gold/30 hover:border-gold/50 transition-colors"
-            >
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt={userProfile?.name || 'Profile'}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gold/10 flex items-center justify-center text-gold font-medium text-sm">
-                  {avatar}
-                </div>
-              )}
-            </motion.button>
-            <ProfileMenu
-              isOpen={isProfileMenuOpen}
-              onClose={() => setIsProfileMenuOpen(false)}
-              avatarUrl={avatarUrl || undefined}
-            />
-          </div>
-        )}
+          {showProfile && (
+            <div className="relative">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  setIsProfileMenuOpen(!isProfileMenuOpen)
+                  onProfileClick?.()
+                }}
+                className="w-10 h-10 rounded-full overflow-hidden border-2 border-gold/30 hover:border-gold/50 transition-colors focus:outline-none focus:ring-2 focus:ring-gold/50"
+              >
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={userProfile?.name || 'Profile'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gold/10 flex items-center justify-center text-gold font-medium text-sm">
+                    {avatar}
+                  </div>
+                )}
+              </motion.button>
+              <ProfileMenu
+                isOpen={isProfileMenuOpen}
+                onClose={() => setIsProfileMenuOpen(false)}
+                avatarUrl={avatarUrl || undefined}
+              />
+            </div>
+          )}
 
           {onSettingsClick && (
             <HeaderButton onClick={onSettingsClick}>
@@ -156,7 +156,7 @@ function HeaderButton({ children, onClick, badge }: HeaderButtonProps) {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
-      className="relative w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+      className="relative w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-gold/50"
     >
       {children}
       {badge !== undefined && badge > 0 && (

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { 
@@ -12,7 +12,11 @@ import {
   Calendar,
   FileText,
   MoreHorizontal,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Pin,
+  PinOff
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from './motion'
@@ -198,7 +202,7 @@ export function BottomNav({ activeTab }: BottomNavProps) {
   )
 }
 
-// Desktop sidebar navigation
+// Desktop sidebar navigation with collapsible mode
 interface SidebarNavProps {
   activeTab: string
 }
@@ -212,29 +216,95 @@ const sidebarItems = [
   { id: 'settings', icon: Settings, label: 'Settings', href: '/app/settings' },
 ]
 
+// Sidebar state persistence key
+const SIDEBAR_COLLAPSED_KEY = 'renewly-sidebar-collapsed'
+const SIDEBAR_PINNED_KEY = 'renewly-sidebar-pinned'
+
 export function SidebarNav({ activeTab }: SidebarNavProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isPinned, setIsPinned] = useState(true)
+  const [isHovered, setIsHovered] = useState(false)
+
+  // Load persisted state on mount
+  useEffect(() => {
+    const savedCollapsed = localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
+    const savedPinned = localStorage.getItem(SIDEBAR_PINNED_KEY)
+    
+    if (savedCollapsed !== null) {
+      setIsCollapsed(savedCollapsed === 'true')
+    }
+    if (savedPinned !== null) {
+      setIsPinned(savedPinned === 'true')
+    }
+  }, [])
+
+  // Persist state changes
+  const toggleCollapsed = () => {
+    const newValue = !isCollapsed
+    setIsCollapsed(newValue)
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(newValue))
+  }
+
+  const togglePinned = () => {
+    const newValue = !isPinned
+    setIsPinned(newValue)
+    localStorage.setItem(SIDEBAR_PINNED_KEY, String(newValue))
+    // If unpinning, also collapse
+    if (!newValue) {
+      setIsCollapsed(true)
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, 'true')
+    }
+  }
+
+  // Determine if sidebar should be expanded (hover expands when unpinned and collapsed)
+  const shouldExpand = !isCollapsed || (isHovered && !isPinned)
+  const sidebarWidth = shouldExpand ? 280 : 72
+
+  // Set CSS variable for main content margin
+  useEffect(() => {
+    document.documentElement.style.setProperty('--sidebar-width', `${sidebarWidth}px`)
+  }, [sidebarWidth])
+
   return (
     <motion.aside
       initial={{ x: -280 }}
-      animate={{ x: 0 }}
+      animate={{ 
+        x: 0,
+        width: sidebarWidth,
+      }}
       transition={springs.gentle}
-      className="hidden lg:flex fixed left-0 top-0 bottom-0 w-[280px] flex-col bg-card border-r border-border z-40"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="hidden lg:flex fixed left-0 top-0 bottom-0 flex-col bg-card border-r border-border z-40"
     >
       {/* Logo */}
-      <div className="p-6 border-b border-border">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl gold-gradient flex items-center justify-center">
+      <div className="p-4 border-b border-border">
+        <div className={cn(
+          "flex items-center gap-3 transition-all duration-200",
+          !shouldExpand && "justify-center"
+        )}>
+          <div className="w-10 h-10 rounded-xl gold-gradient flex items-center justify-center flex-shrink-0">
             <span className="text-obsidian font-semibold text-lg">R</span>
           </div>
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">Renewly</h1>
-            <p className="text-xs text-muted-foreground">Subscription Intelligence</p>
-          </div>
+          <AnimatePresence>
+            {shouldExpand && (
+              <motion.div
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: 'auto' }}
+                exit={{ opacity: 0, width: 0 }}
+                transition={{ duration: 0.15 }}
+                className="overflow-hidden"
+              >
+                <h1 className="text-lg font-semibold text-foreground whitespace-nowrap">Renewly</h1>
+                <p className="text-xs text-muted-foreground whitespace-nowrap">Subscription Intelligence</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
       {/* Navigation items */}
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
         {sidebarItems.map((item) => {
           const isActive = activeTab === item.id
           const Icon = item.icon
@@ -242,21 +312,35 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
           return (
             <Link key={item.id} href={item.href}>
               <motion.button
-                whileHover={{ x: 4 }}
+                whileHover={{ x: shouldExpand ? 4 : 0, scale: shouldExpand ? 1 : 1.05 }}
                 whileTap={{ scale: 0.98 }}
+                title={!shouldExpand ? item.label : undefined}
                 className={cn(
-                  'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200',
+                  'w-full flex items-center gap-3 rounded-xl transition-colors duration-200',
+                  shouldExpand ? 'px-4 py-3' : 'px-0 py-3 justify-center',
                   isActive 
                     ? 'bg-gold/10 text-gold' 
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 )}
               >
-                <Icon className="w-5 h-5" />
-                <span className="font-medium">{item.label}</span>
-                {isActive && (
+                <Icon className="w-5 h-5 flex-shrink-0" />
+                <AnimatePresence>
+                  {shouldExpand && (
+                    <motion.span
+                      initial={{ opacity: 0, width: 0 }}
+                      animate={{ opacity: 1, width: 'auto' }}
+                      exit={{ opacity: 0, width: 0 }}
+                      transition={{ duration: 0.15 }}
+                      className="font-medium whitespace-nowrap overflow-hidden"
+                    >
+                      {item.label}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+                {isActive && shouldExpand && (
                   <motion.div
                     layoutId="activeSidebar"
-                    className="ml-auto w-1.5 h-1.5 rounded-full bg-gold"
+                    className="ml-auto w-1.5 h-1.5 rounded-full bg-gold flex-shrink-0"
                     transition={springs.snappy}
                   />
                 )}
@@ -266,16 +350,95 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
         })}
       </nav>
 
+      {/* Collapse/Pin controls */}
+      <div className={cn(
+        "p-2 border-t border-border",
+        !shouldExpand && "flex flex-col items-center"
+      )}>
+        {/* Pin button - only show when expanded */}
+        <AnimatePresence>
+          {shouldExpand && (
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={togglePinned}
+              className="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground transition-colors mb-2"
+              title={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
+            >
+              {isPinned ? (
+                <Pin className="w-4 h-4" />
+              ) : (
+                <PinOff className="w-4 h-4" />
+              )}
+              <span className="text-sm">
+                {isPinned ? 'Pinned' : 'Unpinned'}
+              </span>
+            </motion.button>
+          )}
+        </AnimatePresence>
+
+        {/* Collapse/Expand toggle */}
+        <motion.button
+          onClick={toggleCollapsed}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className={cn(
+            "flex items-center gap-3 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground transition-colors",
+            shouldExpand ? "w-full px-4 py-2" : "w-10 h-10 justify-center"
+          )}
+          title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {isCollapsed ? (
+            <ChevronRight className="w-4 h-4" />
+          ) : (
+            <ChevronLeft className="w-4 h-4" />
+          )}
+          <AnimatePresence>
+            {shouldExpand && (
+              <motion.span
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: 'auto' }}
+                exit={{ opacity: 0, width: 0 }}
+                transition={{ duration: 0.15 }}
+                className="text-sm whitespace-nowrap overflow-hidden"
+              >
+                {isCollapsed ? 'Expand' : 'Collapse'}
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </motion.button>
+      </div>
+
       {/* Add subscription button */}
-      <div className="p-4 border-t border-border">
+      <div className={cn(
+        "p-2 border-t border-border",
+        !shouldExpand && "flex justify-center"
+      )}>
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           // TODO: Handle add subscription modal/sheet action
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl gold-gradient text-obsidian font-semibold shadow-luxury"
+          className={cn(
+            "flex items-center justify-center gap-2 rounded-xl gold-gradient text-obsidian font-semibold shadow-luxury transition-all",
+            shouldExpand ? "w-full px-4 py-3" : "w-10 h-10"
+          )}
+          title={!shouldExpand ? 'Add Subscription' : undefined}
         >
-          <Plus className="w-5 h-5" />
-          <span>Add Subscription</span>
+          <Plus className="w-5 h-5 flex-shrink-0" />
+          <AnimatePresence>
+            {shouldExpand && (
+              <motion.span
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: 'auto' }}
+                exit={{ opacity: 0, width: 0 }}
+                transition={{ duration: 0.15 }}
+                className="whitespace-nowrap overflow-hidden"
+              >
+                Add Subscription
+              </motion.span>
+            )}
+          </AnimatePresence>
         </motion.button>
       </div>
     </motion.aside>
