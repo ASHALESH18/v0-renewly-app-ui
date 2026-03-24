@@ -114,7 +114,7 @@ export async function getSubscriptions() {
       .from('subscriptions')
       .select('*')
       .eq('user_id', user.id)
-      .order('next_renewal_date', { ascending: true })
+      .order('renewal_date', { ascending: true })
 
     if (error) throw error
 

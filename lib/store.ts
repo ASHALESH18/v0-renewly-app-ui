@@ -3,6 +3,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Subscription } from './types'
+import { createSubscription, updateSubscription, deleteSubscription } from './supabase/subscriptions-actions'
 import type { ProfileRow, UserSettingsRow } from './supabase/database.types'
 import { mapSubscriptionRowToUI, mapUserSettingsRowToUI } from './supabase/mappers'
 import { calculateMetrics } from './subscription-math'
@@ -68,10 +69,15 @@ export interface AppState {
   migrateLocalDataToSupabaseOnce: (userId: string) => Promise<void>
   loadSubscriptionsFromSupabase: (subscriptions: Subscription[]) => void
 
-  // Actions - Subscriptions
+  // Actions - Subscriptions (local only - for optimistic updates)
   addSubscription: (subscription: Omit<Subscription, 'id'>) => void
   updateSubscription: (id: string, subscription: Partial<Subscription>) => void
   deleteSubscription: (id: string) => void
+
+  // Actions - Subscriptions (remote-backed - use these for real data)
+  addSubscriptionRemote: (subscription: Omit<Subscription, 'id'>) => Promise<{ success: boolean; error?: string }>
+  updateSubscriptionRemote: (id: string, subscription: Partial<Subscription>) => Promise<{ success: boolean; error?: string }>
+  deleteSubscriptionRemote: (id: string) => Promise<{ success: boolean; error?: string }>
 
   // Actions - Settings
   updateNotificationSettings: (settings: Partial<NotificationSettings>) => void
@@ -247,6 +253,97 @@ const useStore = create<AppState>()(
       deleteSubscription: (id) => set((state) => ({
         subscriptions: state.subscriptions.filter(sub => sub.id !== id),
       })),
+
+      // Remote-backed subscription actions
+      addSubscriptionRemote: async (subscription) => {
+        set({ isSyncingUserData: true, syncError: null })
+        try {
+          const result = await createSubscription({
+            name: subscription.name,
+            category: subscription.category,
+            amount: subscription.price,
+            currency: subscription.currency || 'INR',
+            billingCycle: subscription.billingCycle,
+            renewalDate: subscription.nextRenewalDate,
+            description: subscription.description,
+          })
+
+          if (result.success && result.data?.[0]) {
+            const newSub: Subscription = {
+              ...subscription,
+              id: result.data[0].id,
+            }
+            set((state) => ({
+              subscriptions: [...state.subscriptions, newSub],
+            }))
+            return { success: true }
+          }
+
+          set({ syncError: result.error || 'Failed to add subscription' })
+          return { success: false, error: result.error }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to add subscription'
+          set({ syncError: message })
+          return { success: false, error: message }
+        } finally {
+          set({ isSyncingUserData: false })
+        }
+      },
+
+      updateSubscriptionRemote: async (id, updates) => {
+        set({ isSyncingUserData: true, syncError: null })
+        try {
+          const result = await updateSubscription(id, {
+            name: updates.name,
+            amount: updates.price,
+            billingCycle: updates.billingCycle,
+            renewalDate: updates.nextRenewalDate,
+            description: updates.description,
+            status: updates.isActive === false ? 'inactive' : updates.isActive === true ? 'active' : undefined,
+          })
+
+          if (result.success) {
+            set((state) => ({
+              subscriptions: state.subscriptions.map(sub =>
+                sub.id === id ? { ...sub, ...updates } : sub
+              ),
+            }))
+            return { success: true }
+          }
+
+          set({ syncError: result.error || 'Failed to update subscription' })
+          return { success: false, error: result.error }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to update subscription'
+          set({ syncError: message })
+          return { success: false, error: message }
+        } finally {
+          set({ isSyncingUserData: false })
+        }
+      },
+
+      deleteSubscriptionRemote: async (id) => {
+        set({ isSyncingUserData: true, syncError: null })
+        try {
+          const result = await deleteSubscription(id)
+
+          if (result.success) {
+            set((state) => ({
+              subscriptions: state.subscriptions.filter(sub => sub.id !== id),
+            }))
+            return { success: true }
+          }
+
+          set({ syncError: result.error || 'Failed to delete subscription' })
+          return { success: false, error: result.error }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to delete subscription'
+          set({ syncError: message })
+          return { success: false, error: message }
+        } finally {
+          set({ isSyncingUserData: false })
+        }
+      },
 
       updateNotificationSettings: (settings) => set((state) => ({
         notificationSettings: { ...state.notificationSettings, ...settings },
