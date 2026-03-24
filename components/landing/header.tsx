@@ -29,19 +29,19 @@ export function LandingHeader() {
         {/* Nav Links - Desktop */}
         <nav className="hidden md:flex items-center gap-8">
           <Link
-            href="#features"
+            href="/#features"
             className="text-sm text-platinum/80 hover:text-ivory transition-colors"
           >
             Features
           </Link>
           <Link
-            href="#pricing"
+            href="/#pricing"
             className="text-sm text-platinum/80 hover:text-ivory transition-colors"
           >
             Pricing
           </Link>
           <Link
-            href="#faq"
+            href="/#faq"
             className="text-sm text-platinum/80 hover:text-ivory transition-colors"
           >
             FAQ

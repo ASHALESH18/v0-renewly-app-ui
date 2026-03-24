@@ -21,7 +21,7 @@ export function FAQ() {
   }
 
   return (
-    <section ref={ref} className="py-24 lg:py-32 px-4 bg-obsidian relative overflow-hidden">
+    <section id="faq" ref={ref} className="py-24 lg:py-32 px-4 bg-obsidian relative overflow-hidden scroll-mt-24">
       <div className="max-w-3xl mx-auto relative z-10">
         {/* Section header */}
         <motion.div
