@@ -45,6 +45,7 @@ export function DashboardScreen({
   // Get data from store
   const subscriptions = useStore((state) => state.subscriptions)
   const addToast = useStore((state) => state.addToast)
+  const hasHydratedFromCloud = useStore((state) => state.hasHydratedFromCloud)
   
   // Memoize metrics calculation to prevent infinite loops
   const metrics = useMemo(() => {
@@ -78,10 +79,12 @@ export function DashboardScreen({
       .sort((a, b) => new Date(a.nextRenewalDate).getTime() - new Date(b.nextRenewalDate).getTime())
   }, [subscriptions])
 
-  // Prevent hydration mismatch
+  // Prevent hydration mismatch - only render dynamic content after mount AND store is ready
   React.useEffect(() => {
-    setMounted(true)
-  }, [])
+    if (hasHydratedFromCloud) {
+      setMounted(true)
+    }
+  }, [hasHydratedFromCloud])
 
   // Build filter chips dynamically from subscriptions
   const categories = [...new Set(subscriptions.map(s => s.category))]
