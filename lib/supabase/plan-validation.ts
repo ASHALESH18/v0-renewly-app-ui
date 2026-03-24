@@ -28,7 +28,7 @@ export async function getUserPlanAndSubscriptionCount() {
       .from('subscriptions')
       .select('id', { count: 'exact' })
       .eq('user_id', user.id)
-      .eq('is_active', true)
+      .eq('status', 'active')
 
     if (countError) throw countError
 

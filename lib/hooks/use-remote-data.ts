@@ -93,6 +93,37 @@ export function useFAQItems() {
   }
 }
 
+export function useNotifications() {
+  const [data, setData] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<any>(null)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true)
+        const res = await fetch('/api/notifications')
+        if (!res.ok) throw new Error('Failed to fetch notifications')
+        const json = await res.json()
+        setData(json)
+      } catch (err) {
+        setError(err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    fetchData()
+  }, [])
+
+  return {
+    notifications: data?.notifications || [],
+    unreadCount: data?.unreadCount || 0,
+    isLoading,
+    error
+  }
+}
+
 export function usePopularServices() {
   const [data, setData] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)

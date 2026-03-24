@@ -1,16 +1,17 @@
-// Supabase browser client - uses @supabase/supabase-js (NOT @supabase/ssr)
-import { createClient as _createClient } from '@supabase/supabase-js'
+'use client'
+
+import { createBrowserClient } from '@supabase/ssr'
 import type { Database } from './database.types'
 
-let _instance: ReturnType<typeof _createClient<Database>> | null = null
+let client: ReturnType<typeof createBrowserClient<Database>> | null = null
 
 export function createClient() {
-  if (_instance) return _instance
-  _instance = _createClient<Database>(
+  if (client) return client
+  
+  client = createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
-  return _instance
+  
+  return client
 }
-
-

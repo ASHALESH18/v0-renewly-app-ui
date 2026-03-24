@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { generatePageMetadata } from '@/lib/metadata'
+import { LandingHeader } from '@/components/landing/header'
 import { Hero } from '@/components/landing/hero'
 import { Features } from '@/components/landing/features'
 import { LeakPreview } from '@/components/landing/leak-preview'
@@ -16,6 +17,7 @@ export const metadata: Metadata = generatePageMetadata(
 export default function LandingPage() {
   return (
     <main className="min-h-screen bg-obsidian">
+      <LandingHeader />
       <Hero />
       <Features />
       <LeakPreview />

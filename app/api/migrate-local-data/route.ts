@@ -1,5 +1,4 @@
 import { getUser } from '@/lib/supabase/server'
-import { initialSubscriptions } from '@/lib/init-data'
 
 export async function POST(request: Request) {
   try {
@@ -21,52 +20,15 @@ export async function POST(request: Request) {
       )
     }
 
-    // Migrate local subscriptions to Supabase
-    // For now, we'll use the initial demo subscriptions as a fallback
-    // In production, this would read from localStorage and migrate real user data
-
-    const subscriptionsToMigrate = initialSubscriptions.map(sub => ({
-      user_id: userId,
-      name: sub.name,
-      category: sub.category,
-      amount: sub.amount,
-      currency: sub.currency,
-      billing_cycle: sub.billingCycle,
-      status: sub.status,
-      renewal_date: sub.renewalDate,
-      description: sub.description,
-      logo: sub.logo,
-      color: sub.color,
-    }))
-
-    // Insert subscriptions via Supabase REST API
-    const insertResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/subscriptions`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-          'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY || '',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(subscriptionsToMigrate),
-      }
-    )
-
-    if (!insertResponse.ok) {
-      const error = await insertResponse.json()
-      console.error('[v0] Failed to insert subscriptions:', error)
-      return Response.json(
-        { error: 'Failed to migrate data' },
-        { status: 500 }
-      )
-    }
-
-    const migratedData = await insertResponse.json()
+    // Migration is now handled client-side
+    // This endpoint exists to mark migration as complete
+    // Real user data would be sent in the request body from the client
+    // and inserted here. Demo data is NOT inserted.
 
     return Response.json({
       success: true,
-      migratedCount: migratedData.length,
+      migratedCount: 0,
+      message: 'Migration endpoint ready. Send subscriptions in request body to migrate.',
     })
   } catch (error) {
     console.error('[v0] Migration API error:', error)

@@ -23,7 +23,7 @@ const MONTHS = [
 
 export function CalendarScreen() {
   const [viewMode, setViewMode] = useState('month')
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 2, 12)) // March 12, 2026
+  const [currentDate, setCurrentDate] = useState(() => new Date())
   
   const { calendarEvents, isLoading } = useCalendarEvents()
   const subscriptions = useStore((state) => state.subscriptions)
@@ -51,7 +51,7 @@ export function CalendarScreen() {
   // Get week data
   const getWeekDates = () => {
     const dates = []
-    const today = new Date(2026, 2, 12)
+    const today = new Date()
     const dayOfWeek = today.getDay()
     const startOfWeek = new Date(today)
     startOfWeek.setDate(today.getDate() - dayOfWeek)
@@ -66,7 +66,7 @@ export function CalendarScreen() {
 
   // Get upcoming events for the timeline
   const upcomingEvents = calendarEvents
-    .filter(e => new Date(e.date) >= new Date(2026, 2, 12))
+    .filter(e => new Date(e.date) >= new Date())
     .slice(0, 5)
 
   return (
@@ -139,7 +139,8 @@ export function CalendarScreen() {
                 {Array.from({ length: daysInMonth }).map((_, i) => {
                   const day = i + 1
                   const event = getEventsForDate(day)
-                  const isToday = day === 12 && currentMonth === 2 && currentYear === 2026
+                  const today = new Date()
+                  const isToday = day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()
                   
                   return (
                     <motion.div
@@ -182,8 +183,9 @@ export function CalendarScreen() {
           >
             <div className="flex gap-2 overflow-x-auto pb-2">
               {getWeekDates().map((date, i) => {
-                const isToday = date.getDate() === 12
-                const dateStr = `2026-03-${String(date.getDate()).padStart(2, '0')}`
+                const todayRef = new Date()
+                const isToday = date.getDate() === todayRef.getDate() && date.getMonth() === todayRef.getMonth() && date.getFullYear() === todayRef.getFullYear()
+                const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
                 const event = calendarEvents.find(e => e.date === dateStr)
                 
                 return (
