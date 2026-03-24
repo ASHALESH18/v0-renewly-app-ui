@@ -63,6 +63,7 @@ export interface AppState {
   setCurrentUser: (userId: string | null, email: string | null) => void
   setUserProfile: (profile: UserProfile | null) => void
   resetUserScopedState: () => void
+  clearUserData: () => void
 
   // Actions - Cloud Data
   hydrateAuthenticatedUserData: (userId: string, email: string) => Promise<void>
@@ -128,6 +129,18 @@ const useStore = create<AppState>()(
 
       // Reset all user-scoped state when user changes or logs out
       resetUserScopedState: () => set({
+        subscriptions: [],
+        userProfile: null,
+        isHydratingUserData: false,
+        hasHydratedFromCloud: false,
+        hasMigratedLocalData: false,
+        syncError: null,
+      }),
+
+      // Clear all user data on sign out
+      clearUserData: () => set({
+        currentUserId: null,
+        currentUserEmail: null,
         subscriptions: [],
         userProfile: null,
         isHydratingUserData: false,
