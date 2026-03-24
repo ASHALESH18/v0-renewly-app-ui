@@ -153,9 +153,13 @@ const useStore = create<AppState>()(
       hydrateAuthenticatedUserData: async (userId, email) => {
         const state = get()
 
+        // Prevent concurrent hydration calls - if already hydrating, skip
+        if (state.isHydratingUserData) {
+          return
+        }
+
         // Prevent cross-user data leakage: if user ID changed, reset state
         if (state.currentUserId && state.currentUserId !== userId) {
-          console.log('[v0] User changed, resetting state:', state.currentUserId, '->', userId)
           set({ isHydratingUserData: true, syncError: null })
           get().resetUserScopedState()
         }

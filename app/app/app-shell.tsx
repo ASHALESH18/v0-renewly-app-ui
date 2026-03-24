@@ -105,6 +105,8 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
 
   const hydrateAuthenticatedUserData = useStore((state) => state.hydrateAuthenticatedUserData)
   const userProfile = useStore((state) => state.userProfile)
+  const isHydratingUserData = useStore((state) => state.isHydratingUserData)
+  const hasHydratedFromCloud = useStore((state) => state.hasHydratedFromCloud)
 
   // Extract section from pathname: /app/dashboard -> dashboard
   const pathSegments = pathname.split('/')
@@ -124,6 +126,7 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
       }
 
       if (user?.email) {
+        // Wait for hydration to complete before marking initialized
         await hydrateAuthenticatedUserData(user.id, user.email)
       }
       
@@ -138,6 +141,10 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     initializeUserData()
   }, [initializeUserData])
+
+  // Computed: Are we truly ready to render children?
+  // We need BOTH auth initialized AND store hydration complete
+  const isFullyReady = isInitialized && hasHydratedFromCloud && !isHydratingUserData
 
   // Listen for auth state changes (e.g., token refresh, sign out)
   useEffect(() => {
@@ -154,8 +161,9 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
     return () => subscription?.unsubscribe()
   }, [hydrateAuthenticatedUserData, router])
 
-  // Show loading skeleton while initializing
-  if (!isInitialized) {
+  // Show loading skeleton while initializing OR hydrating store data
+  // This ensures children don't render with stale/empty data
+  if (!isFullyReady) {
     return <AppShellSkeleton />
   }
 
