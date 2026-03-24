@@ -14,7 +14,7 @@ export function Pricing() {
   const plans = getAllPlans()
 
   return (
-    <section ref={ref} className="py-24 lg:py-32 px-4 bg-graphite relative overflow-hidden">
+    <section id="pricing" ref={ref} className="py-24 lg:py-32 px-4 bg-graphite relative overflow-hidden scroll-mt-24">
       {/* Animated background elements */}
       <motion.div 
         className="absolute top-0 right-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl"
