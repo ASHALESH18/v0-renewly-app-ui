@@ -170,7 +170,7 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
   // Show error state if initialization failed
   if (initError) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(1200px_700px_at_20%_-10%,rgba(199,163,106,0.16),transparent_55%),radial-gradient(900px_600px_at_100%_0%,rgba(255,255,255,0.06),transparent_40%),linear-gradient(180deg,rgba(11,15,20,1)_0%,rgba(14,18,24,1)_100%)]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
