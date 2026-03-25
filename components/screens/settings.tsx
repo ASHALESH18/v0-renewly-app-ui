@@ -136,32 +136,19 @@ export function SettingsScreen() {
 
   // Handlers
   const handleSignOut = async () => {
-    setIsSigningOut(true)const handleSignOut = async () => {
-      if (isSigningOut) return
+    if (isSigningOut) return
 
-      setIsSigningOut(true)
+    setIsSigningOut(true)
 
-      try {
-        await signOutAndRedirectHome()
-      } catch (error) {
-        console.error('[v0] Sign out error:', error)
-        addToast({
-          type: 'error',
-          title: 'Sign out failed',
-          message: 'Please try again',
-        })
-        setIsSigningOut(false)
-      }
-    }
     try {
-      const supabase = createClient()
-      await supabase.auth.signOut()
-      clearUserData?.()
-      router.replace('/auth/sign-in')
-      router.refresh()
+      await signOutAndRedirectHome()
     } catch (error) {
       console.error('[v0] Sign out error:', error)
-      addToast({ type: 'error', title: 'Sign out failed', message: 'Please try again' })
+      addToast({
+        type: 'error',
+        title: 'Sign out failed',
+        message: 'Please try again',
+      })
       setIsSigningOut(false)
     }
   }
