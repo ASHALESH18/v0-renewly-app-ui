@@ -88,6 +88,8 @@ export function SettingsScreen() {
   const [activeSheet, setActiveSheet] = useState<string | null>(null)
   const [showPlanSheet, setShowPlanSheet] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
+  const [newEmail, setNewEmail] = useState('')
+  const [isChangingEmail, setIsChangingEmail] = useState(false)
   
   // Store
   const userProfile = useStore((state) => state.userProfile)
@@ -145,6 +147,40 @@ export function SettingsScreen() {
       console.error('[v0] Sign out error:', error)
       addToast({ type: 'error', title: 'Sign out failed', message: 'Please try again' })
       setIsSigningOut(false)
+    }
+  }
+
+  const handleChangeEmail = async () => {
+    if (!newEmail || newEmail === currentUserEmail) {
+      addToast({ type: 'error', title: 'Invalid email', message: 'Please enter a different email address' })
+      return
+    }
+
+    setIsChangingEmail(true)
+    try {
+      const { changeUserEmail } = await import('@/lib/supabase/settings-actions')
+      const result = await changeUserEmail(newEmail)
+
+      if (result.success) {
+        addToast({
+          type: 'success',
+          title: 'Verification email sent',
+          message: 'Check your new email address to verify the change'
+        })
+        setNewEmail('')
+        setActiveSheet(null)
+      } else {
+        addToast({
+          type: 'error',
+          title: 'Failed to change email',
+          message: result.error || 'Please try again'
+        })
+      }
+    } catch (error) {
+      console.error('[v0] Email change error:', error)
+      addToast({ type: 'error', title: 'Error', message: 'Failed to change email address' })
+    } finally {
+      setIsChangingEmail(false)
     }
   }
 
@@ -244,11 +280,9 @@ export function SettingsScreen() {
           />
           <SettingsItem
             icon={CreditCard}
-            label="Payment Methods"
-            description="Manage billing"
-            onClick={() => {
-              addToast({ type: 'info', title: 'Coming soon', message: 'Payment settings will be available soon.' })
-            }}
+            label="Billing & Plan"
+            description={userProfile?.plan === 'pro' ? 'Pro - Active' : 'Free - Upgrade'}
+            onClick={() => setActiveSheet('billing')}
           />
         </SettingsSection>
 
@@ -292,10 +326,8 @@ export function SettingsScreen() {
           <SettingsItem
             icon={Smartphone}
             label="Phone Number"
-            description="Not set - add for OTP verification"
-            onClick={() => {
-              addToast({ type: 'info', title: 'Coming soon', message: 'Phone verification will be available soon.' })
-            }}
+            description="Not set - contact support to update"
+            disabled
           />
           <SettingsToggle
             icon={Shield}
@@ -457,7 +489,10 @@ export function SettingsScreen() {
       {/* Email Sheet */}
       <SettingsSheet
         isOpen={activeSheet === 'email'}
-        onClose={() => setActiveSheet(null)}
+        onClose={() => {
+          setActiveSheet(null)
+          setNewEmail('')
+        }}
         title="Email Address"
       >
         <div className="space-y-4">
@@ -468,13 +503,19 @@ export function SettingsScreen() {
           <p className="text-sm text-muted-foreground">
             To change your email address, you'll need to verify the new email. A verification link will be sent to your new address.
           </p>
+          <input
+            type="email"
+            placeholder="Enter new email address"
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl bg-muted border border-border focus:border-gold outline-none transition-colors text-foreground placeholder:text-muted-foreground"
+          />
           <button
-            onClick={() => {
-              addToast({ type: 'info', title: 'Coming soon', message: 'Email change will be available soon.' })
-            }}
-            className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors"
+            onClick={handleChangeEmail}
+            disabled={isChangingEmail || !newEmail}
+            className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Change Email Address
+            {isChangingEmail ? 'Sending...' : 'Change Email Address'}
           </button>
         </div>
       </SettingsSheet>
@@ -513,6 +554,43 @@ export function SettingsScreen() {
               <p className="text-sm text-muted-foreground">For backup & import</p>
             </div>
           </button>
+        </div>
+      </SettingsSheet>
+
+      {/* Billing & Plan Sheet */}
+      <SettingsSheet
+        isOpen={activeSheet === 'billing'}
+        onClose={() => setActiveSheet(null)}
+        title="Billing & Plan"
+      >
+        <div className="space-y-4">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
+            <p className="text-sm text-muted-foreground">Current Plan</p>
+            <p className="text-2xl font-semibold text-gold mt-1">{planName}</p>
+            {userProfile?.plan === 'pro' && (
+              <p className="text-xs text-muted-foreground mt-2">Your subscription is active</p>
+            )}
+          </div>
+          {userProfile?.plan !== 'pro' && (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Upgrade to Pro to unlock advanced features including analytics, leak detection, and more.
+              </p>
+              <button
+                onClick={() => {
+                  setShowPlanSheet(true)
+                  setActiveSheet(null)
+                }}
+                className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors"
+              >
+                View Upgrade Options
+              </button>
+            </>
+          )}
+          <div className="p-4 rounded-xl bg-muted space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">Questions about billing?</p>
+            <p className="text-sm text-foreground">Contact our support team for assistance with your account or subscription.</p>
+          </div>
         </div>
       </SettingsSheet>
 
