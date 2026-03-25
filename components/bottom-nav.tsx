@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { 
-  Home, 
-  PieChart, 
-  Plus, 
-  Bell, 
+import {
+  Home,
+  PieChart,
+  Plus,
+  Bell,
   Settings,
   Calendar,
   FileText,
@@ -78,13 +78,13 @@ export function BottomNav({ activeTab }: BottomNavProps) {
                     whileTap={{ scale: 0.9 }}
                     className="relative flex flex-col items-center gap-1 px-3 py-2"
                   >
-                    <Icon 
+                    <Icon
                       className={cn(
                         'w-5 h-5 transition-colors duration-200',
                         isActive ? 'text-gold' : 'text-platinum'
-                      )} 
+                      )}
                     />
-                    <span 
+                    <span
                       className={cn(
                         'text-[10px] font-medium transition-colors duration-200',
                         isActive ? 'text-gold' : 'text-platinum'
@@ -110,13 +110,13 @@ export function BottomNav({ activeTab }: BottomNavProps) {
               onClick={() => setShowMore(!showMore)}
               className="relative flex flex-col items-center gap-1 px-3 py-2"
             >
-              <MoreHorizontal 
+              <MoreHorizontal
                 className={cn(
                   'w-5 h-5 transition-colors duration-200',
                   showMore ? 'text-gold' : 'text-platinum'
-                )} 
+                )}
               />
-              <span 
+              <span
                 className={cn(
                   'text-[10px] font-medium transition-colors duration-200',
                   showMore ? 'text-gold' : 'text-platinum'
@@ -147,7 +147,7 @@ export function BottomNav({ activeTab }: BottomNavProps) {
               onClick={() => setShowMore(false)}
               className="fixed inset-0 z-40 bg-obsidian/40 backdrop-blur-sm lg:hidden"
             />
-            
+
             <motion.div
               initial={{ y: '100%', opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -176,9 +176,9 @@ export function BottomNav({ activeTab }: BottomNavProps) {
                       whileTap={{ scale: 0.98 }}
                       className={cn(
                         'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors',
-                        isActive 
-                          ? 'bg-gold/10 text-gold' 
-                          : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
+                        isActive
+                          ? 'bg-gold/12 text-gold shadow-[inset_0_0_0_1px_rgba(199,163,106,0.18)]'
+                          : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
                       )}
                     >
                       <Icon className="w-5 h-5" />
@@ -229,7 +229,7 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
   useEffect(() => {
     const savedCollapsed = localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
     const savedPinned = localStorage.getItem(SIDEBAR_PINNED_KEY)
-    
+
     if (savedCollapsed !== null) {
       setIsCollapsed(savedCollapsed === 'true')
     }
@@ -268,39 +268,50 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
   return (
     <motion.aside
       initial={{ x: -280 }}
-      animate={{ 
+      animate={{
         x: 0,
         width: sidebarWidth,
       }}
       transition={springs.gentle}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="hidden lg:flex fixed left-0 top-0 bottom-0 flex-col bg-card border-r border-border z-40"
+      className="hidden lg:flex fixed left-0 top-0 bottom-0 flex-col border-r border-gold/10 bg-[linear-gradient(180deg,rgba(14,18,24,0.98)_0%,rgba(10,13,18,0.98)_100%)] backdrop-blur-xl shadow-[14px_0_48px_rgba(0,0,0,0.24)] z-40"
     >
       {/* Logo */}
-      <div className="p-4 border-b border-border">
-        <div className={cn(
-          "flex items-center gap-3 transition-all duration-200",
-          !shouldExpand && "justify-center"
-        )}>
-          <div className="w-10 h-10 rounded-xl gold-gradient flex items-center justify-center flex-shrink-0">
-            <span className="text-obsidian font-semibold text-lg">R</span>
-          </div>
-          <AnimatePresence>
-            {shouldExpand && (
-              <motion.div
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
-                exit={{ opacity: 0, width: 0 }}
-                transition={{ duration: 0.15 }}
-                className="overflow-hidden"
-              >
-                <h1 className="text-lg font-semibold text-foreground whitespace-nowrap">Renewly</h1>
-                <p className="text-xs text-muted-foreground whitespace-nowrap">Subscription Intelligence</p>
-              </motion.div>
+      <div className="p-4 border-b border-gold/10">
+        <Link href="/" className="block cursor-pointer">
+          <motion.div
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            className={cn(
+              "group flex items-center gap-3 rounded-2xl border border-gold/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(199,163,106,0.05))] px-3 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.18)] transition-all duration-200 hover:border-gold/30 hover:shadow-[0_18px_44px_rgba(199,163,106,0.12)]",
+              !shouldExpand && "justify-center px-2"
             )}
-          </AnimatePresence>
-        </div>
+          >
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-gold via-gold/90 to-gold/70 flex items-center justify-center flex-shrink-0 shadow-[0_12px_28px_rgba(199,163,106,0.24)]">
+              <span className="text-obsidian font-semibold text-xl">R</span>
+            </div>
+
+            <AnimatePresence>
+              {shouldExpand && (
+                <motion.div
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 'auto' }}
+                  exit={{ opacity: 0, width: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="overflow-hidden"
+                >
+                  <h1 className="text-[1.05rem] font-semibold tracking-[0.02em] text-foreground whitespace-nowrap group-hover:text-gold transition-colors">
+                    Renewly
+                  </h1>
+                  <p className="text-[11px] text-muted-foreground whitespace-nowrap">
+                    Subscription Intelligence
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </Link>
       </div>
 
       {/* Navigation items */}
@@ -318,8 +329,8 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
                 className={cn(
                   'w-full flex items-center gap-3 rounded-xl transition-colors duration-200',
                   shouldExpand ? 'px-4 py-3' : 'px-0 py-3 justify-center',
-                  isActive 
-                    ? 'bg-gold/10 text-gold' 
+                  isActive
+                    ? 'bg-gold/10 text-gold'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 )}
               >

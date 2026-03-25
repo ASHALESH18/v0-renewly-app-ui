@@ -185,7 +185,7 @@ export function ProfileMenu({ isOpen, onClose, onNavigate, avatarUrl }: ProfileM
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleNavigation(item.path)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left",
+                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left cursor-pointer",
                     isActive
                       ? "bg-gold/10 text-gold"
                       : "hover:bg-secondary/50 text-foreground"
@@ -213,13 +213,13 @@ export function ProfileMenu({ isOpen, onClose, onNavigate, avatarUrl }: ProfileM
               whileTap={{ scale: 0.98 }}
               onClick={handleSignOut}
               disabled={isSigningOut}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-destructive/10 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-gold/15 bg-gradient-to-r from-gold/10 via-gold/6 to-transparent hover:border-gold/35 hover:bg-gold/14 transition-all text-left cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center">
-                <LogOut className="w-4 h-4 text-destructive" />
+              <div className="w-9 h-9 rounded-lg bg-gold/12 ring-1 ring-gold/15 flex items-center justify-center">
+                <LogOut className="w-4 h-4 text-gold" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-destructive">
+                <p className="text-sm font-medium text-gold">
                   {isSigningOut ? 'Signing out...' : 'Sign out'}
                 </p>
                 <p className="text-xs text-muted-foreground">

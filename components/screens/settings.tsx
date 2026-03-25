@@ -374,7 +374,7 @@ export function SettingsScreen() {
           <SettingsItem
             icon={FileText}
             label="Terms & Privacy"
-            onClick={() => router.push('/legal/terms')}
+            onClick={() => router.push('/terms')}
           />
         </SettingsSection>
 
@@ -389,10 +389,10 @@ export function SettingsScreen() {
             disabled={isSigningOut}
             whileTap={{ scale: 0.98 }}
             className={cn(
-              "w-full flex items-center justify-center gap-3 p-4 rounded-2xl glass transition-colors cursor-pointer",
+              "w-full flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer",
               isSigningOut
-                ? "opacity-50 cursor-not-allowed"
-                : "text-crimson hover:bg-crimson/10"
+                ? "border-gold/20 bg-gold/6 text-gold/70 opacity-70 cursor-not-allowed"
+                : "border-gold/30 bg-[linear-gradient(135deg,rgba(199,163,106,0.14),rgba(199,163,106,0.06),rgba(255,255,255,0.02))] text-gold hover:border-gold/55 hover:bg-gold/16 hover:text-ivory hover:shadow-[0_16px_40px_rgba(199,163,106,0.16)]"
             )}
           >
             {isSigningOut ? (
