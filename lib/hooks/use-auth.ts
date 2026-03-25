@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useEffect, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
@@ -13,19 +13,7 @@ export function useAuth() {
     let mounted = true
     const supabase = createClient()
 
-    // Set up auth state listener FIRST - this runs immediately on mount
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (mounted) {
-        setUser(session?.user ?? null)
-        setError(null)
-        setLoading(false)
-      }
-    })
-
-    // Then fetch current user - this will trigger onAuthStateChange if needed
-    const getUser = async () => {
+    const syncCurrentUser = async () => {
       try {
         const {
           data: { user },
@@ -35,18 +23,13 @@ export function useAuth() {
         if (error) throw error
 
         if (mounted) {
-          // Only update if we don't have a user from the listener yet
-          if (!user) {
-            setUser(null)
-          }
+          setUser(user ?? null)
           setError(null)
         }
       } catch (err) {
         if (mounted) {
           setError(err instanceof Error ? err : new Error('Failed to get user'))
-          if (!user) {
-            setUser(null)
-          }
+          setUser(null)
         }
       } finally {
         if (mounted) {
@@ -55,11 +38,21 @@ export function useAuth() {
       }
     }
 
-    getUser()
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return
+
+      setUser(session?.user ?? null)
+      setError(null)
+      setLoading(false)
+    })
+
+    void syncCurrentUser()
 
     return () => {
       mounted = false
-      subscription?.unsubscribe()
+      subscription.unsubscribe()
     }
   }, [])
 
