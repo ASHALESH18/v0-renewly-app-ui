@@ -100,7 +100,6 @@ export function SettingsScreen() {
   const addToast = useStore((state) => state.addToast)
   const updateNotificationSettings = useStore((state) => state.updateNotificationSettings)
   const setUserProfile = useStore((state) => state.setUserProfile)
-  const hasHydratedFromCloud = useStore((state) => state.hasHydratedFromCloud)
 
   // Track client-side mounting to prevent hydration mismatch
   const [isMounted, setIsMounted] = useState(false)
