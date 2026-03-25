@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { LogOut, Settings, Bell, User, Crown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import useStore from '@/lib/store'
-import { createClient } from '@/lib/supabase/client'
+import { signOutAndRedirectHome } from '@/lib/auth/sign-out'
 
 interface ProfileMenuProps {
   isOpen: boolean
@@ -58,14 +58,13 @@ export function ProfileMenu({ isOpen, onClose, onNavigate, avatarUrl }: ProfileM
   }, [isOpen, onClose])
 
   const handleSignOut = async () => {
+    if (isSigningOut) return
+
     setIsSigningOut(true)
+    onClose()
+
     try {
-      const supabase = createClient()
-      await supabase.auth.signOut()
-      // Clear local store
-      useStore.getState().clearUserData?.()
-      router.push('/auth/sign-in')
-      router.refresh()
+      await signOutAndRedirectHome()
     } catch (error) {
       console.error('[v0] Sign out error:', error)
       setIsSigningOut(false)
@@ -74,7 +73,7 @@ export function ProfileMenu({ isOpen, onClose, onNavigate, avatarUrl }: ProfileM
 
   const handleNavigation = (path: string) => {
     onClose()
-    
+
     // Check if we're already on the target page
     if (pathname === path || pathname.startsWith(path.split('?')[0])) {
       // If navigating to settings with a section, scroll to it
@@ -90,7 +89,7 @@ export function ProfileMenu({ isOpen, onClose, onNavigate, avatarUrl }: ProfileM
         return
       }
     }
-    
+
     if (onNavigate) {
       onNavigate(path)
     } else {
@@ -178,7 +177,7 @@ export function ProfileMenu({ isOpen, onClose, onNavigate, avatarUrl }: ProfileM
             {menuItems.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.path.split('?')[0]
-              
+
               return (
                 <motion.button
                   key={item.label}
@@ -187,8 +186,8 @@ export function ProfileMenu({ isOpen, onClose, onNavigate, avatarUrl }: ProfileM
                   onClick={() => handleNavigation(item.path)}
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left",
-                    isActive 
-                      ? "bg-gold/10 text-gold" 
+                    isActive
+                      ? "bg-gold/10 text-gold"
                       : "hover:bg-secondary/50 text-foreground"
                   )}
                 >
