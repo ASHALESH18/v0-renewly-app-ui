@@ -129,7 +129,7 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
         // Wait for hydration to complete before marking initialized
         await hydrateAuthenticatedUserData(user.id, user.email)
       }
-      
+
       setIsInitialized(true)
     } catch (error) {
       console.error('[v0] Failed to initialize user data:', error)
@@ -144,7 +144,7 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
 
   // Computed: Are we truly ready to render children?
   // We need BOTH auth initialized AND store hydration complete
-  const isFullyReady = isInitialized && hasHydratedFromCloud && !isHydratingUserData
+  const isFullyReady = isInitialized && (!isHydratingUserData || hasHydratedFromCloud || Boolean(userProfile))
 
   // Listen for auth state changes (e.g., token refresh, sign out)
   useEffect(() => {
