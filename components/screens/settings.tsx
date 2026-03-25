@@ -105,10 +105,8 @@ export function SettingsScreen() {
   // Track client-side mounting to prevent hydration mismatch
   const [isMounted, setIsMounted] = useState(false)
   useEffect(() => {
-    if (hasHydratedFromCloud) {
-      setIsMounted(true)
-    }
-  }, [hasHydratedFromCloud])
+    setIsMounted(true)
+  }, [])
 
   // Open profile sheet if coming from dropdown
   useEffect(() => {
