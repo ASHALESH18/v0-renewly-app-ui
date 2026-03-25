@@ -129,7 +129,7 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
         // Wait for hydration to complete before marking initialized
         await hydrateAuthenticatedUserData(user.id, user.email)
       }
-      
+
       setIsInitialized(true)
     } catch (error) {
       console.error('[v0] Failed to initialize user data:', error)
@@ -144,14 +144,14 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
 
   // Computed: Are we truly ready to render children?
   // We need BOTH auth initialized AND store hydration complete
-  const isFullyReady = isInitialized && hasHydratedFromCloud && !isHydratingUserData
+  const isFullyReady = isInitialized && (!isHydratingUserData || hasHydratedFromCloud || Boolean(userProfile))
 
   // Listen for auth state changes (e.g., token refresh, sign out)
   useEffect(() => {
     const supabase = createClient()
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
-        router.replace('/auth/sign-in')
+        router.replace('/')
       } else if (event === 'TOKEN_REFRESHED' && session?.user?.email) {
         // Re-hydrate on token refresh to ensure fresh data
         hydrateAuthenticatedUserData(session.user.id, session.user.email)
@@ -170,7 +170,7 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
   // Show error state if initialization failed
   if (initError) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(1200px_700px_at_20%_-10%,rgba(199,163,106,0.16),transparent_55%),radial-gradient(900px_600px_at_100%_0%,rgba(255,255,255,0.06),transparent_40%),linear-gradient(180deg,rgba(11,15,20,1)_0%,rgba(14,18,24,1)_100%)]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -199,7 +199,7 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
       <SidebarNav activeTab={activeTab} />
 
       {/* Main content area with page transitions - sidebar sets --sidebar-width CSS var */}
-      <main className="lg:ml-[var(--sidebar-width,280px)] lg:transition-[margin-left] lg:duration-200 pb-24 lg:pb-0 min-h-screen">
+      <main className="pb-24 lg:pb-0 min-h-screen w-full overflow-x-hidden lg:ml-[var(--sidebar-width,280px)] lg:w-[calc(100%-var(--sidebar-width,280px))] lg:max-w-[calc(100vw-var(--sidebar-width,280px))] lg:transition-[margin-left,width,max-width] lg:duration-200">
         <AnimatePresence mode="wait">
           <CinematicPageTransition key={pathname}>
             {children}
