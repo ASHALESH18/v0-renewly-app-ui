@@ -151,7 +151,7 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
     const supabase = createClient()
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
-        router.replace('/auth/sign-in')
+        router.replace('/')
       } else if (event === 'TOKEN_REFRESHED' && session?.user?.email) {
         // Re-hydrate on token refresh to ensure fresh data
         hydrateAuthenticatedUserData(session.user.id, session.user.email)
