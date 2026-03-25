@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react'
 import { Header } from '@/components/header'
@@ -24,9 +24,27 @@ const MONTHS = [
 export function CalendarScreen() {
   const [viewMode, setViewMode] = useState('month')
   const [currentDate, setCurrentDate] = useState(() => new Date())
+  const [isMounted, setIsMounted] = useState(false)
   
   const { calendarEvents, isLoading } = useCalendarEvents()
   const subscriptions = useStore((state) => state.subscriptions)
+  const hasHydratedFromCloud = useStore((state) => state.hasHydratedFromCloud)
+
+  // Wait for store hydration before rendering
+  useEffect(() => {
+    if (hasHydratedFromCloud) {
+      setIsMounted(true)
+    }
+  }, [hasHydratedFromCloud])
+
+  // Early return: Don't render any content until store is hydrated
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-12 h-12 rounded-xl bg-gold/20 border-2 border-gold/30 border-t-gold animate-spin" />
+      </div>
+    )
+  }
   
   const currentYear = currentDate.getFullYear()
   const currentMonth = currentDate.getMonth()

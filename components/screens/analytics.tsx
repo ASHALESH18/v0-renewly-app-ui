@@ -5,7 +5,7 @@ import { TrendingUp, TrendingDown, PieChart, BarChart3 } from 'lucide-react'
 import { Header } from '@/components/header'
 import { PageTransition, springs, staggerItem, StaggerList } from '@/components/motion'
 import { SegmentedControl } from '@/components/filter-chips'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAnalyticsData } from '@/lib/hooks/use-remote-data'
 import useStore from '@/lib/store'
 import { 
@@ -33,9 +33,27 @@ const COLORS = ['#C7A36A', '#2E5E52', '#7A3940', '#BCC2CC', '#F4EFE7']
 
 export function AnalyticsScreen() {
   const [timeRange, setTimeRange] = useState('6m')
+  const [isMounted, setIsMounted] = useState(false)
   
   const { monthlySpendData, categoryBreakdown, isLoading } = useAnalyticsData()
   const subscriptions = useStore((state) => state.subscriptions)
+  const hasHydratedFromCloud = useStore((state) => state.hasHydratedFromCloud)
+
+  // Wait for store hydration before rendering
+  useEffect(() => {
+    if (hasHydratedFromCloud) {
+      setIsMounted(true)
+    }
+  }, [hasHydratedFromCloud])
+
+  // Early return: Don't render any content until store is hydrated
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-12 h-12 rounded-xl bg-gold/20 border-2 border-gold/30 border-t-gold animate-spin" />
+      </div>
+    )
+  }
 
   const totalSpend = monthlySpendData.reduce((sum: number, m: any) => sum + m.amount, 0)
   const avgSpend = monthlySpendData.length > 0 ? Math.round(totalSpend / monthlySpendData.length) : 0

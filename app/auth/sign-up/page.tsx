@@ -97,8 +97,8 @@ function SignUpPageContent() {
         // Email confirmation is required
         setConfirmationSent(true)
         setConfirmedEmail(formData.email)
-        // Auto-redirect after showing confirmation
-        setTimeout(() => router.push(next), 2000)
+        // Do NOT auto-redirect - let user click the email link
+        // The callback will handle navigation when verification completes
       } else if (data.session) {
         // Session created immediately - go to app
         router.replace('/app')

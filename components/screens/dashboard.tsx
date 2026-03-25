@@ -114,6 +114,16 @@ export function DashboardScreen({
     sub.category.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  // Early return: Don't render any content until store is hydrated
+  // This prevents blank page states and ensures all data is available
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-12 h-12 rounded-xl bg-gold/20 border-2 border-gold/30 border-t-gold animate-spin" />
+      </div>
+    )
+  }
+
   return (
     <PageTransition className="min-h-screen">
       <Header 
