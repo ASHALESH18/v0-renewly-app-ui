@@ -51,8 +51,10 @@ export function LandingHeader() {
         {/* Auth Buttons */}
         <div className="flex items-center gap-3">
           {loading ? (
+            // Premium loading placeholder - don't show sign-in while loading
             <div className="w-20 h-10 rounded-lg bg-graphite/50 animate-pulse" />
           ) : user ? (
+            // Authenticated - show dashboard button
             <Link href="/app">
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -64,6 +66,7 @@ export function LandingHeader() {
               </motion.button>
             </Link>
           ) : (
+            // Not authenticated - show sign-in and get started
             <>
               <Link href="/auth/sign-in">
                 <motion.button
