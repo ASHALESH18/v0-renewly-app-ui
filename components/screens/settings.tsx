@@ -3,8 +3,8 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  User, Bell, CreditCard, Shield, Moon, Sun, Globe, 
+import {
+  User, Bell, CreditCard, Shield, Moon, Sun, Globe,
   HelpCircle, FileText, LogOut, ChevronRight, Crown,
   Smartphone, Mail, Lock, Download, Copy, FileJson, X,
   Check, AlertCircle, Eye, EyeOff, RefreshCw
@@ -17,19 +17,20 @@ import { exportSubscriptions } from '@/lib/export'
 import { createClient } from '@/lib/supabase/client'
 import { PlanSelectionSheet } from '@/components/plan-selection-sheet'
 import { generateAvatar } from '@/lib/avatar-utils'
+import { signOutAndRedirectHome } from '@/lib/auth/sign-out'
 import { countries, currencies } from '@/lib/locale-utils'
 
 // Sheet component for settings modals
-function SettingsSheet({ 
-  isOpen, 
-  onClose, 
-  title, 
-  children 
-}: { 
+function SettingsSheet({
+  isOpen,
+  onClose,
+  title,
+  children
+}: {
   isOpen: boolean
   onClose: () => void
   title: string
-  children: React.ReactNode 
+  children: React.ReactNode
 }) {
   // Close on escape
   useEffect(() => {
@@ -83,14 +84,14 @@ export function SettingsScreen() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const section = searchParams.get('section')
-  
+
   // Sheet states
   const [activeSheet, setActiveSheet] = useState<string | null>(null)
   const [showPlanSheet, setShowPlanSheet] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [newEmail, setNewEmail] = useState('')
   const [isChangingEmail, setIsChangingEmail] = useState(false)
-  
+
   // Store
   const userProfile = useStore((state) => state.userProfile)
   const currentUserEmail = useStore((state) => state.currentUserEmail)
@@ -99,7 +100,6 @@ export function SettingsScreen() {
   const addToast = useStore((state) => state.addToast)
   const updateNotificationSettings = useStore((state) => state.updateNotificationSettings)
   const setUserProfile = useStore((state) => state.setUserProfile)
-  const clearUserData = useStore((state) => state.clearUserData)
   const hasHydratedFromCloud = useStore((state) => state.hasHydratedFromCloud)
 
   // Track client-side mounting to prevent hydration mismatch
@@ -123,7 +123,7 @@ export function SettingsScreen() {
     const seed = userProfile.avatarSeed || userProfile.email || 'default'
     return generateAvatar({ seed, size: 128 })
   }, [userProfile?.email, userProfile?.avatarSeed])
-  
+
   // Plan display
   const planNames: Record<string, string> = {
     free: 'Free Plan',
@@ -136,7 +136,23 @@ export function SettingsScreen() {
 
   // Handlers
   const handleSignOut = async () => {
-    setIsSigningOut(true)
+    setIsSigningOut(true)const handleSignOut = async () => {
+      if (isSigningOut) return
+
+      setIsSigningOut(true)
+
+      try {
+        await signOutAndRedirectHome()
+      } catch (error) {
+        console.error('[v0] Sign out error:', error)
+        addToast({
+          type: 'error',
+          title: 'Sign out failed',
+          message: 'Please try again',
+        })
+        setIsSigningOut(false)
+      }
+    }
     try {
       const supabase = createClient()
       await supabase.auth.signOut()
@@ -224,7 +240,7 @@ export function SettingsScreen() {
           <p className="text-sm text-muted-foreground mt-1">Manage your account and preferences</p>
         </motion.div>
       </div>
-      
+
       {/* Profile Card */}
       <motion.button
         id="profile"
@@ -267,7 +283,7 @@ export function SettingsScreen() {
           </div>
         </div>
       </motion.button>
-      
+
       {/* Settings Sections */}
       <div className="px-4 lg:px-6 space-y-6">
         {/* Account Section */}
@@ -377,7 +393,7 @@ export function SettingsScreen() {
             onClick={() => router.push('/legal/terms')}
           />
         </SettingsSection>
-        
+
         {/* Sign Out Button */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -390,8 +406,8 @@ export function SettingsScreen() {
             whileTap={{ scale: 0.98 }}
             className={cn(
               "w-full flex items-center justify-center gap-3 p-4 rounded-2xl glass transition-colors cursor-pointer",
-              isSigningOut 
-                ? "opacity-50 cursor-not-allowed" 
+              isSigningOut
+                ? "opacity-50 cursor-not-allowed"
                 : "text-crimson hover:bg-crimson/10"
             )}
           >
@@ -408,7 +424,7 @@ export function SettingsScreen() {
             )}
           </motion.button>
         </motion.div>
-        
+
         {/* Version */}
         <p className="text-center text-xs text-muted-foreground py-4">
           Renewly v1.0.0
@@ -417,7 +433,7 @@ export function SettingsScreen() {
 
       {/* Plan Selection Sheet */}
       {showPlanSheet && (
-        <PlanSelectionSheet 
+        <PlanSelectionSheet
           onClose={() => setShowPlanSheet(false)}
           currentPlan={userProfile?.plan || 'free'}
         />
@@ -633,14 +649,14 @@ export function SettingsScreen() {
 }
 
 // Settings Section Component
-function SettingsSection({ 
-  title, 
-  children, 
-  delay = 0 
-}: { 
+function SettingsSection({
+  title,
+  children,
+  delay = 0
+}: {
   title: string
   children: React.ReactNode
-  delay?: number 
+  delay?: number
 }) {
   return (
     <motion.div
@@ -717,7 +733,7 @@ function SettingsToggle({
           <p className="text-sm text-muted-foreground">{description}</p>
         )}
       </div>
-      <Switch 
+      <Switch
         checked={checked}
         onCheckedChange={onToggle}
         className="data-[state=checked]:bg-gold"
@@ -832,7 +848,7 @@ function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
     try {
       const supabase = createClient()
       const { error } = await supabase.auth.updateUser({ password: newPassword })
-      
+
       if (error) {
         setError(error.message)
       } else {
