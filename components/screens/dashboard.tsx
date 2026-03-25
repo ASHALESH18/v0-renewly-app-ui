@@ -2,10 +2,10 @@
 
 import React, { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { 
-  CreditCard, 
-  Calendar, 
-  TrendingDown, 
+import {
+  CreditCard,
+  Calendar,
+  TrendingDown,
   Sparkles,
   ChevronRight,
   Search
@@ -25,12 +25,12 @@ const viewSegments = [
   { id: 'list', label: 'List' },
 ]
 
-export function DashboardScreen({ 
+export function DashboardScreen({
   onSubscriptionSelect,
   onNavigateTab,
   onProfileClick,
   onNotificationClick
-}: { 
+}: {
   onSubscriptionSelect?: (subscription: Subscription) => void
   onNavigateTab?: (tab: string) => void
   onProfileClick?: () => void
@@ -45,8 +45,7 @@ export function DashboardScreen({
   // Get data from store
   const subscriptions = useStore((state) => state.subscriptions)
   const addToast = useStore((state) => state.addToast)
-  const hasHydratedFromCloud = useStore((state) => state.hasHydratedFromCloud)
-  
+
   // Memoize metrics calculation to prevent infinite loops
   const metrics = useMemo(() => {
     const totalMonthly = subscriptions.reduce((sum, sub) => sum + (sub.price || 0), 0)
@@ -54,12 +53,12 @@ export function DashboardScreen({
     const activeSubscriptions = subscriptions.filter(sub => sub.isActive).length
     const unused = subscriptions.filter(sub => !sub.isActive)
     const savingsPotential = unused.reduce((sum, sub) => sum + (sub.price || 0), 0)
-    const leakScore = subscriptions.length > 0 
+    const leakScore = subscriptions.length > 0
       ? Math.max(0, 100 - (unused.length / subscriptions.length) * 100)
       : 100
-    
-    return { 
-      totalMonthly, 
+
+    return {
+      totalMonthly,
       totalYearly,
       activeSubscriptions,
       savingsPotential,
@@ -81,20 +80,18 @@ export function DashboardScreen({
 
   // Prevent hydration mismatch - only render dynamic content after mount AND store is ready
   React.useEffect(() => {
-    if (hasHydratedFromCloud) {
-      setMounted(true)
-    }
-  }, [hasHydratedFromCloud])
+    setMounted(true)
+  }, [])
 
   // Build filter chips dynamically from subscriptions
   const categories = [...new Set(subscriptions.map(s => s.category))]
   const filterChips = [
     { id: 'all', label: 'All', count: subscriptions.length },
     { id: 'upcoming', label: 'Upcoming', count: upcoming.length },
-    ...categories.map(cat => ({ 
-      id: cat, 
-      label: cat, 
-      count: subscriptions.filter(s => s.category === cat).length 
+    ...categories.map(cat => ({
+      id: cat,
+      label: cat,
+      count: subscriptions.filter(s => s.category === cat).length
     }))
   ]
 
@@ -109,7 +106,7 @@ export function DashboardScreen({
   })
 
   // Filter by search query
-  const displayedSubscriptions = filteredSubscriptions.filter(sub => 
+  const displayedSubscriptions = filteredSubscriptions.filter(sub =>
     sub.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     sub.category.toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -126,7 +123,7 @@ export function DashboardScreen({
 
   return (
     <PageTransition className="min-h-screen">
-      <Header 
+      <Header
         showProfile
         notificationCount={0}
         onSearchClick={() => setShowSearch(true)}
@@ -190,11 +187,11 @@ export function DashboardScreen({
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Subscription Health</p>
                   <p className="text-lg font-semibold text-foreground">
-                    {metrics.leakScore > 70 
-                      ? '🚨 Review Subscriptions' 
-                      : metrics.leakScore > 40 
-                      ? '⚠️ Some Unused Services' 
-                      : '✓ Well Optimized'}
+                    {metrics.leakScore > 70
+                      ? '🚨 Review Subscriptions'
+                      : metrics.leakScore > 40
+                        ? '⚠️ Some Unused Services'
+                        : '✓ Well Optimized'}
                   </p>
                 </div>
                 <div className="relative w-16 h-16">
@@ -216,7 +213,7 @@ export function DashboardScreen({
                       strokeWidth="4"
                       strokeDasharray={`${2 * Math.PI * 28}`}
                       initial={{ strokeDashoffset: 2 * Math.PI * 28 }}
-                      animate={{ 
+                      animate={{
                         strokeDashoffset: 2 * Math.PI * 28 * (1 - metrics.leakScore / 100)
                       }}
                       transition={{ delay: 0.5, duration: 1.5, ease: 'easeOut' }}
@@ -287,7 +284,7 @@ export function DashboardScreen({
               <div>
                 <p className="font-medium text-foreground mb-1">Smart Insight</p>
                 <p className="text-sm text-muted-foreground">
-                  {metrics.leakScore > 0 
+                  {metrics.leakScore > 0
                     ? `You could save ₹${metrics.savingsPotential} monthly by reviewing unused subscriptions.`
                     : 'All your subscriptions are being actively used. Great job!'}
                 </p>
@@ -398,12 +395,12 @@ function UpcomingCard({ subscription, index }: UpcomingCardProps) {
       whileHover={{ y: -2 }}
       className={cn(
         'flex-shrink-0 w-36 p-4 rounded-xl border cursor-pointer transition-all',
-        isUrgent 
-          ? 'bg-crimson/10 border-crimson/20 hover:border-crimson/40' 
+        isUrgent
+          ? 'bg-crimson/10 border-crimson/20 hover:border-crimson/40'
           : 'bg-card border-border hover:border-gold/40'
       )}
     >
-      <div 
+      <div
         className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-medium text-sm mb-3"
         style={{ backgroundColor: subscription.color || '#C7A36A' }}
       >
@@ -433,12 +430,12 @@ interface AnimatedMetricItemProps {
   delay?: number
 }
 
-function AnimatedMetricItem({ 
-  label, 
-  value, 
-  prefix = '', 
-  suffix = '', 
-  delay = 0 
+function AnimatedMetricItem({
+  label,
+  value,
+  prefix = '',
+  suffix = '',
+  delay = 0
 }: AnimatedMetricItemProps) {
   const displayValue = useCountUp(value, 1500, delay * 1000)
 

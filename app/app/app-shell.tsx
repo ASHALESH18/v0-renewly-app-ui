@@ -199,7 +199,7 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
       <SidebarNav activeTab={activeTab} />
 
       {/* Main content area with page transitions - sidebar sets --sidebar-width CSS var */}
-      <main className="lg:ml-[var(--sidebar-width,280px)] lg:transition-[margin-left] lg:duration-200 pb-24 lg:pb-0 min-h-screen">
+      <main className="pb-24 lg:pb-0 min-h-screen w-full overflow-x-hidden lg:ml-[var(--sidebar-width,280px)] lg:w-[calc(100%-var(--sidebar-width,280px))] lg:max-w-[calc(100vw-var(--sidebar-width,280px))] lg:transition-[margin-left,width,max-width] lg:duration-200">
         <AnimatePresence mode="wait">
           <CinematicPageTransition key={pathname}>
             {children}
