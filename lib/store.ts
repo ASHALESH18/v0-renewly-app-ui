@@ -362,11 +362,63 @@ const useStore = create<AppState>()(
         }
       },
 
-      updateNotificationSettings: (settings) => set((state) => ({
-        notificationSettings: { ...state.notificationSettings, ...settings },
-      })),
+      updateNotificationSettings: async (settings) => {
+        // Update local state immediately for optimistic UI
+        set((state) => ({
+          notificationSettings: { ...state.notificationSettings, ...settings },
+        }))
+
+        // Persist to Supabase in background
+        try {
+          const { updateNotificationPreferences } = await import('@/lib/supabase/settings-actions')
+          const result = await updateNotificationPreferences({
+            emailReminders: settings.emailNotifications,
+            emailOnRenewal: settings.emailNotifications,
+            emailOnSpike: settings.emailNotifications,
+            reminderDaysBefore: settings.reminderDays,
+          })
+          
+          if (!result.success) {
+            console.warn('[v0] Failed to persist notification settings:', result.error)
+          }
+        } catch (error) {
+          console.error('[v0] Error persisting notification settings:', error)
+        }
+      },
 
       setTheme: (theme) => set({ theme }),
+
+      // Update user profile with Supabase persistence
+      updateUserProfileRemote: async (profileData: {
+        firstName?: string
+        lastName?: string
+        avatarUrl?: string
+      }) => {
+        // Update local state immediately for optimistic UI
+        set((state) => ({
+          userProfile: state.userProfile ? {
+            ...state.userProfile,
+            first_name: profileData.firstName || state.userProfile.first_name,
+            last_name: profileData.lastName || state.userProfile.last_name,
+            avatar_url: profileData.avatarUrl || state.userProfile.avatar_url,
+          } : null,
+        }))
+
+        // Persist to Supabase in background
+        try {
+          const { updateUserProfile } = await import('@/lib/supabase/settings-actions')
+          const result = await updateUserProfile(profileData)
+          
+          if (!result.success) {
+            console.warn('[v0] Failed to persist profile changes:', result.error)
+            return { success: false, error: result.error }
+          }
+          return { success: true }
+        } catch (error) {
+          console.error('[v0] Error persisting profile:', error)
+          return { success: false, error: (error as Error).message }
+        }
+      },
 
       addToast: (toast) => set((state) => {
         const id = Date.now().toString()
