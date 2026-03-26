@@ -1,22 +1,15 @@
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { PublicPageNav } from '@/components/public-page-nav'
 
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <div className="px-4 py-4 border-b border-border">
-        <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors w-fit">
-          <ArrowLeft className="w-4 h-4" />
-          Back to Home
-        </Link>
-      </div>
+      <PublicPageNav />
 
       {/* Content */}
       <div className="max-w-3xl mx-auto px-4 py-16 md:py-24">
         <h1 className="text-4xl font-bold text-foreground mb-2">Terms of Service</h1>
         <p className="text-muted-foreground mb-8">Last updated: March 18, 2026</p>
-        
+
         <div className="space-y-8 text-foreground/80">
           <section>
             <h2 className="text-2xl font-semibold text-foreground mb-4">1. Acceptance of Terms</h2>

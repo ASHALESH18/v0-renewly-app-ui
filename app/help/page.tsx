@@ -1,5 +1,4 @@
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { PublicPageNav } from '@/components/public-page-nav'
 
 export default function HelpPage() {
   const faqs = [
@@ -31,13 +30,7 @@ export default function HelpPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <div className="px-4 py-4 border-b border-border">
-        <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors w-fit">
-          <ArrowLeft className="w-4 h-4" />
-          Back to Home
-        </Link>
-      </div>
+      <PublicPageNav />
 
       {/* Content */}
       <div className="max-w-3xl mx-auto px-4 py-16 md:py-24">
