@@ -8,12 +8,12 @@ import { SegmentedControl } from '@/components/filter-chips'
 import { useState, useEffect } from 'react'
 import { useAnalyticsData } from '@/lib/hooks/use-remote-data'
 import useStore from '@/lib/store'
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  ResponsiveContainer, 
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
   Tooltip as RechartsTooltip,
   Cell,
   PieChart as RechartsPieChart,
@@ -34,17 +34,14 @@ const COLORS = ['#C7A36A', '#2E5E52', '#7A3940', '#BCC2CC', '#F4EFE7']
 export function AnalyticsScreen() {
   const [timeRange, setTimeRange] = useState('6m')
   const [isMounted, setIsMounted] = useState(false)
-  
+
   const { monthlySpendData, categoryBreakdown, isLoading } = useAnalyticsData()
   const subscriptions = useStore((state) => state.subscriptions)
-  const hasHydratedFromCloud = useStore((state) => state.hasHydratedFromCloud)
 
   // Wait for store hydration before rendering
   useEffect(() => {
-    if (hasHydratedFromCloud) {
-      setIsMounted(true)
-    }
-  }, [hasHydratedFromCloud])
+    setIsMounted(true)
+  }, [])
 
   // Early return: Don't render any content until store is hydrated
   if (!isMounted) {
@@ -58,13 +55,13 @@ export function AnalyticsScreen() {
   const totalSpend = monthlySpendData.reduce((sum: number, m: any) => sum + m.amount, 0)
   const avgSpend = monthlySpendData.length > 0 ? Math.round(totalSpend / monthlySpendData.length) : 0
   const yearlyProjected = avgSpend * 12
-  const lastMonthChange = monthlySpendData.length >= 2 
+  const lastMonthChange = monthlySpendData.length >= 2
     ? ((monthlySpendData[monthlySpendData.length - 1].amount - monthlySpendData[monthlySpendData.length - 2].amount) / monthlySpendData[monthlySpendData.length - 2].amount * 100).toFixed(1)
     : '0'
 
   return (
     <PageTransition className="min-h-screen">
-      <Header 
+      <Header
         title="Analytics"
         subtitle="Your spending insights"
         showSearch={false}
@@ -94,7 +91,7 @@ export function AnalyticsScreen() {
               ₹{avgSpend.toLocaleString('en-IN')}
             </p>
           </motion.div>
-          
+
           <motion.div
             variants={staggerItem}
             className="rounded-2xl bg-card border border-border p-4"
@@ -127,7 +124,7 @@ export function AnalyticsScreen() {
             <BarChart3 className="w-5 h-5 text-gold" />
             <h3 className="font-semibold text-foreground">Monthly Spend Trend</h3>
           </div>
-          
+
           <div className="h-[200px] -ml-4">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={monthlySpendData}>
@@ -137,17 +134,17 @@ export function AnalyticsScreen() {
                     <stop offset="100%" stopColor="#C7A36A" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <XAxis 
-                  dataKey="month" 
+                <XAxis
+                  dataKey="month"
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: '#BCC2CC', fontSize: 12 }}
                 />
-                <YAxis 
+                <YAxis
                   hide
                   domain={['dataMin - 500', 'dataMax + 500']}
                 />
-                <RechartsTooltip 
+                <RechartsTooltip
                   contentStyle={{
                     backgroundColor: '#13161C',
                     border: '1px solid rgba(255,255,255,0.1)',
@@ -208,7 +205,7 @@ export function AnalyticsScreen() {
               {categoryBreakdown.slice(0, 5).map((cat, index) => (
                 <div key={cat.category} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div 
+                    <div
                       className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: COLORS[index % COLORS.length] }}
                     />
@@ -254,7 +251,7 @@ export function AnalyticsScreen() {
                   className="flex items-center gap-4 p-4 rounded-xl bg-card border border-border"
                 >
                   <span className="text-sm text-muted-foreground w-4">{index + 1}</span>
-                  <div 
+                  <div
                     className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-medium"
                     style={{ backgroundColor: sub.color }}
                   >
