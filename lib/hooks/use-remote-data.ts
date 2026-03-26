@@ -2,34 +2,51 @@
 
 import { useEffect, useState } from 'react'
 
+let calendarEventsCache: any = null
+
 export function useCalendarEvents() {
-  const [data, setData] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<any>(null)
+  const [data, setData] = useState(calendarEventsCache)
+  const [isLoading, setIsLoading] = useState(!calendarEventsCache)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
+    let active = true
+
     const fetchData = async () => {
       try {
-        setIsLoading(true)
+        if (!calendarEventsCache) {
+          setIsLoading(true)
+        }
+
         const res = await fetch('/api/calendar/events')
         if (!res.ok) throw new Error('Failed to fetch calendar events')
+
         const json = await res.json()
-        setData(json)
+        calendarEventsCache = json
+
+        if (active) {
+          setData(json)
+          setError(null)
+        }
       } catch (err) {
-        setError(err)
+        if (active) {
+          setError(err)
+        }
       } finally {
-        setIsLoading(false)
+        if (active) {
+          setIsLoading(false)
+        }
       }
     }
-    
-    fetchData()
+
+    void fetchData()
+
+    return () => {
+      active = false
+    }
   }, [])
 
-  return {
-    calendarEvents: data?.calendarEvents || [],
-    isLoading,
-    error
-  }
+  return { calendarEvents: data?.calendarEvents || [], isLoading, error }
 }
 
 export function useAnalyticsData() {
@@ -51,7 +68,7 @@ export function useAnalyticsData() {
         setIsLoading(false)
       }
     }
-    
+
     fetchData()
   }, [])
 
@@ -82,7 +99,7 @@ export function useFAQItems() {
         setIsLoading(false)
       }
     }
-    
+
     fetchData()
   }, [])
 
@@ -112,7 +129,7 @@ export function useNotifications() {
         setIsLoading(false)
       }
     }
-    
+
     fetchData()
   }, [])
 
@@ -143,7 +160,7 @@ export function usePopularServices() {
         setIsLoading(false)
       }
     }
-    
+
     fetchData()
   }, [])
 
