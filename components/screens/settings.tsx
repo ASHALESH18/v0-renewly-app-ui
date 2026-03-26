@@ -91,6 +91,7 @@ export function SettingsScreen() {
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [newEmail, setNewEmail] = useState('')
   const [isChangingEmail, setIsChangingEmail] = useState(false)
+  const [isExportingAccount, setIsExportingAccount] = useState(false)
 
   // Store
   const userProfile = useStore((state) => state.userProfile)
@@ -130,6 +131,12 @@ export function SettingsScreen() {
   }
   const planName = userProfile?.plan ? planNames[userProfile.plan] : 'Free Plan'
   const isPremium = userProfile?.plan && userProfile.plan !== 'free'
+  const currentCurrency =
+    currencies.find((currency) => currency.code === notificationSettings.currencyCode) || {
+      code: notificationSettings.currencyCode,
+      name: notificationSettings.currencyCode,
+      symbol: notificationSettings.currencyCode,
+    }
 
   // Handlers
   const handleSignOut = async () => {
@@ -184,14 +191,65 @@ export function SettingsScreen() {
     }
   }
 
-  const handleExport = (format: 'csv' | 'json') => {
-    exportSubscriptions(subscriptions, format)
-    addToast({
-      type: 'success',
-      title: 'Export complete',
-      message: `Your subscriptions have been exported as ${format.toUpperCase()}.`
+  const downloadJsonFile = (filename: string, payload: unknown) => {
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: 'application/json',
     })
-    setActiveSheet(null)
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleExport = async (format: 'csv' | 'json' | 'account') => {
+    try {
+      if (format === 'account') {
+        setIsExportingAccount(true)
+
+        const { exportUserData } = await import('@/lib/supabase/settings-actions')
+        const result = await exportUserData()
+
+        if (!result.success) {
+          addToast({
+            type: 'error',
+            title: 'Export failed',
+            message: result.error || 'Could not export your account data',
+          })
+          return
+        }
+
+        downloadJsonFile('renewly-account-export.json', result.data)
+
+        addToast({
+          type: 'success',
+          title: 'Account export complete',
+          message: 'Your full account backup has been downloaded as JSON.',
+        })
+      } else {
+        exportSubscriptions(subscriptions, format)
+
+        addToast({
+          type: 'success',
+          title: 'Subscription export complete',
+          message: `Your subscriptions have been exported as ${format.toUpperCase()}.`,
+        })
+      }
+
+      setActiveSheet(null)
+    } catch (error) {
+      console.error('[v0] Export error:', error)
+      addToast({
+        type: 'error',
+        title: 'Export failed',
+        message: 'Please try again',
+      })
+    } finally {
+      setIsExportingAccount(false)
+    }
   }
 
   // Toggle handlers that properly await async store updates
@@ -360,297 +418,307 @@ export function SettingsScreen() {
           <SettingsItem
             icon={Download}
             label="Export Data"
-            description="Download your subscriptions and account data"
+            description="Subscriptions as CSV/JSON or full account backup"
             onClick={() => setActiveSheet('export')}
           />
         </SettingsSection>
 
         {/* Appearance Section */}
-        <SettingsSection title="Appearance" delay={0.35}>
-          <SettingsToggle
-            icon={notificationSettings.theme === 'dark' ? Moon : Sun}
-            label="Dark Mode"
-            checked={notificationSettings.theme === 'dark'}
-            onToggle={handleToggleDarkMode}
-          />
-          <SettingsItem
-            icon={Globe}
-            label="Language"
-            description={notificationSettings.language === 'en' ? 'English' : notificationSettings.language}
-            onClick={() => setActiveSheet('language')}
-          />
-        </SettingsSection>
+        <SettingsToggle
+          icon={notificationSettings.theme === 'dark' ? Moon : Sun}
+          label="Dark Mode"
+          checked={notificationSettings.theme === 'dark'}
+          onToggle={handleToggleDarkMode}
+        />
 
-        {/* Support Section */}
-        <SettingsSection title="Support" delay={0.4}>
-          <SettingsItem
-            icon={HelpCircle}
-            label="Help Center"
-            onClick={() => router.push('/help')}
-          />
-          <SettingsItem
-            icon={FileText}
-            label="Terms of Service"
-            onClick={() => router.push('/terms')}
-          />
-          <SettingsItem
-            icon={FileText}
-            label="Privacy Policy"
-            onClick={() => router.push('/privacy')}
-          />
-        </SettingsSection>
+        <SettingsItem
+          icon={Globe}
+          label="Currency"
+          description={`${currentCurrency.symbol} ${currentCurrency.name}`}
+          onClick={() => setActiveSheet('currency')}
+        />
 
-        {/* Sign Out Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ ...springs.gentle, delay: 0.45 }}
+        <SettingsItem
+          icon={Globe}
+          label="Language"
+          description={notificationSettings.language === 'en' ? 'English' : notificationSettings.language}
+          onClick={() => setActiveSheet('language')}
+        />
+      </SettingsSection>
+
+      {/* Support Section */}
+      <SettingsSection title="Support" delay={0.4}>
+        <SettingsItem
+          icon={HelpCircle}
+          label="Help Center"
+          onClick={() => router.push('/help')}
+        />
+        <SettingsItem
+          icon={FileText}
+          label="Terms of Service"
+          onClick={() => router.push('/terms')}
+        />
+        <SettingsItem
+          icon={FileText}
+          label="Privacy Policy"
+          onClick={() => router.push('/privacy')}
+        />
+      </SettingsSection>
+
+      {/* Sign Out Button */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ ...springs.gentle, delay: 0.45 }}
+      >
+        <motion.button
+          onClick={handleSignOut}
+          disabled={isSigningOut}
+          whileTap={{ scale: 0.98 }}
+          className={cn(
+            "w-full flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer",
+            isSigningOut
+              ? "border-gold/20 bg-gold/6 text-gold/70 opacity-70 cursor-not-allowed"
+              : "border-gold/30 bg-[linear-gradient(135deg,rgba(199,163,106,0.14),rgba(199,163,106,0.06),rgba(255,255,255,0.02))] text-gold hover:border-gold/55 hover:bg-gold/16 hover:text-ivory hover:shadow-[0_16px_40px_rgba(199,163,106,0.16)]"
+          )}
         >
-          <motion.button
-            onClick={handleSignOut}
-            disabled={isSigningOut}
-            whileTap={{ scale: 0.98 }}
-            className={cn(
-              "w-full flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer",
-              isSigningOut
-                ? "border-gold/20 bg-gold/6 text-gold/70 opacity-70 cursor-not-allowed"
-                : "border-gold/30 bg-[linear-gradient(135deg,rgba(199,163,106,0.14),rgba(199,163,106,0.06),rgba(255,255,255,0.02))] text-gold hover:border-gold/55 hover:bg-gold/16 hover:text-ivory hover:shadow-[0_16px_40px_rgba(199,163,106,0.16)]"
-            )}
-          >
-            {isSigningOut ? (
-              <>
-                <RefreshCw className="w-5 h-5 animate-spin" />
-                <span className="font-medium">Signing out...</span>
-              </>
-            ) : (
-              <>
-                <LogOut className="w-5 h-5" />
-                <span className="font-medium">Sign Out</span>
-              </>
-            )}
-          </motion.button>
-        </motion.div>
-
-        {/* Version */}
-        <p className="text-center text-xs text-muted-foreground py-4">
-          Renewly v1.0.0
-        </p>
-      </div>
-
-      {/* Plan Selection Sheet */}
-      {showPlanSheet && (
-        <PlanSelectionSheet
-          onClose={() => setShowPlanSheet(false)}
-          currentPlan={userProfile?.plan || 'free'}
-        />
-      )}
-
-      {/* Profile Sheet */}
-      <SettingsSheet
-        isOpen={activeSheet === 'profile'}
-        onClose={() => setActiveSheet(null)}
-        title="Edit Profile"
-      >
-        <ProfileForm
-          userProfile={userProfile}
-          avatarUrl={avatarUrl}
-          onSave={(data) => {
-            if (userProfile) {
-              setUserProfile({ ...userProfile, ...data })
-            }
-            addToast({ type: 'success', title: 'Profile updated' })
-            setActiveSheet(null)
-          }}
-        />
-      </SettingsSheet>
-
-      {/* Reminder Sheet */}
-      <SettingsSheet
-        isOpen={activeSheet === 'reminder'}
-        onClose={() => setActiveSheet(null)}
-        title="Reminder Timing"
-      >
-        <div className="space-y-4">
-          <p className="text-muted-foreground">Choose when to receive renewal reminders.</p>
-          {[1, 3, 7, 14, 30].map((days) => (
-            <button
-              key={days}
-              onClick={async () => {
-                await updateNotificationSettings({ reminderDays: days })
-                addToast({ type: 'success', title: 'Reminder updated', message: `You'll be reminded ${days} day${days > 1 ? 's' : ''} before renewal.` })
-                setActiveSheet(null)
-              }}
-              className={cn(
-                "w-full flex items-center justify-between p-4 rounded-xl transition-colors",
-                notificationSettings.reminderDays === days
-                  ? "bg-gold/10 text-gold border border-gold/30"
-                  : "bg-muted hover:bg-secondary"
-              )}
-            >
-              <span>{days} day{days > 1 ? 's' : ''} before</span>
-              {notificationSettings.reminderDays === days && <Check className="w-5 h-5" />}
-            </button>
-          ))}
-        </div>
-      </SettingsSheet>
-
-      {/* Password Sheet */}
-      <SettingsSheet
-        isOpen={activeSheet === 'password'}
-        onClose={() => setActiveSheet(null)}
-        title="Change Password"
-      >
-        <PasswordForm
-          onSuccess={() => {
-            addToast({ type: 'success', title: 'Password updated' })
-            setActiveSheet(null)
-          }}
-        />
-      </SettingsSheet>
-
-      {/* Email Sheet */}
-      <SettingsSheet
-        isOpen={activeSheet === 'email'}
-        onClose={() => {
-          setActiveSheet(null)
-          setNewEmail('')
-        }}
-        title="Email Address"
-      >
-        <div className="space-y-4">
-          <div className="p-4 rounded-xl bg-muted">
-            <p className="text-sm text-muted-foreground">Current email</p>
-            <p className="font-medium text-foreground">{currentUserEmail || 'Not set'}</p>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            To change your email address, you'll need to verify the new email. A verification link will be sent to your new address.
-          </p>
-          <input
-            type="email"
-            placeholder="Enter new email address"
-            value={newEmail}
-            onChange={(e) => setNewEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-muted border border-border focus:border-gold outline-none transition-colors text-foreground placeholder:text-muted-foreground"
-          />
-          <button
-            onClick={handleChangeEmail}
-            disabled={isChangingEmail || !newEmail}
-            className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isChangingEmail ? 'Sending...' : 'Change Email Address'}
-          </button>
-        </div>
-      </SettingsSheet>
-
-      {/* Export Sheet */}
-      <SettingsSheet
-        isOpen={activeSheet === 'export'}
-        onClose={() => setActiveSheet(null)}
-        title="Export Data"
-      >
-        <div className="space-y-4">
-          <p className="text-muted-foreground">
-            Download all your subscription data. You have {subscriptions.length} subscription{subscriptions.length !== 1 ? 's' : ''}.
-          </p>
-          <button
-            onClick={() => handleExport('csv')}
-            className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors"
-          >
-            <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
-              <Download className="w-5 h-5 text-foreground" />
-            </div>
-            <div className="flex-1 text-left">
-              <p className="font-medium text-foreground">Export as CSV</p>
-              <p className="text-sm text-muted-foreground">Spreadsheet format</p>
-            </div>
-          </button>
-          <button
-            onClick={() => handleExport('json')}
-            className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors"
-          >
-            <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
-              <FileJson className="w-5 h-5 text-foreground" />
-            </div>
-            <div className="flex-1 text-left">
-              <p className="font-medium text-foreground">Export as JSON</p>
-              <p className="text-sm text-muted-foreground">For backup & import</p>
-            </div>
-          </button>
-        </div>
-      </SettingsSheet>
-
-      {/* Billing & Plan Sheet */}
-      <SettingsSheet
-        isOpen={activeSheet === 'billing'}
-        onClose={() => setActiveSheet(null)}
-        title="Billing & Plan"
-      >
-        <div className="space-y-4">
-          <div className="p-4 rounded-xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
-            <p className="text-sm text-muted-foreground">Current Plan</p>
-            <p className="text-2xl font-semibold text-gold mt-1">{planName}</p>
-            {userProfile?.plan === 'pro' && (
-              <p className="text-xs text-muted-foreground mt-2">Your subscription is active</p>
-            )}
-          </div>
-          {userProfile?.plan !== 'pro' && (
+          {isSigningOut ? (
             <>
-              <p className="text-sm text-muted-foreground">
-                Upgrade to Pro to unlock advanced features including analytics, leak detection, and more.
-              </p>
-              <button
-                onClick={() => {
-                  setShowPlanSheet(true)
-                  setActiveSheet(null)
-                }}
-                className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors"
-              >
-                View Upgrade Options
-              </button>
+              <RefreshCw className="w-5 h-5 animate-spin" />
+              <span className="font-medium">Signing out...</span>
+            </>
+          ) : (
+            <>
+              <LogOut className="w-5 h-5" />
+              <span className="font-medium">Sign Out</span>
             </>
           )}
-          <div className="p-4 rounded-xl bg-muted space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Questions about billing?</p>
-            <p className="text-sm text-foreground">Contact our support team for assistance with your account or subscription.</p>
-          </div>
-        </div>
-      </SettingsSheet>
+        </motion.button>
+      </motion.div>
 
-      {/* Language Sheet */}
-      <SettingsSheet
-        isOpen={activeSheet === 'language'}
-        onClose={() => setActiveSheet(null)}
-        title="Language"
-      >
-        <div className="space-y-2">
-          {[
-            { code: 'en', name: 'English' },
-            { code: 'es', name: 'Español' },
-            { code: 'fr', name: 'Français' },
-            { code: 'de', name: 'Deutsch' },
-            { code: 'hi', name: 'हिन्दी' },
-          ].map((lang) => (
-            <button
-              key={lang.code}
-              onClick={async () => {
-                await updateNotificationSettings({ language: lang.code })
-                addToast({ type: 'success', title: 'Language updated' })
-                setActiveSheet(null)
-              }}
-              className={cn(
-                "w-full flex items-center justify-between p-4 rounded-xl transition-colors",
-                notificationSettings.language === lang.code
-                  ? "bg-gold/10 text-gold border border-gold/30"
-                  : "bg-muted hover:bg-secondary"
-              )}
-            >
-              <span>{lang.name}</span>
-              {notificationSettings.language === lang.code && <Check className="w-5 h-5" />}
-            </button>
-          ))}
-        </div>
-      </SettingsSheet>
+      {/* Version */}
+      <p className="text-center text-xs text-muted-foreground py-4">
+        Renewly v1.0.0
+      </p>
     </div>
+
+      {/* Plan Selection Sheet */ }
+  {
+    showPlanSheet && (
+      <PlanSelectionSheet
+        onClose={() => setShowPlanSheet(false)}
+        currentPlan={userProfile?.plan || 'free'}
+      />
+    )
+  }
+
+  {/* Profile Sheet */ }
+  <SettingsSheet
+    isOpen={activeSheet === 'profile'}
+    onClose={() => setActiveSheet(null)}
+    title="Edit Profile"
+  >
+    <ProfileForm
+      userProfile={userProfile}
+      avatarUrl={avatarUrl}
+      onSave={(data) => {
+        if (userProfile) {
+          setUserProfile({ ...userProfile, ...data })
+        }
+        addToast({ type: 'success', title: 'Profile updated' })
+        setActiveSheet(null)
+      }}
+    />
+  </SettingsSheet>
+
+  {/* Reminder Sheet */ }
+  <SettingsSheet
+    isOpen={activeSheet === 'reminder'}
+    onClose={() => setActiveSheet(null)}
+    title="Reminder Timing"
+  >
+    <div className="space-y-4">
+      <p className="text-muted-foreground">Choose when to receive renewal reminders.</p>
+      {[1, 3, 7, 14, 30].map((days) => (
+        <button
+          key={days}
+          onClick={async () => {
+            await updateNotificationSettings({ reminderDays: days })
+            addToast({ type: 'success', title: 'Reminder updated', message: `You'll be reminded ${days} day${days > 1 ? 's' : ''} before renewal.` })
+            setActiveSheet(null)
+          }}
+          className={cn(
+            "w-full flex items-center justify-between p-4 rounded-xl transition-colors",
+            notificationSettings.reminderDays === days
+              ? "bg-gold/10 text-gold border border-gold/30"
+              : "bg-muted hover:bg-secondary"
+          )}
+        >
+          <span>{days} day{days > 1 ? 's' : ''} before</span>
+          {notificationSettings.reminderDays === days && <Check className="w-5 h-5" />}
+        </button>
+      ))}
+    </div>
+  </SettingsSheet>
+
+  {/* Password Sheet */ }
+  <SettingsSheet
+    isOpen={activeSheet === 'password'}
+    onClose={() => setActiveSheet(null)}
+    title="Change Password"
+  >
+    <PasswordForm
+      onSuccess={() => {
+        addToast({ type: 'success', title: 'Password updated' })
+        setActiveSheet(null)
+      }}
+    />
+  </SettingsSheet>
+
+  {/* Email Sheet */ }
+  <SettingsSheet
+    isOpen={activeSheet === 'email'}
+    onClose={() => {
+      setActiveSheet(null)
+      setNewEmail('')
+    }}
+    title="Email Address"
+  >
+    <div className="space-y-4">
+      <div className="p-4 rounded-xl bg-muted">
+        <p className="text-sm text-muted-foreground">Current email</p>
+        <p className="font-medium text-foreground">{currentUserEmail || 'Not set'}</p>
+      </div>
+      <p className="text-sm text-muted-foreground">
+        To change your email address, you'll need to verify the new email. A verification link will be sent to your new address.
+      </p>
+      <input
+        type="email"
+        placeholder="Enter new email address"
+        value={newEmail}
+        onChange={(e) => setNewEmail(e.target.value)}
+        className="w-full px-4 py-3 rounded-xl bg-muted border border-border focus:border-gold outline-none transition-colors text-foreground placeholder:text-muted-foreground"
+      />
+      <button
+        onClick={handleChangeEmail}
+        disabled={isChangingEmail || !newEmail}
+        className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {isChangingEmail ? 'Sending...' : 'Change Email Address'}
+      </button>
+    </div>
+  </SettingsSheet>
+
+  {/* Export Sheet */ }
+  <SettingsSheet
+    isOpen={activeSheet === 'export'}
+    onClose={() => setActiveSheet(null)}
+    title="Export Data"
+  >
+    <div className="space-y-4">
+      <p className="text-muted-foreground">
+        Download your subscriptions as CSV or JSON, or export a full account backup including profile,
+        settings, notifications, and subscriptions.
+      </p>
+      <button
+        onClick={() => handleExport('csv')}
+        className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors"
+      >
+        <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+          <Download className="w-5 h-5 text-foreground" />
+        </div>
+        <div className="flex-1 text-left">
+          <p className="font-medium text-foreground">Export as CSV</p>
+          <p className="text-sm text-muted-foreground">Spreadsheet format</p>
+        </div>
+      </button>
+      <button
+        onClick={() => handleExport('json')}
+        className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors"
+      >
+        <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+          <FileJson className="w-5 h-5 text-foreground" />
+        </div>
+        <div className="flex-1 text-left">
+          <p className="font-medium text-foreground">Export as JSON</p>
+          <p className="text-sm text-muted-foreground">For backup & import</p>
+        </div>
+      </button>
+    </div>
+  </SettingsSheet>
+
+  {/* Billing & Plan Sheet */ }
+  <SettingsSheet
+    isOpen={activeSheet === 'billing'}
+    onClose={() => setActiveSheet(null)}
+    title="Billing & Plan"
+  >
+    <div className="space-y-4">
+      <div className="p-4 rounded-xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
+        <p className="text-sm text-muted-foreground">Current Plan</p>
+        <p className="text-2xl font-semibold text-gold mt-1">{planName}</p>
+        {userProfile?.plan === 'pro' && (
+          <p className="text-xs text-muted-foreground mt-2">Your subscription is active</p>
+        )}
+      </div>
+      {userProfile?.plan !== 'pro' && (
+        <>
+          <p className="text-sm text-muted-foreground">
+            Upgrade to Pro to unlock advanced features including analytics, leak detection, and more.
+          </p>
+          <button
+            onClick={() => {
+              setShowPlanSheet(true)
+              setActiveSheet(null)
+            }}
+            className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors"
+          >
+            View Upgrade Options
+          </button>
+        </>
+      )}
+      <div className="p-4 rounded-xl bg-muted space-y-2">
+        <p className="text-xs font-medium text-muted-foreground">Questions about billing?</p>
+        <p className="text-sm text-foreground">Contact our support team for assistance with your account or subscription.</p>
+      </div>
+    </div>
+  </SettingsSheet>
+
+  {/* Language Sheet */ }
+  <SettingsSheet
+    isOpen={activeSheet === 'language'}
+    onClose={() => setActiveSheet(null)}
+    title="Language"
+  >
+    <div className="space-y-2">
+      {[
+        { code: 'en', name: 'English' },
+        { code: 'es', name: 'Español' },
+        { code: 'fr', name: 'Français' },
+        { code: 'de', name: 'Deutsch' },
+        { code: 'hi', name: 'हिन्दी' },
+      ].map((lang) => (
+        <button
+          key={lang.code}
+          onClick={async () => {
+            await updateNotificationSettings({ language: lang.code })
+            addToast({ type: 'success', title: 'Language updated' })
+            setActiveSheet(null)
+          }}
+          className={cn(
+            "w-full flex items-center justify-between p-4 rounded-xl transition-colors",
+            notificationSettings.language === lang.code
+              ? "bg-gold/10 text-gold border border-gold/30"
+              : "bg-muted hover:bg-secondary"
+          )}
+        >
+          <span>{lang.name}</span>
+          {notificationSettings.language === lang.code && <Check className="w-5 h-5" />}
+        </button>
+      ))}
+    </div>
+  </SettingsSheet>
+    </div >
   )
 }
 
