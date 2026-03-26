@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Suspense } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react'
 import { AuthLayout } from '@/components/auth/auth-layout'
 import { SocialButtons } from '@/components/auth/social-buttons'
@@ -13,7 +13,6 @@ import { createClient } from '@/lib/supabase/client'
 import { getURL } from '@/lib/supabase/url'
 
 function SignInPageContent() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const next = searchParams.get('next') || '/app'
   const errorParam = searchParams.get('error')
@@ -34,7 +33,7 @@ function SignInPageContent() {
 
     try {
       const supabase = createClient()
-      
+
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
@@ -53,13 +52,11 @@ function SignInPageContent() {
         return
       }
 
-      // Successful sign-in - navigate to app
-      // Use replace to avoid going back to sign-in, then refresh to update auth state
-      router.replace(next)
-      // Delay refresh slightly to ensure navigation is queued first
-      setTimeout(() => {
-        router.refresh()
-      }, 0)
+      // Successful sign-in - use a hard navigation so the authenticated app
+      // boots with a clean session state on first load.
+      const destination = next === '/app' ? '/app/dashboard' : next
+      window.location.replace(destination)
+      return
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign in')
       setIsLoading(false)
@@ -152,8 +149,8 @@ function SignInPageContent() {
             <label htmlFor="password" className="block text-sm font-medium text-ivory">
               Password
             </label>
-            <Link 
-              href="/auth/forgot-password" 
+            <Link
+              href="/auth/forgot-password"
               className="text-sm text-gold hover:text-gold/80 transition-colors"
             >
               Forgot password?

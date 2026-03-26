@@ -156,7 +156,7 @@ function HeaderButton({ children, onClick, badge }: HeaderButtonProps) {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
-      className="relative w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-gold/50"
+      className="relative w-10 h-10 rounded-xl border border-gold/15 bg-[radial-gradient(circle_at_top,rgba(199,163,106,0.12),rgba(255,255,255,0.02))] flex items-center justify-center text-foreground/80 hover:text-gold hover:border-gold/35 hover:bg-gold/10 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50"
     >
       {children}
       {badge !== undefined && badge > 0 && (

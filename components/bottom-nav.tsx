@@ -230,34 +230,38 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
     const savedCollapsed = localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
     const savedPinned = localStorage.getItem(SIDEBAR_PINNED_KEY)
 
-    if (savedCollapsed !== null) {
-      setIsCollapsed(savedCollapsed === 'true')
-    }
-    if (savedPinned !== null) {
-      setIsPinned(savedPinned === 'true')
-    }
+    const pinned = savedPinned !== null ? savedPinned === 'true' : true
+    const collapsed = savedCollapsed !== null ? savedCollapsed === 'true' : false
+
+    setIsPinned(pinned)
+    setIsCollapsed(pinned ? false : collapsed)
   }, [])
 
   // Persist state changes
   const toggleCollapsed = () => {
-    const newValue = !isCollapsed
-    setIsCollapsed(newValue)
-    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(newValue))
-  }
+    const nextCollapsed = !isCollapsed
+    setIsCollapsed(nextCollapsed)
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(nextCollapsed))
 
-  const togglePinned = () => {
-    const newValue = !isPinned
-    setIsPinned(newValue)
-    localStorage.setItem(SIDEBAR_PINNED_KEY, String(newValue))
-    // If unpinning, also collapse
-    if (!newValue) {
-      setIsCollapsed(true)
-      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, 'true')
+    if (!nextCollapsed) {
+      setIsPinned(true)
+      localStorage.setItem(SIDEBAR_PINNED_KEY, 'true')
     }
   }
 
-  // Determine if sidebar should be expanded (hover expands when unpinned and collapsed)
-  const shouldExpand = !isCollapsed || (isHovered && !isPinned)
+  const togglePinned = () => {
+    const nextPinned = !isPinned
+    setIsPinned(nextPinned)
+    localStorage.setItem(SIDEBAR_PINNED_KEY, String(nextPinned))
+
+    const nextCollapsed = nextPinned ? false : true
+    setIsCollapsed(nextCollapsed)
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(nextCollapsed))
+  }
+
+  // Pinned means expanded and stable.
+  // Unpinned means collapsed by default, expand on hover.
+  const shouldExpand = isPinned || !isCollapsed || (isHovered && !isPinned)
   const sidebarWidth = shouldExpand ? 280 : 72
 
   // Set CSS variable for main content margin
