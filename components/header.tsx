@@ -42,7 +42,7 @@ export function Header({
   const userProfile = useStore((state) => state.userProfile)
   const firstName = userProfile?.name?.split(' ')[0] || 'User'
   const avatar = firstName.charAt(0).toUpperCase()
-  
+
   // Generate avatar URL deterministically
   const avatarUrl = useMemo(() => {
     if (!userProfile) return null
@@ -95,7 +95,7 @@ export function Header({
               <Search className="w-5 h-5" />
             </HeaderButton>
           )}
-          
+
           {showNotifications && (
             <HeaderButton onClick={onNotificationClick} badge={notificationCount}>
               <Bell className="w-5 h-5" />
@@ -111,7 +111,7 @@ export function Header({
                   setIsProfileMenuOpen(!isProfileMenuOpen)
                   onProfileClick?.()
                 }}
-                className="w-10 h-10 rounded-full overflow-hidden border-2 border-gold/30 hover:border-gold/50 transition-colors focus:outline-none focus:ring-2 focus:ring-gold/50"
+                className="w-10 h-10 rounded-full overflow-hidden border-2 border-gold/30 bg-[radial-gradient(circle_at_top,rgba(199,163,106,0.14),rgba(255,255,255,0.02))] hover:border-gold/60 hover:shadow-[0_0_0_4px_rgba(199,163,106,0.08)] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50"
               >
                 {avatarUrl ? (
                   <img
@@ -176,11 +176,11 @@ interface SearchOverlayProps {
   onSearchChange: (query: string) => void
 }
 
-export function SearchOverlay({ 
-  isOpen, 
-  onClose, 
-  searchQuery, 
-  onSearchChange 
+export function SearchOverlay({
+  isOpen,
+  onClose,
+  searchQuery,
+  onSearchChange
 }: SearchOverlayProps) {
   if (!isOpen) return null
 
