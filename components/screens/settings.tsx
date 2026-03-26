@@ -373,8 +373,13 @@ export function SettingsScreen() {
           />
           <SettingsItem
             icon={FileText}
-            label="Terms & Privacy"
+            label="Terms of Service"
             onClick={() => router.push('/terms')}
+          />
+          <SettingsItem
+            icon={FileText}
+            label="Privacy Policy"
+            onClick={() => router.push('/privacy')}
           />
         </SettingsSection>
 
@@ -664,18 +669,26 @@ function SettingsItem({
   label,
   description,
   onClick,
+  disabled = false,
 }: {
   icon: React.ElementType
   label: string
   description?: string
-  onClick: () => void
+  onClick?: () => void
+  disabled?: boolean
 }) {
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-4 p-4 hover:bg-secondary/30 transition-colors text-left"
+      disabled={disabled}
+      className={cn(
+        "w-full flex items-center gap-4 p-4 transition-colors text-left",
+        disabled
+          ? "opacity-60 cursor-not-allowed bg-muted/20"
+          : "hover:bg-secondary/30 cursor-pointer"
+      )}
     >
-      <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+      <div className={cn("w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0", disabled ? "bg-muted/30" : "bg-secondary")}>
         <Icon className="w-5 h-5 text-foreground" />
       </div>
       <div className="flex-1 min-w-0">
@@ -684,7 +697,7 @@ function SettingsItem({
           <p className="text-sm text-muted-foreground truncate">{description}</p>
         )}
       </div>
-      <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+      {!disabled && <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />}
     </button>
   )
 }
@@ -742,10 +755,23 @@ function ProfileForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500))
-    onSave({ name })
-    setIsLoading(false)
+    try {
+      const { updateUserProfile } = await import('@/lib/supabase/settings-actions')
+      const result = await updateUserProfile({
+        firstName: name.split(' ')[0] || name,
+        lastName: name.split(' ').slice(1).join(' ') || undefined,
+      })
+
+      if (result.success) {
+        onSave({ name })
+      } else {
+        console.error('[v0] Profile update failed:', result.error)
+      }
+    } catch (error) {
+      console.error('[v0] Profile save error:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
