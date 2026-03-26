@@ -25,17 +25,14 @@ export function CalendarScreen() {
   const [viewMode, setViewMode] = useState('month')
   const [currentDate, setCurrentDate] = useState(() => new Date())
   const [isMounted, setIsMounted] = useState(false)
-  
+
   const { calendarEvents, isLoading } = useCalendarEvents()
   const subscriptions = useStore((state) => state.subscriptions)
-  const hasHydratedFromCloud = useStore((state) => state.hasHydratedFromCloud)
 
   // Wait for store hydration before rendering
   useEffect(() => {
-    if (hasHydratedFromCloud) {
-      setIsMounted(true)
-    }
-  }, [hasHydratedFromCloud])
+    setIsMounted(true)
+  }, [])
 
   // Early return: Don't render any content until store is hydrated
   if (!isMounted) {
@@ -45,17 +42,17 @@ export function CalendarScreen() {
       </div>
     )
   }
-  
+
   const currentYear = currentDate.getFullYear()
   const currentMonth = currentDate.getMonth()
-  
+
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay()
-  
+
   const prevMonth = () => {
     setCurrentDate(new Date(currentYear, currentMonth - 1, 1))
   }
-  
+
   const nextMonth = () => {
     setCurrentDate(new Date(currentYear, currentMonth + 1, 1))
   }
@@ -73,7 +70,7 @@ export function CalendarScreen() {
     const dayOfWeek = today.getDay()
     const startOfWeek = new Date(today)
     startOfWeek.setDate(today.getDate() - dayOfWeek)
-    
+
     for (let i = 0; i < 7; i++) {
       const date = new Date(startOfWeek)
       date.setDate(startOfWeek.getDate() + i)
@@ -89,7 +86,7 @@ export function CalendarScreen() {
 
   return (
     <PageTransition className="min-h-screen">
-      <Header 
+      <Header
         title="Calendar"
         subtitle="Renewal schedule"
         showSearch={false}
@@ -116,11 +113,11 @@ export function CalendarScreen() {
               >
                 <ChevronLeft className="w-5 h-5" />
               </motion.button>
-              
+
               <h2 className="text-lg font-semibold text-foreground">
                 {MONTHS[currentMonth]} {currentYear}
               </h2>
-              
+
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={nextMonth}
@@ -152,14 +149,14 @@ export function CalendarScreen() {
                 {Array.from({ length: firstDayOfMonth }).map((_, i) => (
                   <div key={`empty-${i}`} className="aspect-square" />
                 ))}
-                
+
                 {/* Day cells */}
                 {Array.from({ length: daysInMonth }).map((_, i) => {
                   const day = i + 1
                   const event = getEventsForDate(day)
                   const today = new Date()
                   const isToday = day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()
-                  
+
                   return (
                     <motion.div
                       key={day}
@@ -205,7 +202,7 @@ export function CalendarScreen() {
                 const isToday = date.getDate() === todayRef.getDate() && date.getMonth() === todayRef.getMonth() && date.getFullYear() === todayRef.getFullYear()
                 const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
                 const event = calendarEvents.find(e => e.date === dateStr)
-                
+
                 return (
                   <motion.div
                     key={i}
@@ -230,12 +227,12 @@ export function CalendarScreen() {
                     {event && (
                       <div className="mt-2 flex justify-center gap-0.5">
                         {event.subscriptions.slice(0, 2).map((_, idx) => (
-                          <div 
-                            key={idx} 
+                          <div
+                            key={idx}
                             className={cn(
                               'w-1.5 h-1.5 rounded-full',
                               isToday ? 'bg-obsidian' : 'bg-gold'
-                            )} 
+                            )}
                           />
                         ))}
                       </div>
@@ -253,7 +250,7 @@ export function CalendarScreen() {
             <CalendarDays className="w-5 h-5 text-gold" />
             <h2 className="text-lg font-semibold text-foreground">Upcoming Renewals</h2>
           </div>
-          
+
           <StaggerList className="space-y-3">
             {upcomingEvents.map((event, index) => (
               <motion.div
@@ -265,10 +262,10 @@ export function CalendarScreen() {
                 {index < upcomingEvents.length - 1 && (
                   <div className="absolute left-[7px] top-8 bottom-0 w-0.5 bg-border" />
                 )}
-                
+
                 {/* Timeline dot */}
                 <div className="absolute left-0 top-2 w-[14px] h-[14px] rounded-full bg-card border-2 border-gold" />
-                
+
                 <div className="rounded-xl bg-card border border-border p-4">
                   <p className="text-sm text-muted-foreground mb-2">
                     {formatDate(event.date)}
@@ -278,7 +275,7 @@ export function CalendarScreen() {
                     return (
                       <div key={sub.id} className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div 
+                          <div
                             className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-medium"
                             style={{ backgroundColor: subscription?.color }}
                           >
