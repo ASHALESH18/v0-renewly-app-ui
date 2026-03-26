@@ -21,7 +21,7 @@ export default function HelpPage() {
     },
     {
       question: 'Can I export my data?',
-      answer: 'Yes! Go to Settings > Security > Export Data. You can download your subscriptions as CSV or JSON format for backup or import into other tools.'
+      answer: 'Yes! Go to Settings > Data & Storage > Export Data. You can download your subscriptions as CSV or JSON, or export a full account backup as JSON.'
     },
     {
       question: 'Do you offer multi-currency support?',
