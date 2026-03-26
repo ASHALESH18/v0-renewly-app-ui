@@ -46,12 +46,17 @@ export function AnalyticsScreen() {
   // Early return: Don't render any content until store is hydrated
   if (!isMounted) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-12 h-12 rounded-xl bg-gold/20 border-2 border-gold/30 border-t-gold animate-spin" />
+      <div className="min-h-[calc(100vh-6rem)] px-6 py-8 lg:px-8">
+        <div className="h-10 w-48 rounded-2xl bg-white/5 animate-pulse" />
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="h-28 rounded-3xl bg-white/5 animate-pulse" />
+          <div className="h-28 rounded-3xl bg-white/5 animate-pulse" />
+          <div className="h-28 rounded-3xl bg-white/5 animate-pulse" />
+          <div className="h-28 rounded-3xl bg-white/5 animate-pulse" />
+        </div>
       </div>
     )
   }
-
   const totalSpend = monthlySpendData.reduce((sum: number, m: any) => sum + m.amount, 0)
   const avgSpend = monthlySpendData.length > 0 ? Math.round(totalSpend / monthlySpendData.length) : 0
   const yearlyProjected = avgSpend * 12
