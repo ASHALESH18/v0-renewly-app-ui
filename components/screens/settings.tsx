@@ -358,17 +358,12 @@ export function SettingsScreen() {
       {/* Settings Sections */}
       <div className="px-4 lg:px-6 space-y-6">
         {/* Account Section */}
+        {/* Account Section */}
         <SettingsSection title="Account" delay={0.15}>
           <SettingsItem
-            icon={Crown}
-            label="Subscription"
-            description={planName}
-            onClick={() => setShowPlanSheet(true)}
-          />
-          <SettingsItem
             icon={CreditCard}
-            label="Billing & Plan"
-            description={userProfile?.plan === 'pro' ? 'Pro - Active' : 'Free - Upgrade'}
+            label="Plan & Billing"
+            description={userProfile?.plan === 'pro' ? 'Pro - Active' : planName}
             onClick={() => setActiveSheet('billing')}
           />
         </SettingsSection>
