@@ -370,16 +370,21 @@ const useStore = create<AppState>()(
 
         // Persist to Supabase in background
         try {
-          const { updateNotificationPreferences } = await import('@/lib/supabase/settings-actions')
-          const result = await updateNotificationPreferences({
-            emailReminders: settings.emailNotifications,
-            emailOnRenewal: settings.emailNotifications,
-            emailOnSpike: settings.emailNotifications,
-            reminderDaysBefore: settings.reminderDays,
+          const { updateUserSettings } = await import('@/lib/supabase/settings-actions')
+          const result = await updateUserSettings({
+            pushNotifications: settings.pushNotifications,
+            emailNotifications: settings.emailNotifications,
+            leakAlerts: settings.leakAlerts,
+            biometricEnabled: settings.biometricEnabled,
+            reminderDays: settings.reminderDays,
+            theme: settings.theme,
+            language: settings.language,
+            currencyCode: settings.currencyCode,
           })
           
           if (!result.success) {
             console.warn('[v0] Failed to persist notification settings:', result.error)
+            // Optionally revert local state on failure
           }
         } catch (error) {
           console.error('[v0] Error persisting notification settings:', error)
