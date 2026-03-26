@@ -194,6 +194,23 @@ export function SettingsScreen() {
     setActiveSheet(null)
   }
 
+  // Toggle handlers that properly await async store updates
+  const handleTogglePushNotifications = async () => {
+    await updateNotificationSettings({ pushNotifications: !notificationSettings.pushNotifications })
+  }
+
+  const handleToggleEmailNotifications = async () => {
+    await updateNotificationSettings({ emailNotifications: !notificationSettings.emailNotifications })
+  }
+
+  const handleToggleBiometricLogin = async () => {
+    await updateNotificationSettings({ biometricEnabled: !notificationSettings.biometricEnabled })
+  }
+
+  const handleToggleDarkMode = async () => {
+    await updateNotificationSettings({ theme: notificationSettings.theme === 'dark' ? 'light' : 'dark' })
+  }
+
   // Show minimal loading while store hydrates
   if (!isMounted) {
     return (
@@ -293,14 +310,14 @@ export function SettingsScreen() {
             label="Push Notifications"
             description="Renewal reminders"
             checked={notificationSettings.pushNotifications}
-            onToggle={() => updateNotificationSettings({ pushNotifications: !notificationSettings.pushNotifications })}
+            onToggle={handleTogglePushNotifications}
           />
           <SettingsToggle
             icon={Mail}
             label="Email Notifications"
             description="Weekly summaries"
             checked={notificationSettings.emailNotifications}
-            onToggle={() => updateNotificationSettings({ emailNotifications: !notificationSettings.emailNotifications })}
+            onToggle={handleToggleEmailNotifications}
           />
           <SettingsItem
             icon={Smartphone}
@@ -334,7 +351,7 @@ export function SettingsScreen() {
             label="Biometric Login"
             description="Face ID / Touch ID"
             checked={notificationSettings.biometricEnabled}
-            onToggle={() => updateNotificationSettings({ biometricEnabled: !notificationSettings.biometricEnabled })}
+            onToggle={handleToggleBiometricLogin}
           />
         </SettingsSection>
 
@@ -343,7 +360,7 @@ export function SettingsScreen() {
           <SettingsItem
             icon={Download}
             label="Export Data"
-            description="Download your subscriptions"
+            description="Download your subscriptions and account data"
             onClick={() => setActiveSheet('export')}
           />
         </SettingsSection>
@@ -354,7 +371,7 @@ export function SettingsScreen() {
             icon={notificationSettings.theme === 'dark' ? Moon : Sun}
             label="Dark Mode"
             checked={notificationSettings.theme === 'dark'}
-            onToggle={() => updateNotificationSettings({ theme: notificationSettings.theme === 'dark' ? 'light' : 'dark' })}
+            onToggle={handleToggleDarkMode}
           />
           <SettingsItem
             icon={Globe}
@@ -458,8 +475,8 @@ export function SettingsScreen() {
           {[1, 3, 7, 14, 30].map((days) => (
             <button
               key={days}
-              onClick={() => {
-                updateNotificationSettings({ reminderDays: days })
+              onClick={async () => {
+                await updateNotificationSettings({ reminderDays: days })
                 addToast({ type: 'success', title: 'Reminder updated', message: `You'll be reminded ${days} day${days > 1 ? 's' : ''} before renewal.` })
                 setActiveSheet(null)
               }}
@@ -615,8 +632,8 @@ export function SettingsScreen() {
           ].map((lang) => (
             <button
               key={lang.code}
-              onClick={() => {
-                updateNotificationSettings({ language: lang.code })
+              onClick={async () => {
+                await updateNotificationSettings({ language: lang.code })
                 addToast({ type: 'success', title: 'Language updated' })
                 setActiveSheet(null)
               }}
@@ -714,7 +731,7 @@ function SettingsToggle({
   label: string
   description?: string
   checked: boolean
-  onToggle: () => void
+  onToggle: () => void | Promise<void>
 }) {
   return (
     <div
