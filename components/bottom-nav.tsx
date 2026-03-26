@@ -260,7 +260,7 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
   }
 
   // Pinned means expanded and stable.
-  // Unpinned means collapsed by default, expand on hover.
+  // Unpinned means collapsed by default, then expands on hover.
   const shouldExpand = isPinned || !isCollapsed || (isHovered && !isPinned)
   const sidebarWidth = shouldExpand ? 280 : 72
 
