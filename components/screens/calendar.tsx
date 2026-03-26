@@ -35,7 +35,7 @@ export function CalendarScreen() {
   }, [])
 
   // Early return: Don't render any content until store is hydrated
-  if (!isMounted || isLoading) {
+  if (!isMounted) {
     return (
       <div className="min-h-[calc(100vh-6rem)] px-6 py-8 lg:px-8">
         <div className="h-10 w-44 rounded-2xl bg-white/5 animate-pulse" />
