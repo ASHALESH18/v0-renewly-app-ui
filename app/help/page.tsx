@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { PublicPageNav } from '@/components/public-page-nav'
 
 export default function HelpPage() {
