@@ -424,359 +424,360 @@ export function SettingsScreen() {
         </SettingsSection>
 
         {/* Appearance Section */}
-        <SettingsToggle
-          icon={notificationSettings.theme === 'dark' ? Moon : Sun}
-          label="Dark Mode"
-          checked={notificationSettings.theme === 'dark'}
-          onToggle={handleToggleDarkMode}
-        />
+        <SettingsSection title="Appearance" delay={0.3}>
+          <SettingsToggle
+            icon={notificationSettings.theme === 'dark' ? Moon : Sun}
+            label="Dark Mode"
+            checked={notificationSettings.theme === 'dark'}
+            onToggle={handleToggleDarkMode}
+          />
 
-        <SettingsItem
-          icon={Globe}
-          label="Currency"
-          description={`${currentCurrency.symbol} ${currentCurrency.name}`}
-          onClick={() => setActiveSheet('currency')}
-        />
+          <SettingsItem
+            icon={Globe}
+            label="Currency"
+            description={`${currentCurrency.symbol} ${currentCurrency.name}`}
+            onClick={() => setActiveSheet('currency')}
+          />
 
-        <SettingsItem
-          icon={Globe}
-          label="Language"
-          description={notificationSettings.language === 'en' ? 'English' : notificationSettings.language}
-          onClick={() => setActiveSheet('language')}
-        />
-      </SettingsSection>
+          <SettingsItem
+            icon={Globe}
+            label="Language"
+            description={notificationSettings.language === 'en' ? 'English' : notificationSettings.language}
+            onClick={() => setActiveSheet('language')}
+          />
+        </SettingsSection>
 
-      {/* Support Section */}
-      <SettingsSection title="Support" delay={0.4}>
-        <SettingsItem
-          icon={HelpCircle}
-          label="Help Center"
-          onClick={() => router.push('/help')}
-        />
-        <SettingsItem
-          icon={FileText}
-          label="Terms of Service"
-          onClick={() => router.push('/terms')}
-        />
-        <SettingsItem
-          icon={FileText}
-          label="Privacy Policy"
-          onClick={() => router.push('/privacy')}
-        />
-      </SettingsSection>
+        {/* Support Section */}
+        <SettingsSection title="Support" delay={0.4}>
+          <SettingsItem
+            icon={HelpCircle}
+            label="Help Center"
+            onClick={() => router.push('/help')}
+          />
+          <SettingsItem
+            icon={FileText}
+            label="Terms of Service"
+            onClick={() => router.push('/terms')}
+          />
+          <SettingsItem
+            icon={FileText}
+            label="Privacy Policy"
+            onClick={() => router.push('/privacy')}
+          />
+        </SettingsSection>
 
-      {/* Sign Out Button */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ ...springs.gentle, delay: 0.45 }}
-      >
-        <motion.button
-          onClick={handleSignOut}
-          disabled={isSigningOut}
-          whileTap={{ scale: 0.98 }}
-          className={cn(
-            "w-full flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer",
-            isSigningOut
-              ? "border-gold/20 bg-gold/6 text-gold/70 opacity-70 cursor-not-allowed"
-              : "border-gold/30 bg-[linear-gradient(135deg,rgba(199,163,106,0.14),rgba(199,163,106,0.06),rgba(255,255,255,0.02))] text-gold hover:border-gold/55 hover:bg-gold/16 hover:text-ivory hover:shadow-[0_16px_40px_rgba(199,163,106,0.16)]"
-          )}
+        {/* Sign Out Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...springs.gentle, delay: 0.45 }}
         >
-          {isSigningOut ? (
-            <>
-              <RefreshCw className="w-5 h-5 animate-spin" />
-              <span className="font-medium">Signing out...</span>
-            </>
-          ) : (
-            <>
-              <LogOut className="w-5 h-5" />
-              <span className="font-medium">Sign Out</span>
-            </>
-          )}
-        </motion.button>
-      </motion.div>
+          <motion.button
+            onClick={handleSignOut}
+            disabled={isSigningOut}
+            whileTap={{ scale: 0.98 }}
+            className={cn(
+              "w-full flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer",
+              isSigningOut
+                ? "border-gold/20 bg-gold/6 text-gold/70 opacity-70 cursor-not-allowed"
+                : "border-gold/30 bg-[linear-gradient(135deg,rgba(199,163,106,0.14),rgba(199,163,106,0.06),rgba(255,255,255,0.02))] text-gold hover:border-gold/55 hover:bg-gold/16 hover:text-ivory hover:shadow-[0_16px_40px_rgba(199,163,106,0.16)]"
+            )}
+          >
+            {isSigningOut ? (
+              <>
+                <RefreshCw className="w-5 h-5 animate-spin" />
+                <span className="font-medium">Signing out...</span>
+              </>
+            ) : (
+              <>
+                <LogOut className="w-5 h-5" />
+                <span className="font-medium">Sign Out</span>
+              </>
+            )}
+          </motion.button>
+        </motion.div>
 
-      {/* Version */}
-      <p className="text-center text-xs text-muted-foreground py-4">
-        Renewly v1.0.0
-      </p>
-    </div>
+        {/* Version */}
+        <p className="text-center text-xs text-muted-foreground py-4">
+          Renewly v1.0.0
+        </p>
+      </div>
 
-      {/* Plan Selection Sheet */ }
-  {
-    showPlanSheet && (
-      <PlanSelectionSheet
-        onClose={() => setShowPlanSheet(false)}
-        currentPlan={userProfile?.plan || 'free'}
-      />
-    )
-  }
+      {/* Plan Selection Sheet */}
+      {
+        showPlanSheet && (
+          <PlanSelectionSheet
+            onClose={() => setShowPlanSheet(false)}
+            currentPlan={userProfile?.plan || 'free'}
+          />
+        )
+      }
 
-  {/* Profile Sheet */ }
-  <SettingsSheet
-    isOpen={activeSheet === 'profile'}
-    onClose={() => setActiveSheet(null)}
-    title="Edit Profile"
-  >
-    <ProfileForm
-      userProfile={userProfile}
-      avatarUrl={avatarUrl}
-      onSave={(data) => {
-        if (userProfile) {
-          setUserProfile({ ...userProfile, ...data })
-        }
-        addToast({ type: 'success', title: 'Profile updated' })
-        setActiveSheet(null)
-      }}
-    />
-  </SettingsSheet>
-
-  {/* Reminder Sheet */ }
-  <SettingsSheet
-    isOpen={activeSheet === 'reminder'}
-    onClose={() => setActiveSheet(null)}
-    title="Reminder Timing"
-  >
-    <div className="space-y-4">
-      <p className="text-muted-foreground">Choose when to receive renewal reminders.</p>
-      {[1, 3, 7, 14, 30].map((days) => (
-        <button
-          key={days}
-          onClick={async () => {
-            await updateNotificationSettings({ reminderDays: days })
-            addToast({ type: 'success', title: 'Reminder updated', message: `You'll be reminded ${days} day${days > 1 ? 's' : ''} before renewal.` })
+      {/* Profile Sheet */}
+      <SettingsSheet
+        isOpen={activeSheet === 'profile'}
+        onClose={() => setActiveSheet(null)}
+        title="Edit Profile"
+      >
+        <ProfileForm
+          userProfile={userProfile}
+          avatarUrl={avatarUrl}
+          onSave={(data) => {
+            if (userProfile) {
+              setUserProfile({ ...userProfile, ...data })
+            }
+            addToast({ type: 'success', title: 'Profile updated' })
             setActiveSheet(null)
           }}
-          className={cn(
-            "w-full flex items-center justify-between p-4 rounded-xl transition-colors",
-            notificationSettings.reminderDays === days
-              ? "bg-gold/10 text-gold border border-gold/30"
-              : "bg-muted hover:bg-secondary"
-          )}
-        >
-          <span>{days} day{days > 1 ? 's' : ''} before</span>
-          {notificationSettings.reminderDays === days && <Check className="w-5 h-5" />}
-        </button>
-      ))}
-    </div>
-  </SettingsSheet>
+        />
+      </SettingsSheet>
 
-  {/* Password Sheet */ }
-  <SettingsSheet
-    isOpen={activeSheet === 'password'}
-    onClose={() => setActiveSheet(null)}
-    title="Change Password"
-  >
-    <PasswordForm
-      onSuccess={() => {
-        addToast({ type: 'success', title: 'Password updated' })
-        setActiveSheet(null)
-      }}
-    />
-  </SettingsSheet>
+      {/* Reminder Sheet */}
+      <SettingsSheet
+        isOpen={activeSheet === 'reminder'}
+        onClose={() => setActiveSheet(null)}
+        title="Reminder Timing"
+      >
+        <div className="space-y-4">
+          <p className="text-muted-foreground">Choose when to receive renewal reminders.</p>
+          {[1, 3, 7, 14, 30].map((days) => (
+            <button
+              key={days}
+              onClick={async () => {
+                await updateNotificationSettings({ reminderDays: days })
+                addToast({ type: 'success', title: 'Reminder updated', message: `You'll be reminded ${days} day${days > 1 ? 's' : ''} before renewal.` })
+                setActiveSheet(null)
+              }}
+              className={cn(
+                "w-full flex items-center justify-between p-4 rounded-xl transition-colors",
+                notificationSettings.reminderDays === days
+                  ? "bg-gold/10 text-gold border border-gold/30"
+                  : "bg-muted hover:bg-secondary"
+              )}
+            >
+              <span>{days} day{days > 1 ? 's' : ''} before</span>
+              {notificationSettings.reminderDays === days && <Check className="w-5 h-5" />}
+            </button>
+          ))}
+        </div>
+      </SettingsSheet>
 
-  {/* Email Sheet */ }
-  <SettingsSheet
-    isOpen={activeSheet === 'email'}
-    onClose={() => {
-      setActiveSheet(null)
-      setNewEmail('')
-    }}
-    title="Email Address"
-  >
-    <div className="space-y-4">
-      <div className="p-4 rounded-xl bg-muted">
-        <p className="text-sm text-muted-foreground">Current email</p>
-        <p className="font-medium text-foreground">{currentUserEmail || 'Not set'}</p>
-      </div>
-      <p className="text-sm text-muted-foreground">
-        To change your email address, you'll need to verify the new email. A verification link will be sent to your new address.
-      </p>
-      <input
-        type="email"
-        placeholder="Enter new email address"
-        value={newEmail}
-        onChange={(e) => setNewEmail(e.target.value)}
-        className="w-full px-4 py-3 rounded-xl bg-muted border border-border focus:border-gold outline-none transition-colors text-foreground placeholder:text-muted-foreground"
-      />
-      <button
-        onClick={handleChangeEmail}
-        disabled={isChangingEmail || !newEmail}
-        className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      {/* Password Sheet */}
+      <SettingsSheet
+        isOpen={activeSheet === 'password'}
+        onClose={() => setActiveSheet(null)}
+        title="Change Password"
       >
-        {isChangingEmail ? 'Sending...' : 'Change Email Address'}
-      </button>
-    </div>
-  </SettingsSheet>
+        <PasswordForm
+          onSuccess={() => {
+            addToast({ type: 'success', title: 'Password updated' })
+            setActiveSheet(null)
+          }}
+        />
+      </SettingsSheet>
 
-  {/* Export Sheet */ }
-  <SettingsSheet
-    isOpen={activeSheet === 'export'}
-    onClose={() => setActiveSheet(null)}
-    title="Export Data"
-  >
-    <div className="space-y-4">
-      <p className="text-muted-foreground">
-        Download your subscriptions as CSV or JSON, or export a full account backup including profile,
-        settings, notifications, and subscriptions.
-      </p>
-      <button
-        onClick={() => handleExport('csv')}
-        className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors"
+      {/* Email Sheet */}
+      <SettingsSheet
+        isOpen={activeSheet === 'email'}
+        onClose={() => {
+          setActiveSheet(null)
+          setNewEmail('')
+        }}
+        title="Email Address"
       >
-        <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
-          <Download className="w-5 h-5 text-foreground" />
-        </div>
-        <div className="flex-1 text-left">
-          <p className="font-medium text-foreground">Export as CSV</p>
-          <p className="text-sm text-muted-foreground">Spreadsheet format</p>
-        </div>
-      </button>
-      <button
-        onClick={() => handleExport('json')}
-        className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors"
-      >
-        <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
-          <FileJson className="w-5 h-5 text-foreground" />
-        </div>
-        <div className="flex-1 text-left">
-          <p className="font-medium text-foreground">Export as JSON</p>
-          <p className="text-sm text-muted-foreground">For backup & import</p>
-        </div>
-      </button>
-      <button
-        onClick={() => handleExport('account')}
-        disabled={isExportingAccount}
-        className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
-          {isExportingAccount ? (
-            <RefreshCw className="w-5 h-5 text-foreground animate-spin" />
-          ) : (
-            <FileJson className="w-5 h-5 text-foreground" />
-          )}
-        </div>
-
-        <div className="flex-1 text-left">
-          <p className="font-medium text-foreground">Full account backup</p>
+        <div className="space-y-4">
+          <div className="p-4 rounded-xl bg-muted">
+            <p className="text-sm text-muted-foreground">Current email</p>
+            <p className="font-medium text-foreground">{currentUserEmail || 'Not set'}</p>
+          </div>
           <p className="text-sm text-muted-foreground">
-            Profile, settings, notifications, and subscriptions (JSON)
+            To change your email address, you'll need to verify the new email. A verification link will be sent to your new address.
           </p>
+          <input
+            type="email"
+            placeholder="Enter new email address"
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl bg-muted border border-border focus:border-gold outline-none transition-colors text-foreground placeholder:text-muted-foreground"
+          />
+          <button
+            onClick={handleChangeEmail}
+            disabled={isChangingEmail || !newEmail}
+            className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isChangingEmail ? 'Sending...' : 'Change Email Address'}
+          </button>
         </div>
-      </button>
-    </div>
-  </SettingsSheet>
+      </SettingsSheet>
 
-  {/* Billing & Plan Sheet */ }
-  <SettingsSheet
-    isOpen={activeSheet === 'billing'}
-    onClose={() => setActiveSheet(null)}
-    title="Billing & Plan"
-  >
-    <div className="space-y-4">
-      <div className="p-4 rounded-xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
-        <p className="text-sm text-muted-foreground">Current Plan</p>
-        <p className="text-2xl font-semibold text-gold mt-1">{planName}</p>
-        {userProfile?.plan === 'pro' && (
-          <p className="text-xs text-muted-foreground mt-2">Your subscription is active</p>
-        )}
-      </div>
-      {userProfile?.plan !== 'pro' && (
-        <>
-          <p className="text-sm text-muted-foreground">
-            Upgrade to Pro to unlock advanced features including analytics, leak detection, and more.
+      {/* Export Sheet */}
+      <SettingsSheet
+        isOpen={activeSheet === 'export'}
+        onClose={() => setActiveSheet(null)}
+        title="Export Data"
+      >
+        <div className="space-y-4">
+          <p className="text-muted-foreground">
+            Download your subscriptions as CSV or JSON, or export a full account backup including profile,
+            settings, notifications, and subscriptions.
           </p>
           <button
-            onClick={() => {
-              setShowPlanSheet(true)
-              setActiveSheet(null)
-            }}
-            className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors"
+            onClick={() => handleExport('csv')}
+            className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors"
           >
-            View Upgrade Options
+            <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+              <Download className="w-5 h-5 text-foreground" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="font-medium text-foreground">Export as CSV</p>
+              <p className="text-sm text-muted-foreground">Spreadsheet format</p>
+            </div>
           </button>
-        </>
-      )}
-      <div className="p-4 rounded-xl bg-muted space-y-2">
-        <p className="text-xs font-medium text-muted-foreground">Questions about billing?</p>
-        <p className="text-sm text-foreground">Contact our support team for assistance with your account or subscription.</p>
-      </div>
-    </div>
-  </SettingsSheet>
+          <button
+            onClick={() => handleExport('json')}
+            className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors"
+          >
+            <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+              <FileJson className="w-5 h-5 text-foreground" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="font-medium text-foreground">Export as JSON</p>
+              <p className="text-sm text-muted-foreground">For backup & import</p>
+            </div>
+          </button>
+          <button
+            onClick={() => handleExport('account')}
+            disabled={isExportingAccount}
+            className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+              {isExportingAccount ? (
+                <RefreshCw className="w-5 h-5 text-foreground animate-spin" />
+              ) : (
+                <FileJson className="w-5 h-5 text-foreground" />
+              )}
+            </div>
 
-  {/* Language Sheet */ }
-  {/* Currency Sheet */ }
-<SettingsSheet
-  isOpen={activeSheet === 'currency'}
-  onClose={() => setActiveSheet(null)}
-  title="Currency"
->
-  <div className="space-y-2">
-    {currencies.map((currency) => (
-      <button
-        key={currency.code}
-        onClick={async () => {
-          await updateNotificationSettings({ currencyCode: currency.code })
-          addToast({
-            type: 'success',
-            title: 'Currency updated',
-            message: `${currency.name} is now your preferred currency.`,
-          })
-          setActiveSheet(null)
-        }}
-        className={cn(
-          "w-full flex items-center justify-between p-4 rounded-xl transition-colors",
-          notificationSettings.currencyCode === currency.code
-            ? "bg-gold/10 text-gold border border-gold/30"
-            : "bg-muted hover:bg-secondary"
-        )}
+            <div className="flex-1 text-left">
+              <p className="font-medium text-foreground">Full account backup</p>
+              <p className="text-sm text-muted-foreground">
+                Profile, settings, notifications, and subscriptions (JSON)
+              </p>
+            </div>
+          </button>
+        </div>
+      </SettingsSheet>
+
+      {/* Billing & Plan Sheet */}
+      <SettingsSheet
+        isOpen={activeSheet === 'billing'}
+        onClose={() => setActiveSheet(null)}
+        title="Billing & Plan"
       >
-        <div className="flex items-center gap-3">
-          <span className="text-lg font-semibold">{currency.symbol}</span>
-          <div className="text-left">
-            <p className="font-medium">{currency.name}</p>
-            <p className="text-sm opacity-80">{currency.code}</p>
+        <div className="space-y-4">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
+            <p className="text-sm text-muted-foreground">Current Plan</p>
+            <p className="text-2xl font-semibold text-gold mt-1">{planName}</p>
+            {userProfile?.plan === 'pro' && (
+              <p className="text-xs text-muted-foreground mt-2">Your subscription is active</p>
+            )}
+          </div>
+          {userProfile?.plan !== 'pro' && (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Upgrade to Pro to unlock advanced features including analytics, leak detection, and more.
+              </p>
+              <button
+                onClick={() => {
+                  setShowPlanSheet(true)
+                  setActiveSheet(null)
+                }}
+                className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors"
+              >
+                View Upgrade Options
+              </button>
+            </>
+          )}
+          <div className="p-4 rounded-xl bg-muted space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">Questions about billing?</p>
+            <p className="text-sm text-foreground">Contact our support team for assistance with your account or subscription.</p>
           </div>
         </div>
+      </SettingsSheet>
 
-        {notificationSettings.currencyCode === currency.code && <Check className="w-5 h-5" />}
-      </button>
-    ))}
-  </div>
-</SettingsSheet>
-  <SettingsSheet
-    isOpen={activeSheet === 'language'}
-    onClose={() => setActiveSheet(null)}
-    title="Language"
-  >
-    <div className="space-y-2">
-      {[
-        { code: 'en', name: 'English' },
-        { code: 'es', name: 'Español' },
-        { code: 'fr', name: 'Français' },
-        { code: 'de', name: 'Deutsch' },
-        { code: 'hi', name: 'हिन्दी' },
-      ].map((lang) => (
-        <button
-          key={lang.code}
-          onClick={async () => {
-            await updateNotificationSettings({ language: lang.code })
-            addToast({ type: 'success', title: 'Language updated' })
-            setActiveSheet(null)
-          }}
-          className={cn(
-            "w-full flex items-center justify-between p-4 rounded-xl transition-colors",
-            notificationSettings.language === lang.code
-              ? "bg-gold/10 text-gold border border-gold/30"
-              : "bg-muted hover:bg-secondary"
-          )}
-        >
-          <span>{lang.name}</span>
-          {notificationSettings.language === lang.code && <Check className="w-5 h-5" />}
-        </button>
-      ))}
-    </div>
-  </SettingsSheet>
+      {/* Language Sheet */}
+      {/* Currency Sheet */}
+      <SettingsSheet
+        isOpen={activeSheet === 'currency'}
+        onClose={() => setActiveSheet(null)}
+        title="Currency"
+      >
+        <div className="space-y-2">
+          {currencies.map((currency) => (
+            <button
+              key={currency.code}
+              onClick={async () => {
+                await updateNotificationSettings({ currencyCode: currency.code })
+                addToast({
+                  type: 'success',
+                  title: 'Currency updated',
+                  message: `${currency.name} is now your preferred currency.`,
+                })
+                setActiveSheet(null)
+              }}
+              className={cn(
+                "w-full flex items-center justify-between p-4 rounded-xl transition-colors",
+                notificationSettings.currencyCode === currency.code
+                  ? "bg-gold/10 text-gold border border-gold/30"
+                  : "bg-muted hover:bg-secondary"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-lg font-semibold">{currency.symbol}</span>
+                <div className="text-left">
+                  <p className="font-medium">{currency.name}</p>
+                  <p className="text-sm opacity-80">{currency.code}</p>
+                </div>
+              </div>
+
+              {notificationSettings.currencyCode === currency.code && <Check className="w-5 h-5" />}
+            </button>
+          ))}
+        </div>
+      </SettingsSheet>
+      <SettingsSheet
+        isOpen={activeSheet === 'language'}
+        onClose={() => setActiveSheet(null)}
+        title="Language"
+      >
+        <div className="space-y-2">
+          {[
+            { code: 'en', name: 'English' },
+            { code: 'es', name: 'Español' },
+            { code: 'fr', name: 'Français' },
+            { code: 'de', name: 'Deutsch' },
+            { code: 'hi', name: 'हिन्दी' },
+          ].map((lang) => (
+            <button
+              key={lang.code}
+              onClick={async () => {
+                await updateNotificationSettings({ language: lang.code })
+                addToast({ type: 'success', title: 'Language updated' })
+                setActiveSheet(null)
+              }}
+              className={cn(
+                "w-full flex items-center justify-between p-4 rounded-xl transition-colors",
+                notificationSettings.language === lang.code
+                  ? "bg-gold/10 text-gold border border-gold/30"
+                  : "bg-muted hover:bg-secondary"
+              )}
+            >
+              <span>{lang.name}</span>
+              {notificationSettings.language === lang.code && <Check className="w-5 h-5" />}
+            </button>
+          ))}
+        </div>
+      </SettingsSheet>
     </div >
   )
 }
