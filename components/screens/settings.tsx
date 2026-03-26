@@ -644,6 +644,26 @@ export function SettingsScreen() {
           <p className="text-sm text-muted-foreground">For backup & import</p>
         </div>
       </button>
+      <button
+        onClick={() => handleExport('account')}
+        disabled={isExportingAccount}
+        className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+          {isExportingAccount ? (
+            <RefreshCw className="w-5 h-5 text-foreground animate-spin" />
+          ) : (
+            <FileJson className="w-5 h-5 text-foreground" />
+          )}
+        </div>
+
+        <div className="flex-1 text-left">
+          <p className="font-medium text-foreground">Full account backup</p>
+          <p className="text-sm text-muted-foreground">
+            Profile, settings, notifications, and subscriptions (JSON)
+          </p>
+        </div>
+      </button>
     </div>
   </SettingsSheet>
 
@@ -685,6 +705,45 @@ export function SettingsScreen() {
   </SettingsSheet>
 
   {/* Language Sheet */ }
+  {/* Currency Sheet */ }
+<SettingsSheet
+  isOpen={activeSheet === 'currency'}
+  onClose={() => setActiveSheet(null)}
+  title="Currency"
+>
+  <div className="space-y-2">
+    {currencies.map((currency) => (
+      <button
+        key={currency.code}
+        onClick={async () => {
+          await updateNotificationSettings({ currencyCode: currency.code })
+          addToast({
+            type: 'success',
+            title: 'Currency updated',
+            message: `${currency.name} is now your preferred currency.`,
+          })
+          setActiveSheet(null)
+        }}
+        className={cn(
+          "w-full flex items-center justify-between p-4 rounded-xl transition-colors",
+          notificationSettings.currencyCode === currency.code
+            ? "bg-gold/10 text-gold border border-gold/30"
+            : "bg-muted hover:bg-secondary"
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-lg font-semibold">{currency.symbol}</span>
+          <div className="text-left">
+            <p className="font-medium">{currency.name}</p>
+            <p className="text-sm opacity-80">{currency.code}</p>
+          </div>
+        </div>
+
+        {notificationSettings.currencyCode === currency.code && <Check className="w-5 h-5" />}
+      </button>
+    ))}
+  </div>
+</SettingsSheet>
   <SettingsSheet
     isOpen={activeSheet === 'language'}
     onClose={() => setActiveSheet(null)}
