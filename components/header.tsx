@@ -46,12 +46,14 @@ export function Header({
   // Generate avatar URL deterministically
   const avatarUrl = useMemo(() => {
     if (!userProfile) return null
+
     const seed =
       userProfile.avatarSeed ||
       [userProfile.name, userProfile.email].filter(Boolean).join('::') ||
       'default'
+
     return generateAvatar({ seed, size: 256 })
-  }, [userProfile?.name, userProfile?.email, userProfile?.avatarSeed]
+  }, [userProfile?.name, userProfile?.email, userProfile?.avatarSeed])
 
   return (
     <motion.header
