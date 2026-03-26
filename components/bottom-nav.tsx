@@ -260,7 +260,7 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
   }
 
   // Pinned means expanded and stable.
-  // Unpinned means collapsed by default, expand on hover.
+  // Unpinned means collapsed by default, then expands on hover.
   const shouldExpand = isPinned || !isCollapsed || (isHovered && !isPinned)
   const sidebarWidth = shouldExpand ? 280 : 72
 
@@ -331,11 +331,11 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
                 whileTap={{ scale: 0.98 }}
                 title={!shouldExpand ? item.label : undefined}
                 className={cn(
-                  'w-full flex items-center gap-3 rounded-xl transition-colors duration-200',
+                  'w-full flex items-center gap-3 rounded-xl transition-all duration-200 cursor-pointer',
                   shouldExpand ? 'px-4 py-3' : 'px-0 py-3 justify-center',
                   isActive
-                    ? 'bg-gold/10 text-gold'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    ? 'bg-gold/12 text-gold shadow-[inset_0_0_0_1px_rgba(199,163,106,0.18)]'
+                    : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
                 )}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
@@ -378,7 +378,7 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={togglePinned}
-              className="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground transition-colors mb-2"
+              className="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all mb-2 cursor-pointer"
               title={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
             >
               {isPinned ? (
@@ -399,7 +399,7 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className={cn(
-            "flex items-center gap-3 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground transition-colors",
+            "flex items-center gap-3 rounded-xl text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all cursor-pointer",
             shouldExpand ? "w-full px-4 py-2" : "w-10 h-10 justify-center"
           )}
           title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -435,7 +435,7 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
           whileTap={{ scale: 0.98 }}
           // TODO: Handle add subscription modal/sheet action
           className={cn(
-            "flex items-center justify-center gap-2 rounded-xl gold-gradient text-obsidian font-semibold shadow-luxury transition-all",
+            "flex items-center justify-center gap-2 rounded-xl gold-gradient text-obsidian font-semibold shadow-luxury transition-all cursor-pointer",
             shouldExpand ? "w-full px-4 py-3" : "w-10 h-10"
           )}
           title={!shouldExpand ? 'Add Subscription' : undefined}
