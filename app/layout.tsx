@@ -1,17 +1,19 @@
 // Root layout - Renewly subscription management app
 import type { Metadata, Viewport } from 'next'
+import { PreferencesBridge } from '@/components/preferences-bridge'
 import { Inter, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ToastContainer } from '@/components/toast-container'
 import './globals.css'
 
-const inter = Inter({ 
+
+const inter = Inter({
   subsets: ["latin"],
   variable: '--font-inter',
   display: 'swap'
 });
 
-const playfair = Playfair_Display({ 
+const playfair = Playfair_Display({
   subsets: ["latin"],
   variable: '--font-playfair',
   display: 'swap'
@@ -137,7 +139,7 @@ export default function RootLayout({
   }
 
   return (
-    <html lang="en" className="dark" data-scroll-behavior="smooth">
+    <html lang="en" className="dark" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"
@@ -145,6 +147,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
+        <PreferencesBridge />
         {children}
         <ToastContainer />
         <Analytics />
