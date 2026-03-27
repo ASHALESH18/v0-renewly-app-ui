@@ -243,7 +243,10 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
     setIsCollapsed(nextCollapsed)
     localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(nextCollapsed))
 
-    if (!nextCollapsed) {
+    if (nextCollapsed) {
+      setIsPinned(false)
+      localStorage.setItem(SIDEBAR_PINNED_KEY, 'false')
+    } else {
       setIsPinned(true)
       localStorage.setItem(SIDEBAR_PINNED_KEY, 'true')
     }
