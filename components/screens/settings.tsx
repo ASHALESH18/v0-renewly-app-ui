@@ -32,63 +32,78 @@ function SettingsSheet({
   title: string
   children: React.ReactNode
 }) {
+  const [portalReady, setPortalReady] = useState(false)
+
   useEffect(() => {
-    if (!isOpen) return
+    setPortalReady(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isOpen || !portalReady) return
 
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
     }
 
-    const previousOverflow = document.body.style.overflow
+    const previousBodyOverflow = document.body.style.overflow
+    const previousHtmlOverflow = document.documentElement.style.overflow
+
     document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
     document.addEventListener('keydown', handleEscape)
 
     return () => {
-      document.body.style.overflow = previousOverflow
+      document.body.style.overflow = previousBodyOverflow
+      document.documentElement.style.overflow = previousHtmlOverflow
       document.removeEventListener('keydown', handleEscape)
     }
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, portalReady])
 
-  return (
+  if (!portalReady) return null
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-6"
+          className="fixed inset-0 z-[140] bg-black/60 backdrop-blur-sm overflow-y-auto"
           onClick={onClose}
         >
-          <motion.div
-            initial={{ opacity: 0, y: 32, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.98 }}
-            transition={{ duration: 0.2 }}
-            onClick={(e) => e.stopPropagation()}
-            className="w-full md:max-w-2xl max-h-[92vh] md:max-h-[80vh] overflow-hidden rounded-t-3xl md:rounded-3xl border border-gold/10 bg-[linear-gradient(180deg,rgba(14,18,24,0.98)_0%,rgba(10,13,18,0.98)_100%)] shadow-[0_28px_80px_rgba(0,0,0,0.45)]"
-          >
-            <div className="flex items-center justify-between border-b border-gold/10 px-4 py-4 md:px-6">
-              <div className="space-y-1">
-                <h3 className="text-xl font-semibold text-foreground">{title}</h3>
-                <div className="h-1 w-12 rounded-full bg-gold/40 md:hidden" />
+          <div className="min-h-full flex items-end md:items-center justify-center p-0 md:p-6">
+            <motion.div
+              initial={{ opacity: 0, y: 28, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.98 }}
+              transition={{ duration: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full md:max-w-2xl max-h-[92dvh] md:max-h-[80dvh] overflow-hidden rounded-t-3xl md:rounded-3xl border border-gold/10 bg-[linear-gradient(180deg,rgba(14,18,24,0.98)_0%,rgba(10,13,18,0.98)_100%)] shadow-[0_28px_80px_rgba(0,0,0,0.45)]"
+            >
+              <div className="flex items-center justify-between border-b border-gold/10 px-4 py-4 md:px-6">
+                <div className="space-y-1">
+                  <h3 className="text-xl font-semibold text-foreground">{title}</h3>
+                  <div className="h-1 w-12 rounded-full bg-gold/40 md:hidden" />
+                </div>
+
+                <button
+                  onClick={onClose}
+                  className="w-10 h-10 rounded-xl border border-gold/10 bg-white/5 hover:bg-white/10 hover:border-gold/25 transition-all flex items-center justify-center cursor-pointer"
+                  aria-label={`Close ${title}`}
+                >
+                  <X className="w-5 h-5 text-foreground" />
+                </button>
               </div>
 
-              <button
-                onClick={onClose}
-                className="w-10 h-10 rounded-xl border border-gold/10 bg-white/5 hover:bg-white/10 hover:border-gold/25 transition-all flex items-center justify-center cursor-pointer"
-                aria-label={`Close ${title}`}
-              >
-                <X className="w-5 h-5 text-foreground" />
-              </button>
-            </div>
-
-            <div className="overflow-y-auto px-4 py-4 md:px-6 md:py-6">
-              {children}
-            </div>
-          </motion.div>
+              <div className="max-h-[calc(92dvh-88px)] md:max-h-[calc(80dvh-88px)] overflow-y-auto overscroll-contain px-4 py-4 md:px-6 md:py-6">
+                {children}
+              </div>
+            </motion.div>
+          </div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   )
 }
 
