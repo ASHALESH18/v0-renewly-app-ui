@@ -166,12 +166,14 @@ export function DashboardScreen({
                   value={Math.round(metrics.totalMonthly)}
                   prefix="₹"
                   delay={0.2}
+                  language={preferredLanguage}
                 />
                 <AnimatedMetricItem
                   label="Annual Projected"
                   value={Math.round(metrics.totalYearly)}
                   prefix="₹"
                   delay={0.3}
+                  language={preferredLanguage}
                 />
                 <AnimatedMetricItem
                   label="Potential Savings"
@@ -179,6 +181,7 @@ export function DashboardScreen({
                   prefix="₹"
                   suffix="/month"
                   delay={0.4}
+                  language={preferredLanguage}
                 />
               </div>
 
@@ -285,7 +288,7 @@ export function DashboardScreen({
                 <p className="font-medium text-foreground mb-1">Smart Insight</p>
                 <p className="text-sm text-muted-foreground">
                   {metrics.leakScore > 0
-                    ? `You could save ₹${metrics.savingsPotential} monthly by reviewing unused subscriptions.`
+                    ? `You could save ${formatMoney(metrics.savingsPotential, preferredCurrency, preferredLanguage)} monthly by reviewing unused subscriptions.`
                     : 'All your subscriptions are being actively used. Great job!'}
                 </p>
               </div>
@@ -428,6 +431,7 @@ interface AnimatedMetricItemProps {
   prefix?: string
   suffix?: string
   delay?: number
+  language?: string
 }
 
 function AnimatedMetricItem({
@@ -435,7 +439,8 @@ function AnimatedMetricItem({
   value,
   prefix = '',
   suffix = '',
-  delay = 0
+  delay = 0,
+  language = 'en'
 }: AnimatedMetricItemProps) {
   const displayValue = useCountUp(value, 1500, delay * 1000)
 
@@ -447,7 +452,7 @@ function AnimatedMetricItem({
     >
       <p className="text-sm text-muted-foreground mb-1">{label}</p>
       <p className="text-3xl font-bold text-gold">
-        {prefix}{displayValue.toLocaleString('en-IN')}{suffix && <span className="text-lg text-muted-foreground ml-1">{suffix}</span>}
+        {prefix}{formatNumberForLocale(displayValue, language)}{suffix && <span className="text-lg text-muted-foreground ml-1">{suffix}</span>}
       </p>
     </motion.div>
   )

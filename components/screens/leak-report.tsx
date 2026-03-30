@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Share2, 
-  Download, 
+import { formatMoney } from '@/lib/preferences-format'
+import {
+  Share2,
+  Download,
   TrendingDown,
   Sparkles,
   ArrowRight,
@@ -19,7 +20,7 @@ import { useCountUp } from '@/lib/hooks/use-count-up'
 import { cn } from '@/lib/utils'
 import { getLeakStatusConfig, getLeakStatusLabel } from '@/lib/leak-status-config'
 
-export function LeakReportScreen({ 
+export function LeakReportScreen({
   onNavigateTab,
   onProfileClick
 }: {
@@ -28,14 +29,17 @@ export function LeakReportScreen({
 } = {}) {
   const [mounted, setMounted] = useState(false)
   const [copied, setCopied] = useState(false)
-  
+
   useEffect(() => {
     setMounted(true)
   }, [])
 
   // Get live data from store
   const subscriptions = useStore((state) => state.subscriptions)
-  
+  const notificationSettings = useStore((state) => state.notificationSettings)
+  const preferredLanguage = notificationSettings.language || 'en'
+  const preferredCurrency = notificationSettings.currencyCode || 'INR'
+
   // Memoize metrics calculation to prevent infinite loop
   const metrics = useMemo(() => {
     const totalMonthly = subscriptions.reduce((sum, sub) => sum + (sub.price || sub.amount || 0), 0)
@@ -43,14 +47,14 @@ export function LeakReportScreen({
     const savingsPotential = subscriptions
       .filter(sub => sub.status === 'unused')
       .reduce((sum, sub) => sum + (sub.price || sub.amount || 0), 0)
-    
-    return { 
-      totalMonthly: totalMonthly || 0, 
-      totalYearly: totalYearly || 0, 
-      savingsPotential: savingsPotential || 0 
+
+    return {
+      totalMonthly: totalMonthly || 0,
+      totalYearly: totalYearly || 0,
+      savingsPotential: savingsPotential || 0
     }
   }, [subscriptions])
-  
+
   // Calculate leak data
   const leakData = (() => {
     const categories: Record<string, number> = {}
@@ -75,8 +79,8 @@ export function LeakReportScreen({
       categorySpending: Object.entries(categories).map(([category, amount]) => ({
         category,
         amount,
-        percentage: subscriptions.length > 0 
-          ? (amount / subscriptions.reduce((sum, s) => sum + (s.price || 0), 0)) * 100 
+        percentage: subscriptions.length > 0
+          ? (amount / subscriptions.reduce((sum, s) => sum + (s.price || 0), 0)) * 100
           : 0,
       })),
       mostExpensiveCategory,
@@ -84,7 +88,7 @@ export function LeakReportScreen({
       potentialSavings: unusedSubscriptions.reduce((sum, sub) => sum + (sub.price || 0), 0),
     }
   })()
-  
+
   // Calculate upcoming renewals
   const upcoming = subscriptions
     .filter(sub => {
@@ -98,7 +102,7 @@ export function LeakReportScreen({
   if (!mounted) {
     return (
       <PageTransition className="min-h-screen">
-        <Header 
+        <Header
           title="Leak Report"
           subtitle="Loading..."
           showSearch={false}
@@ -115,16 +119,16 @@ export function LeakReportScreen({
   const unusedSubs = subscriptions.filter(s => s.status === 'unused')
   const pausedSubs = subscriptions.filter(s => s.status === 'paused')
   const activeSubs = subscriptions.filter(s => s.status === 'active')
-  
+
   const categoryCounts = activeSubs.reduce((acc, sub) => {
     acc[sub.category] = (acc[sub.category] || 0) + 1
     return acc
   }, {} as Record<string, number>)
-  
-  const topCategory = Object.entries(categoryCounts).sort(([,a], [,b]) => b - a)[0]
+
+  const topCategory = Object.entries(categoryCounts).sort(([, a], [, b]) => b - a)[0]
   const topCategoryCount = topCategory?.[1] ?? 0
   const topCategoryName = topCategory?.[0] ?? 'N/A'
-  
+
   const categorySpends = subscriptions.reduce((acc, sub) => {
     if (sub.status === 'active') {
       const monthlyAmount = sub.billingCycle === 'yearly' ? sub.amount / 12 : sub.amount
@@ -132,8 +136,8 @@ export function LeakReportScreen({
     }
     return acc
   }, {} as Record<string, number>)
-  
-  const topSpendCategory = Object.entries(categorySpends).sort(([,a], [,b]) => b - a)[0]
+
+  const topSpendCategory = Object.entries(categorySpends).sort(([, a], [, b]) => b - a)[0]
   const topSpendAmount = topSpendCategory?.[1] ?? 0
 
   // Generate observations
@@ -152,7 +156,7 @@ export function LeakReportScreen({
   const handleShare = async () => {
     try {
       const shareText = `Renewly Leak Report: My subscription leak score is ${leakData.overallScore}/100. Monthly spend: ₹${metrics.totalMonthly}. Annual projected: ₹${metrics.totalYearly}. Potential savings: ₹${metrics.savingsPotential}`
-      
+
       if (navigator.share) {
         await navigator.share({
           title: 'Renewly Leak Report',
@@ -172,15 +176,15 @@ export function LeakReportScreen({
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const scoreColor = leakData.overallScore >= 85 
-    ? 'text-emerald' 
+  const scoreColor = leakData.overallScore >= 85
+    ? 'text-emerald'
     : leakData.overallScore >= 70
-    ? 'text-emerald-200'
-    : leakData.overallScore >= 50 
-    ? 'text-gold' 
-    : leakData.overallScore >= 30
-    ? 'text-amber-400'
-    : 'text-crimson'
+      ? 'text-emerald-200'
+      : leakData.overallScore >= 50
+        ? 'text-gold'
+        : leakData.overallScore >= 30
+          ? 'text-amber-400'
+          : 'text-crimson'
 
   const scoreLabel = getLeakStatusLabel(leakData.overallScore)
   const statusConfig = getLeakStatusConfig(leakData.overallScore)
@@ -192,7 +196,7 @@ export function LeakReportScreen({
 
   return (
     <PageTransition className="min-h-screen">
-      <Header 
+      <Header
         title="Leak Report"
         subtitle="Your financial health snapshot"
         showSearch={false}
@@ -209,13 +213,13 @@ export function LeakReportScreen({
         >
           {/* Luxury background gradient */}
           <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-emerald/5" />
-          
+
           {/* Premium border and glass effect */}
           <div className="relative bg-graphite/40 backdrop-blur-lg border border-gold/20 p-8 md:p-12">
             {/* Decorative elements */}
             <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-gold/10 blur-3xl" />
             <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-emerald/5 blur-3xl" />
-            
+
             <div className="relative z-10">
               {/* Header */}
               <div className="flex items-start justify-between mb-12">
@@ -232,7 +236,7 @@ export function LeakReportScreen({
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 }}
-                    className={cn('flex items-center gap-2 px-4 py-2 rounded-full font-semibold', 
+                    className={cn('flex items-center gap-2 px-4 py-2 rounded-full font-semibold',
                       statusConfig.bgColor,
                       statusConfig.textColor,
                       statusConfig.borderColor,
@@ -285,27 +289,27 @@ export function LeakReportScreen({
 
               {/* Key metrics grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <MetricCard 
+                <MetricCard
                   label="Monthly Recurring"
                   value={`₹${metrics.totalMonthly.toLocaleString('en-IN')}`}
                   icon="₹"
                   delay={0.5}
                 />
-                <MetricCard 
+                <MetricCard
                   label="Annual Projected"
-                  value={`₹${metrics.totalYearly.toLocaleString('en-IN')}`}
+                  value={formatMoney(metrics.totalYearly, preferredCurrency, preferredLanguage)}
                   icon="📊"
                   delay={0.6}
                 />
-                <MetricCard 
+                <MetricCard
                   label="Active Subscriptions"
                   value={activeSubs.length.toString()}
                   icon="✓"
                   delay={0.7}
                 />
-                <MetricCard 
+                <MetricCard
                   label="Potential Savings"
-                  value={`₹${metrics.savingsPotential.toLocaleString('en-IN')}`}
+                  value={formatMoney(metrics.savingsPotential, preferredCurrency, preferredLanguage)}
                   icon="💰"
                   highlight
                   delay={0.8}
@@ -323,25 +327,25 @@ export function LeakReportScreen({
         >
           <h2 className="text-xl font-semibold text-foreground mb-4">Spend Overview</h2>
           <div className="grid grid-cols-2 gap-4">
-            <SpendCard 
+            <SpendCard
               label="Active Services"
               value={activeSubs.length}
               icon="🎯"
               color="emerald"
             />
-            <SpendCard 
+            <SpendCard
               label="Unused Services"
               value={unusedSubs.length}
               icon="⚠️"
               color="crimson"
             />
-            <SpendCard 
+            <SpendCard
               label="Paused Services"
               value={pausedSubs.length}
               icon="⏸️"
               color="gold"
             />
-            <SpendCard 
+            <SpendCard
               label="Upcoming Renewals"
               value={upcoming.length}
               icon="📅"
@@ -361,7 +365,7 @@ export function LeakReportScreen({
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-sm text-platinum mb-2">{topSpendCategory?.[0]}</p>
-                <p className="text-4xl font-bold text-gold">₹{Math.round(topSpendAmount).toLocaleString('en-IN')}</p>
+                <p className="text-4xl font-bold text-gold">{formatMoney(Math.round(topSpendAmount), preferredCurrency, preferredLanguage)}</p>
                 <p className="text-xs text-muted-foreground mt-1">{topCategoryCount} subscriptions</p>
               </div>
               <div className="text-right">
@@ -382,7 +386,7 @@ export function LeakReportScreen({
             <Sparkles className="w-5 h-5 text-gold" />
             <h2 className="text-xl font-semibold text-foreground">Observations</h2>
           </div>
-          
+
           <StaggerList className="space-y-3">
             {observations.map((observation, index) => (
               <motion.div
@@ -413,7 +417,7 @@ export function LeakReportScreen({
               <TrendingDown className="w-5 h-5 text-crimson" />
               <h2 className="text-xl font-semibold text-foreground">Flagged Subscriptions</h2>
             </div>
-            
+
             <StaggerList className="space-y-3">
               {unusedSubs.map((sub, index) => (
                 <motion.div
@@ -424,7 +428,7 @@ export function LeakReportScreen({
                   custom={index}
                   className="flex items-center gap-4 p-4 rounded-2xl glass-strong border border-crimson/20 hover:border-crimson/40 transition-colors cursor-pointer group"
                 >
-                  <div 
+                  <div
                     className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shrink-0"
                     style={{ backgroundColor: sub.color }}
                   >
@@ -453,7 +457,7 @@ export function LeakReportScreen({
             transition={{ delay: 1.0, ...springs.gentle }}
           >
             <h2 className="text-xl font-semibold text-foreground mb-4">Upcoming Renewals</h2>
-            
+
             <StaggerList className="space-y-3">
               {upcoming.slice(0, 5).map((sub, index) => {
                 const daysUntil = Math.ceil((new Date(sub.renewalDate!).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
@@ -467,7 +471,7 @@ export function LeakReportScreen({
                     className="flex items-center justify-between p-4 rounded-xl bg-secondary/50 border border-border hover:border-gold/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div 
+                      <div
                         className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-sm"
                         style={{ backgroundColor: sub.color }}
                       >
@@ -495,27 +499,27 @@ export function LeakReportScreen({
           <h2 className="text-xl font-semibold text-foreground mb-4">Suggested Actions</h2>
           <div className="space-y-3">
             {unusedSubs.length > 0 && (
-              <ActionCard 
+              <ActionCard
                 title="Review Unused Subscriptions"
                 description={`You have ${unusedSubs.length} unused service${unusedSubs.length > 1 ? 's' : ''} that could be cancelled`}
                 action="Review"
               />
             )}
             {upcoming.length > 3 && (
-              <ActionCard 
+              <ActionCard
                 title="Cluster of Renewals"
                 description={`${upcoming.length} subscriptions renew in the next 30 days`}
                 action="View Calendar"
               />
             )}
             {topCategoryCount > 2 && (
-              <ActionCard 
+              <ActionCard
                 title="Category Concentration"
                 description={`${topCategoryCount} ${topCategoryName} subscriptions might have overlaps`}
                 action="Optimize"
               />
             )}
-            <ActionCard 
+            <ActionCard
               title="Enable Leak Alerts"
               description="Get notified when new potential savings are detected"
               action="Enable"
@@ -527,13 +531,13 @@ export function LeakReportScreen({
   )
 }
 
-function MetricCard({ 
-  label, 
-  value, 
+function MetricCard({
+  label,
+  value,
   icon,
   highlight = false,
   delay = 0
-}: { 
+}: {
   label: string
   value: string
   icon: string
@@ -547,8 +551,8 @@ function MetricCard({
       transition={{ delay, ...springs.gentle }}
       className={cn(
         'p-4 rounded-xl border transition-colors',
-        highlight 
-          ? 'bg-emerald/10 border-emerald/20' 
+        highlight
+          ? 'bg-emerald/10 border-emerald/20'
           : 'bg-slate/40 border-gold/10'
       )}
     >
@@ -568,12 +572,12 @@ function MetricCard({
   )
 }
 
-function SpendCard({ 
-  label, 
-  value, 
-  icon, 
-  color 
-}: { 
+function SpendCard({
+  label,
+  value,
+  icon,
+  color
+}: {
   label: string
   value: number
   icon: string
@@ -602,11 +606,11 @@ function SpendCard({
   )
 }
 
-function ActionCard({ 
-  title, 
-  description, 
-  action 
-}: { 
+function ActionCard({
+  title,
+  description,
+  action
+}: {
   title: string
   description: string
   action: string
@@ -645,7 +649,7 @@ function generateObservations(data: {
   const observations: string[] = []
 
   if (data.leakScore < 50) {
-    observations.push(`Your subscription health shows significant optimization opportunities. You could potentially recover ₹${data.savingsPotential.toLocaleString('en-IN')} each month by reviewing flagged services.`)
+    observations.push(`Your subscription health shows significant optimization opportunities. You could potentially recover ${formatMoney(data.savingsPotential, preferredCurrency, preferredLanguage)} each month by reviewing flagged services.`)
   } else if (data.leakScore < 75) {
     observations.push(`There are opportunities to improve your subscription efficiency. Consider reviewing unused services to reduce your monthly spend.`)
   } else {
@@ -653,7 +657,7 @@ function generateObservations(data: {
   }
 
   if (data.unusedCount > 0) {
-    observations.push(`You have ${data.unusedCount} unused subscription${data.unusedCount > 1 ? 's' : ''} consuming ₹${data.savingsPotential.toLocaleString('en-IN')} monthly. These are prime candidates for cancellation.`)
+    observations.push(`You have ${data.unusedCount} unused subscription${data.unusedCount > 1 ? 's' : ''} consuming ${formatMoney(data.savingsPotential, preferredCurrency, preferredLanguage)} monthly. These are prime candidates for cancellation.`)
   }
 
   if (data.topCategory && data.activeCount > 0) {

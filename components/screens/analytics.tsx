@@ -8,6 +8,7 @@ import { SegmentedControl } from '@/components/filter-chips'
 import { useState, useEffect } from 'react'
 import { useAnalyticsData } from '@/lib/hooks/use-remote-data'
 import useStore from '@/lib/store'
+import { formatMoney } from '@/lib/preferences-format'
 import {
   AreaChart,
   Area,
@@ -28,6 +29,10 @@ const timeSegments = [
   { id: '6m', label: '6M' },
   { id: '1y', label: '1Y' },
 ]
+
+const notificationSettings = useStore((state) => state.notificationSettings)
+const preferredLanguage = notificationSettings.language || 'en'
+const preferredCurrency = notificationSettings.currencyCode || 'INR'
 
 const COLORS = ['#C7A36A', '#2E5E52', '#7A3940', '#BCC2CC', '#F4EFE7']
 
@@ -93,7 +98,7 @@ export function AnalyticsScreen() {
               <span className="text-xs">Avg Monthly</span>
             </div>
             <p className="text-xl font-semibold text-foreground">
-              ₹{avgSpend.toLocaleString('en-IN')}
+              {formatMoney(avgSpend, preferredCurrency, preferredLanguage)}
             </p>
           </motion.div>
 
@@ -157,7 +162,7 @@ export function AnalyticsScreen() {
                     padding: '8px 12px',
                   }}
                   labelStyle={{ color: '#BCC2CC' }}
-                  formatter={(value: number) => [`₹${value.toLocaleString('en-IN')}`, 'Spend']}
+                  formatter={(value: number) => [formatMoney(value, preferredCurrency, preferredLanguage), 'Spend']}
                 />
                 <Area
                   type="monotone"
@@ -233,7 +238,7 @@ export function AnalyticsScreen() {
           <h3 className="font-semibold text-foreground mb-4">Yearly Projection</h3>
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-semibold text-gold">
-              ₹{yearlyProjected.toLocaleString('en-IN')}
+              {formatMoney(yearlyProjected, preferredCurrency, preferredLanguage)}
             </span>
             <span className="text-muted-foreground">projected spend</span>
           </div>
@@ -268,7 +273,7 @@ export function AnalyticsScreen() {
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-foreground">
-                      {sub.currency}{sub.amount.toLocaleString('en-IN')}
+                      {formatMoney(sub.amount, sub.currency || preferredCurrency, preferredLanguage)}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       /{sub.billingCycle === 'yearly' ? 'yr' : 'mo'}
