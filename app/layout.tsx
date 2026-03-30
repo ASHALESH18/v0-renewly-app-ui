@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ToastContainer } from '@/components/toast-container'
+import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 import { PreferencesBridge } from '@/components/preferences-bridge'
 
@@ -138,43 +139,26 @@ export default function RootLayout({
   }
 
   return (
-    <script
-  dangerouslySetInnerHTML={{
-    __html: `
-      (function () {
-        try {
-          var stored = localStorage.getItem('renewly-store');
-          var parsed = stored ? JSON.parse(stored) : null;
-          var state = parsed && parsed.state ? parsed.state : null;
-          var theme = state && state.theme ? state.theme : 'dark';
-          var root = document.documentElement;
-
-          if (theme === 'light') {
-            root.classList.remove('dark');
-          } else {
-            root.classList.add('dark');
-          }
-
-          root.dataset.theme = theme;
-        } catch (e) {
-          document.documentElement.classList.add('dark');
-          document.documentElement.dataset.theme = 'dark';
-        }
-      })();
-    `,
-  }}
-/>
+    <html lang="en" suppressHydrationWarning>
+      <head>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
         />
-      </head >
-    <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
-      <PreferencesBridge />
-      {children}
-      <ToastContainer />
-      <Analytics />
-    </body>
-    </html >
+      </head>
+      <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+          <PreferencesBridge />
+          {children}
+          <ToastContainer />
+        </ThemeProvider>
+        <Analytics />
+      </body>
+    </html>
   )
 }
