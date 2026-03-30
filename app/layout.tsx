@@ -142,45 +142,47 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
-        />
-        {/* Pre-hydration theme bootstrap - prevents flash on first paint */}
-        <script
           dangerouslySetInnerHTML={{
             __html: `
-              (function() {
-                try {
-                  var theme = localStorage.getItem('renewly-theme');
-                  if (!theme) {
-                    var store = localStorage.getItem('renewly-store');
-                    if (store) {
-                      var parsed = JSON.parse(store);
-                      theme = (parsed.state && parsed.state.notificationSettings && parsed.state.notificationSettings.theme) || 
-                              (parsed.state && parsed.state.theme) || 'dark';
-                    }
-                  }
-                  if (theme === 'light') {
-                    document.documentElement.classList.remove('dark');
-                    document.documentElement.classList.add('light');
-                    document.documentElement.style.colorScheme = 'light';
-                  } else {
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.classList.remove('light');
-                    document.documentElement.style.colorScheme = 'dark';
-                  }
-                } catch (e) {
-                  document.documentElement.classList.add('dark');
-                }
-              })();
-            `,
+        (function () {
+          try {
+            var stored = localStorage.getItem('renewly-store');
+            var parsed = stored ? JSON.parse(stored) : null;
+            var state = parsed && parsed.state ? parsed.state : null;
+
+            var theme =
+              (state &&
+                state.notificationSettings &&
+                state.notificationSettings.theme) ||
+              (state && state.theme) ||
+              'dark';
+
+            var root = document.documentElement;
+
+            if (theme === 'light') {
+              root.classList.remove('dark');
+            } else {
+              root.classList.add('dark');
+            }
+
+            root.dataset.theme = theme;
+          } catch (e) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.dataset.theme = 'dark';
+          }
+        })();
+      `,
           }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
         />
       </head>
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="light"
           enableSystem={false}
           storageKey="renewly-theme"
           disableTransitionOnChange
