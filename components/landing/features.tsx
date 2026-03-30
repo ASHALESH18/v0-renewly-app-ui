@@ -2,12 +2,12 @@
 
 import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
-import { 
-  Calendar, 
-  Bell, 
-  PieChart, 
-  Shield, 
-  Smartphone, 
+import {
+  Calendar,
+  Bell,
+  PieChart,
+  Shield,
+  Smartphone,
   Zap,
   CreditCard,
   TrendingDown,
@@ -53,7 +53,10 @@ export function Features() {
   const isInView = useInView(ref, { once: true, margin: '-100px' })
 
   return (
-    <section id="features" className="py-24 lg:py-32 px-4 bg-card dark:bg-graphite relative overflow-hidden scroll-mt-24 -mt-px">
+    <section
+      id="features"
+      className="py-24 lg:py-32 px-4 bg-transparent relative overflow-hidden scroll-mt-24 -mt-px"
+    >
       {/* Background elements */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald/5 rounded-full blur-3xl" />
@@ -126,7 +129,7 @@ export function Features() {
               <span className="text-platinum">Built for your wallet.</span>
             </h3>
             <p className="text-platinum leading-relaxed mb-6">
-              Renewly is crafted as a premium mobile experience first. Every tap, swipe, and gesture 
+              Renewly is crafted as a premium mobile experience first. Every tap, swipe, and gesture
               feels natural and satisfying. Manage your financial life from anywhere.
             </p>
             <div className="grid grid-cols-3 gap-8">
