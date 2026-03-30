@@ -5,6 +5,7 @@ import { Inter, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ToastContainer } from '@/components/toast-container'
 import './globals.css'
+import { PreferencesBridge } from '@/components/preferences-bridge'
 
 
 const inter = Inter({

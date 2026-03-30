@@ -19,6 +19,7 @@ import useStore from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { useCountUp } from '@/lib/hooks/use-count-up'
 import type { Subscription } from '@/lib/types'
+import { formatMoney, formatNumberForLocale, getCurrencySymbol } from '@/lib/preferences-format'
 
 const viewSegments = [
   { id: 'cards', label: 'Cards' },
@@ -45,6 +46,11 @@ export function DashboardScreen({
   // Get data from store
   const subscriptions = useStore((state) => state.subscriptions)
   const addToast = useStore((state) => state.addToast)
+  const notificationSettings = useStore((state) => state.notificationSettings)
+  const preferredLanguage = notificationSettings.language || 'en'
+  const preferredCurrency = notificationSettings.currencyCode || 'INR'
+  const currencySymbol = getCurrencySymbol(preferredCurrency, preferredLanguage)
+
 
   // Memoize metrics calculation to prevent infinite loops
   const metrics = useMemo(() => {
@@ -164,21 +170,21 @@ export function DashboardScreen({
                 <AnimatedMetricItem
                   label="Monthly Spend"
                   value={Math.round(metrics.totalMonthly)}
-                  prefix="₹"
+                  prefix={currencySymbol}
                   delay={0.2}
                   language={preferredLanguage}
                 />
                 <AnimatedMetricItem
                   label="Annual Projected"
                   value={Math.round(metrics.totalYearly)}
-                  prefix="₹"
+                  prefix={currencySymbol}
                   delay={0.3}
                   language={preferredLanguage}
                 />
                 <AnimatedMetricItem
                   label="Potential Savings"
                   value={Math.round(metrics.savingsPotential)}
-                  prefix="₹"
+                  prefix={currencySymbol}
                   suffix="/month"
                   delay={0.4}
                   language={preferredLanguage}
@@ -237,7 +243,7 @@ export function DashboardScreen({
           <MetricCard
             title="Monthly Recurring"
             value={Math.round(metrics.totalMonthly)}
-            prefix="₹"
+            prefix={currencySymbol}
             change={-12}
             changeLabel="vs last month"
             icon={CreditCard}
@@ -247,7 +253,7 @@ export function DashboardScreen({
           <MetricCard
             title="Yearly Projected"
             value={Math.round(metrics.totalYearly)}
-            prefix="₹"
+            prefix={currencySymbol}
             icon={Calendar}
             iconColor="#2E5E52"
             index={1}
@@ -263,7 +269,7 @@ export function DashboardScreen({
           <MetricCard
             title="Possible Savings"
             value={Math.round(metrics.savingsPotential)}
-            prefix="₹"
+            prefix={currencySymbol}
             suffix="/mo"
             icon={TrendingDown}
             iconColor="#2E5E52"
@@ -419,7 +425,7 @@ function UpcomingCard({ subscription, index }: UpcomingCardProps) {
         {daysUntil === 0 ? 'Due today' : `${daysUntil} days left`}
       </p>
       <p className="text-sm font-semibold text-foreground mt-2">
-        ₹{subscription.amount.toLocaleString('en-IN')}
+        {formatMoney(subscription.amount, subscription.currency || preferredCurrency, preferredLanguage)}
       </p>
     </motion.div>
   )
