@@ -152,6 +152,14 @@ export default function RootLayout({
               (function() {
                 try {
                   var theme = localStorage.getItem('renewly-theme');
+                  if (!theme) {
+                    var store = localStorage.getItem('renewly-store');
+                    if (store) {
+                      var parsed = JSON.parse(store);
+                      theme = (parsed.state && parsed.state.notificationSettings && parsed.state.notificationSettings.theme) || 
+                              (parsed.state && parsed.state.theme) || 'dark';
+                    }
+                  }
                   if (theme === 'light') {
                     document.documentElement.classList.remove('dark');
                     document.documentElement.classList.add('light');
