@@ -14,7 +14,7 @@ import type { Subscription } from '@/lib/types'
 // Premium loading skeleton for the app shell
 function AppShellSkeleton() {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(1200px_700px_at_20%_-10%,rgba(199,163,106,0.16),transparent_55%),radial-gradient(900px_600px_at_100%_0%,rgba(255,255,255,0.06),transparent_40%),linear-gradient(180deg,rgba(11,15,20,1)_0%,rgba(14,18,24,1)_100%)]">
+    <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(1200px_700px_at_18%_-10%,rgba(192,142,75,0.14),transparent_55%),radial-gradient(900px_560px_at_100%_0%,rgba(255,248,239,0.92),transparent_40%),linear-gradient(180deg,#fbf6ef_0%,#f2e7d9_100%)] dark:bg-[radial-gradient(1200px_700px_at_20%_-10%,rgba(199,163,106,0.16),transparent_55%),radial-gradient(900px_600px_at_100%_0%,rgba(255,255,255,0.06),transparent_40%),linear-gradient(180deg,rgba(11,15,20,1)_0%,rgba(14,18,24,1)_100%)]">
       {/* Desktop sidebar skeleton */}
       <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-[280px] flex-col bg-card border-r border-border z-40">
         {/* Logo skeleton */}

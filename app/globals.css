@@ -77,62 +77,61 @@ button,
 /* Light Mode - Pearl Paper & Brushed Platinum */
 :root {
   --background: #F8F2E9;
-  --foreground: #1C1712;
+  --foreground: #211B16;
   --card: #FFFDF9;
-  --card-foreground: #1C1712;
+  --card-foreground: #211B16;
   --popover: #FFFDF9;
-  --popover-foreground: #1C1712;
+  --popover-foreground: #211B16;
 
-  --primary: #B88A44;
-  --primary-foreground: #1A1510;
+  --primary: #C08E4B;
+  --primary-foreground: #1D1712;
 
-  --secondary: #F1E7D8;
-  --secondary-foreground: #1C1712;
+  --secondary: #F1E6D8;
+  --secondary-foreground: #211B16;
 
-  --muted: #EEE4D6;
-  --muted-foreground: #6E655A;
+  --muted: #ECE1D3;
+  --muted-foreground: #756B60;
 
-  --accent: #2F6B5F;
+  --accent: #6B8A78;
   --accent-foreground: #FAF6F0;
 
-  --destructive: #9A525C;
+  --destructive: #9A5A63;
   --destructive-foreground: #FFF7F8;
 
   --border: #DED2C3;
   --input: #F3EADE;
-  --ring: #B88A44;
+  --ring: #C08E4B;
 
-  --chart-1: #B88A44;
-  --chart-2: #2F6B5F;
-  --chart-3: #6D7FA4;
-  --chart-4: #C99A5A;
-  --chart-5: #1C1712;
+  --chart-1: #C08E4B;
+  --chart-2: #6B8A78;
+  --chart-3: #7F8FA8;
+  --chart-4: #D2A767;
+  --chart-5: #211B16;
 
   --radius: 1rem;
 
-  --sidebar: #F9F3EA;
-  --sidebar-foreground: #1C1712;
-  --sidebar-primary: #B88A44;
-  --sidebar-primary-foreground: #1A1510;
-  --sidebar-accent: #EFE4D5;
-  --sidebar-accent-foreground: #1C1712;
+  --sidebar: #FBF6EF;
+  --sidebar-foreground: #211B16;
+  --sidebar-primary: #C08E4B;
+  --sidebar-primary-foreground: #1D1712;
+  --sidebar-accent: #EFE3D5;
+  --sidebar-accent-foreground: #211B16;
   --sidebar-border: #DCCFBE;
-  --sidebar-ring: #B88A44;
+  --sidebar-ring: #C08E4B;
 
-  /* Custom Renewly tokens for light mode */
-  --obsidian: #FCF7F0;
+  /* Renewly custom tokens - Ivory Reserve */
+  --obsidian: #FBF6EF;
   --graphite: #FFFDF9;
-  --slate: #EEE3D5;
-  --ivory: #1C1712;
-  --platinum: #6E655A;
-  --gold: #B88A44;
-  --muted-gold: #8A6A43;
-  --emerald: #2F6B5F;
-  --crimson: #9A525C;
+  --slate: #E9DDCF;
+  --ivory: #211B16;
+  --platinum: #756B60;
+  --gold: #C08E4B;
+  --muted-gold: #8E7352;
+  --emerald: #6B8A78;
+  --crimson: #9A5A63;
   --glass: rgba(255, 255, 255, 0.72);
-  --glass-border: rgba(184, 138, 68, 0.14);
-
-  --hero-vignette: rgba(184, 138, 68, 0.14);
+  --glass-border: rgba(192, 142, 75, 0.14);
+  --hero-vignette: rgba(10, 10, 13, 0.5);
 }
 
 /* Dark Mode - Hero Mode (Obsidian Reserve) */
@@ -301,13 +300,19 @@ button,
 
 /* Premium shadow utilities */
 .shadow-luxury {
-  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.3),
-    0 0 0 1px var(--glass-border);
+  box-shadow: 0 18px 44px rgba(87, 63, 38, 0.08), 0 0 0 1px var(--glass-border);
 }
 
 .shadow-card {
-  box-shadow: 0 2px 16px -2px rgba(0, 0, 0, 0.2),
-    0 0 0 1px var(--glass-border);
+  box-shadow: 0 10px 28px rgba(87, 63, 38, 0.06), 0 0 0 1px var(--glass-border);
+}
+
+.dark .shadow-luxury {
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--glass-border);
+}
+
+.dark .shadow-card {
+  box-shadow: 0 2px 16px -2px rgba(0, 0, 0, 0.2), 0 0 0 1px var(--glass-border);
 }
 
 /* Gold gradient accent */
