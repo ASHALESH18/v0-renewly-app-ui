@@ -55,7 +55,7 @@ export function Features() {
   return (
     <section
       id="features"
-      className="py-24 lg:py-32 px-4 bg-transparent relative overflow-hidden scroll-mt-24 -mt-px"
+      className="relative -mt-px overflow-hidden bg-transparent px-4 py-24 lg:py-32 scroll-mt-24"
     >
       {/* Background elements */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl" />

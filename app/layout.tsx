@@ -182,9 +182,9 @@ export default function RootLayout({
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
-          enableSystem={false}
+          defaultTheme="dark"
           storageKey="renewly-theme"
+          enableSystem={false}
           disableTransitionOnChange
         >
           <PreferencesBridge />
