@@ -243,7 +243,7 @@ export function DashboardScreen({
           <MetricCard
             title="Monthly Recurring"
             value={Math.round(metrics.totalMonthly)}
-            prefix="₹"
+            prefix={currencySymbol}
             change={-12}
             changeLabel="vs last month"
             icon={CreditCard}
@@ -253,7 +253,7 @@ export function DashboardScreen({
           <MetricCard
             title="Yearly Projected"
             value={Math.round(metrics.totalYearly)}
-            prefix="₹"
+            prefix={currencySymbol}
             icon={Calendar}
             iconColor="#2E5E52"
             index={1}
@@ -269,7 +269,7 @@ export function DashboardScreen({
           <MetricCard
             title="Possible Savings"
             value={Math.round(metrics.savingsPotential)}
-            prefix="₹"
+            prefix={currencySymbol}
             suffix="/mo"
             icon={TrendingDown}
             iconColor="#2E5E52"
