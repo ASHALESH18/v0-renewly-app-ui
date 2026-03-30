@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useTheme } from 'next-themes'
 import useStore from '@/lib/store'
 import { getLocaleFromLanguage } from '@/lib/preferences-format'
@@ -8,7 +8,8 @@ import { getLocaleFromLanguage } from '@/lib/preferences-format'
 export function PreferencesBridge() {
   const notificationSettings = useStore((state) => state.notificationSettings)
   const fallbackTheme = useStore((state) => state.theme)
-  const { setTheme: setNextTheme } = useTheme()
+  const { setTheme: setNextTheme, theme: currentTheme } = useTheme()
+  const hasInitialized = useRef(false)
 
   const storeTheme = notificationSettings.theme || fallbackTheme || 'dark'
   const language = notificationSettings.language || 'en'
@@ -16,12 +17,18 @@ export function PreferencesBridge() {
 
   // Sync store theme preference with next-themes and localStorage for first-paint consistency
   useEffect(() => {
-    setNextTheme(storeTheme)
-    // Also sync to the next-themes localStorage key for first paint on homepage
+    // Always sync to localStorage for pre-hydration script on next page load
     if (typeof window !== 'undefined') {
       localStorage.setItem('renewly-theme', storeTheme)
     }
-  }, [storeTheme, setNextTheme])
+    
+    // Only update next-themes if the theme actually differs to avoid unnecessary re-renders
+    if (currentTheme !== storeTheme) {
+      setNextTheme(storeTheme)
+    }
+    
+    hasInitialized.current = true
+  }, [storeTheme, setNextTheme, currentTheme])
 
   // Set language and currency attributes
   useEffect(() => {

@@ -146,7 +146,18 @@ export default function RootLayout({
             __html: `
       (function () {
         try {
-          var theme = localStorage.getItem('renewly-theme') || 'dark';
+          var theme = localStorage.getItem('renewly-theme');
+          if (!theme) {
+            var store = localStorage.getItem('renewly-store');
+            if (store) {
+              var parsed = JSON.parse(store);
+              var state = parsed.state;
+              theme = (state && state.notificationSettings && state.notificationSettings.theme) ||
+                      (state && state.theme) ||
+                      'dark';
+            }
+          }
+          theme = theme || 'dark';
           var root = document.documentElement;
 
           if (theme === 'light') {
@@ -172,7 +183,7 @@ export default function RootLayout({
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
+          defaultTheme="dark"
           storageKey="renewly-theme"
           enableSystem={false}
           disableTransitionOnChange
