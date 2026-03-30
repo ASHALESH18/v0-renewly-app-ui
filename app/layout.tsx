@@ -144,34 +144,24 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
-        (function () {
-          try {
-            var stored = localStorage.getItem('renewly-store');
-            var parsed = stored ? JSON.parse(stored) : null;
-            var state = parsed && parsed.state ? parsed.state : null;
+      (function () {
+        try {
+          var theme = localStorage.getItem('renewly-theme') || 'dark';
+          var root = document.documentElement;
 
-            var theme =
-              (state &&
-                state.notificationSettings &&
-                state.notificationSettings.theme) ||
-              (state && state.theme) ||
-              'dark';
-
-            var root = document.documentElement;
-
-            if (theme === 'light') {
-              root.classList.remove('dark');
-            } else {
-              root.classList.add('dark');
-            }
-
-            root.dataset.theme = theme;
-          } catch (e) {
-            document.documentElement.classList.add('dark');
-            document.documentElement.dataset.theme = 'dark';
+          if (theme === 'light') {
+            root.classList.remove('dark');
+          } else {
+            root.classList.add('dark');
           }
-        })();
-      `,
+
+          root.dataset.theme = theme;
+        } catch (e) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.dataset.theme = 'dark';
+        }
+      })();
+    `,
           }}
         />
         <script
@@ -182,7 +172,7 @@ export default function RootLayout({
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="light"
           storageKey="renewly-theme"
           enableSystem={false}
           disableTransitionOnChange
