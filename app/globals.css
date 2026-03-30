@@ -131,7 +131,7 @@ button,
   --crimson: #9A5A63;
   --glass: rgba(255, 255, 255, 0.72);
   --glass-border: rgba(192, 142, 75, 0.14);
-  --hero-vignette: rgba(10, 10, 13, 0.5);
+  --hero-vignette: rgba(192, 142, 75, 0.18);
 }
 
 /* Dark Mode - Hero Mode (Obsidian Reserve) */

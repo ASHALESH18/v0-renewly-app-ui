@@ -138,16 +138,15 @@ export default function RootLayout({
   }
 
   return (
-    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
+    <script
+  dangerouslySetInnerHTML={{
+    __html: `
       (function () {
         try {
           var stored = localStorage.getItem('renewly-store');
           var parsed = stored ? JSON.parse(stored) : null;
-          var theme = parsed && parsed.state && parsed.state.theme ? parsed.state.theme : 'dark';
+          var state = parsed && parsed.state ? parsed.state : null;
+          var theme = state && state.theme ? state.theme : 'dark';
           var root = document.documentElement;
 
           if (theme === 'light') {
@@ -163,19 +162,19 @@ export default function RootLayout({
         }
       })();
     `,
-          }}
-        />
+  }}
+/>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
         />
-      </head>
-      <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
-        <PreferencesBridge />
-        {children}
-        <ToastContainer />
-        <Analytics />
-      </body>
-    </html>
+      </head >
+    <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
+      <PreferencesBridge />
+      {children}
+      <ToastContainer />
+      <Analytics />
+    </body>
+    </html >
   )
 }
