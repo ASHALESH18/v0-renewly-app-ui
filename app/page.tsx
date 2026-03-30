@@ -16,7 +16,7 @@ export const metadata: Metadata = generatePageMetadata(
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-obsidian">
+    <main className="min-h-screen text-foreground bg-[radial-gradient(1200px_700px_at_15%_-10%,rgba(184,138,68,0.14),transparent_55%),radial-gradient(1000px_600px_at_100%_0%,rgba(47,107,95,0.08),transparent_42%),linear-gradient(180deg,#fbf6ef_0%,#f2e7d9_100%)] dark:bg-obsidian">
       <LandingHeader />
       <Hero />
       <Features />

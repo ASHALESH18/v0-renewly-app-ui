@@ -13,12 +13,12 @@ export function Hero() {
   const [isMobile, setIsMobile] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const { prefersReducedMotion } = useMotionPreferences()
-  
+
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['start start', 'end start']
   })
-  
+
   // Multi-plane parallax for depth system
   const yFar = useTransform(scrollYProgress, [0, 1], [0, -30])
   const yMid = useTransform(scrollYProgress, [0, 1], [0, -60])
@@ -28,50 +28,50 @@ export function Hero() {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
     checkMobile()
     window.addEventListener('resize', checkMobile)
-    
+
     // Trigger reveal sequence after mount - faster for premium responsiveness
     const timer = setTimeout(() => setIsLoaded(true), 50)
-    
+
     return () => {
       window.removeEventListener('resize', checkMobile)
       clearTimeout(timer)
     }
   }, [])
-  
+
   return (
     <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-20 lg:py-32">
-      
+
       {/* ============================================ */}
       {/* LAYER A: FAR DEPTH PLANE - Matte Black Base */}
       {/* ============================================ */}
-      <motion.div 
-        className="absolute inset-0 pointer-events-none" 
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
         aria-hidden="true"
         style={{ y: prefersReducedMotion ? 0 : yFar }}
       >
         {/* Base gradient - obsidian to graphite */}
         <div className="absolute inset-0 bg-gradient-to-b from-obsidian via-[#0D0D10] to-obsidian" />
-        
+
         {/* Deep volumetric haze - subtle depth atmosphere */}
-        <motion.div 
+        <motion.div
           className="absolute inset-0"
           style={{
             background: 'radial-gradient(ellipse 120% 80% at 50% 40%, rgba(199, 163, 106, 0.03) 0%, transparent 60%)'
           }}
-          animate={prefersReducedMotion ? {} : { 
+          animate={prefersReducedMotion ? {} : {
             opacity: [0.4, 0.7, 0.4],
           }}
           transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
         />
-        
+
         {/* Subtle grid texture - brushed metal feel */}
-        <div 
-          className="absolute inset-0 opacity-[0.015]" 
+        <div
+          className="absolute inset-0 opacity-[0.015]"
           style={{
             backgroundImage: `linear-gradient(rgba(199, 163, 106, 0.4) 1px, transparent 1px),
                               linear-gradient(90deg, rgba(199, 163, 106, 0.4) 1px, transparent 1px)`,
             backgroundSize: '80px 80px',
-          }} 
+          }}
         />
       </motion.div>
 
@@ -79,38 +79,38 @@ export function Hero() {
       {/* LAYER B: MID DEPTH PLANE - Ghost Glass Panels */}
       {/* ============================================ */}
       {!isMobile && (
-        <motion.div 
-          className="absolute inset-0 pointer-events-none" 
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
           aria-hidden="true"
           style={{ y: prefersReducedMotion ? 0 : yMid }}
         >
           {/* Volumetric light field - directional champagne sweep */}
-          <motion.div 
+          <motion.div
             className="absolute inset-0"
             style={{
               background: 'linear-gradient(135deg, transparent 0%, rgba(199, 163, 106, 0.04) 30%, transparent 60%)'
             }}
-            animate={prefersReducedMotion ? {} : { 
+            animate={prefersReducedMotion ? {} : {
               opacity: [0.3, 0.6, 0.3],
               x: ['-5%', '5%', '-5%'],
             }}
             transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
           />
-          
+
           {/* Secondary light sweep - cross direction */}
-          <motion.div 
+          <motion.div
             className="absolute inset-0"
             style={{
               background: 'linear-gradient(-45deg, transparent 40%, rgba(199, 163, 106, 0.025) 50%, transparent 60%)'
             }}
-            animate={prefersReducedMotion ? {} : { 
+            animate={prefersReducedMotion ? {} : {
               opacity: [0.2, 0.5, 0.2],
             }}
             transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
           />
 
           {/* Ghost glass panel 1 - premium financial card silhouette */}
-          <motion.div 
+          <motion.div
             className="absolute top-[18%] left-[12%] w-72 h-44 rounded-3xl"
             style={{
               background: 'linear-gradient(145deg, rgba(199, 163, 106, 0.04) 0%, rgba(199, 163, 106, 0.01) 100%)',
@@ -119,7 +119,7 @@ export function Hero() {
               boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.02)'
             }}
             initial={{ opacity: 0, y: 30, rotate: -2 }}
-            animate={isLoaded ? { 
+            animate={isLoaded ? {
               opacity: prefersReducedMotion ? 0.08 : [0.06, 0.1, 0.06],
               y: prefersReducedMotion ? 0 : [0, 12, 0],
               rotate: prefersReducedMotion ? -2 : [-2, -1, -2]
@@ -134,7 +134,7 @@ export function Hero() {
           </motion.div>
 
           {/* Ghost glass panel 2 - insight card silhouette */}
-          <motion.div 
+          <motion.div
             className="absolute bottom-[22%] right-[10%] w-64 h-40 rounded-3xl"
             style={{
               background: 'linear-gradient(155deg, rgba(229, 228, 226, 0.03) 0%, rgba(229, 228, 226, 0.01) 100%)',
@@ -143,7 +143,7 @@ export function Hero() {
               boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.015)'
             }}
             initial={{ opacity: 0, y: -20, rotate: 1.5 }}
-            animate={isLoaded ? { 
+            animate={isLoaded ? {
               opacity: prefersReducedMotion ? 0.06 : [0.05, 0.09, 0.05],
               y: prefersReducedMotion ? 0 : [0, -10, 0],
               rotate: prefersReducedMotion ? 1.5 : [1.5, 2.5, 1.5]
@@ -159,14 +159,14 @@ export function Hero() {
           </motion.div>
 
           {/* Ghost glass panel 3 - small metric chip */}
-          <motion.div 
+          <motion.div
             className="absolute top-[35%] right-[18%] w-36 h-20 rounded-2xl"
             style={{
               background: 'linear-gradient(135deg, rgba(199, 163, 106, 0.035) 0%, transparent 100%)',
               border: '1px solid rgba(199, 163, 106, 0.04)',
             }}
             initial={{ opacity: 0, scale: 0.9 }}
-            animate={isLoaded ? { 
+            animate={isLoaded ? {
               opacity: prefersReducedMotion ? 0.05 : [0.04, 0.08, 0.04],
               scale: prefersReducedMotion ? 1 : [1, 1.02, 1],
             } : {}}
@@ -181,19 +181,19 @@ export function Hero() {
       {/* ============================================ */}
       {/* LAYER C: NEAR DEPTH PLANE - Spotlight & Focus */}
       {/* ============================================ */}
-      <motion.div 
-        className="absolute inset-0 pointer-events-none" 
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
         aria-hidden="true"
         style={{ y: prefersReducedMotion ? 0 : yNear }}
       >
         {/* Central spotlight - hero product focus */}
-        <motion.div 
+        <motion.div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] md:w-[800px] md:h-[800px]"
           style={{
             background: 'radial-gradient(ellipse at center, rgba(199, 163, 106, 0.08) 0%, rgba(199, 163, 106, 0.02) 40%, transparent 70%)'
           }}
           initial={{ opacity: 0, scale: 0.8 }}
-          animate={isLoaded ? { 
+          animate={isLoaded ? {
             opacity: prefersReducedMotion ? 0.6 : [0.5, 0.8, 0.5],
             scale: prefersReducedMotion ? 1 : [1, 1.08, 1]
           } : {}}
@@ -201,12 +201,12 @@ export function Hero() {
         />
 
         {/* Soft vignette - cinematic framing */}
-        <motion.div 
+        <motion.div
           className="absolute inset-0"
           style={{
-            background: 'radial-gradient(ellipse 80% 70% at 50% 45%, transparent 0%, rgba(10, 10, 13, 0.5) 100%)'
+            background: 'radial-gradient(ellipse 80% 70% at 50% 45%, transparent 0%, var(--hero-vignette) 100%)'
           }}
-          animate={prefersReducedMotion ? {} : { 
+          animate={prefersReducedMotion ? {} : {
             opacity: [0.4, 0.6, 0.4]
           }}
           transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
@@ -217,8 +217,8 @@ export function Hero() {
       {/* SIGNATURE RENEWAL INTELLIGENCE PATH */}
       {/* ============================================ */}
       {!isMobile && !prefersReducedMotion && (
-        <svg 
-          className="absolute inset-0 w-full h-full pointer-events-none" 
+        <svg
+          className="absolute inset-0 w-full h-full pointer-events-none"
           aria-hidden="true"
           preserveAspectRatio="xMidYMid slice"
         >
@@ -237,7 +237,7 @@ export function Hero() {
               </feMerge>
             </filter>
           </defs>
-          
+
           {/* Main intelligence path */}
           <motion.path
             d="M -50 55% Q 20% 45%, 35% 52% T 65% 48% Q 80% 42%, 110% 50%"
@@ -246,20 +246,20 @@ export function Hero() {
             fill="none"
             filter="url(#pathGlow)"
             initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ 
+            animate={{
               pathLength: [0, 1, 1, 0],
               opacity: [0, 0.5, 0.5, 0]
             }}
-            transition={{ 
+            transition={{
               duration: 4,
               times: [0, 0.35, 0.65, 1],
-              repeat: Infinity, 
+              repeat: Infinity,
               repeatDelay: 12,
               ease: 'easeInOut',
               delay: 0.8
             }}
           />
-          
+
           {/* Activation node 1 - pulses when path reaches */}
           <motion.circle
             cx="35%"
@@ -267,18 +267,18 @@ export function Hero() {
             r="4"
             fill="rgba(199, 163, 106, 0.6)"
             initial={{ scale: 0, opacity: 0 }}
-            animate={{ 
+            animate={{
               scale: [0, 1.5, 0],
               opacity: [0, 0.7, 0]
             }}
-            transition={{ 
+            transition={{
               duration: 1,
-              repeat: Infinity, 
+              repeat: Infinity,
               repeatDelay: 16,
               delay: 1.4
             }}
           />
-          
+
           {/* Activation node 2 */}
           <motion.circle
             cx="65%"
@@ -286,13 +286,13 @@ export function Hero() {
             r="3"
             fill="rgba(229, 228, 226, 0.5)"
             initial={{ scale: 0, opacity: 0 }}
-            animate={{ 
+            animate={{
               scale: [0, 1.3, 0],
               opacity: [0, 0.6, 0]
             }}
-            transition={{ 
+            transition={{
               duration: 0.9,
-              repeat: Infinity, 
+              repeat: Infinity,
               repeatDelay: 16,
               delay: 1.8
             }}
@@ -303,10 +303,10 @@ export function Hero() {
       {/* ============================================ */}
       {/* AMBIENT LIGHT SWEEP - Top Edge */}
       {/* ============================================ */}
-      <motion.div 
+      <motion.div
         className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent pointer-events-none"
         aria-hidden="true"
-        animate={prefersReducedMotion ? {} : { 
+        animate={prefersReducedMotion ? {} : {
           opacity: [0, 0.6, 0],
           scaleX: [0.5, 1, 0.5]
         }}
@@ -316,19 +316,19 @@ export function Hero() {
       {/* ============================================ */}
       {/* HERO CONTENT - Sequenced Reveal */}
       {/* ============================================ */}
-      <motion.div 
+      <motion.div
         className="relative z-10 max-w-4xl mx-auto text-center"
         initial="initial"
         animate={isLoaded ? "animate" : "initial"}
       >
         {/* Eyebrow with pulse - reveals first */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 16, filter: 'blur(6px)' }}
           animate={isLoaded ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
           transition={{ duration: 0.5, delay: 0.12, ease: 'easeOut' }}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 border border-gold/20 mb-8"
         >
-          <motion.span 
+          <motion.span
             className="w-2 h-2 rounded-full bg-gold"
             animate={prefersReducedMotion ? {} : { scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
@@ -337,12 +337,12 @@ export function Hero() {
         </motion.div>
 
         {/* Headline with luxury masked reveal - reveals second */}
-        <motion.h1 
+        <motion.h1
           className="text-4xl md:text-6xl lg:text-7xl font-semibold text-ivory tracking-tight leading-[1.1]"
         >
           {/* First line with blur reveal */}
           <span className="block overflow-hidden">
-            <motion.span 
+            <motion.span
               className="block"
               initial={{ opacity: 0, filter: 'blur(10px)', y: 24 }}
               animate={isLoaded ? { opacity: 1, filter: 'blur(0px)', y: 0 } : {}}
@@ -351,19 +351,19 @@ export function Hero() {
               Own every
             </motion.span>
           </span>
-          
+
           {/* Emphasis word with gold light sweep */}
           <span className="block overflow-hidden mt-2 relative">
-            <motion.span 
+            <motion.span
               className="block text-gold-gradient font-serif italic relative"
               initial={{ opacity: 0, filter: 'blur(10px)', y: 24 }}
               animate={isLoaded ? { opacity: 1, filter: 'blur(0px)', y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.32, ease: 'easeOut' }}
             >
               renewal.
-              
+
               {/* Gold light sweep across text */}
-              <motion.div 
+              <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none"
                 initial={{ x: '-100%', opacity: 0 }}
                 animate={isLoaded ? { x: '200%', opacity: [0, 1, 0] } : {}}
@@ -374,7 +374,7 @@ export function Hero() {
         </motion.h1>
 
         {/* Subheadline - reveals third */}
-        <motion.p 
+        <motion.p
           initial={{ opacity: 0, y: 16, filter: 'blur(6px)' }}
           animate={isLoaded ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
           transition={{ duration: 0.5, delay: 0.45, ease: 'easeOut' }}
@@ -384,7 +384,7 @@ export function Hero() {
         </motion.p>
 
         {/* CTA buttons - reveal fourth */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 16, filter: 'blur(6px)' }}
           animate={isLoaded ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
           transition={{ duration: 0.5, delay: 0.55, ease: 'easeOut' }}
@@ -408,7 +408,7 @@ export function Hero() {
               </motion.div>
             </motion.button>
           </Link>
-          
+
           <motion.button
             onClick={() => setIsDemoOpen(true)}
             variants={magneticButtonVariants}
@@ -433,13 +433,13 @@ export function Hero() {
           style={{ y: prefersReducedMotion ? 0 : yNear }}
         >
           {/* Spotlight halo behind device */}
-          <motion.div 
+          <motion.div
             className="absolute -inset-16 md:-inset-24 rounded-[80px]"
             style={{
               background: 'radial-gradient(ellipse at center, rgba(199, 163, 106, 0.12) 0%, rgba(199, 163, 106, 0.04) 40%, transparent 70%)'
             }}
             initial={{ opacity: 0, scale: 0.8 }}
-            animate={isLoaded ? { 
+            animate={isLoaded ? {
               opacity: prefersReducedMotion ? 0.6 : [0.4, 0.7, 0.4],
               scale: prefersReducedMotion ? 1 : [1, 1.05, 1]
             } : {}}
@@ -449,11 +449,11 @@ export function Hero() {
           {/* Phone mockup frame */}
           <div className="relative mx-auto w-[280px] md:w-[320px]">
             {/* Premium frame with depth */}
-            <motion.div 
+            <motion.div
               className="relative rounded-[40px] bg-gradient-to-br from-graphite to-obsidian border border-gold/20 p-3 shadow-luxury"
               initial={{ boxShadow: '0 0 0px rgba(199, 163, 106, 0)' }}
-              animate={isLoaded ? { 
-                boxShadow: prefersReducedMotion 
+              animate={isLoaded ? {
+                boxShadow: prefersReducedMotion
                   ? '0 0 60px rgba(199, 163, 106, 0.1)'
                   : [
                     '0 0 40px rgba(199, 163, 106, 0.08)',
@@ -465,13 +465,13 @@ export function Hero() {
             >
               {/* Notch */}
               <div className="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-6 bg-obsidian rounded-full" />
-              
+
               {/* Screen */}
               <div className="rounded-[32px] bg-obsidian overflow-hidden aspect-[9/19.5]">
                 {/* App preview content */}
                 <div className="p-4 pt-10 h-full">
                   {/* Status bar */}
-                  <motion.div 
+                  <motion.div
                     className="flex items-center justify-between text-xs text-platinum mb-6"
                     initial={{ opacity: 0 }}
                     animate={isLoaded ? { opacity: 1 } : {}}
@@ -484,9 +484,9 @@ export function Hero() {
                       <div className="w-6 h-2 rounded-sm bg-platinum/50" />
                     </div>
                   </motion.div>
-                  
+
                   {/* Header */}
-                  <motion.div 
+                  <motion.div
                     className="flex items-center justify-between mb-6"
                     initial={{ opacity: 0, x: -20 }}
                     animate={isLoaded ? { opacity: 1, x: 0 } : {}}
@@ -509,7 +509,7 @@ export function Hero() {
                     className="rounded-2xl bg-gradient-to-br from-slate/50 via-graphite to-slate/50 border border-gold/20 p-4 mb-4 relative overflow-hidden"
                   >
                     {/* Subtle shine effect */}
-                    <motion.div 
+                    <motion.div
                       className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none"
                       animate={prefersReducedMotion ? {} : { x: ['-100%', '100%'] }}
                       transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
@@ -530,21 +530,21 @@ export function Hero() {
                         key={sub.name}
                         initial={{ opacity: 0, x: -30, filter: 'blur(6px)' }}
                         animate={isLoaded ? { opacity: 1, x: 0, filter: 'blur(0px)' } : {}}
-                        transition={{ 
-                          delay: 2.5 + i * 0.15, 
+                        transition={{
+                          delay: 2.5 + i * 0.15,
                           duration: 0.5,
                           ease: 'easeOut'
                         }}
                         className="flex items-center gap-3 p-3 rounded-xl bg-slate/50 border border-glass-border/50 relative overflow-hidden"
                       >
                         {/* Card shimmer */}
-                        <motion.div 
+                        <motion.div
                           className="absolute inset-0 bg-gradient-to-r from-transparent via-gold/5 to-transparent pointer-events-none"
                           animate={prefersReducedMotion ? {} : { x: ['-100%', '100%'] }}
                           transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 3.5 + i * 0.3 }}
                         />
-                        
-                        <div 
+
+                        <div
                           className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-medium shrink-0 relative"
                           style={{ backgroundColor: sub.color }}
                         >
@@ -563,13 +563,13 @@ export function Hero() {
             </motion.div>
 
             {/* Animated glow ring - signature moment */}
-            <motion.div 
+            <motion.div
               className="absolute -inset-4 rounded-[48px] -z-10"
               style={{
                 background: 'radial-gradient(ellipse at center, rgba(199, 163, 106, 0.15) 0%, transparent 70%)'
               }}
               initial={{ opacity: 0, scale: 0.9 }}
-              animate={isLoaded ? { 
+              animate={isLoaded ? {
                 opacity: prefersReducedMotion ? 0.5 : [0.3, 0.6, 0.3],
                 scale: prefersReducedMotion ? 1 : [1, 1.06, 1]
               } : {}}
@@ -578,10 +578,10 @@ export function Hero() {
           </div>
 
           {/* Gold trace line - signature element resolves last */}
-          <motion.div 
+          <motion.div
             className="absolute top-20 left-1/2 -translate-x-1/2 w-0.5 bg-gradient-to-b from-gold/50 via-gold/30 to-transparent rounded-full pointer-events-none"
             initial={{ height: 0, opacity: 0 }}
-            animate={isLoaded && !prefersReducedMotion ? { 
+            animate={isLoaded && !prefersReducedMotion ? {
               height: [0, 80, 0],
               opacity: [0, 0.8, 0]
             } : {}}
