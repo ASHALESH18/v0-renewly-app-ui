@@ -138,8 +138,33 @@ export default function RootLayout({
   }
 
   return (
-    <html lang="en" className="dark" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+      (function () {
+        try {
+          var stored = localStorage.getItem('renewly-store');
+          var parsed = stored ? JSON.parse(stored) : null;
+          var theme = parsed && parsed.state && parsed.state.theme ? parsed.state.theme : 'dark';
+          var root = document.documentElement;
+
+          if (theme === 'light') {
+            root.classList.remove('dark');
+          } else {
+            root.classList.add('dark');
+          }
+
+          root.dataset.theme = theme;
+        } catch (e) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.dataset.theme = 'dark';
+        }
+      })();
+    `,
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
