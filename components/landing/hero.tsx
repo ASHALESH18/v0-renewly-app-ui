@@ -50,7 +50,7 @@ export function Hero() {
         style={{ y: prefersReducedMotion ? 0 : yFar }}
       >
         {/* Base gradient - obsidian to graphite */}
-        <div className="absolute inset-0 bg-gradient-to-b from-obsidian via-[#0D0D10] to-obsidian" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#fbf6ef] via-[#f1e6d8] to-[#fbf6ef] dark:from-obsidian dark:via-[#0D0D10] dark:to-obsidian" />
 
         {/* Deep volumetric haze - subtle depth atmosphere */}
         <motion.div
