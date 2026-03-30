@@ -53,7 +53,7 @@ export function Features() {
   const isInView = useInView(ref, { once: true, margin: '-100px' })
 
   return (
-    <section id="features" className="py-24 lg:py-32 px-4 bg-graphite relative overflow-hidden scroll-mt-24">
+    <section id="features" className="py-24 lg:py-32 px-4 bg-card dark:bg-graphite relative overflow-hidden scroll-mt-24">
       {/* Background elements */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald/5 rounded-full blur-3xl" />
@@ -69,7 +69,7 @@ export function Features() {
           <p className="text-gold text-sm font-medium tracking-wide uppercase mb-4">
             Features
           </p>
-          <h2 className="text-3xl md:text-4xl font-semibold text-ivory tracking-tight">
+          <h2 className="text-3xl md:text-4xl font-semibold text-foreground tracking-tight">
             Everything you need to
             <br />
             <span className="text-gold-gradient">master your subscriptions</span>
@@ -93,12 +93,12 @@ export function Features() {
               initial={{ opacity: 0, y: 20, filter: 'blur(4px)' }}
               animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
               transition={{ delay: index * 0.1, duration: 0.5 }}
-              className="group p-6 rounded-2xl bg-slate/50 border border-glass-border hover:border-gold/30 transition-colors"
+              className="group p-6 rounded-2xl bg-secondary/50 dark:bg-slate/50 border border-glass-border hover:border-gold/30 transition-colors"
             >
               <div className="w-12 h-12 rounded-xl bg-gold/10 flex items-center justify-center mb-4 group-hover:bg-gold/20 transition-colors">
                 <feature.icon className="w-6 h-6 text-gold" />
               </div>
-              <h3 className="text-lg font-semibold text-ivory mb-2">
+              <h3 className="text-lg font-semibold text-foreground mb-2">
                 {feature.title}
               </h3>
               <p className="text-platinum text-sm leading-relaxed">
@@ -120,7 +120,7 @@ export function Features() {
               <Smartphone className="w-4 h-4" />
               Mobile-first design
             </div>
-            <h3 className="text-2xl md:text-3xl font-semibold text-ivory mb-4">
+            <h3 className="text-2xl md:text-3xl font-semibold text-foreground mb-4">
               Designed for your thumb.
               <br />
               <span className="text-platinum">Built for your wallet.</span>
@@ -167,13 +167,13 @@ export function Features() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={isInView ? { opacity: 1, x: 0 } : {}}
                   transition={{ delay: 0.5 + i * 0.1, ...springs.gentle }}
-                  className="flex items-start gap-4 p-4 rounded-xl bg-slate/30 border border-glass-border"
+                  className="flex items-start gap-4 p-4 rounded-xl bg-secondary/30 dark:bg-slate/30 border border-glass-border"
                 >
                   <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
                     <item.icon className="w-5 h-5 text-gold" />
                   </div>
                   <div>
-                    <p className="font-medium text-ivory">{item.title}</p>
+                    <p className="font-medium text-foreground">{item.title}</p>
                     <p className="text-sm text-platinum">{item.desc}</p>
                   </div>
                 </motion.div>
