@@ -14,9 +14,13 @@ export function PreferencesBridge() {
   const language = notificationSettings.language || 'en'
   const currencyCode = notificationSettings.currencyCode || 'INR'
 
-  // Sync store theme preference with next-themes
+  // Sync store theme preference with next-themes and localStorage for first-paint consistency
   useEffect(() => {
     setNextTheme(storeTheme)
+    // Also sync to the next-themes localStorage key for first paint on homepage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('renewly-theme', storeTheme)
+    }
   }, [storeTheme, setNextTheme])
 
   // Set language and currency attributes

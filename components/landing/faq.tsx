@@ -21,7 +21,7 @@ export function FAQ() {
   }
 
   return (
-    <section id="faq" ref={ref} className="py-24 lg:py-32 px-4 bg-obsidian relative overflow-hidden scroll-mt-24">
+    <section id="faq" ref={ref} className="py-24 lg:py-32 px-4 bg-background relative overflow-hidden scroll-mt-24">
       <div className="max-w-3xl mx-auto relative z-10">
         {/* Section header */}
         <motion.div
@@ -33,7 +33,7 @@ export function FAQ() {
           <p className="text-gold text-sm font-medium tracking-wide uppercase mb-4">
             FAQ
           </p>
-          <h2 className="text-3xl md:text-4xl font-semibold text-ivory tracking-tight">
+          <h2 className="text-3xl md:text-4xl font-semibold text-foreground tracking-tight">
             Questions? Answers.
           </h2>
         </motion.div>
@@ -97,13 +97,13 @@ function FAQItem({ question, answer, isOpen, onToggle, index }: FAQItemProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, ...springs.gentle }}
-      className="rounded-xl bg-graphite border border-glass-border overflow-hidden"
+      className="rounded-xl bg-card dark:bg-graphite border border-glass-border overflow-hidden"
     >
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate/40 hover:border-gold/10 transition-all duration-200 group"
+        className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-secondary/40 dark:hover:bg-slate/40 hover:border-gold/10 transition-all duration-200 group"
       >
-        <span className="font-medium text-ivory pr-4">{question}</span>
+        <span className="font-medium text-foreground pr-4">{question}</span>
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={springs.snappy}

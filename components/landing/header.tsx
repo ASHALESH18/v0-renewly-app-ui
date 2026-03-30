@@ -35,7 +35,7 @@ export function LandingHeader() {
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gold to-gold/80 flex items-center justify-center">
             <span className="text-obsidian font-bold text-lg">R</span>
           </div>
-          <span className="text-xl font-serif text-ivory group-hover:text-gold transition-colors">
+          <span className="text-xl font-serif text-foreground group-hover:text-gold transition-colors">
             Renewly
           </span>
         </Link>
@@ -43,19 +43,19 @@ export function LandingHeader() {
         <nav className="hidden md:flex items-center gap-8">
           <Link
             href="/#features"
-            className="text-sm text-platinum/80 hover:text-ivory transition-colors"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             Features
           </Link>
           <Link
             href="/#pricing"
-            className="text-sm text-platinum/80 hover:text-ivory transition-colors"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             Pricing
           </Link>
           <Link
             href="/#faq"
-            className="text-sm text-platinum/80 hover:text-ivory transition-colors"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             FAQ
           </Link>
@@ -82,7 +82,7 @@ export function LandingHeader() {
                 whileTap={{ scale: isSigningOut ? 1 : 0.98 }}
                 onClick={handleLogout}
                 disabled={isSigningOut}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gold/25 bg-obsidian/70 text-ivory font-medium text-sm transition-colors hover:border-gold/45 hover:text-gold disabled:opacity-60 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gold/25 bg-card/70 text-foreground font-medium text-sm transition-colors hover:border-gold/45 hover:text-gold disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <LogOut className="w-4 h-4" />
                 {isSigningOut ? 'Signing out...' : 'Logout'}
@@ -94,7 +94,7 @@ export function LandingHeader() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="px-4 py-2 text-sm text-platinum hover:text-ivory transition-colors cursor-pointer"
+                  className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 >
                   Sign in
                 </motion.button>

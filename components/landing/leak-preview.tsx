@@ -11,7 +11,7 @@ export function LeakPreview() {
   const isInView = useInView(ref, { once: true, margin: '-100px' })
 
   return (
-    <section ref={ref} className="py-24 lg:py-32 px-4 bg-obsidian relative overflow-hidden">
+    <section ref={ref} className="py-24 lg:py-32 px-4 bg-secondary dark:bg-obsidian relative overflow-hidden">
       {/* Background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-gold/5 blur-3xl" />
 
@@ -28,7 +28,7 @@ export function LeakPreview() {
               Signature Feature
             </div>
             
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-ivory tracking-tight mb-6">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground tracking-tight mb-6">
               The
               <span className="text-gold-gradient font-serif italic"> Leak Report</span>
             </h2>
@@ -55,7 +55,7 @@ export function LeakPreview() {
                     <div className="w-2 h-2 rounded-full bg-gold" />
                   </div>
                   <div>
-                    <p className="font-medium text-ivory">{item.title}</p>
+                    <p className="font-medium text-foreground">{item.title}</p>
                     <p className="text-sm text-platinum">{item.desc}</p>
                   </div>
                 </motion.div>
@@ -71,7 +71,7 @@ export function LeakPreview() {
             className="relative"
           >
             {/* The Leak Report Card */}
-            <div className="relative rounded-3xl bg-gradient-to-br from-graphite via-slate to-graphite border border-gold/20 p-6 md:p-8 shadow-luxury overflow-hidden">
+            <div className="relative rounded-3xl bg-gradient-to-br from-card via-secondary to-card dark:from-graphite dark:via-slate dark:to-graphite border border-gold/20 p-6 md:p-8 shadow-luxury overflow-hidden">
               {/* Gold accent line */}
               <div className="absolute top-0 left-0 right-0 h-1 gold-gradient" />
               
@@ -111,17 +111,17 @@ export function LeakPreview() {
 
               {/* Metrics grid */}
               <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="p-4 rounded-xl bg-obsidian/50 border border-glass-border">
+                <div className="p-4 rounded-xl bg-muted dark:bg-obsidian/50 border border-glass-border">
                   <p className="text-xs text-platinum mb-1">Monthly Recurring</p>
-                  <p className="text-xl font-semibold text-ivory">₹7,644</p>
+                  <p className="text-xl font-semibold text-foreground">₹7,644</p>
                 </div>
-                <div className="p-4 rounded-xl bg-obsidian/50 border border-glass-border">
+                <div className="p-4 rounded-xl bg-muted dark:bg-obsidian/50 border border-glass-border">
                   <p className="text-xs text-platinum mb-1">Yearly Projected</p>
-                  <p className="text-xl font-semibold text-ivory">₹91,728</p>
+                  <p className="text-xl font-semibold text-foreground">₹91,728</p>
                 </div>
-                <div className="p-4 rounded-xl bg-obsidian/50 border border-glass-border">
+                <div className="p-4 rounded-xl bg-muted dark:bg-obsidian/50 border border-glass-border">
                   <p className="text-xs text-platinum mb-1">Active Subscriptions</p>
-                  <p className="text-xl font-semibold text-ivory">9</p>
+                  <p className="text-xl font-semibold text-foreground">9</p>
                 </div>
                 <div className="p-4 rounded-xl bg-emerald/10 border border-emerald/20">
                   <p className="text-xs text-emerald mb-1">Possible Savings</p>
@@ -134,7 +134,7 @@ export function LeakPreview() {
                 <div className="flex items-start gap-3">
                   <AlertTriangle className="w-5 h-5 text-gold shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm text-ivory font-medium mb-1">AI Insight</p>
+                    <p className="text-sm text-foreground font-medium mb-1">AI Insight</p>
                     <p className="text-xs text-platinum">
                       You have 2 music streaming services with overlapping features. 
                       Consider keeping only Spotify to save ₹99/month.

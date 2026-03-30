@@ -49,8 +49,8 @@ export function Hero() {
         aria-hidden="true"
         style={{ y: prefersReducedMotion ? 0 : yFar }}
       >
-        {/* Base gradient - obsidian to graphite */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#fbf6ef] via-[#f1e6d8] to-[#fbf6ef] dark:from-obsidian dark:via-[#0D0D10] dark:to-obsidian" />
+        {/* Base gradient - ends with card/graphite to match Features section seamlessly */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-secondary to-card dark:from-obsidian dark:via-[#0D0D10] dark:to-graphite" />
 
         {/* Deep volumetric haze - subtle depth atmosphere */}
         <motion.div
@@ -338,7 +338,7 @@ export function Hero() {
 
         {/* Headline with luxury masked reveal - reveals second */}
         <motion.h1
-          className="text-4xl md:text-6xl lg:text-7xl font-semibold text-ivory tracking-tight leading-[1.1]"
+          className="text-4xl md:text-6xl lg:text-7xl font-semibold text-foreground tracking-tight leading-[1.1]"
         >
           {/* First line with blur reveal */}
           <span className="block overflow-hidden">
@@ -415,7 +415,7 @@ export function Hero() {
             initial="initial"
             whileHover="hover"
             whileTap="tap"
-            className="w-full sm:w-auto px-8 py-4 rounded-xl border border-glass-border text-ivory font-medium flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full sm:w-auto px-8 py-4 rounded-xl border border-glass-border text-foreground font-medium flex items-center justify-center gap-2 cursor-pointer"
           >
             <Play className="w-4 h-4" />
             Watch demo
@@ -472,7 +472,7 @@ export function Hero() {
                 <div className="p-4 pt-10 h-full">
                   {/* Status bar */}
                   <motion.div
-                    className="flex items-center justify-between text-xs text-platinum mb-6"
+                    className="flex items-center justify-between text-xs text-[#BCC2CC] mb-6"
                     initial={{ opacity: 0 }}
                     animate={isLoaded ? { opacity: 1 } : {}}
                     transition={{ delay: 1.8, duration: 0.5 }}
@@ -493,8 +493,8 @@ export function Hero() {
                     transition={{ delay: 2, duration: 0.6 }}
                   >
                     <div>
-                      <p className="text-xs text-platinum">Good morning,</p>
-                      <p className="text-sm font-semibold text-ivory">Arjun</p>
+                      <p className="text-xs text-[#BCC2CC]">Good morning,</p>
+                      <p className="text-sm font-semibold text-[#F4EFE7]">Arjun</p>
                     </div>
                     <div className="w-8 h-8 rounded-full bg-gold/20 flex items-center justify-center text-xs text-gold font-medium">
                       AM
@@ -514,7 +514,7 @@ export function Hero() {
                       animate={prefersReducedMotion ? {} : { x: ['-100%', '100%'] }}
                       transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
                     />
-                    <p className="text-xs text-platinum mb-1 relative">Monthly recurring</p>
+                    <p className="text-xs text-[#BCC2CC] mb-1 relative">Monthly recurring</p>
                     <p className="text-2xl font-semibold text-gold relative">₹7,644</p>
                     <p className="text-xs text-emerald mt-1 relative">↓ 12% vs last month</p>
                   </motion.div>
@@ -551,10 +551,10 @@ export function Hero() {
                           {sub.name[0]}
                         </div>
                         <div className="flex-1 relative">
-                          <p className="text-xs font-medium text-ivory">{sub.name}</p>
-                          <p className="text-[10px] text-platinum">Renews in 5d</p>
+                          <p className="text-xs font-medium text-[#F4EFE7]">{sub.name}</p>
+                          <p className="text-[10px] text-[#BCC2CC]">Renews in 5d</p>
                         </div>
-                        <p className="text-xs font-medium text-ivory relative">₹{sub.amount}</p>
+                        <p className="text-xs font-medium text-[#F4EFE7] relative">₹{sub.amount}</p>
                       </motion.div>
                     ))}
                   </div>

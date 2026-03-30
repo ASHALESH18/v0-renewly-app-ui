@@ -48,7 +48,7 @@ const socialLinks = [
 
 export function Footer() {
   return (
-    <footer className="bg-graphite border-t border-glass-border">
+    <footer className="bg-card dark:bg-graphite border-t border-glass-border">
       <div className="max-w-6xl mx-auto px-4 py-16">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
           {/* Brand column */}
@@ -57,7 +57,7 @@ export function Footer() {
               <div className="w-8 h-8 rounded-lg gold-gradient flex items-center justify-center">
                 <span className="text-obsidian font-semibold text-sm">R</span>
               </div>
-              <span className="font-semibold text-ivory">Renewly</span>
+              <span className="font-semibold text-foreground">Renewly</span>
             </Link>
             <p className="text-sm text-platinum mb-6 max-w-xs">
               Own every renewal. Track, understand, and reduce every recurring payment with elegance.
@@ -82,7 +82,7 @@ export function Footer() {
                       transition: springs.gentle
                     }}
                     whileTap={{ scale: 0.96 }}
-                    className="w-10 h-10 rounded-full bg-slate/30 border border-glass-border flex items-center justify-center text-muted-gold hover:text-gold transition-colors duration-300 group relative"
+                    className="w-10 h-10 rounded-full bg-secondary/30 dark:bg-slate/30 border border-glass-border flex items-center justify-center text-muted-gold hover:text-gold transition-colors duration-300 group relative"
                   >
                     {/* Subtle sheen effect on hover */}
                     <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/0 via-transparent to-white/0 group-hover:from-white/10 group-hover:via-white/5 group-hover:to-white/0 transition-all duration-300" />
@@ -94,7 +94,7 @@ export function Footer() {
             )}
           </div>
           <div>
-            <p className="font-medium text-ivory mb-4">Product</p>
+            <p className="font-medium text-foreground mb-4">Product</p>
             <ul className="space-y-3">
               {footerLinks.product.map((link) => (
                 <li key={link.label}>
@@ -111,7 +111,7 @@ export function Footer() {
 
           {/* Company links */}
           <div>
-            <p className="font-medium text-ivory mb-4">Company</p>
+            <p className="font-medium text-foreground mb-4">Company</p>
             <ul className="space-y-3">
               {footerLinks.company.map((link) => (
                 <li key={link.label}>
@@ -128,7 +128,7 @@ export function Footer() {
 
           {/* Resources links */}
           <div>
-            <p className="font-medium text-ivory mb-4">Resources</p>
+            <p className="font-medium text-foreground mb-4">Resources</p>
             <ul className="space-y-3">
               {footerLinks.resources.map((link) => (
                 <li key={link.label}>

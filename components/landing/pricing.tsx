@@ -14,7 +14,7 @@ export function Pricing() {
   const plans = getAllPlans()
 
   return (
-    <section id="pricing" ref={ref} className="py-24 lg:py-32 px-4 bg-graphite relative overflow-hidden scroll-mt-24">
+    <section id="pricing" ref={ref} className="py-24 lg:py-32 px-4 bg-card dark:bg-graphite relative overflow-hidden scroll-mt-24">
       {/* Animated background elements */}
       <motion.div 
         className="absolute top-0 right-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl"
@@ -44,7 +44,7 @@ export function Pricing() {
           <p className="text-gold text-sm font-medium tracking-wide uppercase mb-4">
             Pricing
           </p>
-          <h2 className="text-3xl md:text-4xl font-semibold text-ivory tracking-tight mb-4">
+          <h2 className="text-3xl md:text-4xl font-semibold text-foreground tracking-tight mb-4">
             Simple, transparent pricing
           </h2>
           <p className="text-platinum max-w-xl mx-auto">
@@ -72,10 +72,10 @@ export function Pricing() {
                 initial={{ y: 0 }}
                 className={`relative rounded-2xl p-6 md:p-8 flex flex-col cursor-pointer transition-colors group ${
                   isPro
-                    ? 'bg-gradient-to-br from-slate via-graphite to-slate border border-gold/30 overflow-hidden'
+                    ? 'bg-gradient-to-br from-secondary via-card to-secondary dark:from-slate dark:via-graphite dark:to-slate border border-gold/30 overflow-hidden'
                     : isFamily
-                    ? 'bg-gradient-to-br from-slate/80 via-graphite/80 to-slate/80 border border-gold/40 overflow-hidden'
-                    : 'bg-slate/50 border border-glass-border'
+                    ? 'bg-gradient-to-br from-secondary/80 via-card/80 to-secondary/80 dark:from-slate/80 dark:via-graphite/80 dark:to-slate/80 border border-gold/40 overflow-hidden'
+                    : 'bg-secondary/50 dark:bg-slate/50 border border-glass-border'
                 }`}
               >
                 {/* Premium glow overlay on hover for Pro and Family */}
@@ -161,7 +161,7 @@ export function Pricing() {
                       
                       {/* Current price */}
                       <motion.span 
-                        className={`text-4xl font-semibold ${isPro || isFamily ? 'text-ivory' : 'text-ivory'}`}
+                        className={`text-4xl font-semibold ${isPro || isFamily ? 'text-foreground' : 'text-foreground'}`}
                         initial={{ opacity: 0, y: 8 }}
                         animate={isInView ? { opacity: 1, y: 0 } : {}}
                         transition={{ delay: index * 0.1 + 0.3, duration: 0.5 }}
@@ -198,7 +198,7 @@ export function Pricing() {
                   </motion.p>
                 )}
                 
-                <p className={`text-sm mb-6 ${isPro || isFamily ? 'text-ivory' : 'text-platinum'}`}>
+                <p className={`text-sm mb-6 ${isPro || isFamily ? 'text-foreground' : 'text-muted-foreground'}`}>
                   {plan.description}
                 </p>
 
@@ -227,10 +227,10 @@ export function Pricing() {
                         : isFamily
                         ? 'gold-gradient text-obsidian font-semibold shadow-luxury'
                         : isFree
-                        ? 'border border-glass-border text-ivory hover:bg-glass'
+                        ? 'border border-glass-border text-foreground hover:bg-glass'
                         : plan.id === 'enterprise'
                         ? 'gold-gradient text-obsidian font-semibold shadow-luxury'
-                        : 'border border-glass-border text-ivory hover:bg-glass'
+                        : 'border border-glass-border text-foreground hover:bg-glass'
                     }`}
                   >
                     {plan.cta || 'Get started'}
@@ -251,7 +251,7 @@ export function Pricing() {
                         plan.id === 'enterprise' ? 'text-[#6EE7D7] drop-shadow-[0_0_16px_rgba(110,231,215,0.6)] drop-shadow-[0_0_8px_rgba(110,231,215,0.4)] drop-shadow-[0_0_3px_rgba(110,231,215,0.8)]' :
                         'text-emerald'
                       }`} />
-                      <span className={`text-sm ${isPro || isFamily ? 'text-ivory' : 'text-platinum'}`}>
+                      <span className={`text-sm ${isPro || isFamily ? 'text-foreground' : 'text-muted-foreground'}`}>
                         {feature}
                       </span>
                     </motion.div>
