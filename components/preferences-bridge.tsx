@@ -1,23 +1,25 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useTheme } from 'next-themes'
 import useStore from '@/lib/store'
 import { getLocaleFromLanguage } from '@/lib/preferences-format'
 
 export function PreferencesBridge() {
   const notificationSettings = useStore((state) => state.notificationSettings)
   const fallbackTheme = useStore((state) => state.theme)
+  const { setTheme: setNextTheme } = useTheme()
 
-  const theme = notificationSettings.theme || fallbackTheme || 'dark'
+  const storeTheme = notificationSettings.theme || fallbackTheme || 'dark'
   const language = notificationSettings.language || 'en'
   const currencyCode = notificationSettings.currencyCode || 'INR'
 
+  // Sync store theme preference with next-themes
   useEffect(() => {
-    const root = document.documentElement
-    root.classList.toggle('dark', theme !== 'light')
-    root.dataset.theme = theme
-  }, [theme])
+    setNextTheme(storeTheme)
+  }, [storeTheme, setNextTheme])
 
+  // Set language and currency attributes
   useEffect(() => {
     const root = document.documentElement
     root.lang = language || 'en'
