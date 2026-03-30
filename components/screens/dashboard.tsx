@@ -210,7 +210,7 @@ export function DashboardScreen({
                       cy="32"
                       r="28"
                       fill="none"
-                      stroke="rgba(255,255,255,0.1)"
+                      stroke="rgba(184,138,68,0.16)"
                       strokeWidth="4"
                     />
                     <motion.circle

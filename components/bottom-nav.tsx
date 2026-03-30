@@ -291,7 +291,7 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
             className={cn(
-              "group flex items-center gap-3 rounded-2xl border border-gold/16 bg-[linear-gradient(180deg,rgba(255,255,255,0.74),rgba(232,214,190,0.42))] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(199,163,106,0.05))] px-3 py-3 shadow-[0_10px_30px_rgba(33,24,16,0.08)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.18)] transition-all duration-200 hover:border-gold/30 hover:shadow-[0_18px_44px_rgba(184,138,68,0.14)]"
+              "group flex items-center gap-3 rounded-2xl border border-gold/16 bg-[linear-gradient(180deg,rgba(255,255,255,0.74),rgba(232,214,190,0.42))] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(199,163,106,0.05))] px-3 py-3 shadow-[0_10px_30px_rgba(33,24,16,0.08)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.18)] transition-all duration-200 hover:border-gold/30 hover:shadow-[0_18px_44px_rgba(184,138,68,0.14)]",
               !shouldExpand && "justify-center px-2"
             )}
           >
