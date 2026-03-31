@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
 import useStore from '@/lib/store'
 import { getLocaleFromLanguage } from '@/lib/preferences-format'
@@ -9,28 +9,48 @@ export function PreferencesBridge() {
   const notificationSettings = useStore((state) => state.notificationSettings)
   const fallbackTheme = useStore((state) => state.theme)
   const { setTheme: setNextTheme, theme: currentTheme } = useTheme()
-  const hasInitialized = useRef(false)
+  const [storeHydrated, setStoreHydrated] = useState(false)
 
+  const persistApi = (useStore as any).persist
   const storeTheme = fallbackTheme || notificationSettings.theme || 'dark'
   const language = notificationSettings.language || 'en'
   const currencyCode = notificationSettings.currencyCode || 'INR'
 
-  // Sync store theme preference with next-themes and localStorage for first-paint consistency
   useEffect(() => {
-    // Always sync to localStorage for pre-hydration script on next page load
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('renewly-theme', storeTheme)
+    if (!persistApi) {
+      setStoreHydrated(true)
+      return
     }
 
-    // Only update next-themes if the theme actually differs to avoid unnecessary re-renders
+    setStoreHydrated(persistApi.hasHydrated())
+
+    const unsubHydrate = persistApi.onHydrate(() => {
+      setStoreHydrated(false)
+    })
+
+    const unsubFinish = persistApi.onFinishHydration(() => {
+      setStoreHydrated(true)
+    })
+
+    return () => {
+      unsubHydrate?.()
+      unsubFinish?.()
+    }
+  }, [persistApi])
+
+  useEffect(() => {
+    if (!storeHydrated) return
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('renewly-theme', storeTheme)
+      document.cookie = `renewly-theme=${storeTheme}; path=/; max-age=31536000; samesite=lax`
+    }
+
     if (currentTheme !== storeTheme) {
       setNextTheme(storeTheme)
     }
+  }, [storeHydrated, storeTheme, setNextTheme, currentTheme])
 
-    hasInitialized.current = true
-  }, [storeTheme, setNextTheme, currentTheme])
-
-  // Set language and currency attributes
   useEffect(() => {
     const root = document.documentElement
     root.lang = language || 'en'

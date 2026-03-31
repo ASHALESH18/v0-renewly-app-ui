@@ -1,4 +1,5 @@
 // Root layout - Renewly subscription management app
+import { cookies } from 'next/headers'
 import type { Metadata, Viewport } from 'next'
 import { Inter, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
@@ -108,11 +109,14 @@ export const viewport: Viewport = {
   userScalable: true,
 }
 
-export default function RootLayout({
-  children,
+import { cookies } from 'next/headers'
+children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const cookieStore = await cookies()
+  const cookieTheme = cookieStore.get('renewly-theme')?.value
+  const initialTheme = cookieTheme === 'light' ? 'light' : 'dark'
   const schemaData = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
@@ -139,40 +143,52 @@ export default function RootLayout({
   }
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={initialTheme === 'dark' ? 'dark' : ''}
+      suppressHydrationWarning
+    >
       <head>
         <script
           dangerouslySetInnerHTML={{
             __html: `
-      (function () {
-        try {
-          var theme = localStorage.getItem('renewly-theme');
-          if (!theme) {
-            var store = localStorage.getItem('renewly-store');
-            if (store) {
-              var parsed = JSON.parse(store);
-              var state = parsed.state;
-              theme = (state && state.notificationSettings && state.notificationSettings.theme) ||
-                      (state && state.theme) ||
-                      'dark';
-            }
-          }
-          theme = theme || 'dark';
-          var root = document.documentElement;
+  (function () {
+    try {
+      var cookieMatch = document.cookie.match(/(?:^|; )renewly-theme=(light|dark)/);
+      var theme = cookieMatch ? cookieMatch[1] : null;
 
-          if (theme === 'light') {
-            root.classList.remove('dark');
-          } else {
-            root.classList.add('dark');
-          }
+      if (!theme) {
+        theme = localStorage.getItem('renewly-theme');
+      }
 
-          root.dataset.theme = theme;
-        } catch (e) {
-          document.documentElement.classList.add('dark');
-          document.documentElement.dataset.theme = 'dark';
+      if (!theme) {
+        var store = localStorage.getItem('renewly-store');
+        if (store) {
+          var parsed = JSON.parse(store);
+          var state = parsed && parsed.state ? parsed.state : null;
+          theme =
+            (state && state.theme) ||
+            (state && state.notificationSettings && state.notificationSettings.theme) ||
+            'dark';
         }
-      })();
-    `,
+      }
+
+      theme = theme || 'dark';
+
+      var root = document.documentElement;
+      if (theme === 'light') {
+        root.classList.remove('dark');
+      } else {
+        root.classList.add('dark');
+      }
+
+      root.dataset.theme = theme;
+    } catch (e) {
+      document.documentElement.classList.add('dark');
+      document.documentElement.dataset.theme = 'dark';
+    }
+  })();
+`,
           }}
         />
         <script
