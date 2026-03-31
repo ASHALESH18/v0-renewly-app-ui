@@ -8,6 +8,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 import { PreferencesBridge } from '@/components/preferences-bridge'
 
+
 const inter = Inter({
   subsets: ["latin"],
   variable: '--font-inter',
@@ -109,14 +110,16 @@ export const viewport: Viewport = {
   userScalable: true,
 }
 
-import { cookies } from 'next/headers'
-children,
+
+export default async function RootLayout({
+  children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   const cookieStore = await cookies()
   const cookieTheme = cookieStore.get('renewly-theme')?.value
   const initialTheme = cookieTheme === 'light' ? 'light' : 'dark'
+
   const schemaData = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',

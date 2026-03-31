@@ -6,6 +6,8 @@ import { springs, staggerContainer, staggerItem, cinematicFadeInUp, magneticButt
 import { DemoModal } from '@/components/demo-modal'
 import Link from 'next/link'
 import { useRef, useState, useEffect } from 'react'
+import { cookies } from 'next/headers'
+
 
 export function Hero() {
   const ref = useRef(null)
