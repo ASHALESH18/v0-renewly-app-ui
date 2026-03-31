@@ -39,7 +39,10 @@ export function Hero() {
   }, [])
 
   return (
-    <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-20 lg:py-32">
+    <section
+      ref={ref}
+      className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-20 lg:py-32 bg-gradient-to-b from-background via-secondary to-card dark:from-obsidian dark:via-[#0D0D10] dark:to-graphite"
+    >
 
       {/* ============================================ */}
       {/* LAYER A: FAR DEPTH PLANE - Matte Black Base */}
@@ -47,11 +50,9 @@ export function Hero() {
       <motion.div
         className="absolute inset-0 pointer-events-none"
         aria-hidden="true"
-        style={{ y: prefersReducedMotion ? 0 : yFar }}
+        style={{ y: 0 }}
       >
-        {/* Base gradient - ends with card/graphite to match Features section seamlessly */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-secondary to-card dark:from-obsidian dark:via-[#0D0D10] dark:to-graphite" />
-
+        <div className="absolute inset-0" />
         {/* Deep volumetric haze - subtle depth atmosphere */}
         <motion.div
           className="absolute inset-0"
