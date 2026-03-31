@@ -8,6 +8,7 @@ import { useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react'
 import { AuthLayout } from '@/components/auth/auth-layout'
 import { SocialButtons } from '@/components/auth/social-buttons'
+import { AuthSkeleton } from '@/components/skeletons'
 import { springs } from '@/components/motion'
 import { createClient } from '@/lib/supabase/client'
 import { getURL } from '@/lib/supabase/url'
@@ -228,7 +229,7 @@ function SignInPageContent() {
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<AuthSkeleton />}>
       <SignInPageContent />
     </Suspense>
   )

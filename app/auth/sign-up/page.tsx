@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Check } from 'lucide-react'
 import { AuthLayout } from '@/components/auth/auth-layout'
 import { SocialButtons } from '@/components/auth/social-buttons'
+import { AuthSkeleton } from '@/components/skeletons'
 import { createClient } from '@/lib/supabase/client'
 import { getURL } from '@/lib/supabase/url'
 
@@ -378,7 +379,7 @@ function SignUpPageContent() {
 
 export default function SignUpPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<AuthSkeleton />}>
       <SignUpPageContent />
     </Suspense>
   )

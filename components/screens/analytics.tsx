@@ -27,6 +27,7 @@ import { SegmentedControl } from '@/components/filter-chips'
 import { useAnalyticsData } from '@/lib/hooks/use-remote-data'
 import useStore from '@/lib/store'
 import { formatMoney } from '@/lib/preferences-format'
+import { AnalyticsSkeleton } from '@/components/skeletons'
 
 const timeSegments = [
   { id: '3m', label: '3M' },
@@ -41,29 +42,7 @@ type AnalyticsScreenProps = {
   onProfileClick?: () => void
 }
 
-function AnalyticsSkeleton() {
-  return (
-    <div className="px-6 py-8 lg:px-8 space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <div className="h-9 w-40 rounded-xl bg-white/5 animate-pulse" />
-        <div className="h-10 w-44 rounded-xl bg-white/5 animate-pulse" />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-28 rounded-3xl bg-white/5 animate-pulse" />
-        ))}
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
-        <div className="h-[360px] rounded-3xl bg-white/5 animate-pulse" />
-        <div className="h-[360px] rounded-3xl bg-white/5 animate-pulse" />
-      </div>
-
-      <div className="h-[300px] rounded-3xl bg-white/5 animate-pulse" />
-    </div>
-  )
-}
+// Inline skeleton removed - using AnalyticsSkeleton from @/components/skeletons
 
 function MetricCard({
   label,
