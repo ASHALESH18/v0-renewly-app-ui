@@ -16,6 +16,7 @@ function AppSectionLoading() {
         <div className="h-28 rounded-3xl bg-white/5 animate-pulse" />
         <div className="h-28 rounded-3xl bg-white/5 animate-pulse" />
       </div>
+      <div className="mt-6 h-[360px] rounded-3xl bg-white/5 animate-pulse" />
     </div>
   )
 }
