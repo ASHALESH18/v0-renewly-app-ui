@@ -201,7 +201,10 @@ const useStore = create<AppState>()(
           // Set settings
           if (settings) {
             const uiSettings = mapUserSettingsRowToUI(settings)
-            set({ notificationSettings: uiSettings })
+            set({
+              notificationSettings: uiSettings,
+              theme: uiSettings.theme || get().theme,
+            })
           }
 
           // Set subscriptions
@@ -366,6 +369,7 @@ const useStore = create<AppState>()(
         // Update local state immediately for optimistic UI
         set((state) => ({
           notificationSettings: { ...state.notificationSettings, ...settings },
+          theme: settings.theme ?? state.theme,
         }))
 
         // Persist to Supabase in background
@@ -381,7 +385,7 @@ const useStore = create<AppState>()(
             language: settings.language,
             currencyCode: settings.currencyCode,
           })
-          
+
           if (!result.success) {
             console.warn('[v0] Failed to persist notification settings:', result.error)
             // Optionally revert local state on failure
@@ -413,7 +417,7 @@ const useStore = create<AppState>()(
         try {
           const { updateUserProfile } = await import('@/lib/supabase/settings-actions')
           const result = await updateUserProfile(profileData)
-          
+
           if (!result.success) {
             console.warn('[v0] Failed to persist profile changes:', result.error)
             return { success: false, error: result.error }
@@ -506,8 +510,8 @@ export function selectLeakReportData(state: AppState) {
     categorySpending: Object.entries(categories).map(([category, amount]) => ({
       category,
       amount,
-      percentage: state.subscriptions.length > 0 
-        ? (amount / state.subscriptions.reduce((sum, s) => sum + (s.price || 0), 0)) * 100 
+      percentage: state.subscriptions.length > 0
+        ? (amount / state.subscriptions.reduce((sum, s) => sum + (s.price || 0), 0)) * 100
         : 0,
     })),
     mostExpensiveCategory,

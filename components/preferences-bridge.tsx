@@ -11,7 +11,7 @@ export function PreferencesBridge() {
   const { setTheme: setNextTheme, theme: currentTheme } = useTheme()
   const hasInitialized = useRef(false)
 
-  const storeTheme = notificationSettings.theme || fallbackTheme || 'dark'
+  const storeTheme = fallbackTheme || notificationSettings.theme || 'dark'
   const language = notificationSettings.language || 'en'
   const currencyCode = notificationSettings.currencyCode || 'INR'
 
@@ -21,12 +21,12 @@ export function PreferencesBridge() {
     if (typeof window !== 'undefined') {
       localStorage.setItem('renewly-theme', storeTheme)
     }
-    
+
     // Only update next-themes if the theme actually differs to avoid unnecessary re-renders
     if (currentTheme !== storeTheme) {
       setNextTheme(storeTheme)
     }
-    
+
     hasInitialized.current = true
   }, [storeTheme, setNextTheme, currentTheme])
 
