@@ -9,6 +9,7 @@ import { SegmentedControl } from '@/components/filter-chips'
 import { useCalendarEvents } from '@/lib/hooks/use-remote-data'
 import useStore from '@/lib/store'
 import { cn } from '@/lib/utils'
+import { CalendarSkeleton } from '@/components/skeletons'
 
 const viewSegments = [
   { id: 'month', label: 'Month' },
@@ -34,14 +35,9 @@ export function CalendarScreen() {
     setIsMounted(true)
   }, [])
 
-  // Early return: Don't render any content until store is hydrated
+  // Early return: Show premium skeleton until store is hydrated
   if (!isMounted || isLoading) {
-    return (
-      <div className="min-h-[calc(100vh-6rem)] px-6 py-8 lg:px-8">
-        <div className="h-10 w-44 rounded-2xl bg-white/5 animate-pulse" />
-        <div className="mt-6 h-[420px] rounded-3xl bg-white/5 animate-pulse" />
-      </div>
-    )
+    return <CalendarSkeleton />
   }
   const currentYear = currentDate.getFullYear()
   const currentMonth = currentDate.getMonth()

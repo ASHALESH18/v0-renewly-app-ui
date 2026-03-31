@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, Calendar, AlertTriangle, Info, Check, Trash2, Settings, Loader2 } from 'lucide-react'
+import { Bell, Calendar, AlertTriangle, Info, Check, Trash2, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { StaggerList } from '@/components/motion'
 import { useNotifications } from '@/lib/hooks/use-remote-data'
+import { NotificationsListSkeleton } from '@/components/skeletons'
 
 interface Notification {
   id: string
@@ -126,10 +127,7 @@ export function NotificationsScreen() {
       {/* Notifications List */}
       <div className="px-4 py-4">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-16">
-            <Loader2 className="w-8 h-8 text-gold animate-spin mb-4" />
-            <p className="text-sm text-muted-foreground">Loading notifications...</p>
-          </div>
+          <NotificationsListSkeleton />
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="w-16 h-16 rounded-full bg-crimson/10 flex items-center justify-center mb-4">

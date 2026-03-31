@@ -14,6 +14,7 @@ import {
 import { cn } from '@/lib/utils'
 import { springs } from '@/components/motion'
 import { Switch } from '@/components/ui/switch'
+import { SettingsSkeleton } from '@/components/skeletons'
 import useStore from '@/lib/store'
 import { exportSubscriptions } from '@/lib/export'
 import { createClient } from '@/lib/supabase/client'
@@ -302,21 +303,9 @@ export function SettingsScreen() {
     await updateNotificationSettings({ theme: newTheme })
   }
 
-  // Show minimal loading while store hydrates
+  // Show premium skeleton while store hydrates
   if (!isMounted) {
-    return (
-      <div className="min-h-screen bg-background pb-24">
-        <div className="px-4 pt-8 pb-6 lg:px-6">
-          <div className="h-8 w-32 bg-muted animate-pulse rounded-lg" />
-          <div className="h-4 w-48 bg-muted/50 animate-pulse rounded mt-2" />
-        </div>
-        <div className="px-4 lg:px-6 space-y-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-20 rounded-2xl bg-muted/30 animate-pulse" />
-          ))}
-        </div>
-      </div>
-    )
+    return <SettingsSkeleton />
   }
 
   return (
