@@ -1,12 +1,15 @@
 'use client'
 
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Play } from 'lucide-react'
-import { springs, staggerContainer, staggerItem, cinematicFadeInUp, magneticButtonVariants, useMotionPreferences } from '../motion'
-import { DemoModal } from '@/components/demo-modal'
+
+import { motion, useScroll, useTransform, useSpring, useReducedMotion, AnimatePresence } from 'framer-motion'
+import { ArrowRight, Check, Star, Zap, Shield, Crown } from 'lucide-react'
 import Link from 'next/link'
 import { useRef, useState, useEffect } from 'react'
-import { cookies } from 'next/headers'
+import { springs, staggerContainer, staggerItem, cinematicFadeInUp, magneticButtonVariants, useMotionPreferences } from '../motion'
+import { DemoModal } from '@/components/demo-modal'
+
+
+
 
 
 export function Hero() {
