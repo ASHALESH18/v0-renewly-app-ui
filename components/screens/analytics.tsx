@@ -1,14 +1,12 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { TrendingUp, TrendingDown, PieChart, BarChart3 } from 'lucide-react'
-import { Header } from '@/components/header'
-import { PageTransition, springs, staggerItem, StaggerList } from '@/components/motion'
-import { SegmentedControl } from '@/components/filter-chips'
-import { useState, useEffect } from 'react'
-import { useAnalyticsData } from '@/lib/hooks/use-remote-data'
-import useStore from '@/lib/store'
-import { formatMoney } from '@/lib/preferences-format'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  TrendingUp,
+  TrendingDown,
+  PieChart as PieChartIcon,
+  BarChart3,
+} from 'lucide-react'
 import {
   AreaChart,
   Area,
@@ -16,13 +14,19 @@ import {
   YAxis,
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
-  Cell,
   PieChart as RechartsPieChart,
   Pie,
+  Cell,
   BarChart,
-  Bar
+  Bar,
 } from 'recharts'
-import { cn } from '@/lib/utils'
+
+import { Header } from '@/components/header'
+import { PageTransition } from '@/components/motion'
+import { SegmentedControl } from '@/components/filter-chips'
+import { useAnalyticsData } from '@/lib/hooks/use-remote-data'
+import useStore from '@/lib/store'
+import { formatMoney } from '@/lib/preferences-format'
 
 const timeSegments = [
   { id: '3m', label: '3M' },
@@ -30,56 +34,191 @@ const timeSegments = [
   { id: '1y', label: '1Y' },
 ]
 
-const notificationSettings = useStore((state) => state.notificationSettings)
-const preferredLanguage = notificationSettings.language || 'en'
-const preferredCurrency = notificationSettings.currencyCode || 'INR'
-
 const COLORS = ['#C7A36A', '#2E5E52', '#7A3940', '#BCC2CC', '#F4EFE7']
 
-export function AnalyticsScreen() {
+type AnalyticsScreenProps = {
+  onNavigateTab?: (tab: string) => void
+  onProfileClick?: () => void
+}
+
+function AnalyticsSkeleton() {
+  return (
+    <div className="px-6 py-8 lg:px-8 space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div className="h-9 w-40 rounded-xl bg-white/5 animate-pulse" />
+        <div className="h-10 w-44 rounded-xl bg-white/5 animate-pulse" />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-28 rounded-3xl bg-white/5 animate-pulse" />
+        ))}
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
+        <div className="h-[360px] rounded-3xl bg-white/5 animate-pulse" />
+        <div className="h-[360px] rounded-3xl bg-white/5 animate-pulse" />
+      </div>
+
+      <div className="h-[300px] rounded-3xl bg-white/5 animate-pulse" />
+    </div>
+  )
+}
+
+function MetricCard({
+  label,
+  value,
+  trend,
+  icon: Icon,
+}: {
+  label: string
+  value: string
+  trend?: { value: string; positive?: boolean; note?: string }
+  icon: React.ComponentType<{ className?: string }>
+}) {
+  return (
+    <div className="rounded-3xl border border-gold/10 bg-card/75 p-5 shadow-card backdrop-blur-md">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm text-muted-foreground">{label}</p>
+          <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
+
+          {trend ? (
+            <div
+              className={`mt-3 inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-medium ${trend.positive
+                  ? 'bg-emerald/10 text-emerald'
+                  : 'bg-crimson/10 text-crimson'
+                }`}
+            >
+              {trend.positive ? (
+                <TrendingUp className="h-3.5 w-3.5" />
+              ) : (
+                <TrendingDown className="h-3.5 w-3.5" />
+              )}
+              <span>{trend.value}</span>
+              {trend.note ? <span className="opacity-80">{trend.note}</span> : null}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gold/12 text-gold">
+          <Icon className="h-5 w-5" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function AnalyticsScreen({
+  onProfileClick,
+}: AnalyticsScreenProps) {
   const [timeRange, setTimeRange] = useState('6m')
   const [isMounted, setIsMounted] = useState(false)
 
-  const { monthlySpendData, categoryBreakdown, isLoading } = useAnalyticsData()
+  const { monthlySpendData, categoryBreakdown, isLoading, error } = useAnalyticsData()
   const subscriptions = useStore((state) => state.subscriptions)
+  const notificationSettings = useStore((state) => state.notificationSettings)
 
-  // Wait for store hydration before rendering
+  const preferredLanguage = notificationSettings.language || 'en'
+  const preferredCurrency = notificationSettings.currencyCode || 'INR'
+
   useEffect(() => {
     setIsMounted(true)
   }, [])
 
-  // Early return: Don't render any content until store is hydrated
+  const filteredSpendData = useMemo(() => {
+    const count = timeRange === '3m' ? 3 : timeRange === '6m' ? 6 : 12
+    return monthlySpendData.slice(-count)
+  }, [monthlySpendData, timeRange])
+
+  const totalSpend = useMemo(
+    () => filteredSpendData.reduce((sum: number, item: any) => sum + (item.amount || 0), 0),
+    [filteredSpendData]
+  )
+
+  const avgSpend = filteredSpendData.length
+    ? Math.round(totalSpend / filteredSpendData.length)
+    : 0
+
+  const yearlyProjected = avgSpend * 12
+
+  const lastMonthChange = useMemo(() => {
+    if (filteredSpendData.length < 2) return 0
+    const current = filteredSpendData[filteredSpendData.length - 1]?.amount || 0
+    const previous = filteredSpendData[filteredSpendData.length - 2]?.amount || 0
+    if (!previous) return 0
+    return Number((((current - previous) / previous) * 100).toFixed(1))
+  }, [filteredSpendData])
+
+  const pieData = useMemo(() => {
+    const total = categoryBreakdown.reduce(
+      (sum: number, item: any) => sum + (item.value || 0),
+      0
+    )
+
+    return categoryBreakdown.map((item: any, index: number) => ({
+      ...item,
+      name: item.name || item.category || 'Other',
+      value: item.value || 0,
+      percentage: total ? Math.round(((item.value || 0) / total) * 100) : 0,
+      color: item.color || COLORS[index % COLORS.length],
+    }))
+  }, [categoryBreakdown])
+
+  const highestSpend = useMemo(() => {
+    return [...subscriptions].sort((a, b) => b.amount - a.amount).slice(0, 5)
+  }, [subscriptions])
+
   if (!isMounted || isLoading) {
     return (
-      <div className="min-h-[calc(100vh-6rem)] px-6 py-8 lg:px-8">
-        <div className="h-10 w-48 rounded-2xl bg-white/5 animate-pulse" />
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className="h-28 rounded-3xl bg-white/5 animate-pulse" />
-          <div className="h-28 rounded-3xl bg-white/5 animate-pulse" />
-          <div className="h-28 rounded-3xl bg-white/5 animate-pulse" />
-          <div className="h-28 rounded-3xl bg-white/5 animate-pulse" />
-        </div>
-      </div>
+      <>
+        <Header
+          title="Analytics"
+          subtitle="Spending trends and subscription intelligence"
+          onProfileClick={onProfileClick}
+        />
+        <AnalyticsSkeleton />
+      </>
     )
   }
-  const totalSpend = monthlySpendData.reduce((sum: number, m: any) => sum + m.amount, 0)
-  const avgSpend = monthlySpendData.length > 0 ? Math.round(totalSpend / monthlySpendData.length) : 0
-  const yearlyProjected = avgSpend * 12
-  const lastMonthChange = monthlySpendData.length >= 2
-    ? ((monthlySpendData[monthlySpendData.length - 1].amount - monthlySpendData[monthlySpendData.length - 2].amount) / monthlySpendData[monthlySpendData.length - 2].amount * 100).toFixed(1)
-    : '0'
+
+  if (error) {
+    return (
+      <>
+        <Header
+          title="Analytics"
+          subtitle="Spending trends and subscription intelligence"
+          onProfileClick={onProfileClick}
+        />
+        <PageTransition className="px-6 py-8 lg:px-8">
+          <div className="rounded-3xl border border-crimson/20 bg-card/75 p-6 shadow-card">
+            <h2 className="text-lg font-semibold text-foreground">Could not load analytics</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Please refresh the page and try again.
+            </p>
+          </div>
+        </PageTransition>
+      </>
+    )
+  }
 
   return (
-    <PageTransition className="min-h-screen">
+    <>
       <Header
         title="Analytics"
-        subtitle="Your spending insights"
-        showSearch={false}
+        subtitle="Spending trends and subscription intelligence"
+        onProfileClick={onProfileClick}
       />
 
-      <div className="px-4 lg:px-6 space-y-6 pb-8">
-        {/* Time range selector */}
-        <div className="flex justify-center">
+      <PageTransition className="px-6 py-8 lg:px-8">
+        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold text-foreground">Subscription analytics</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Track trends, category concentration, and projected annual spend.
+            </p>
+          </div>
+
           <SegmentedControl
             segments={timeSegments}
             selectedSegment={timeRange}
@@ -87,226 +226,242 @@ export function AnalyticsScreen() {
           />
         </div>
 
-        {/* Overview cards */}
-        <StaggerList className="grid grid-cols-2 gap-4">
-          <motion.div
-            variants={staggerItem}
-            className="rounded-2xl bg-card border border-border p-4"
-          >
-            <div className="flex items-center gap-2 text-muted-foreground mb-2">
-              <TrendingUp className="w-4 h-4" />
-              <span className="text-xs">Avg Monthly</span>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <MetricCard
+            label="Avg Monthly Spend"
+            value={formatMoney(avgSpend, preferredCurrency, preferredLanguage)}
+            icon={TrendingUp}
+            trend={{
+              value: `${lastMonthChange > 0 ? '+' : ''}${lastMonthChange}%`,
+              positive: lastMonthChange <= 0,
+              note: 'vs last month',
+            }}
+          />
+
+          <MetricCard
+            label="Projected Yearly"
+            value={formatMoney(yearlyProjected, preferredCurrency, preferredLanguage)}
+            icon={BarChart3}
+          />
+
+          <MetricCard
+            label="Active Categories"
+            value={String(pieData.length)}
+            icon={PieChartIcon}
+          />
+
+          <MetricCard
+            label="Tracked Services"
+            value={String(subscriptions.length)}
+            icon={BarChart3}
+          />
+        </div>
+
+        <div className="mt-6 grid gap-6 xl:grid-cols-[1.6fr_1fr]">
+          <div className="rounded-3xl border border-gold/10 bg-card/75 p-5 shadow-card">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Monthly Spend Trend</h3>
+              <p className="text-sm text-muted-foreground">
+                Your recurring spend over the selected period
+              </p>
             </div>
-            <p className="text-xl font-semibold text-foreground">
-              {formatMoney(avgSpend, preferredCurrency, preferredLanguage)}
-            </p>
-          </motion.div>
 
-          <motion.div
-            variants={staggerItem}
-            className="rounded-2xl bg-card border border-border p-4"
-          >
-            <div className="flex items-center gap-2 text-muted-foreground mb-2">
-              {Number(lastMonthChange) > 0 ? (
-                <TrendingUp className="w-4 h-4 text-crimson" />
-              ) : (
-                <TrendingDown className="w-4 h-4 text-emerald" />
-              )}
-              <span className="text-xs">vs Last Month</span>
+            <div className="h-[320px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={filteredSpendData}>
+                  <defs>
+                    <linearGradient id="analyticsArea" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#C7A36A" stopOpacity={0.35} />
+                      <stop offset="95%" stopColor="#C7A36A" stopOpacity={0.04} />
+                    </linearGradient>
+                  </defs>
+
+                  <XAxis dataKey="month" stroke="currentColor" tick={{ fill: 'currentColor' }} />
+                  <YAxis
+                    stroke="currentColor"
+                    tick={{ fill: 'currentColor' }}
+                    width={88}
+                    tickFormatter={(value) =>
+                      formatMoney(value, preferredCurrency, preferredLanguage)
+                    }
+                  />
+
+                  <RechartsTooltip
+                    formatter={(value: number) => [
+                      formatMoney(value, preferredCurrency, preferredLanguage),
+                      'Spend',
+                    ]}
+                    labelClassName="text-foreground"
+                    contentStyle={{
+                      borderRadius: 16,
+                      border: '1px solid rgba(199,163,106,0.15)',
+                      background: 'rgba(18, 22, 28, 0.92)',
+                    }}
+                  />
+
+                  <Area
+                    type="monotone"
+                    dataKey="amount"
+                    stroke="#C7A36A"
+                    strokeWidth={3}
+                    fill="url(#analyticsArea)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
-            <p className={cn(
-              'text-xl font-semibold',
-              Number(lastMonthChange) > 0 ? 'text-crimson' : 'text-emerald'
-            )}>
-              {Number(lastMonthChange) > 0 ? '+' : ''}{lastMonthChange}%
-            </p>
-          </motion.div>
-        </StaggerList>
-
-        {/* Spend trend chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={springs.gentle}
-          className="rounded-2xl bg-card border border-border p-5"
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <BarChart3 className="w-5 h-5 text-gold" />
-            <h3 className="font-semibold text-foreground">Monthly Spend Trend</h3>
           </div>
 
-          <div className="h-[200px] -ml-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={monthlySpendData}>
-                <defs>
-                  <linearGradient id="goldGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#C7A36A" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="#C7A36A" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="month"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#BCC2CC', fontSize: 12 }}
-                />
-                <YAxis
-                  hide
-                  domain={['dataMin - 500', 'dataMax + 500']}
-                />
-                <RechartsTooltip
-                  contentStyle={{
-                    backgroundColor: '#13161C',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '12px',
-                    padding: '8px 12px',
-                  }}
-                  labelStyle={{ color: '#BCC2CC' }}
-                  formatter={(value: number) => [formatMoney(value, preferredCurrency, preferredLanguage), 'Spend']}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="amount"
-                  stroke="#C7A36A"
-                  strokeWidth={2}
-                  fill="url(#goldGradient)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </motion.div>
+          <div className="rounded-3xl border border-gold/10 bg-card/75 p-5 shadow-card">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Category Breakdown</h3>
+              <p className="text-sm text-muted-foreground">
+                Where most of your recurring spend is concentrated
+              </p>
+            </div>
 
-        {/* Category breakdown */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, ...springs.gentle }}
-          className="rounded-2xl bg-card border border-border p-5"
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <PieChart className="w-5 h-5 text-gold" />
-            <h3 className="font-semibold text-foreground">Category Breakdown</h3>
-          </div>
-
-          <div className="flex items-center gap-6">
-            {/* Pie chart */}
-            <div className="w-32 h-32 shrink-0">
+            <div className="h-[220px]">
               <ResponsiveContainer width="100%" height="100%">
                 <RechartsPieChart>
                   <Pie
-                    data={categoryBreakdown}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={35}
-                    outerRadius={50}
-                    paddingAngle={2}
-                    dataKey="percentage"
+                    data={pieData}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={55}
+                    outerRadius={90}
+                    paddingAngle={3}
                   >
-                    {categoryBreakdown.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    {pieData.map((entry: any, index: number) => (
+                      <Cell key={entry.name || index} fill={entry.color || COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
+
+                  <RechartsTooltip
+                    formatter={(value: number) => [
+                      formatMoney(value, preferredCurrency, preferredLanguage),
+                      'Spend',
+                    ]}
+                    contentStyle={{
+                      borderRadius: 16,
+                      border: '1px solid rgba(199,163,106,0.15)',
+                      background: 'rgba(18, 22, 28, 0.92)',
+                    }}
+                  />
                 </RechartsPieChart>
               </ResponsiveContainer>
             </div>
 
-            {/* Legend */}
-            <div className="flex-1 space-y-2">
-              {categoryBreakdown.slice(0, 5).map((cat, index) => (
-                <div key={cat.category} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
+            <div className="mt-4 space-y-3">
+              {pieData.slice(0, 5).map((cat: any, index: number) => (
+                <div key={cat.name || index} className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: cat.color || COLORS[index % COLORS.length] }}
                     />
-                    <span className="text-sm text-muted-foreground">{cat.category}</span>
+                    <span className="truncate text-sm text-foreground">{cat.name}</span>
                   </div>
-                  <span className="text-sm font-medium text-foreground">{cat.percentage}%</span>
+                  <span className="text-sm text-muted-foreground">{cat.percentage}%</span>
                 </div>
               ))}
             </div>
           </div>
-        </motion.div>
-
-        {/* Yearly projection */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, ...springs.gentle }}
-          className="rounded-2xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20 p-5"
-        >
-          <h3 className="font-semibold text-foreground mb-4">Yearly Projection</h3>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-semibold text-gold">
-              {formatMoney(yearlyProjected, preferredCurrency, preferredLanguage)}
-            </span>
-            <span className="text-muted-foreground">projected spend</span>
-          </div>
-          <p className="text-sm text-muted-foreground mt-2">
-            Based on your current subscriptions
-          </p>
-        </motion.div>
-
-        {/* Highest spend subscriptions */}
-        <div>
-          <h3 className="font-semibold text-foreground mb-4">Highest Spend</h3>
-          <StaggerList className="space-y-3">
-            {subscriptions
-              .sort((a, b) => b.amount - a.amount)
-              .slice(0, 5)
-              .map((sub, index) => (
-                <motion.div
-                  key={sub.id}
-                  variants={staggerItem}
-                  className="flex items-center gap-4 p-4 rounded-xl bg-card border border-border"
-                >
-                  <span className="text-sm text-muted-foreground w-4">{index + 1}</span>
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-medium"
-                    style={{ backgroundColor: sub.color }}
-                  >
-                    {sub.logo}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-foreground">{sub.name}</p>
-                    <p className="text-xs text-muted-foreground">{sub.category}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-foreground">
-                      {formatMoney(sub.amount, sub.currency || preferredCurrency, preferredLanguage)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      /{sub.billingCycle === 'yearly' ? 'yr' : 'mo'}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-          </StaggerList>
         </div>
 
-        {/* Savings opportunities */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, ...springs.gentle }}
-          className="rounded-2xl bg-emerald/10 border border-emerald/20 p-5"
-        >
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald/20 flex items-center justify-center">
-              <TrendingDown className="w-5 h-5 text-emerald" />
+        <div className="mt-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+          <div className="rounded-3xl border border-gold/10 bg-card/75 p-5 shadow-card">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Highest Spend</h3>
+              <p className="text-sm text-muted-foreground">
+                Your most expensive active subscriptions
+              </p>
             </div>
-            <div>
-              <h3 className="font-semibold text-foreground mb-1">Savings Opportunity</h3>
-              <p className="text-sm text-muted-foreground mb-3">
-                Switch to annual plans for Netflix and Spotify to save money.
-              </p>
-              <p className="text-lg font-semibold text-emerald">
-                Save up to ₹1,200/year
-              </p>
+
+            <div className="space-y-3">
+              {highestSpend.length === 0 ? (
+                <div className="rounded-2xl border border-border/60 bg-background/60 px-4 py-6 text-sm text-muted-foreground">
+                  No subscriptions available yet.
+                </div>
+              ) : (
+                highestSpend.map((sub, index) => (
+                  <div
+                    key={sub.id || `${sub.name}-${index}`}
+                    className="flex items-center justify-between gap-4 rounded-2xl border border-border/60 bg-background/60 px-4 py-3"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">#{index + 1}</span>
+                        <p className="truncate font-medium text-foreground">{sub.name}</p>
+                      </div>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {sub.category || 'Other'}
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="font-medium text-foreground">
+                        {formatMoney(
+                          sub.amount,
+                          sub.currency || preferredCurrency,
+                          preferredLanguage
+                        )}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        /{sub.billingCycle === 'yearly' ? 'yr' : 'mo'}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
-        </motion.div>
-      </div>
-    </PageTransition>
+
+          <div className="rounded-3xl border border-gold/10 bg-card/75 p-5 shadow-card">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Yearly Projection</h3>
+              <p className="text-sm text-muted-foreground">
+                Based on your current recurring commitments
+              </p>
+            </div>
+
+            <div className="h-[260px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={[
+                    {
+                      name: 'Projected',
+                      amount: yearlyProjected,
+                    },
+                  ]}
+                >
+                  <XAxis dataKey="name" stroke="currentColor" tick={{ fill: 'currentColor' }} />
+                  <YAxis
+                    stroke="currentColor"
+                    tick={{ fill: 'currentColor' }}
+                    width={88}
+                    tickFormatter={(value) =>
+                      formatMoney(value, preferredCurrency, preferredLanguage)
+                    }
+                  />
+
+                  <RechartsTooltip
+                    formatter={(value: number) => [
+                      formatMoney(value, preferredCurrency, preferredLanguage),
+                      'Projected',
+                    ]}
+                    contentStyle={{
+                      borderRadius: 16,
+                      border: '1px solid rgba(199,163,106,0.15)',
+                      background: 'rgba(18, 22, 28, 0.92)',
+                    }}
+                  />
+
+                  <Bar dataKey="amount" fill="#C7A36A" radius={[12, 12, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      </PageTransition>
+    </>
   )
 }
