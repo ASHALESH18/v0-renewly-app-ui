@@ -1,5 +1,3 @@
-'use server'
-
 import { createClient } from '@supabase/supabase-js'
 import { sendOTPSMS, formatPhoneNumber, isValidPhoneNumber, isTwilioConfigured } from '@/lib/sms/twilio'
 import crypto from 'crypto'
@@ -56,7 +54,7 @@ async function canRequestNewOTP(userId: string, phoneNumber: string): Promise<{
   const createdAt = new Date(existingOTP.created_at)
   const now = new Date()
   const secondsSinceCreated = Math.floor((now.getTime() - createdAt.getTime()) / 1000)
-  
+
   if (secondsSinceCreated < COOLDOWN_SECONDS) {
     return {
       canRequest: false,
@@ -137,7 +135,7 @@ export async function sendPhoneOTP(userId: string, phoneNumber: string): Promise
 
     // Send SMS
     const smsResult = await sendOTPSMS(formattedPhone, code)
-    
+
     if (!smsResult.success) {
       return {
         success: false,
@@ -212,7 +210,7 @@ export async function verifyPhoneOTP(userId: string, phoneNumber: string, code: 
       const attemptsRemaining = MAX_ATTEMPTS - (otpRecord.attempts + 1)
       return {
         success: false,
-        error: attemptsRemaining > 0 
+        error: attemptsRemaining > 0
           ? `Invalid code. ${attemptsRemaining} attempt${attemptsRemaining === 1 ? '' : 's'} remaining.`
           : 'Invalid code. Please request a new code.',
         attemptsRemaining,
@@ -235,24 +233,7 @@ export async function verifyPhoneOTP(userId: string, phoneNumber: string, code: 
       })
       .eq('id', userId)
 
-    // Send phone verified notification email (non-blocking)
-    try {
-      // Get user email for notification
-      const { data: userData } = await supabase.auth.admin.getUserById(userId)
-      if (userData?.user?.email) {
-        const { sendSecurityAlertEmail, isResendConfigured } = await import('@/lib/email/resend')
-        if (isResendConfigured()) {
-          await sendSecurityAlertEmail(
-            userData.user.email,
-            'Phone Number Verified',
-            `Your phone number ending in ${formattedPhone.slice(-4)} has been verified and linked to your Renewly account.`
-          )
-        }
-      }
-    } catch (emailError) {
-      // Log but don't fail the verification
-      console.error('Failed to send phone verification notification:', emailError)
-    }
+    // Optional phone verification email can be added later with a dedicated helper.
 
     return { success: true }
   } catch (error) {

@@ -788,8 +788,8 @@ export function SettingsScreen() {
                 key={lang.code}
                 onClick={async () => {
                   await updateNotificationSettings({ language: lang.code })
-                  addToast({ 
-                    type: 'success', 
+                  addToast({
+                    type: 'success',
                     title: 'Language updated',
                     message: `App language changed to ${lang.nativeName}`
                   })
@@ -899,25 +899,35 @@ function SettingsToggle({
   onToggle: () => void | Promise<void>
 }) {
   return (
-    <div
-      onClick={onToggle}
-      className="w-full flex items-center gap-4 p-4 hover:bg-secondary/30 transition-colors cursor-pointer"
+    <button
+      type="button"
+      onClick={() => {
+        void onToggle()
+      }}
+      className="w-full flex items-center gap-4 p-4 hover:bg-secondary/30 transition-colors text-left cursor-pointer"
     >
       <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
         <Icon className="w-5 h-5 text-foreground" />
       </div>
+
       <div className="flex-1 min-w-0">
         <span className="text-foreground font-medium block">{label}</span>
-        {description && (
-          <p className="text-sm text-muted-foreground">{description}</p>
-        )}
+        {description && <p className="text-sm text-muted-foreground">{description}</p>}
       </div>
-      <Switch
-        checked={checked}
-        onCheckedChange={onToggle}
-        className="data-[state=checked]:bg-gold"
-      />
-    </div>
+
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="flex items-center"
+      >
+        <Switch
+          checked={checked}
+          onCheckedChange={() => {
+            void onToggle()
+          }}
+          className="data-[state=checked]:bg-gold"
+        />
+      </div>
+    </button>
   )
 }
 
@@ -1152,9 +1162,9 @@ function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
   const allRulesPass = ruleResults.every((r) => r.passes)
   const passwordsMatch = newPassword === confirmPassword && confirmPassword.length > 0
 
-  const isFormValid = 
-    currentPassword.length > 0 && 
-    allRulesPass && 
+  const isFormValid =
+    currentPassword.length > 0 &&
+    allRulesPass &&
     passwordsMatch
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1271,8 +1281,8 @@ function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
                   newPassword.length === 0
                     ? "text-muted-foreground"
                     : rule.passes
-                    ? "text-emerald-500"
-                    : "text-muted-foreground"
+                      ? "text-emerald-500"
+                      : "text-muted-foreground"
                 )}
               >
                 {newPassword.length > 0 && rule.passes ? (
@@ -1617,7 +1627,7 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
                 }}
                 className={cn(
                   "w-12 h-14 text-center text-xl font-semibold rounded-xl border transition-all focus:outline-none focus:ring-2",
-                  error 
+                  error
                     ? "border-destructive bg-destructive/5 focus:ring-destructive/50"
                     : "border-border bg-muted focus:ring-gold/50 focus:border-gold"
                 )}
@@ -1686,8 +1696,8 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
             </div>
             <div className={cn(
               "px-2.5 py-1 rounded-full text-xs font-medium",
-              isVerified 
-                ? "bg-emerald-500/20 text-emerald-500" 
+              isVerified
+                ? "bg-emerald-500/20 text-emerald-500"
                 : "bg-amber-500/20 text-amber-500"
             )}>
               {isVerified ? 'Verified' : 'Not verified'}
@@ -1796,7 +1806,7 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
           </button>
         )}
       </div>
-    </form>
+    </div>
   )
 }
 
