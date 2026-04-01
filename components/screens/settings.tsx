@@ -81,9 +81,9 @@ function SettingsSheet({
               exit={{ opacity: 0, y: 20, scale: 0.98 }}
               transition={{ duration: 0.2 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full md:max-w-2xl max-h-[92dvh] md:max-h-[80dvh] overflow-hidden rounded-t-3xl md:rounded-3xl border border-gold/10 bg-[linear-gradient(180deg,rgba(14,18,24,0.98)_0%,rgba(10,13,18,0.98)_100%)] shadow-[0_28px_80px_rgba(0,0,0,0.45)]"
+              className="w-full md:max-w-2xl max-h-[92dvh] md:max-h-[80dvh] overflow-hidden rounded-t-3xl md:rounded-3xl border border-border bg-card shadow-[0_28px_80px_rgba(0,0,0,0.25)] dark:shadow-[0_28px_80px_rgba(0,0,0,0.45)]"
             >
-              <div className="flex items-center justify-between border-b border-gold/10 px-4 py-4 md:px-6">
+              <div className="flex items-center justify-between border-b border-border px-4 py-4 md:px-6">
                 <div className="space-y-1">
                   <h3 className="text-xl font-semibold text-foreground">{title}</h3>
                   <div className="h-1 w-12 rounded-full bg-gold/40 md:hidden" />
@@ -91,7 +91,7 @@ function SettingsSheet({
 
                 <button
                   onClick={onClose}
-                  className="w-10 h-10 rounded-xl border border-gold/10 bg-white/5 hover:bg-white/10 hover:border-gold/25 transition-all flex items-center justify-center cursor-pointer"
+                  className="w-10 h-10 rounded-xl border border-border bg-muted hover:bg-secondary transition-all flex items-center justify-center cursor-pointer"
                   aria-label={`Close ${title}`}
                 >
                   <X className="w-5 h-5 text-foreground" />
@@ -292,9 +292,7 @@ export function SettingsScreen() {
     await updateNotificationSettings({ emailNotifications: !notificationSettings.emailNotifications })
   }
 
-  const handleToggleBiometricLogin = async () => {
-    await updateNotificationSettings({ biometricEnabled: !notificationSettings.biometricEnabled })
-  }
+
 
   const handleToggleDarkMode = async () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark'
@@ -417,16 +415,10 @@ export function SettingsScreen() {
           <SettingsItem
             icon={Smartphone}
             label="Phone Number"
-            description="Not set - contact support to update"
-            disabled
+            description="Add your phone number"
+            onClick={() => setActiveSheet('phone')}
           />
-          <SettingsToggle
-            icon={Shield}
-            label="Biometric Login"
-            description="Face ID / Touch ID"
-            checked={notificationSettings.biometricEnabled}
-            onToggle={handleToggleBiometricLogin}
-          />
+          <BiometricSettingsItem />
         </SettingsSection>
 
         {/* Data Section */}
@@ -626,6 +618,20 @@ export function SettingsScreen() {
         </div>
       </SettingsSheet>
 
+      {/* Phone Number Sheet */}
+      <SettingsSheet
+        isOpen={activeSheet === 'phone'}
+        onClose={() => setActiveSheet(null)}
+        title="Phone Number"
+      >
+        <PhoneNumberForm
+          onSuccess={() => {
+            addToast({ type: 'success', title: 'Phone number updated' })
+            setActiveSheet(null)
+          }}
+        />
+      </SettingsSheet>
+
       {/* Export Sheet */}
       <SettingsSheet
         isOpen={activeSheet === 'export'}
@@ -766,32 +772,47 @@ export function SettingsScreen() {
         onClose={() => setActiveSheet(null)}
         title="Language"
       >
-        <div className="space-y-2">
-          {[
-            { code: 'en', name: 'English' },
-            { code: 'es', name: 'Español' },
-            { code: 'fr', name: 'Français' },
-            { code: 'de', name: 'Deutsch' },
-            { code: 'hi', name: 'हिन्दी' },
-          ].map((lang) => (
-            <button
-              key={lang.code}
-              onClick={async () => {
-                await updateNotificationSettings({ language: lang.code })
-                addToast({ type: 'success', title: 'Language updated' })
-                setActiveSheet(null)
-              }}
-              className={cn(
-                "w-full flex items-center justify-between p-4 rounded-xl transition-colors",
-                notificationSettings.language === lang.code
-                  ? "bg-gold/10 text-gold border border-gold/30"
-                  : "bg-muted hover:bg-secondary"
-              )}
-            >
-              <span>{lang.name}</span>
-              {notificationSettings.language === lang.code && <Check className="w-5 h-5" />}
-            </button>
-          ))}
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Select your preferred language. Settings labels, common UI text, and notification messages will be displayed in your chosen language.
+          </p>
+          <div className="space-y-2">
+            {[
+              { code: 'en', name: 'English', nativeName: 'English' },
+              { code: 'es', name: 'Spanish', nativeName: 'Español' },
+              { code: 'fr', name: 'French', nativeName: 'Français' },
+              { code: 'de', name: 'German', nativeName: 'Deutsch' },
+              { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी' },
+            ].map((lang) => (
+              <button
+                key={lang.code}
+                onClick={async () => {
+                  await updateNotificationSettings({ language: lang.code })
+                  addToast({ 
+                    type: 'success', 
+                    title: 'Language updated',
+                    message: `App language changed to ${lang.nativeName}`
+                  })
+                  setActiveSheet(null)
+                }}
+                className={cn(
+                  "w-full flex items-center justify-between p-4 rounded-xl transition-colors",
+                  notificationSettings.language === lang.code
+                    ? "bg-gold/10 text-gold border border-gold/30"
+                    : "bg-muted hover:bg-secondary"
+                )}
+              >
+                <div className="text-left">
+                  <span className="block font-medium">{lang.nativeName}</span>
+                  <span className="text-sm opacity-70">{lang.name}</span>
+                </div>
+                {notificationSettings.language === lang.code && <Check className="w-5 h-5" />}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground pt-2">
+            Note: Some content like legal pages may remain in English.
+          </p>
         </div>
       </SettingsSheet>
     </div >
@@ -991,115 +1012,540 @@ function ProfileForm({
   )
 }
 
-// Password Form Component
+// Password validation rules
+const passwordRules = {
+  minLength: { test: (p: string) => p.length >= 8, label: 'At least 8 characters' },
+  hasUppercase: { test: (p: string) => /[A-Z]/.test(p), label: 'One uppercase letter' },
+  hasLowercase: { test: (p: string) => /[a-z]/.test(p), label: 'One lowercase letter' },
+  hasNumber: { test: (p: string) => /[0-9]/.test(p), label: 'One number' },
+  hasSpecial: { test: (p: string) => /[!@#$%^&*(),.?":{}|<>]/.test(p), label: 'One special character' },
+}
+
+// Password Form Component with real re-authentication
 function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [showPasswords, setShowPasswords] = useState(false)
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [errorType, setErrorType] = useState<string | null>(null)
   const addToast = useStore((state) => state.addToast)
+
+  // Calculate which rules pass
+  const ruleResults = useMemo(() => {
+    return Object.entries(passwordRules).map(([key, rule]) => ({
+      key,
+      label: rule.label,
+      passes: rule.test(newPassword),
+    }))
+  }, [newPassword])
+
+  const allRulesPass = ruleResults.every((r) => r.passes)
+  const passwordsMatch = newPassword === confirmPassword && confirmPassword.length > 0
+
+  const isFormValid = 
+    currentPassword.length > 0 && 
+    allRulesPass && 
+    passwordsMatch
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setErrorType(null)
 
-    if (newPassword !== confirmPassword) {
+    if (!passwordsMatch) {
       setError('Passwords do not match')
       return
     }
 
-    if (newPassword.length < 8) {
-      setError('Password must be at least 8 characters')
+    if (!allRulesPass) {
+      setError('Password does not meet all requirements')
       return
     }
 
     setIsLoading(true)
     try {
-      const supabase = createClient()
-      const { error } = await supabase.auth.updateUser({ password: newPassword })
+      const { changeUserPassword } = await import('@/lib/supabase/settings-actions')
+      const result = await changeUserPassword(currentPassword, newPassword)
 
-      if (error) {
-        setError(error.message)
-      } else {
+      if (result.success) {
+        addToast({
+          type: 'success',
+          title: 'Password updated',
+          message: 'Your password has been changed successfully.',
+        })
         onSuccess()
+      } else {
+        setError(result.error || 'Failed to update password')
+        setErrorType(result.errorType || null)
       }
     } catch (err) {
-      setError('Failed to update password')
+      setError('Failed to update password. Please try again.')
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Current Password */}
       <div>
-        <label className="block text-sm font-medium text-foreground mb-2">Current Password</label>
+        <label className="block text-sm font-medium text-foreground mb-2">
+          Current Password
+        </label>
         <div className="relative">
           <input
-            type={showPasswords ? 'text' : 'password'}
+            type={showCurrentPassword ? 'text' : 'password'}
             value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            placeholder="Enter current password"
+            onChange={(e) => {
+              setCurrentPassword(e.target.value)
+              if (errorType === 'invalid_current_password') {
+                setError(null)
+                setErrorType(null)
+              }
+            }}
+            placeholder="Enter your current password"
+            className={cn(
+              "w-full px-4 py-3 pr-12 rounded-xl bg-muted border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-colors",
+              errorType === 'invalid_current_password'
+                ? "border-destructive focus:ring-destructive/50"
+                : "border-border focus:ring-gold/50"
+            )}
+          />
+          <button
+            type="button"
+            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+          </button>
+        </div>
+        {errorType === 'invalid_current_password' && (
+          <p className="mt-2 text-sm text-destructive flex items-center gap-1.5">
+            <AlertCircle className="w-4 h-4" />
+            Current password is incorrect
+          </p>
+        )}
+      </div>
+
+      {/* New Password */}
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-2">
+          New Password
+        </label>
+        <div className="relative">
+          <input
+            type={showNewPassword ? 'text' : 'password'}
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="Create a new password"
             className="w-full px-4 py-3 pr-12 rounded-xl bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors"
           />
           <button
             type="button"
-            onClick={() => setShowPasswords(!showPasswords)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            onClick={() => setShowNewPassword(!showNewPassword)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
           >
-            {showPasswords ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
         </div>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-foreground mb-2">New Password</label>
-        <input
-          type={showPasswords ? 'text' : 'password'}
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          placeholder="Enter new password"
-          className="w-full px-4 py-3 rounded-xl bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-foreground mb-2">Confirm New Password</label>
-        <input
-          type={showPasswords ? 'text' : 'password'}
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Confirm new password"
-          className="w-full px-4 py-3 rounded-xl bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors"
-        />
+
+        {/* Password Rules */}
+        <div className="mt-3 p-3 rounded-xl bg-secondary/50 border border-border">
+          <p className="text-xs font-medium text-muted-foreground mb-2">Password Requirements</p>
+          <div className="space-y-1.5">
+            {ruleResults.map((rule) => (
+              <div
+                key={rule.key}
+                className={cn(
+                  "flex items-center gap-2 text-sm transition-colors",
+                  newPassword.length === 0
+                    ? "text-muted-foreground"
+                    : rule.passes
+                    ? "text-emerald-500"
+                    : "text-muted-foreground"
+                )}
+              >
+                {newPassword.length > 0 && rule.passes ? (
+                  <Check className="w-4 h-4 flex-shrink-0" />
+                ) : (
+                  <div className="w-4 h-4 rounded-full border border-current flex-shrink-0" />
+                )}
+                <span>{rule.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {error && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+      {/* Confirm Password */}
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-2">
+          Confirm New Password
+        </label>
+        <div className="relative">
+          <input
+            type={showConfirmPassword ? 'text' : 'password'}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Confirm your new password"
+            className={cn(
+              "w-full px-4 py-3 pr-12 rounded-xl bg-muted border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-colors",
+              confirmPassword.length > 0 && !passwordsMatch
+                ? "border-destructive focus:ring-destructive/50"
+                : "border-border focus:ring-gold/50"
+            )}
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+          </button>
+        </div>
+        {confirmPassword.length > 0 && (
+          <p className={cn(
+            "mt-2 text-sm flex items-center gap-1.5",
+            passwordsMatch ? "text-emerald-500" : "text-destructive"
+          )}>
+            {passwordsMatch ? (
+              <>
+                <Check className="w-4 h-4" />
+                Passwords match
+              </>
+            ) : (
+              <>
+                <AlertCircle className="w-4 h-4" />
+                Passwords do not match
+              </>
+            )}
+          </p>
+        )}
+      </div>
+
+      {/* General Error */}
+      {error && errorType !== 'invalid_current_password' && (
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           {error}
         </div>
       )}
 
+      {/* Submit Button */}
       <button
         type="submit"
-        disabled={isLoading || !currentPassword || !newPassword || !confirmPassword}
+        disabled={isLoading || !isFormValid}
         className={cn(
-          "w-full py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2",
-          isLoading || !currentPassword || !newPassword || !confirmPassword
-            ? "bg-gold/50 text-obsidian cursor-not-allowed"
-            : "bg-gold text-obsidian hover:bg-gold/90"
+          "w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2",
+          isLoading || !isFormValid
+            ? "bg-gold/40 text-obsidian/70 cursor-not-allowed"
+            : "bg-gold text-obsidian hover:bg-gold/90 shadow-[0_4px_16px_rgba(199,163,106,0.25)] hover:shadow-[0_6px_20px_rgba(199,163,106,0.35)]"
         )}
       >
         {isLoading ? (
           <>
             <RefreshCw className="w-4 h-4 animate-spin" />
-            Updating...
+            Updating Password...
           </>
         ) : (
           'Update Password'
         )}
       </button>
     </form>
+  )
+}
+
+// Phone Number Form Component
+function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [existingPhone, setExistingPhone] = useState<string | null>(null)
+  const [isVerified, setIsVerified] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isFetching, setIsFetching] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const addToast = useStore((state) => state.addToast)
+
+  // Fetch existing phone on mount
+  useEffect(() => {
+    const fetchPhone = async () => {
+      try {
+        const { getUserPhone } = await import('@/lib/supabase/settings-actions')
+        const result = await getUserPhone()
+        if (result.success) {
+          setExistingPhone(result.phone)
+          setPhoneNumber(result.phone || '')
+          setIsVerified(result.verified)
+        }
+      } catch (err) {
+        console.error('[v0] Failed to fetch phone:', err)
+      } finally {
+        setIsFetching(false)
+      }
+    }
+    fetchPhone()
+  }, [])
+
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-digit characters except +
+    const cleaned = value.replace(/[^\d+]/g, '')
+    return cleaned
+  }
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value)
+    setPhoneNumber(formatted)
+    setError(null)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+
+    // Basic phone validation
+    if (phoneNumber && phoneNumber.length < 10) {
+      setError('Please enter a valid phone number')
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const { updateUserPhone } = await import('@/lib/supabase/settings-actions')
+      const result = await updateUserPhone(phoneNumber || null)
+
+      if (result.success) {
+        addToast({
+          type: 'success',
+          title: phoneNumber ? 'Phone number saved' : 'Phone number removed',
+          message: result.message,
+        })
+        onSuccess()
+      } else {
+        setError(result.error || 'Failed to update phone number')
+      }
+    } catch (err) {
+      setError('Failed to update phone number. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleRemove = async () => {
+    setIsLoading(true)
+    try {
+      const { updateUserPhone } = await import('@/lib/supabase/settings-actions')
+      const result = await updateUserPhone(null)
+
+      if (result.success) {
+        addToast({
+          type: 'success',
+          title: 'Phone number removed',
+        })
+        onSuccess()
+      } else {
+        setError(result.error || 'Failed to remove phone number')
+      }
+    } catch (err) {
+      setError('Failed to remove phone number')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (isFetching) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <RefreshCw className="w-6 h-6 text-gold animate-spin" />
+      </div>
+    )
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Existing Phone Display */}
+      {existingPhone && (
+        <div className="p-4 rounded-xl bg-secondary/50 border border-border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Current phone number</p>
+              <p className="font-medium text-foreground">{existingPhone}</p>
+            </div>
+            <div className={cn(
+              "px-2.5 py-1 rounded-full text-xs font-medium",
+              isVerified 
+                ? "bg-emerald-500/20 text-emerald-500" 
+                : "bg-amber-500/20 text-amber-500"
+            )}>
+              {isVerified ? 'Verified' : 'Not verified'}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Info Banner - SMS not configured */}
+      <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+        <div className="flex gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-amber-500">SMS Verification Not Available</p>
+            <p className="text-xs text-amber-500/80">
+              SMS verification is not yet configured. Your phone number will be saved but cannot be verified at this time.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Phone Input */}
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-2">
+          {existingPhone ? 'Update Phone Number' : 'Add Phone Number'}
+        </label>
+        <div className="relative">
+          <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <input
+            type="tel"
+            value={phoneNumber}
+            onChange={handlePhoneChange}
+            placeholder="+1 234 567 8900"
+            className="w-full px-4 py-3 pl-12 rounded-xl bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors"
+          />
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Include country code (e.g., +1 for US, +91 for India)
+        </p>
+      </div>
+
+      {/* Error */}
+      {error && (
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          {error}
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="space-y-3">
+        <button
+          type="submit"
+          disabled={isLoading || (!phoneNumber && !existingPhone)}
+          className={cn(
+            "w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2",
+            isLoading || (!phoneNumber && !existingPhone)
+              ? "bg-gold/40 text-obsidian/70 cursor-not-allowed"
+              : "bg-gold text-obsidian hover:bg-gold/90 shadow-[0_4px_16px_rgba(199,163,106,0.25)] hover:shadow-[0_6px_20px_rgba(199,163,106,0.35)]"
+          )}
+        >
+          {isLoading ? (
+            <>
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            existingPhone ? 'Update Phone Number' : 'Save Phone Number'
+          )}
+        </button>
+
+        {existingPhone && (
+          <button
+            type="button"
+            onClick={handleRemove}
+            disabled={isLoading}
+            className="w-full py-3 rounded-xl font-medium text-destructive bg-destructive/10 border border-destructive/20 hover:bg-destructive/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Remove Phone Number
+          </button>
+        )}
+      </div>
+    </form>
+  )
+}
+
+// Biometric Settings Item - shows honest "not supported" state
+function BiometricSettingsItem() {
+  const [showInfo, setShowInfo] = useState(false)
+
+  return (
+    <>
+      <button
+        onClick={() => setShowInfo(true)}
+        className="w-full flex items-center gap-4 p-4 hover:bg-secondary/30 transition-colors cursor-pointer text-left"
+      >
+        <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+          <Shield className="w-5 h-5 text-foreground" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <span className="text-foreground font-medium block">Biometric Login</span>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+              Not available
+            </span>
+          </div>
+        </div>
+        <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+      </button>
+
+      {/* Info Modal */}
+      <AnimatePresence>
+        {showInfo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setShowInfo(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md p-6 rounded-2xl bg-card border border-border shadow-xl"
+            >
+              <div className="flex items-start gap-4 mb-4">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-foreground">Biometric Login</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Face ID / Touch ID</p>
+                </div>
+                <button
+                  onClick={() => setShowInfo(false)}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted transition-colors"
+                >
+                  <X className="w-5 h-5 text-muted-foreground" />
+                </button>
+              </div>
+
+              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 mb-4">
+                <div className="flex gap-3">
+                  <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-amber-500">Not Available on This Platform</p>
+                    <p className="text-xs text-amber-500/80">
+                      Biometric authentication (Face ID, Touch ID, fingerprint) is not supported in web browsers. This feature may be available in native mobile apps in a future update.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground mb-4">
+                Your account is protected by your password. For enhanced security, we recommend using a strong, unique password and enabling email notifications for account activity.
+              </p>
+
+              <button
+                onClick={() => setShowInfo(false)}
+                className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors"
+              >
+                Got it
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   )
 }
