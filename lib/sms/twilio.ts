@@ -1,6 +1,4 @@
-'use server'
-
-import twilio from 'twilio'
+'import twilio from 'twilio'
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID
 const authToken = process.env.TWILIO_AUTH_TOKEN
@@ -40,7 +38,7 @@ export async function sendSMS(to: string, body: string): Promise<{
     }
 
     const client = getTwilioClient()
-    
+
     const message = await client.messages.create({
       body,
       from: fromPhone,
@@ -69,7 +67,7 @@ export async function sendOTPSMS(phoneNumber: string, code: string): Promise<{
   error?: string
 }> {
   const body = `Your Renewly verification code is: ${code}. This code expires in 10 minutes. Do not share this code with anyone.`
-  
+
   return sendSMS(phoneNumber, body)
 }
 
@@ -80,7 +78,7 @@ export async function sendOTPSMS(phoneNumber: string, code: string): Promise<{
 export function formatPhoneNumber(phone: string, defaultCountryCode: string = '+1'): string {
   // Remove all non-digit characters except +
   let cleaned = phone.replace(/[^\d+]/g, '')
-  
+
   // If it doesn't start with +, add the default country code
   if (!cleaned.startsWith('+')) {
     // Remove leading 0 if present (common in some countries)
@@ -89,7 +87,7 @@ export function formatPhoneNumber(phone: string, defaultCountryCode: string = '+
     }
     cleaned = defaultCountryCode + cleaned
   }
-  
+
   return cleaned
 }
 

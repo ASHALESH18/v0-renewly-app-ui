@@ -8,7 +8,7 @@ export async function GET() {
   } catch (error) {
     console.error('[API] OTP status error:', error)
     return NextResponse.json(
-      { available: false, reason: 'Failed to check service status' },
+      { available: false, reason: 'Unable to determine SMS service status' },
       { status: 500 }
     )
   }

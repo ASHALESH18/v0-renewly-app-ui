@@ -1,4 +1,4 @@
-import { getUser } from '@/lib/supabase/server'
+timport { getUser } from '@/lib/supabase/server'
 import { getUserSubscriptions } from '@/lib/supabase/repositories/subscriptions'
 import { NextResponse } from 'next/server'
 
@@ -18,7 +18,7 @@ export async function GET() {
       .map(sub => {
         const renewalDate = new Date(sub.renewal_date)
         const dateStr = renewalDate.toISOString().split('T')[0]
-        
+
         return {
           date: dateStr,
           subscription: sub.name,

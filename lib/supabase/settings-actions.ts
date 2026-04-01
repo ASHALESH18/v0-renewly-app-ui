@@ -241,7 +241,7 @@ export async function changeUserPassword(currentPassword: string, newPassword: s
     // This verifies the current password is correct
     const { createClient } = await import('@supabase/supabase-js')
     const authClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-    
+
     const { error: signInError } = await authClient.auth.signInWithPassword({
       email: user.email,
       password: currentPassword,
@@ -249,8 +249,8 @@ export async function changeUserPassword(currentPassword: string, newPassword: s
 
     if (signInError) {
       // Current password is wrong
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: 'Current password is incorrect',
         errorType: 'invalid_current_password' as const
       }
@@ -269,7 +269,18 @@ export async function changeUserPassword(currentPassword: string, newPassword: s
     try {
       const { sendPasswordChangedEmail, isResendConfigured } = await import('@/lib/email/resend')
       if (isResendConfigured()) {
-        await sendPasswordChangedEmail(user.email!)
+        const { sendPasswordChangedEmail, isResendConfigured } = await import('@/lib/email/resend')
+        if (isResendConfigured()) {
+          const displayName =
+            user.user_metadata?.full_name ||
+            [user.user_metadata?.first_name, user.user_metadata?.last_name]
+              .filter(Boolean)
+              .join(' ') ||
+            user.email.split('@')[0] ||
+            'there'
+
+          await sendPasswordChangedEmail(user.email, displayName)
+        }
       }
     } catch (emailError) {
       // Log but don't fail the password change
@@ -305,10 +316,10 @@ export async function updateUserPhone(phoneNumber: string | null) {
     if (error) throw error
 
     revalidateTag('user-profile')
-    return { 
-      success: true, 
-      message: phoneNumber 
-        ? 'Phone number saved. SMS verification is not yet configured.' 
+    return {
+      success: true,
+      message: phoneNumber
+        ? 'Phone number saved. SMS verification is not yet configured.'
         : 'Phone number removed.'
     }
   } catch (error) {
