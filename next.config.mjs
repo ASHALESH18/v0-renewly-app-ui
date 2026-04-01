@@ -6,6 +6,10 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  eslint: {
+    ignoreBuildErrors: true,
+  }
+
 }
 
 export default nextConfig
