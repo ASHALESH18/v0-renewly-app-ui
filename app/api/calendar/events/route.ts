@@ -1,4 +1,4 @@
-timport { getUser } from '@/lib/supabase/server'
+import { getUser } from '@/lib/supabase/server'
 import { getUserSubscriptions } from '@/lib/supabase/repositories/subscriptions'
 import { NextResponse } from 'next/server'
 
