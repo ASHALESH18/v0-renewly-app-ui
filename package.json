@@ -59,6 +59,8 @@
     "react-resizable-panels": "^2.1.7",
     "razorpay": "2.9.6",
     "recharts": "2.15.0",
+    "resend": "^4.0.0",
+    "twilio": "^5.0.0",
     "sonner": "^1.7.1",
     "swr": "^2.2.4",
     "tailwind-merge": "^3.3.1",

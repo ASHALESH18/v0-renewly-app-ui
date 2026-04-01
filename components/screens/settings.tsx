@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from 'next-themes'
 import {
   User, Bell, CreditCard, Shield, Moon, Sun, Globe,
-  HelpCircle, FileText, LogOut, ChevronRight, Crown,
+  HelpCircle, FileText, LogOut, ChevronRight, ChevronLeft, Crown,
   Smartphone, Mail, Lock, Download, Copy, FileJson, X,
   Check, AlertCircle, Eye, EyeOff, RefreshCw
 } from 'lucide-react'
@@ -921,10 +921,40 @@ function SettingsToggle({
   )
 }
 
-// Profile Form Component
+// Common timezones for the dropdown
+const COMMON_TIMEZONES = [
+  { value: 'America/New_York', label: 'Eastern Time (ET)', offset: 'UTC-5' },
+  { value: 'America/Chicago', label: 'Central Time (CT)', offset: 'UTC-6' },
+  { value: 'America/Denver', label: 'Mountain Time (MT)', offset: 'UTC-7' },
+  { value: 'America/Los_Angeles', label: 'Pacific Time (PT)', offset: 'UTC-8' },
+  { value: 'America/Phoenix', label: 'Arizona (MST)', offset: 'UTC-7' },
+  { value: 'America/Anchorage', label: 'Alaska Time', offset: 'UTC-9' },
+  { value: 'Pacific/Honolulu', label: 'Hawaii Time', offset: 'UTC-10' },
+  { value: 'Europe/London', label: 'London (GMT)', offset: 'UTC+0' },
+  { value: 'Europe/Paris', label: 'Central European (CET)', offset: 'UTC+1' },
+  { value: 'Europe/Berlin', label: 'Berlin (CET)', offset: 'UTC+1' },
+  { value: 'Asia/Dubai', label: 'Dubai (GST)', offset: 'UTC+4' },
+  { value: 'Asia/Kolkata', label: 'India (IST)', offset: 'UTC+5:30' },
+  { value: 'Asia/Singapore', label: 'Singapore (SGT)', offset: 'UTC+8' },
+  { value: 'Asia/Tokyo', label: 'Japan (JST)', offset: 'UTC+9' },
+  { value: 'Australia/Sydney', label: 'Sydney (AEST)', offset: 'UTC+10' },
+]
+
+// Generate avatar URL from name/email
+function generateAvatarUrl(seed: string, style: 'initials' | 'abstract' = 'initials'): string {
+  const encodedSeed = encodeURIComponent(seed)
+  if (style === 'abstract') {
+    // Use DiceBear for abstract patterns
+    return `https://api.dicebear.com/7.x/shapes/svg?seed=${encodedSeed}&backgroundColor=c7a36a&size=128`
+  }
+  // Use UI Avatars for initials
+  return `https://ui-avatars.com/api/?name=${encodedSeed}&background=c7a36a&color=0a0d12&size=128&bold=true`
+}
+
+// Profile Form Component with avatar regeneration and timezone
 function ProfileForm({
   userProfile,
-  avatarUrl,
+  avatarUrl: initialAvatarUrl,
   onSave,
 }: {
   userProfile: any
@@ -932,7 +962,23 @@ function ProfileForm({
   onSave: (data: any) => void
 }) {
   const [name, setName] = useState(userProfile?.name || '')
+  const [timezone, setTimezone] = useState(userProfile?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone)
+  const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl)
+  const [avatarStyle, setAvatarStyle] = useState<'initials' | 'abstract'>('initials')
   const [isLoading, setIsLoading] = useState(false)
+  const [isRegenerating, setIsRegenerating] = useState(false)
+  const addToast = useStore((state) => state.addToast)
+
+  const handleRegenerateAvatar = () => {
+    setIsRegenerating(true)
+    // Toggle style for variety, or use a random seed
+    const newStyle = avatarStyle === 'initials' ? 'abstract' : 'initials'
+    const seed = name || userProfile?.email || `user-${Date.now()}`
+    const newUrl = generateAvatarUrl(seed, newStyle)
+    setAvatarStyle(newStyle)
+    setAvatarUrl(newUrl)
+    setTimeout(() => setIsRegenerating(false), 500)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -942,15 +988,31 @@ function ProfileForm({
       const result = await updateUserProfile({
         firstName: name.split(' ')[0] || name,
         lastName: name.split(' ').slice(1).join(' ') || undefined,
+        timezone,
+        avatarUrl: avatarUrl || undefined,
       })
 
       if (result.success) {
-        onSave({ name })
+        addToast({
+          type: 'success',
+          title: 'Profile updated',
+          message: 'Your profile has been saved successfully.',
+        })
+        onSave({ name, timezone, avatarUrl })
       } else {
-        console.error('[v0] Profile update failed:', result.error)
+        addToast({
+          type: 'error',
+          title: 'Update failed',
+          message: result.error || 'Failed to update profile.',
+        })
       }
     } catch (error) {
-      console.error('[v0] Profile save error:', error)
+      console.error('Profile save error:', error)
+      addToast({
+        type: 'error',
+        title: 'Update failed',
+        message: 'An unexpected error occurred.',
+      })
     } finally {
       setIsLoading(false)
     }
@@ -958,21 +1020,40 @@ function ProfileForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Avatar */}
+      {/* Avatar with regeneration */}
       <div className="flex flex-col items-center gap-4">
-        {avatarUrl ? (
-          <img
-            src={avatarUrl}
-            alt="Your avatar"
-            className="w-20 h-20 rounded-full border-2 border-gold/30"
-          />
-        ) : (
-          <div className="w-20 h-20 rounded-full bg-gold/20 flex items-center justify-center border-2 border-gold/30">
-            <span className="text-2xl font-semibold text-gold">
-              {name?.charAt(0).toUpperCase() || 'U'}
-            </span>
-          </div>
-        )}
+        <div className="relative">
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt="Your avatar"
+              className={cn(
+                "w-24 h-24 rounded-full border-2 border-gold/30 object-cover transition-all",
+                isRegenerating && "opacity-50 scale-95"
+              )}
+            />
+          ) : (
+            <div className="w-24 h-24 rounded-full bg-gold/20 flex items-center justify-center border-2 border-gold/30">
+              <span className="text-3xl font-semibold text-gold">
+                {name?.charAt(0).toUpperCase() || 'U'}
+              </span>
+            </div>
+          )}
+          {isRegenerating && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <RefreshCw className="w-6 h-6 text-gold animate-spin" />
+            </div>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={handleRegenerateAvatar}
+          disabled={isRegenerating}
+          className="flex items-center gap-2 text-sm text-gold hover:text-gold/80 transition-colors disabled:opacity-50"
+        >
+          <RefreshCw className={cn("w-4 h-4", isRegenerating && "animate-spin")} />
+          Generate new avatar
+        </button>
       </div>
 
       {/* Name */}
@@ -989,14 +1070,39 @@ function ProfileForm({
         />
       </div>
 
+      {/* Timezone */}
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-2">
+          Timezone
+        </label>
+        <div className="relative">
+          <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+          <select
+            value={timezone}
+            onChange={(e) => setTimezone(e.target.value)}
+            className="w-full px-4 py-3 pl-12 rounded-xl bg-muted border border-border text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors cursor-pointer"
+          >
+            {COMMON_TIMEZONES.map((tz) => (
+              <option key={tz.value} value={tz.value}>
+                {tz.label} ({tz.offset})
+              </option>
+            ))}
+          </select>
+          <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground rotate-90 pointer-events-none" />
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Used for displaying renewal dates and sending notifications at the right time.
+        </p>
+      </div>
+
       <button
         type="submit"
         disabled={isLoading || !name.trim()}
         className={cn(
-          "w-full py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2",
+          "w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2",
           isLoading || !name.trim()
-            ? "bg-gold/50 text-obsidian cursor-not-allowed"
-            : "bg-gold text-obsidian hover:bg-gold/90"
+            ? "bg-gold/40 text-obsidian/70 cursor-not-allowed"
+            : "bg-gold text-obsidian hover:bg-gold/90 shadow-[0_4px_16px_rgba(199,163,106,0.25)]"
         )}
       >
         {isLoading ? (
@@ -1259,20 +1365,34 @@ function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
   )
 }
 
-// Phone Number Form Component
+// Phone Number Form Component with OTP Verification
+type PhoneStep = 'input' | 'verify'
+
 function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
+  const [step, setStep] = useState<PhoneStep>('input')
   const [phoneNumber, setPhoneNumber] = useState('')
   const [existingPhone, setExistingPhone] = useState<string | null>(null)
   const [isVerified, setIsVerified] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [otpCode, setOtpCode] = useState('')
+  const [cooldown, setCooldown] = useState(0)
+  const [smsAvailable, setSmsAvailable] = useState(true)
   const addToast = useStore((state) => state.addToast)
 
-  // Fetch existing phone on mount
+  // Fetch existing phone and check SMS availability on mount
   useEffect(() => {
-    const fetchPhone = async () => {
+    const init = async () => {
       try {
+        // Check SMS service status
+        const statusRes = await fetch('/api/otp/status')
+        if (statusRes.ok) {
+          const status = await statusRes.json()
+          setSmsAvailable(status.available !== false)
+        }
+
+        // Fetch existing phone
         const { getUserPhone } = await import('@/lib/supabase/settings-actions')
         const result = await getUserPhone()
         if (result.success) {
@@ -1281,16 +1401,23 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
           setIsVerified(result.verified)
         }
       } catch (err) {
-        console.error('[v0] Failed to fetch phone:', err)
+        console.error('Failed to initialize phone form:', err)
       } finally {
         setIsFetching(false)
       }
     }
-    fetchPhone()
+    init()
   }, [])
 
+  // Cooldown timer
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [cooldown])
+
   const formatPhoneNumber = (value: string) => {
-    // Remove all non-digit characters except +
     const cleaned = value.replace(/[^\d+]/g, '')
     return cleaned
   }
@@ -1301,16 +1428,82 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
     setError(null)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSendOTP = async () => {
     setError(null)
 
-    // Basic phone validation
-    if (phoneNumber && phoneNumber.length < 10) {
-      setError('Please enter a valid phone number')
+    if (!phoneNumber || phoneNumber.length < 10) {
+      setError('Please enter a valid phone number with country code')
       return
     }
 
+    setIsLoading(true)
+    try {
+      const res = await fetch('/api/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber }),
+      })
+
+      const data = await res.json()
+
+      if (data.success) {
+        setStep('verify')
+        setCooldown(60)
+        addToast({
+          type: 'success',
+          title: 'Code sent',
+          message: `Verification code sent to ${phoneNumber}`,
+        })
+      } else {
+        if (data.cooldownSeconds) {
+          setCooldown(data.cooldownSeconds)
+        }
+        setError(data.error || 'Failed to send verification code')
+      }
+    } catch (err) {
+      setError('Failed to send verification code. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleVerifyOTP = async () => {
+    setError(null)
+
+    if (otpCode.length !== 6) {
+      setError('Please enter the 6-digit verification code')
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const res = await fetch('/api/otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber, code: otpCode }),
+      })
+
+      const data = await res.json()
+
+      if (data.success) {
+        addToast({
+          type: 'success',
+          title: 'Phone verified',
+          message: 'Your phone number has been verified successfully.',
+        })
+        onSuccess()
+      } else {
+        setError(data.error || 'Invalid verification code')
+      }
+    } catch (err) {
+      setError('Failed to verify code. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSaveWithoutVerification = async () => {
+    setError(null)
     setIsLoading(true)
     try {
       const { updateUserPhone } = await import('@/lib/supabase/settings-actions')
@@ -1319,15 +1512,15 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
       if (result.success) {
         addToast({
           type: 'success',
-          title: phoneNumber ? 'Phone number saved' : 'Phone number removed',
-          message: result.message,
+          title: 'Phone number saved',
+          message: 'Phone saved without verification.',
         })
         onSuccess()
       } else {
-        setError(result.error || 'Failed to update phone number')
+        setError(result.error || 'Failed to save phone number')
       }
     } catch (err) {
-      setError('Failed to update phone number. Please try again.')
+      setError('Failed to save phone number')
     } finally {
       setIsLoading(false)
     }
@@ -1340,10 +1533,7 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
       const result = await updateUserPhone(null)
 
       if (result.success) {
-        addToast({
-          type: 'success',
-          title: 'Phone number removed',
-        })
+        addToast({ type: 'success', title: 'Phone number removed' })
         onSuccess()
       } else {
         setError(result.error || 'Failed to remove phone number')
@@ -1363,8 +1553,129 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
     )
   }
 
+  // OTP Verification Step
+  if (step === 'verify') {
+    return (
+      <div className="space-y-5">
+        <button
+          type="button"
+          onClick={() => {
+            setStep('input')
+            setOtpCode('')
+            setError(null)
+          }}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back to phone number
+        </button>
+
+        <div className="text-center space-y-2">
+          <div className="w-14 h-14 mx-auto rounded-full bg-gold/10 flex items-center justify-center">
+            <Smartphone className="w-7 h-7 text-gold" />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground">Enter verification code</h3>
+          <p className="text-sm text-muted-foreground">
+            We sent a 6-digit code to <span className="font-medium text-foreground">{phoneNumber}</span>
+          </p>
+        </div>
+
+        {/* OTP Input */}
+        <div className="space-y-3">
+          <div className="flex justify-center gap-2">
+            {[...Array(6)].map((_, i) => (
+              <input
+                key={i}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={otpCode[i] || ''}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '')
+                  if (val.length <= 1) {
+                    const newCode = otpCode.split('')
+                    newCode[i] = val
+                    setOtpCode(newCode.join(''))
+                    // Auto-focus next input
+                    if (val && i < 5) {
+                      const nextInput = e.target.parentElement?.children[i + 1] as HTMLInputElement
+                      nextInput?.focus()
+                    }
+                  }
+                }}
+                onKeyDown={(e) => {
+                  // Handle backspace to go to previous input
+                  if (e.key === 'Backspace' && !otpCode[i] && i > 0) {
+                    const prevInput = (e.target as HTMLElement).parentElement?.children[i - 1] as HTMLInputElement
+                    prevInput?.focus()
+                  }
+                }}
+                onPaste={(e) => {
+                  e.preventDefault()
+                  const paste = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+                  setOtpCode(paste)
+                }}
+                className={cn(
+                  "w-12 h-14 text-center text-xl font-semibold rounded-xl border transition-all focus:outline-none focus:ring-2",
+                  error 
+                    ? "border-destructive bg-destructive/5 focus:ring-destructive/50"
+                    : "border-border bg-muted focus:ring-gold/50 focus:border-gold"
+                )}
+              />
+            ))}
+          </div>
+
+          {error && (
+            <p className="text-center text-sm text-destructive">{error}</p>
+          )}
+        </div>
+
+        {/* Verify Button */}
+        <button
+          type="button"
+          onClick={handleVerifyOTP}
+          disabled={isLoading || otpCode.length !== 6}
+          className={cn(
+            "w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2",
+            isLoading || otpCode.length !== 6
+              ? "bg-gold/40 text-obsidian/70 cursor-not-allowed"
+              : "bg-gold text-obsidian hover:bg-gold/90 shadow-[0_4px_16px_rgba(199,163,106,0.25)]"
+          )}
+        >
+          {isLoading ? (
+            <>
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              Verifying...
+            </>
+          ) : (
+            'Verify Phone Number'
+          )}
+        </button>
+
+        {/* Resend */}
+        <div className="text-center">
+          {cooldown > 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Resend code in <span className="font-medium text-foreground">{cooldown}s</span>
+            </p>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSendOTP}
+              disabled={isLoading}
+              className="text-sm text-gold hover:text-gold/80 font-medium transition-colors"
+            >
+              Resend verification code
+            </button>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // Phone Input Step
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <div className="space-y-5">
       {/* Existing Phone Display */}
       {existingPhone && (
         <div className="p-4 rounded-xl bg-secondary/50 border border-border">
@@ -1385,18 +1696,20 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
       )}
 
-      {/* Info Banner - SMS not configured */}
-      <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-        <div className="flex gap-3">
-          <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-amber-500">SMS Verification Not Available</p>
-            <p className="text-xs text-amber-500/80">
-              SMS verification is not yet configured. Your phone number will be saved but cannot be verified at this time.
-            </p>
+      {/* SMS Availability Banner */}
+      {!smsAvailable && (
+        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+          <div className="flex gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-amber-500">SMS Verification Not Available</p>
+              <p className="text-xs text-amber-500/80">
+                SMS verification is not configured. Your phone number will be saved but cannot be verified at this time.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Phone Input */}
       <div>
@@ -1428,25 +1741,49 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
 
       {/* Action Buttons */}
       <div className="space-y-3">
-        <button
-          type="submit"
-          disabled={isLoading || (!phoneNumber && !existingPhone)}
-          className={cn(
-            "w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2",
-            isLoading || (!phoneNumber && !existingPhone)
-              ? "bg-gold/40 text-obsidian/70 cursor-not-allowed"
-              : "bg-gold text-obsidian hover:bg-gold/90 shadow-[0_4px_16px_rgba(199,163,106,0.25)] hover:shadow-[0_6px_20px_rgba(199,163,106,0.35)]"
-          )}
-        >
-          {isLoading ? (
-            <>
-              <RefreshCw className="w-4 h-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            existingPhone ? 'Update Phone Number' : 'Save Phone Number'
-          )}
-        </button>
+        {smsAvailable ? (
+          <button
+            type="button"
+            onClick={handleSendOTP}
+            disabled={isLoading || !phoneNumber || phoneNumber.length < 10}
+            className={cn(
+              "w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2",
+              isLoading || !phoneNumber || phoneNumber.length < 10
+                ? "bg-gold/40 text-obsidian/70 cursor-not-allowed"
+                : "bg-gold text-obsidian hover:bg-gold/90 shadow-[0_4px_16px_rgba(199,163,106,0.25)]"
+            )}
+          >
+            {isLoading ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                Sending code...
+              </>
+            ) : (
+              'Send Verification Code'
+            )}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleSaveWithoutVerification}
+            disabled={isLoading || !phoneNumber}
+            className={cn(
+              "w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2",
+              isLoading || !phoneNumber
+                ? "bg-gold/40 text-obsidian/70 cursor-not-allowed"
+                : "bg-gold text-obsidian hover:bg-gold/90 shadow-[0_4px_16px_rgba(199,163,106,0.25)]"
+            )}
+          >
+            {isLoading ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save Phone Number'
+            )}
+          </button>
+        )}
 
         {existingPhone && (
           <button
