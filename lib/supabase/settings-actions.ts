@@ -9,18 +9,20 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 /**
- * Update user profile (name, avatar URL)
+ * Update user profile (name, avatar URL, timezone)
  */
 export async function updateUserProfile(data: {
   firstName?: string
   lastName?: string
   avatarUrl?: string
+  timezone?: string
 }) {
   try {
     const user = await getUser()
     if (!user) throw new Error('Unauthorized')
 
-    const { error } = await supabase
+    // Update profile table
+    const { error: profileError } = await supabase
       .from('profiles')
       .update({
         first_name: data.firstName || null,
@@ -30,7 +32,25 @@ export async function updateUserProfile(data: {
       })
       .eq('id', user.id)
 
-    if (error) throw error
+    if (profileError) throw profileError
+
+    // Update timezone in user_settings if provided
+    if (data.timezone) {
+      const { error: settingsError } = await supabase
+        .from('user_settings')
+        .upsert({
+          user_id: user.id,
+          time_zone: data.timezone,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'user_id',
+        })
+
+      if (settingsError) {
+        console.error('Failed to update timezone:', settingsError)
+        // Non-fatal, continue
+      }
+    }
 
     revalidateTag('user-profile')
     return { success: true }
@@ -243,6 +263,17 @@ export async function changeUserPassword(currentPassword: string, newPassword: s
 
     if (updateError) {
       return { success: false, error: updateError.message }
+    }
+
+    // Send password change notification email (non-blocking)
+    try {
+      const { sendPasswordChangedEmail, isResendConfigured } = await import('@/lib/email/resend')
+      if (isResendConfigured()) {
+        await sendPasswordChangedEmail(user.email!)
+      }
+    } catch (emailError) {
+      // Log but don't fail the password change
+      console.error('Failed to send password change notification:', emailError)
     }
 
     return { success: true, message: 'Password updated successfully' }
