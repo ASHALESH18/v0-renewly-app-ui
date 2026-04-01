@@ -209,6 +209,111 @@ export async function deleteUserAccount() {
 }
 
 /**
+ * Change user password with re-authentication
+ * This properly verifies the current password before allowing the change
+ */
+export async function changeUserPassword(currentPassword: string, newPassword: string) {
+  try {
+    const user = await getUser()
+    if (!user || !user.email) throw new Error('Unauthorized')
+
+    // Create a separate client to re-authenticate with current password
+    // This verifies the current password is correct
+    const { createClient } = await import('@supabase/supabase-js')
+    const authClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+    
+    const { error: signInError } = await authClient.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    })
+
+    if (signInError) {
+      // Current password is wrong
+      return { 
+        success: false, 
+        error: 'Current password is incorrect',
+        errorType: 'invalid_current_password' as const
+      }
+    }
+
+    // Now update the password using the service role client
+    const { error: updateError } = await supabase.auth.admin.updateUserById(user.id, {
+      password: newPassword,
+    })
+
+    if (updateError) {
+      return { success: false, error: updateError.message }
+    }
+
+    return { success: true, message: 'Password updated successfully' }
+  } catch (error) {
+    console.error('[v0] Change password error:', error)
+    return { success: false, error: (error as Error).message }
+  }
+}
+
+/**
+ * Update user phone number
+ * Note: SMS verification is not currently configured, so we save the number
+ * but mark it as unverified
+ */
+export async function updateUserPhone(phoneNumber: string | null) {
+  try {
+    const user = await getUser()
+    if (!user) throw new Error('Unauthorized')
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        phone: phoneNumber,
+        phone_verified: false, // Always false since SMS verification is not configured
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', user.id)
+
+    if (error) throw error
+
+    revalidateTag('user-profile')
+    return { 
+      success: true, 
+      message: phoneNumber 
+        ? 'Phone number saved. SMS verification is not yet configured.' 
+        : 'Phone number removed.'
+    }
+  } catch (error) {
+    console.error('[v0] Update phone error:', error)
+    return { success: false, error: (error as Error).message }
+  }
+}
+
+/**
+ * Get user phone number and verification status
+ */
+export async function getUserPhone() {
+  try {
+    const user = await getUser()
+    if (!user) throw new Error('Unauthorized')
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('phone, phone_verified')
+      .eq('id', user.id)
+      .single()
+
+    if (error) throw error
+
+    return {
+      success: true,
+      phone: data?.phone || null,
+      verified: data?.phone_verified || false,
+    }
+  } catch (error) {
+    console.error('[v0] Get phone error:', error)
+    return { success: false, error: (error as Error).message, phone: null, verified: false }
+  }
+}
+
+/**
  * Export user data for GDPR compliance
  */
 export async function exportUserData() {
