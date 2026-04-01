@@ -41,8 +41,8 @@ async function canRequestNewOTP(userId: string, phoneNumber: string): Promise<{
     .from('otp_codes')
     .select('created_at')
     .eq('user_id', userId)
-    .eq('phone_number', phoneNumber)
-    .eq('verified', false)
+    .eq('phone', phoneNumber)
+    .is('verified_at', null)
     .order('created_at', { ascending: false })
     .limit(1)
     .single()
@@ -107,22 +107,23 @@ export async function sendPhoneOTP(userId: string, phoneNumber: string): Promise
     const hashedCode = hashOTP(code)
     const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000)
 
-    // Invalidate any existing OTPs for this user/phone
+    // Invalidate any existing OTPs for this user/phone by marking them as verified
     await supabase
       .from('otp_codes')
-      .update({ verified: true }) // Mark as used
+      .update({ verified_at: new Date().toISOString() })
       .eq('user_id', userId)
-      .eq('phone_number', formattedPhone)
-      .eq('verified', false)
+      .eq('phone', formattedPhone)
+      .is('verified_at', null)
 
-    // Store new OTP
+    // Store new OTP (using hashed code for security)
     const { error: insertError } = await supabase.from('otp_codes').insert({
       user_id: userId,
-      phone_number: formattedPhone,
-      code_hash: hashedCode,
+      phone: formattedPhone,
+      code: hashedCode, // Store hashed code
+      purpose: 'phone_verification',
       expires_at: expiresAt.toISOString(),
       attempts: 0,
-      verified: false,
+      max_attempts: MAX_ATTEMPTS,
     })
 
     if (insertError) {
@@ -170,8 +171,8 @@ export async function verifyPhoneOTP(userId: string, phoneNumber: string, code: 
       .from('otp_codes')
       .select('*')
       .eq('user_id', userId)
-      .eq('phone_number', formattedPhone)
-      .eq('verified', false)
+      .eq('phone', formattedPhone)
+      .is('verified_at', null)
       .order('created_at', { ascending: false })
       .limit(1)
       .single()
@@ -192,22 +193,23 @@ export async function verifyPhoneOTP(userId: string, phoneNumber: string, code: 
     }
 
     // Check attempts
-    if (otpRecord.attempts >= MAX_ATTEMPTS) {
+    const maxAttempts = otpRecord.max_attempts || MAX_ATTEMPTS
+    if (otpRecord.attempts >= maxAttempts) {
       return {
         success: false,
         error: 'Too many failed attempts. Please request a new code.',
       }
     }
 
-    // Verify the code
-    if (otpRecord.code_hash !== hashedCode) {
+    // Verify the code (compare hashed values)
+    if (otpRecord.code !== hashedCode) {
       // Increment attempts
       await supabase
         .from('otp_codes')
         .update({ attempts: otpRecord.attempts + 1 })
         .eq('id', otpRecord.id)
 
-      const attemptsRemaining = MAX_ATTEMPTS - (otpRecord.attempts + 1)
+      const attemptsRemaining = maxAttempts - (otpRecord.attempts + 1)
       return {
         success: false,
         error: attemptsRemaining > 0
@@ -220,7 +222,7 @@ export async function verifyPhoneOTP(userId: string, phoneNumber: string, code: 
     // Mark as verified
     await supabase
       .from('otp_codes')
-      .update({ verified: true })
+      .update({ verified_at: new Date().toISOString() })
       .eq('id', otpRecord.id)
 
     // Update user profile with verified phone
