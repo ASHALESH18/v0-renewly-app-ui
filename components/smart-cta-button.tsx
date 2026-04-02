@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useRouter } from 'next/navigation'
+import { getStartedDestination, getUpgradeDestination } from '@/lib/upgrade-flow'
 
 interface SmartCTAButtonProps {
   text: string
@@ -15,8 +15,7 @@ interface SmartCTAButtonProps {
 
 /**
  * Smart CTA button that routes based on auth state
- * - Unauthenticated: Routes to /auth/sign-in with ?next=/app/dashboard
- * - Authenticated: Routes directly to /app/dashboard
+ * Uses centralized upgrade-flow utility for consistent routing
  */
 export function SmartGetStartedCTA({
   text = 'Get started',
@@ -32,8 +31,8 @@ export function SmartGetStartedCTA({
     if (loading) return
 
     setIsNavigating(true)
-    const href = isAuthenticated ? '/app/dashboard' : '/auth/sign-in?next=/app/dashboard'
-    router.push(href)
+    const destination = getStartedDestination(isAuthenticated)
+    router.push(destination)
   }
 
   const baseStyles = {
@@ -61,17 +60,27 @@ export function SmartGetStartedCTA({
 }
 
 /**
- * Smart upgrade button for Free users
- * - Free users: Show upgrade modal
- * - Pro/Family/Enterprise: Disabled or hidden
+ * Smart upgrade button that routes to upgrade flow
+ * Uses centralized upgrade-flow utility for auth-aware routing
  */
 export function SmartUpgradeCTA({
-  onUpgrade,
+  planId = 'pro',
   text = 'Upgrade to Pro',
   variant = 'primary',
   size = 'md',
   className = '',
-}: SmartCTAButtonProps & { onUpgrade: () => void }) {
+}: SmartCTAButtonProps & { planId?: 'pro' | 'family' | 'enterprise' }) {
+  const { isAuthenticated, loading } = useAuth()
+  const router = useRouter()
+  const [isNavigating, setIsNavigating] = useState(false)
+
+  const handleClick = () => {
+    if (loading) return
+    setIsNavigating(true)
+    const destination = getUpgradeDestination(planId, isAuthenticated)
+    router.push(destination)
+  }
+
   const baseStyles = {
     primary: 'gold-gradient text-obsidian font-semibold shadow-luxury',
     secondary: 'border border-glass-border text-ivory hover:bg-glass',
@@ -83,11 +92,11 @@ export function SmartUpgradeCTA({
     lg: 'px-10 py-5 text-lg rounded-2xl',
   }
 
-  const baseClass = `${sizeStyles[size]} ${baseStyles[variant]} transition-all cursor-pointer ${className}`
+  const baseClass = `${sizeStyles[size]} ${baseStyles[variant]} transition-all cursor-pointer disabled:opacity-50 ${className}`
 
   return (
-    <button onClick={onUpgrade} className={baseClass}>
-      {text}
+    <button onClick={handleClick} disabled={loading || isNavigating} className={baseClass}>
+      {isNavigating ? 'Loading...' : text}
     </button>
   )
 }
