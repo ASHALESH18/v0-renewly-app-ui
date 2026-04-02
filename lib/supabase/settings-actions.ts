@@ -269,18 +269,15 @@ export async function changeUserPassword(currentPassword: string, newPassword: s
     try {
       const { sendPasswordChangedEmail, isResendConfigured } = await import('@/lib/email/resend')
       if (isResendConfigured()) {
-        const { sendPasswordChangedEmail, isResendConfigured } = await import('@/lib/email/resend')
-        if (isResendConfigured()) {
-          const displayName =
-            user.user_metadata?.full_name ||
-            [user.user_metadata?.first_name, user.user_metadata?.last_name]
-              .filter(Boolean)
-              .join(' ') ||
-            user.email.split('@')[0] ||
-            'there'
+        const displayName =
+          user.user_metadata?.full_name ||
+          [user.user_metadata?.first_name, user.user_metadata?.last_name]
+            .filter(Boolean)
+            .join(' ') ||
+          user.email.split('@')[0] ||
+          'there'
 
-          await sendPasswordChangedEmail(user.email, displayName)
-        }
+        await sendPasswordChangedEmail(user.email, displayName)
       }
     } catch (emailError) {
       // Log but don't fail the password change

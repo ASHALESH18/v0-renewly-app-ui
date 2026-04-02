@@ -912,7 +912,9 @@ function SettingsToggle({
 
       <div className="flex-1 min-w-0">
         <span className="text-foreground font-medium block">{label}</span>
-        {description && <p className="text-sm text-muted-foreground">{description}</p>}
+        {description && (
+          <p className="text-sm text-muted-foreground">{description}</p>
+        )}
       </div>
 
       <div
@@ -977,6 +979,7 @@ function ProfileForm({
   const [avatarStyle, setAvatarStyle] = useState<'initials' | 'abstract'>('initials')
   const [isLoading, setIsLoading] = useState(false)
   const [isRegenerating, setIsRegenerating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const addToast = useStore((state) => state.addToast)
 
   const handleRegenerateAvatar = () => {
@@ -993,6 +996,8 @@ function ProfileForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null)
+
     try {
       const { updateUserProfile } = await import('@/lib/supabase/settings-actions')
       const result = await updateUserProfile({
@@ -1010,6 +1015,7 @@ function ProfileForm({
         })
         onSave({ name, timezone, avatarUrl })
       } else {
+        setError(result.error || 'Failed to update profile.')
         addToast({
           type: 'error',
           title: 'Update failed',
@@ -1018,6 +1024,7 @@ function ProfileForm({
       }
     } catch (error) {
       console.error('Profile save error:', error)
+      setError('An unexpected error occurred.')
       addToast({
         type: 'error',
         title: 'Update failed',
@@ -1120,8 +1127,14 @@ function ProfileForm({
             <RefreshCw className="w-4 h-4 animate-spin" />
             Saving...
           </>
+          {error && (
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            {error}
+          </div>
+        )}
         ) : (
-          'Save Profile'
+        'Save Profile'
         )}
       </button>
     </form>
