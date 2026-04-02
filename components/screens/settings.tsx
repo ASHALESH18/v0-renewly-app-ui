@@ -6,9 +6,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from 'next-themes'
 import {
-  User, Bell, CreditCard, Shield, Moon, Sun, Globe,
+  Bell, CreditCard, Shield, Moon, Sun, Globe,
   HelpCircle, FileText, LogOut, ChevronRight, ChevronLeft, Crown,
-  Smartphone, Mail, Lock, Download, Copy, FileJson, X,
+  Smartphone, Mail, Lock, Download, FileJson, X,
   Check, AlertCircle, Eye, EyeOff, RefreshCw
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -17,11 +17,10 @@ import { Switch } from '@/components/ui/switch'
 import { SettingsSkeleton } from '@/components/skeletons'
 import useStore from '@/lib/store'
 import { exportSubscriptions } from '@/lib/export'
-import { createClient } from '@/lib/supabase/client'
 import { PlanSelectionSheet } from '@/components/plan-selection-sheet'
 import { generateAvatar } from '@/lib/avatar-utils'
 import { signOutAndRedirectHome } from '@/lib/auth/sign-out'
-import { countries, currencies } from '@/lib/locale-utils'
+import { currencies } from '@/lib/locale-utils'
 
 // Sheet component for settings modals
 function SettingsSheet({
@@ -934,6 +933,7 @@ function SettingsToggle({
 }
 
 // Common timezones for the dropdown
+
 const COMMON_TIMEZONES = [
   { value: 'America/New_York', label: 'Eastern Time (ET)', offset: 'UTC-5' },
   { value: 'America/Chicago', label: 'Central Time (CT)', offset: 'UTC-6' },
@@ -1111,6 +1111,7 @@ function ProfileForm({
           Used for displaying renewal dates and sending notifications at the right time.
         </p>
       </div>
+
       {error && (
         <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -1133,14 +1134,8 @@ function ProfileForm({
             <RefreshCw className="w-4 h-4 animate-spin" />
             Saving...
           </>
-          {error && (
-          <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            {error}
-          </div>
-        )}
         ) : (
-        'Save Profile'
+          'Save Profile'
         )}
       </button>
     </form>
@@ -1188,41 +1183,37 @@ function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
     setError(null)
+    setErrorType(null)
 
+    if (!passwordsMatch) {
+      setError('Passwords do not match')
+      return
+    }
+
+    if (!allRulesPass) {
+      setError('Password does not meet all requirements')
+      return
+    }
+
+    setIsLoading(true)
     try {
-      const { updateUserProfile } = await import('@/lib/supabase/settings-actions')
-      const result = await updateUserProfile({
-        firstName: name.split(' ')[0] || name,
-        lastName: name.split(' ').slice(1).join(' ') || undefined,
-        timezone,
-        avatarUrl: avatarUrl || undefined,
-      })
+      const { changeUserPassword } = await import('@/lib/supabase/settings-actions')
+      const result = await changeUserPassword(currentPassword, newPassword)
 
       if (result.success) {
         addToast({
           type: 'success',
-          title: 'Profile updated',
-          message: 'Your profile has been saved successfully.',
+          title: 'Password updated',
+          message: 'Your password has been changed successfully.',
         })
-        onSave({ name, timezone, avatarUrl })
+        onSuccess()
       } else {
-        setError(result.error || 'Failed to update profile.')
-        addToast({
-          type: 'error',
-          title: 'Update failed',
-          message: result.error || 'Failed to update profile.',
-        })
+        setError(result.error || 'Failed to update password')
+        setErrorType(result.errorType || null)
       }
-    } catch (error) {
-      console.error('Profile save error:', error)
-      setError('An unexpected error occurred.')
-      addToast({
-        type: 'error',
-        title: 'Update failed',
-        message: 'An unexpected error occurred.',
-      })
+    } catch (err) {
+      setError('Failed to update password. Please try again.')
     } finally {
       setIsLoading(false)
     }
