@@ -5,6 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Check, ChevronRight, Sparkles, ArrowLeft, X, Zap, Crown, Users, Building2 } from 'lucide-react'
 import { springs } from '@/components/motion'
 import { getAllPlans } from '@/lib/plans'
+import { useRouter } from 'next/navigation'
+import { getUpgradeDestination } from '@/lib/upgrade-flow'
+import { useAuth } from '@/lib/hooks/use-auth'
 
 export interface PlanSheetProps {
   onClose: () => void
@@ -174,15 +177,20 @@ function UpgradeFlowView({
   const plans = getAllPlans()
   const plan = plans.find(p => p.id === planId)!
   const [isProcessing, setIsProcessing] = useState(false)
+  const router = useRouter()
+  const { isAuthenticated } = useAuth()
 
   const PlanIcon = planId === 'pro' ? Crown : Users
 
   const handleStartTrial = async () => {
     setIsProcessing(true)
-    // Simulate processing - in production, this would redirect to Stripe/Razorpay checkout
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    // For now, show a message that payment integration is coming
-    setIsProcessing(false)
+    
+    // Get the correct destination based on auth state
+    const destination = getUpgradeDestination(planId, isAuthenticated)
+    
+    // Close modal and navigate
+    onClose()
+    router.push(destination)
   }
 
   return (

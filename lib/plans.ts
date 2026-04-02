@@ -43,7 +43,7 @@ export const plans: Plan[] = [
       'No multi-currency support',
     ],
     cta: 'Get started',
-    ctaHref: '/auth/sign-up',
+    ctaHref: '/auth/sign-in?next=/app/dashboard',
   },
   {
     id: 'pro',
@@ -63,8 +63,8 @@ export const plans: Plan[] = [
       'Export to CSV / JSON',
       'Priority support',
     ],
-    cta: 'Get started',
-    ctaHref: '/auth/sign-up?plan=pro',
+    cta: 'Start free trial',
+    ctaHref: '/auth/sign-in?next=/app/upgrade?plan=pro',
   },
   {
     id: 'family',
@@ -84,8 +84,8 @@ export const plans: Plan[] = [
       'Shared expense tracking',
       'Family reports',
     ],
-    cta: 'Get started',
-    ctaHref: '/auth/sign-up?plan=family',
+    cta: 'Start free trial',
+    ctaHref: '/auth/sign-in?next=/app/upgrade?plan=family',
   },
   {
     id: 'enterprise',
@@ -105,7 +105,7 @@ export const plans: Plan[] = [
       'Dedicated support',
     ],
     cta: 'Contact Sales',
-    ctaHref: '/contact-sales',
+    ctaHref: '/auth/sign-in?next=/app/upgrade?plan=enterprise',
   },
 ]
 

@@ -4,16 +4,21 @@ import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Play } from 'lucide-react'
 import { springs, staggerContainer, staggerItem, cinematicFadeInUp, magneticButtonVariants, useMotionPreferences } from '../motion'
 import { DemoModal } from '@/components/demo-modal'
-import Link from 'next/link'
 import { useRef, useState, useEffect } from 'react'
 import { SubscriptionIcon } from '@/lib/brand-icons'
 import { useTheme } from 'next-themes'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/hooks/use-auth'
+import { getStartedDestination } from '@/lib/upgrade-flow'
 
 export function Hero() {
   const ref = useRef(null)
   const [isDemoOpen, setIsDemoOpen] = useState(false)
   const { resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const router = useRouter()
+  const { isAuthenticated } = useAuth()
+  const [isNavigating, setIsNavigating] = useState(false)
   
   // Prevent hydration mismatch
   useEffect(() => {
@@ -24,6 +29,13 @@ export function Hero() {
   const [isMobile, setIsMobile] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const { prefersReducedMotion } = useMotionPreferences()
+  
+  // Smart CTA handler - consistent with pricing/upgrade flow
+  const handleGetStarted = () => {
+    setIsNavigating(true)
+    const destination = getStartedDestination(isAuthenticated)
+    router.push(destination)
+  }
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -402,15 +414,17 @@ export function Hero() {
           transition={{ duration: 0.5, delay: 0.55, ease: 'easeOut' }}
           className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <Link href="/auth/sign-in?next=/app/dashboard">
-            <motion.button
-              variants={magneticButtonVariants}
-              initial="initial"
-              whileHover="hover"
-              whileTap="tap"
-              className="w-full sm:w-auto px-8 py-4 rounded-xl gold-gradient text-obsidian font-semibold shadow-luxury flex items-center justify-center gap-2"
-            >
-              Start for free
+          <motion.button
+            onClick={handleGetStarted}
+            disabled={isNavigating}
+            variants={magneticButtonVariants}
+            initial="initial"
+            whileHover="hover"
+            whileTap="tap"
+            className="w-full sm:w-auto px-8 py-4 rounded-xl gold-gradient text-obsidian font-semibold shadow-luxury flex items-center justify-center gap-2 disabled:opacity-70"
+          >
+            {isNavigating ? 'Loading...' : 'Start for free'}
+            {!isNavigating && (
               <motion.div
                 initial={{ x: 0 }}
                 whileHover={{ x: 4 }}
@@ -418,8 +432,8 @@ export function Hero() {
               >
                 <ArrowRight className="w-4 h-4" />
               </motion.div>
-            </motion.button>
-          </Link>
+            )}
+          </motion.button>
 
           <motion.button
             onClick={() => setIsDemoOpen(true)}
@@ -460,17 +474,17 @@ export function Hero() {
 
           {/* Phone mockup frame - theme-aware */}
           <div className="relative mx-auto w-[280px] md:w-[320px]">
-            {/* Premium device frame - adapts to theme */}
+            {/* Premium device frame - adapts to theme with rich shading */}
             <motion.div
               className={`relative rounded-[40px] p-3 transition-colors duration-300 ${
                 isDark 
                   ? 'bg-gradient-to-br from-[#1A1D24] via-[#0F1115] to-[#0A0C10] border border-[#2A2F38]'
-                  : 'bg-gradient-to-br from-[#F5F5F5] via-[#EBEBEB] to-[#E0E0E0] border border-[#D0D0D0]'
+                  : 'bg-gradient-to-b from-[#E8E4DE] via-[#D8D4CE] to-[#C8C4BE] border border-[#B8B4AE]'
               }`}
               style={{
                 boxShadow: isDark
                   ? '0 25px 60px -12px rgba(0, 0, 0, 0.35), 0 12px 24px -8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05) inset'
-                  : '0 25px 60px -12px rgba(0, 0, 0, 0.15), 0 12px 24px -8px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.8) inset'
+                  : '0 30px 60px -15px rgba(120, 100, 70, 0.25), 0 15px 30px -10px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.6) inset, inset 0 -2px 6px rgba(0, 0, 0, 0.06)'
               }}
               initial={{ boxShadow: isDark ? '0 25px 60px -12px rgba(0, 0, 0, 0.35)' : '0 25px 60px -12px rgba(0, 0, 0, 0.15)' }}
               animate={isLoaded ? {
@@ -497,12 +511,19 @@ export function Hero() {
                 isDark ? 'bg-[#000000]' : 'bg-[#1A1A1A]'
               }`} />
 
-              {/* Screen - theme-aware app interface */}
-              <div className={`rounded-[32px] overflow-hidden aspect-[9/19.5] transition-colors duration-300 ${
-                isDark 
-                  ? 'bg-[#0A0C10] border border-[#1A1D24]'
-                  : 'bg-[#FAFAFA] border border-[#E5E5E5]'
-              }`}>
+              {/* Screen - theme-aware app interface with premium depth */}
+              <div 
+                className={`rounded-[32px] overflow-hidden aspect-[9/19.5] transition-colors duration-300 ${
+                  isDark 
+                    ? 'bg-[#0A0C10] border border-[#1A1D24]'
+                    : 'bg-gradient-to-b from-[#FAF8F5] via-[#F5F3F0] to-[#F0EDE8] border border-[#DDD8D0]'
+                }`}
+                style={{
+                  boxShadow: isDark 
+                    ? 'none'
+                    : 'inset 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 0 0 1px rgba(0, 0, 0, 0.02)'
+                }}
+              >
                 {/* App preview content */}
                 <div className="p-4 pt-10 h-full">
                   {/* Status bar */}
@@ -538,16 +559,21 @@ export function Hero() {
                     </div>
                   </motion.div>
 
-                  {/* Total spend card - signature reveal anchor */}
+                  {/* Total spend card - signature reveal anchor with premium depth */}
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9, filter: 'blur(6px)' }}
                     animate={isLoaded ? { opacity: 1, scale: 1, filter: 'blur(0px)' } : {}}
                     transition={{ delay: 2.2, duration: 0.7, ease: 'easeOut' }}
                     className={`rounded-2xl p-4 mb-4 relative overflow-hidden transition-colors duration-300 ${
                       isDark 
-                        ? 'bg-gradient-to-br from-[#1B2028] via-[#13161C] to-[#1B2028] border border-[#C7A36A]/25 shadow-[0_4px_12px_rgba(0,0,0,0.2)]'
-                        : 'bg-gradient-to-br from-white via-[#FEFEFE] to-white border border-[#9A7035]/25 shadow-[0_4px_12px_rgba(0,0,0,0.08)]'
+                        ? 'bg-gradient-to-br from-[#1B2028] via-[#13161C] to-[#1B2028] border border-[#C7A36A]/25'
+                        : 'bg-gradient-to-br from-[#FFFDF9] via-[#FBF8F3] to-[#F8F5EF] border border-[#9A7035]/20'
                     }`}
+                    style={{
+                      boxShadow: isDark
+                        ? '0 4px 12px rgba(0,0,0,0.2)'
+                        : '0 6px 20px -4px rgba(120, 90, 50, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8)'
+                    }}
                   >
                     {/* Subtle shine effect */}
                     <motion.div
@@ -578,11 +604,16 @@ export function Hero() {
                           duration: 0.5,
                           ease: 'easeOut'
                         }}
-                        className={`flex items-center gap-3 p-3 rounded-xl relative overflow-hidden shadow-sm transition-colors duration-300 ${
+                        className={`flex items-center gap-3 p-3 rounded-xl relative overflow-hidden transition-colors duration-300 ${
                           isDark 
                             ? 'bg-[#1B2028] border border-white/[0.08]'
-                            : 'bg-white border border-[#E5E5E5]'
+                            : 'bg-gradient-to-r from-[#FFFDF9] to-[#FBF9F5] border border-[#E8E2D8]'
                         }`}
+                        style={{
+                          boxShadow: isDark
+                            ? '0 1px 3px rgba(0, 0, 0, 0.1)'
+                            : '0 2px 8px -2px rgba(120, 90, 50, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)'
+                        }}
                       >
                         {/* Card shimmer */}
                         <motion.div
