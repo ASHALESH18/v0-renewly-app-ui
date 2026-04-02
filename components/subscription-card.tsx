@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 import type { Subscription } from '@/lib/types'
 import { cardLift, springs, staggerItem } from './motion'
 import { SubscriptionActions } from './subscription-actions'
+import { SubscriptionIcon } from '@/lib/brand-icons'
 
 interface SubscriptionCardProps {
   subscription: Subscription
@@ -59,13 +60,12 @@ export function SubscriptionCard({ subscription, index = 0, onClick }: Subscript
         />
 
         <div className="relative z-10 flex items-start gap-4">
-          {/* Logo */}
-          <div 
-            className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-semibold text-lg shrink-0"
-            style={{ backgroundColor: subscription.color }}
-          >
-            {subscription.logo}
-          </div>
+          {/* Logo - Uses brand icons when available */}
+          <SubscriptionIcon 
+            name={subscription.name} 
+            fallbackColor={subscription.color} 
+            size="lg"
+          />
 
           {/* Details */}
           <div className="flex-1 min-w-0">
@@ -151,12 +151,11 @@ export function SubscriptionCardCompact({ subscription, onClick }: SubscriptionC
       onClick={onClick}
       className="flex items-center gap-4 p-4 rounded-xl bg-card border border-border cursor-pointer"
     >
-      <div 
-        className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-semibold shrink-0"
-        style={{ backgroundColor: subscription.color }}
-      >
-        {subscription.logo}
-      </div>
+      <SubscriptionIcon 
+        name={subscription.name} 
+        fallbackColor={subscription.color} 
+        size="md"
+      />
       
       <div className="flex-1 min-w-0">
         <p className="font-medium text-foreground truncate">{subscription.name}</p>

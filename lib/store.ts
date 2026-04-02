@@ -23,6 +23,7 @@ export interface UserProfile {
   locale?: string
   timeZone?: string
   avatarSeed?: string
+  avatarUrl?: string // Persisted avatar URL from database
 }
 
 export interface NotificationSettings {
@@ -187,13 +188,19 @@ const useStore = create<AppState>()(
 
           const { profile, settings, subscriptions, shouldMigrate } = await response.json()
 
-          // Set profile
+          // Set profile with all persisted fields
           if (profile) {
+            // Build full name from first/last or use full_name
+            const fullName = profile.first_name && profile.last_name
+              ? `${profile.first_name} ${profile.last_name}`.trim()
+              : profile.full_name || email.split('@')[0]
+
             set({
               userProfile: {
-                name: profile.full_name || email.split('@')[0],
+                name: fullName,
                 email: profile.email,
                 plan: profile.plan,
+                avatarUrl: profile.avatar_url || undefined,
               },
             })
           }

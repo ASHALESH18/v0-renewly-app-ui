@@ -6,6 +6,7 @@ import { springs, staggerContainer, staggerItem, cinematicFadeInUp, magneticButt
 import { DemoModal } from '@/components/demo-modal'
 import Link from 'next/link'
 import { useRef, useState, useEffect } from 'react'
+import { SubscriptionIcon } from '@/lib/brand-icons'
 
 
 
@@ -451,26 +452,29 @@ export function Hero() {
 
           {/* Phone mockup frame */}
           <div className="relative mx-auto w-[280px] md:w-[320px]">
-            {/* Premium frame with depth */}
+            {/* Premium device frame - always dark for premium app appearance */}
             <motion.div
-              className="relative rounded-[40px] bg-gradient-to-br from-graphite to-obsidian border border-gold/20 p-3 shadow-luxury"
-              initial={{ boxShadow: '0 0 0px rgba(199, 163, 106, 0)' }}
+              className="relative rounded-[40px] bg-gradient-to-br from-[#1A1D24] via-[#0F1115] to-[#0A0C10] border border-[#2A2F38] p-3"
+              style={{
+                boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.35), 0 12px 24px -8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05) inset'
+              }}
+              initial={{ boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.35)' }}
               animate={isLoaded ? {
                 boxShadow: prefersReducedMotion
-                  ? '0 0 60px rgba(199, 163, 106, 0.1)'
+                  ? '0 25px 60px -12px rgba(0, 0, 0, 0.35), 0 0 80px rgba(199, 163, 106, 0.08)'
                   : [
-                    '0 0 40px rgba(199, 163, 106, 0.08)',
-                    '0 0 80px rgba(199, 163, 106, 0.15)',
-                    '0 0 40px rgba(199, 163, 106, 0.08)'
+                    '0 25px 60px -12px rgba(0, 0, 0, 0.35), 0 0 60px rgba(199, 163, 106, 0.06)',
+                    '0 25px 60px -12px rgba(0, 0, 0, 0.35), 0 0 100px rgba(199, 163, 106, 0.12)',
+                    '0 25px 60px -12px rgba(0, 0, 0, 0.35), 0 0 60px rgba(199, 163, 106, 0.06)'
                   ]
               } : {}}
               transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1.0 }}
             >
-              {/* Notch */}
-              <div className="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-6 bg-obsidian rounded-full" />
+              {/* Notch - dynamic island style */}
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-6 bg-[#000000] rounded-full" />
 
-              {/* Screen */}
-              <div className="rounded-[32px] bg-obsidian overflow-hidden aspect-[9/19.5]">
+              {/* Screen - dark app interface */}
+              <div className="rounded-[32px] bg-[#0A0C10] overflow-hidden aspect-[9/19.5] border border-[#1A1D24]">
                 {/* App preview content */}
                 <div className="p-4 pt-10 h-full">
                   {/* Status bar */}
@@ -509,7 +513,7 @@ export function Hero() {
                     initial={{ opacity: 0, scale: 0.9, filter: 'blur(6px)' }}
                     animate={isLoaded ? { opacity: 1, scale: 1, filter: 'blur(0px)' } : {}}
                     transition={{ delay: 2.2, duration: 0.7, ease: 'easeOut' }}
-                    className="rounded-2xl bg-gradient-to-br from-slate/50 via-graphite to-slate/50 border border-gold/20 p-4 mb-4 relative overflow-hidden"
+                    className="rounded-2xl bg-gradient-to-br from-[#1B2028] via-[#13161C] to-[#1B2028] border border-[#C7A36A]/25 p-4 mb-4 relative overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.2)]"
                   >
                     {/* Subtle shine effect */}
                     <motion.div
@@ -517,17 +521,17 @@ export function Hero() {
                       animate={prefersReducedMotion ? {} : { x: ['-100%', '100%'] }}
                       transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
                     />
-                    <p className="text-xs text-[#BCC2CC] mb-1 relative">Monthly recurring</p>
-                    <p className="text-2xl font-semibold text-gold relative">₹7,644</p>
-                    <p className="text-xs text-emerald mt-1 relative">↓ 12% vs last month</p>
+                    <p className="text-xs text-[#9CA3AF] mb-1 relative">Monthly recurring</p>
+                    <p className="text-2xl font-bold text-[#C7A36A] relative">₹7,644</p>
+                    <p className="text-xs text-[#34D399] mt-1 relative font-medium">↓ 12% vs last month</p>
                   </motion.div>
 
-                  {/* Subscription cards - cascade reveal */}
-                  <div className="space-y-3">
+                  {/* Subscription cards - cascade reveal with real brand icons */}
+                  <div className="space-y-2.5">
                     {[
-                      { name: 'Netflix', color: '#E50914', amount: '649' },
-                      { name: 'Spotify', color: '#1DB954', amount: '119' },
-                      { name: 'ChatGPT', color: '#10A37F', amount: '1,680' },
+                      { name: 'Netflix', color: '#E50914', amount: '649', renewsIn: '3d' },
+                      { name: 'Spotify', color: '#1DB954', amount: '119', renewsIn: '7d' },
+                      { name: 'ChatGPT', color: '#10A37F', amount: '1,680', renewsIn: '12d' },
                     ].map((sub, i) => (
                       <motion.div
                         key={sub.name}
@@ -538,7 +542,7 @@ export function Hero() {
                           duration: 0.5,
                           ease: 'easeOut'
                         }}
-                        className="flex items-center gap-3 p-3 rounded-xl bg-slate/50 border border-glass-border/50 relative overflow-hidden"
+                        className="flex items-center gap-3 p-3 rounded-xl bg-[#1B2028] border border-white/[0.08] relative overflow-hidden shadow-sm"
                       >
                         {/* Card shimmer */}
                         <motion.div
@@ -547,17 +551,15 @@ export function Hero() {
                           transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 3.5 + i * 0.3 }}
                         />
 
-                        <div
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-medium shrink-0 relative"
-                          style={{ backgroundColor: sub.color }}
-                        >
-                          {sub.name[0]}
+                        {/* Real brand icon */}
+                        <div className="relative shrink-0">
+                          <SubscriptionIcon name={sub.name} fallbackColor={sub.color} size="sm" />
                         </div>
-                        <div className="flex-1 relative">
-                          <p className="text-xs font-medium text-[#F4EFE7]">{sub.name}</p>
-                          <p className="text-[10px] text-[#BCC2CC]">Renews in 5d</p>
+                        <div className="flex-1 relative min-w-0">
+                          <p className="text-xs font-semibold text-white truncate">{sub.name}</p>
+                          <p className="text-[10px] text-[#9CA3AF]">Renews in {sub.renewsIn}</p>
                         </div>
-                        <p className="text-xs font-medium text-[#F4EFE7] relative">₹{sub.amount}</p>
+                        <p className="text-sm font-semibold text-white relative">₹{sub.amount}</p>
                       </motion.div>
                     ))}
                   </div>

@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
 import { ArrowRight, LogOut } from 'lucide-react'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { signOutAndRedirectHome } from '@/lib/auth/sign-out'
@@ -10,6 +11,30 @@ import { signOutAndRedirectHome } from '@/lib/auth/sign-out'
 export function LandingHeader() {
   const { user, loading } = useAuth()
   const [isSigningOut, setIsSigningOut] = useState(false)
+  const pathname = usePathname()
+  const router = useRouter()
+
+  // Handle anchor navigation with proper smooth scroll
+  const handleAnchorClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
+    e.preventDefault()
+    
+    const scrollToSection = () => {
+      const element = document.getElementById(sectionId)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }
+
+    // If already on homepage, just scroll
+    if (pathname === '/') {
+      scrollToSection()
+    } else {
+      // Navigate to homepage first, then scroll after load
+      router.push('/')
+      // Wait for navigation then scroll
+      setTimeout(scrollToSection, 100)
+    }
+  }, [pathname, router])
 
   const handleLogout = async () => {
     if (isSigningOut) return
@@ -41,24 +66,27 @@ export function LandingHeader() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
-          <Link
+          <a
             href="/#features"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            onClick={(e) => handleAnchorClick(e, 'features')}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
             Features
-          </Link>
-          <Link
+          </a>
+          <a
             href="/#pricing"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            onClick={(e) => handleAnchorClick(e, 'pricing')}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
             Pricing
-          </Link>
-          <Link
+          </a>
+          <a
             href="/#faq"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            onClick={(e) => handleAnchorClick(e, 'faq')}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
             FAQ
-          </Link>
+          </a>
         </nav>
 
         <div className="flex items-center gap-3">
