@@ -7,12 +7,20 @@ import { DemoModal } from '@/components/demo-modal'
 import Link from 'next/link'
 import { useRef, useState, useEffect } from 'react'
 import { SubscriptionIcon } from '@/lib/brand-icons'
-
-
+import { useTheme } from 'next-themes'
 
 export function Hero() {
   const ref = useRef(null)
   const [isDemoOpen, setIsDemoOpen] = useState(false)
+  const { resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+  
+  const isDark = mounted ? resolvedTheme === 'dark' : true // Default to dark during SSR
   const [isMobile, setIsMobile] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const { prefersReducedMotion } = useMotionPreferences()
@@ -450,45 +458,67 @@ export function Hero() {
             transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 0.9 }}
           />
 
-          {/* Phone mockup frame */}
+          {/* Phone mockup frame - theme-aware */}
           <div className="relative mx-auto w-[280px] md:w-[320px]">
-            {/* Premium device frame - always dark for premium app appearance */}
+            {/* Premium device frame - adapts to theme */}
             <motion.div
-              className="relative rounded-[40px] bg-gradient-to-br from-[#1A1D24] via-[#0F1115] to-[#0A0C10] border border-[#2A2F38] p-3"
+              className={`relative rounded-[40px] p-3 transition-colors duration-300 ${
+                isDark 
+                  ? 'bg-gradient-to-br from-[#1A1D24] via-[#0F1115] to-[#0A0C10] border border-[#2A2F38]'
+                  : 'bg-gradient-to-br from-[#F5F5F5] via-[#EBEBEB] to-[#E0E0E0] border border-[#D0D0D0]'
+              }`}
               style={{
-                boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.35), 0 12px 24px -8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05) inset'
+                boxShadow: isDark
+                  ? '0 25px 60px -12px rgba(0, 0, 0, 0.35), 0 12px 24px -8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05) inset'
+                  : '0 25px 60px -12px rgba(0, 0, 0, 0.15), 0 12px 24px -8px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.8) inset'
               }}
-              initial={{ boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.35)' }}
+              initial={{ boxShadow: isDark ? '0 25px 60px -12px rgba(0, 0, 0, 0.35)' : '0 25px 60px -12px rgba(0, 0, 0, 0.15)' }}
               animate={isLoaded ? {
                 boxShadow: prefersReducedMotion
-                  ? '0 25px 60px -12px rgba(0, 0, 0, 0.35), 0 0 80px rgba(199, 163, 106, 0.08)'
-                  : [
-                    '0 25px 60px -12px rgba(0, 0, 0, 0.35), 0 0 60px rgba(199, 163, 106, 0.06)',
-                    '0 25px 60px -12px rgba(0, 0, 0, 0.35), 0 0 100px rgba(199, 163, 106, 0.12)',
-                    '0 25px 60px -12px rgba(0, 0, 0, 0.35), 0 0 60px rgba(199, 163, 106, 0.06)'
-                  ]
+                  ? isDark 
+                    ? '0 25px 60px -12px rgba(0, 0, 0, 0.35), 0 0 80px rgba(199, 163, 106, 0.08)'
+                    : '0 25px 60px -12px rgba(0, 0, 0, 0.15), 0 0 80px rgba(154, 112, 53, 0.1)'
+                  : isDark
+                    ? [
+                      '0 25px 60px -12px rgba(0, 0, 0, 0.35), 0 0 60px rgba(199, 163, 106, 0.06)',
+                      '0 25px 60px -12px rgba(0, 0, 0, 0.35), 0 0 100px rgba(199, 163, 106, 0.12)',
+                      '0 25px 60px -12px rgba(0, 0, 0, 0.35), 0 0 60px rgba(199, 163, 106, 0.06)'
+                    ]
+                    : [
+                      '0 25px 60px -12px rgba(0, 0, 0, 0.15), 0 0 60px rgba(154, 112, 53, 0.06)',
+                      '0 25px 60px -12px rgba(0, 0, 0, 0.15), 0 0 100px rgba(154, 112, 53, 0.12)',
+                      '0 25px 60px -12px rgba(0, 0, 0, 0.15), 0 0 60px rgba(154, 112, 53, 0.06)'
+                    ]
               } : {}}
               transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1.0 }}
             >
               {/* Notch - dynamic island style */}
-              <div className="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-6 bg-[#000000] rounded-full" />
+              <div className={`absolute top-3 left-1/2 -translate-x-1/2 w-24 h-6 rounded-full ${
+                isDark ? 'bg-[#000000]' : 'bg-[#1A1A1A]'
+              }`} />
 
-              {/* Screen - dark app interface */}
-              <div className="rounded-[32px] bg-[#0A0C10] overflow-hidden aspect-[9/19.5] border border-[#1A1D24]">
+              {/* Screen - theme-aware app interface */}
+              <div className={`rounded-[32px] overflow-hidden aspect-[9/19.5] transition-colors duration-300 ${
+                isDark 
+                  ? 'bg-[#0A0C10] border border-[#1A1D24]'
+                  : 'bg-[#FAFAFA] border border-[#E5E5E5]'
+              }`}>
                 {/* App preview content */}
                 <div className="p-4 pt-10 h-full">
                   {/* Status bar */}
                   <motion.div
-                    className="flex items-center justify-between text-xs text-[#BCC2CC] mb-6"
+                    className={`flex items-center justify-between text-xs mb-6 ${
+                      isDark ? 'text-[#BCC2CC]' : 'text-[#6B7280]'
+                    }`}
                     initial={{ opacity: 0 }}
                     animate={isLoaded ? { opacity: 1 } : {}}
                     transition={{ delay: 1.8, duration: 0.5 }}
                   >
                     <span>9:41</span>
                     <div className="flex gap-1">
-                      <div className="w-4 h-2 rounded-sm bg-platinum/50" />
-                      <div className="w-4 h-2 rounded-sm bg-platinum/50" />
-                      <div className="w-6 h-2 rounded-sm bg-platinum/50" />
+                      <div className={`w-4 h-2 rounded-sm ${isDark ? 'bg-platinum/50' : 'bg-gray-400/50'}`} />
+                      <div className={`w-4 h-2 rounded-sm ${isDark ? 'bg-platinum/50' : 'bg-gray-400/50'}`} />
+                      <div className={`w-6 h-2 rounded-sm ${isDark ? 'bg-platinum/50' : 'bg-gray-400/50'}`} />
                     </div>
                   </motion.div>
 
@@ -500,8 +530,8 @@ export function Hero() {
                     transition={{ delay: 2, duration: 0.6 }}
                   >
                     <div>
-                      <p className="text-xs text-[#BCC2CC]">Good morning,</p>
-                      <p className="text-sm font-semibold text-[#F4EFE7]">Arjun</p>
+                      <p className={`text-xs ${isDark ? 'text-[#BCC2CC]' : 'text-[#6B7280]'}`}>Good morning,</p>
+                      <p className={`text-sm font-semibold ${isDark ? 'text-[#F4EFE7]' : 'text-[#1A1510]'}`}>Arjun</p>
                     </div>
                     <div className="w-8 h-8 rounded-full bg-gold/20 flex items-center justify-center text-xs text-gold font-medium">
                       AM
@@ -513,16 +543,22 @@ export function Hero() {
                     initial={{ opacity: 0, scale: 0.9, filter: 'blur(6px)' }}
                     animate={isLoaded ? { opacity: 1, scale: 1, filter: 'blur(0px)' } : {}}
                     transition={{ delay: 2.2, duration: 0.7, ease: 'easeOut' }}
-                    className="rounded-2xl bg-gradient-to-br from-[#1B2028] via-[#13161C] to-[#1B2028] border border-[#C7A36A]/25 p-4 mb-4 relative overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.2)]"
+                    className={`rounded-2xl p-4 mb-4 relative overflow-hidden transition-colors duration-300 ${
+                      isDark 
+                        ? 'bg-gradient-to-br from-[#1B2028] via-[#13161C] to-[#1B2028] border border-[#C7A36A]/25 shadow-[0_4px_12px_rgba(0,0,0,0.2)]'
+                        : 'bg-gradient-to-br from-white via-[#FEFEFE] to-white border border-[#9A7035]/25 shadow-[0_4px_12px_rgba(0,0,0,0.08)]'
+                    }`}
                   >
                     {/* Subtle shine effect */}
                     <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none"
+                      className={`absolute inset-0 bg-gradient-to-r from-transparent to-transparent pointer-events-none ${
+                        isDark ? 'via-white/5' : 'via-gold/10'
+                      }`}
                       animate={prefersReducedMotion ? {} : { x: ['-100%', '100%'] }}
                       transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
                     />
-                    <p className="text-xs text-[#9CA3AF] mb-1 relative">Monthly recurring</p>
-                    <p className="text-2xl font-bold text-[#C7A36A] relative">₹7,644</p>
+                    <p className={`text-xs mb-1 relative ${isDark ? 'text-[#9CA3AF]' : 'text-[#6B7280]'}`}>Monthly recurring</p>
+                    <p className={`text-2xl font-bold relative ${isDark ? 'text-[#C7A36A]' : 'text-[#9A7035]'}`}>₹7,644</p>
                     <p className="text-xs text-[#34D399] mt-1 relative font-medium">↓ 12% vs last month</p>
                   </motion.div>
 
@@ -542,11 +578,17 @@ export function Hero() {
                           duration: 0.5,
                           ease: 'easeOut'
                         }}
-                        className="flex items-center gap-3 p-3 rounded-xl bg-[#1B2028] border border-white/[0.08] relative overflow-hidden shadow-sm"
+                        className={`flex items-center gap-3 p-3 rounded-xl relative overflow-hidden shadow-sm transition-colors duration-300 ${
+                          isDark 
+                            ? 'bg-[#1B2028] border border-white/[0.08]'
+                            : 'bg-white border border-[#E5E5E5]'
+                        }`}
                       >
                         {/* Card shimmer */}
                         <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-gold/5 to-transparent pointer-events-none"
+                          className={`absolute inset-0 bg-gradient-to-r from-transparent to-transparent pointer-events-none ${
+                            isDark ? 'via-gold/5' : 'via-gold/10'
+                          }`}
                           animate={prefersReducedMotion ? {} : { x: ['-100%', '100%'] }}
                           transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 3.5 + i * 0.3 }}
                         />
@@ -556,10 +598,10 @@ export function Hero() {
                           <SubscriptionIcon name={sub.name} fallbackColor={sub.color} size="sm" />
                         </div>
                         <div className="flex-1 relative min-w-0">
-                          <p className="text-xs font-semibold text-white truncate">{sub.name}</p>
-                          <p className="text-[10px] text-[#9CA3AF]">Renews in {sub.renewsIn}</p>
+                          <p className={`text-xs font-semibold truncate ${isDark ? 'text-white' : 'text-[#1A1510]'}`}>{sub.name}</p>
+                          <p className={`text-[10px] ${isDark ? 'text-[#9CA3AF]' : 'text-[#6B7280]'}`}>Renews in {sub.renewsIn}</p>
                         </div>
-                        <p className="text-sm font-semibold text-white relative">₹{sub.amount}</p>
+                        <p className={`text-sm font-semibold relative ${isDark ? 'text-white' : 'text-[#1A1510]'}`}>₹{sub.amount}</p>
                       </motion.div>
                     ))}
                   </div>
@@ -567,11 +609,13 @@ export function Hero() {
               </div>
             </motion.div>
 
-            {/* Animated glow ring - signature moment */}
+            {/* Animated glow ring - signature moment, theme-aware */}
             <motion.div
               className="absolute -inset-4 rounded-[48px] -z-10"
               style={{
-                background: 'radial-gradient(ellipse at center, rgba(199, 163, 106, 0.15) 0%, transparent 70%)'
+                background: isDark
+                  ? 'radial-gradient(ellipse at center, rgba(199, 163, 106, 0.15) 0%, transparent 70%)'
+                  : 'radial-gradient(ellipse at center, rgba(154, 112, 53, 0.12) 0%, transparent 70%)'
               }}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={isLoaded ? {

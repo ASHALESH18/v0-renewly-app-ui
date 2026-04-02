@@ -188,7 +188,18 @@ const useStore = create<AppState>()(
 
           const { profile, settings, subscriptions, shouldMigrate } = await response.json()
 
-          // Set profile with all persisted fields
+          // Set settings first to get timezone
+          let savedTimeZone: string | undefined
+          if (settings) {
+            const uiSettings = mapUserSettingsRowToUI(settings)
+            savedTimeZone = uiSettings.timeZone
+            set({
+              notificationSettings: uiSettings,
+              theme: uiSettings.theme || get().theme,
+            })
+          }
+
+          // Set profile with all persisted fields including timezone
           if (profile) {
             // Build full name from first/last or use full_name
             const fullName =
@@ -203,16 +214,9 @@ const useStore = create<AppState>()(
                 email: profile.email,
                 plan: profile.plan,
                 avatarUrl: profile.avatar_url || undefined,
+                // Use timezone from settings (single source of truth)
+                timeZone: savedTimeZone || profile.time_zone || undefined,
               },
-            })
-          }
-
-          // Set settings
-          if (settings) {
-            const uiSettings = mapUserSettingsRowToUI(settings)
-            set({
-              notificationSettings: uiSettings,
-              theme: uiSettings.theme || get().theme,
             })
           }
 

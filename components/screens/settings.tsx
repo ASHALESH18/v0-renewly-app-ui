@@ -967,15 +967,38 @@ const COMMON_TIMEZONES = [
   { value: 'Australia/Sydney', label: 'Sydney (AEST)', offset: 'UTC+10' },
 ]
 
-// Generate avatar URL from name/email
-function generateAvatarUrl(seed: string, style: 'initials' | 'abstract' = 'initials'): string {
-  const encodedSeed = encodeURIComponent(seed)
-  if (style === 'abstract') {
-    // Use DiceBear for abstract patterns
-    return `https://api.dicebear.com/7.x/shapes/svg?seed=${encodedSeed}&backgroundColor=c7a36a&size=128`
+// DiceBear avatar styles - premium, varied options
+const AVATAR_STYLES = [
+  'thumbs',
+  'shapes',
+  'initials', 
+  'bottts',
+  'identicon',
+  'rings',
+  'glass',
+  'fun-emoji',
+] as const
+
+type AvatarStyle = typeof AVATAR_STYLES[number]
+
+// Generate avatar URL with variety - each click produces a genuinely new avatar
+function generateAvatarUrl(baseSeed: string, variation: number = 0): string {
+  // Combine seed with variation number to create unique avatars
+  const uniqueSeed = `${baseSeed}-v${variation}-${Date.now()}`
+  const encodedSeed = encodeURIComponent(uniqueSeed)
+  
+  // Cycle through different styles based on variation
+  const styleIndex = variation % AVATAR_STYLES.length
+  const style = AVATAR_STYLES[styleIndex]
+  
+  // DiceBear v7 API with Renewly gold accent
+  if (style === 'initials') {
+    // Use UI Avatars for initials style - cleaner look
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(baseSeed)}&background=c7a36a&color=0a0d12&size=128&bold=true&format=svg`
   }
-  // Use UI Avatars for initials
-  return `https://ui-avatars.com/api/?name=${encodedSeed}&background=c7a36a&color=0a0d12&size=128&bold=true`
+  
+  // DiceBear styles with gold background
+  return `https://api.dicebear.com/7.x/${style}/svg?seed=${encodedSeed}&backgroundColor=c7a36a&size=128`
 }
 
 // Profile Form Component with avatar regeneration and timezone
@@ -989,23 +1012,42 @@ function ProfileForm({
   onSave: (data: any) => void
 }) {
   const [name, setName] = useState(userProfile?.name || '')
-  const [timezone, setTimezone] = useState(userProfile?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone)
+  // Use saved timezone from profile, fall back to browser timezone only if no saved value
+  const [timezone, setTimezone] = useState(() => {
+    // Check if userProfile has a saved timezone
+    if (userProfile?.timeZone) return userProfile.timeZone
+    if (userProfile?.timezone) return userProfile.timezone
+    // Only use browser timezone as initial fallback
+    return Intl.DateTimeFormat().resolvedOptions().timeZone
+  })
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl)
-  const [avatarStyle, setAvatarStyle] = useState<'initials' | 'abstract'>('initials')
+  const [avatarVariation, setAvatarVariation] = useState(0)
+  const [avatarError, setAvatarError] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isRegenerating, setIsRegenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const addToast = useStore((state) => state.addToast)
 
+  // Generate a new unique avatar on each click
   const handleRegenerateAvatar = () => {
     setIsRegenerating(true)
-    // Toggle style for variety, or use a random seed
-    const newStyle = avatarStyle === 'initials' ? 'abstract' : 'initials'
-    const seed = name || userProfile?.email || `user-${Date.now()}`
-    const newUrl = generateAvatarUrl(seed, newStyle)
-    setAvatarStyle(newStyle)
+    setAvatarError(false)
+    
+    // Increment variation to get a genuinely new avatar
+    const newVariation = avatarVariation + 1
+    const seed = name || userProfile?.email || 'user'
+    const newUrl = generateAvatarUrl(seed, newVariation)
+    
+    setAvatarVariation(newVariation)
     setAvatarUrl(newUrl)
-    setTimeout(() => setIsRegenerating(false), 500)
+    
+    // Brief delay for visual feedback
+    setTimeout(() => setIsRegenerating(false), 400)
+  }
+
+  // Handle avatar image load error - fallback to initials
+  const handleAvatarError = () => {
+    setAvatarError(true)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1055,16 +1097,18 @@ function ProfileForm({
       {/* Avatar with regeneration */}
       <div className="flex flex-col items-center gap-4">
         <div className="relative">
-          {avatarUrl ? (
+          {avatarUrl && !avatarError ? (
             <img
               src={avatarUrl}
               alt="Your avatar"
+              onError={handleAvatarError}
               className={cn(
-                "w-24 h-24 rounded-full border-2 border-gold/30 object-cover transition-all",
+                "w-24 h-24 rounded-full border-2 border-gold/30 object-cover transition-all bg-gold/10",
                 isRegenerating && "opacity-50 scale-95"
               )}
             />
           ) : (
+            // Fallback initials avatar - always renders cleanly
             <div className="w-24 h-24 rounded-full bg-gold/20 flex items-center justify-center border-2 border-gold/30">
               <span className="text-3xl font-semibold text-gold">
                 {name?.charAt(0).toUpperCase() || 'U'}
@@ -1072,20 +1116,25 @@ function ProfileForm({
             </div>
           )}
           {isRegenerating && (
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-obsidian/50">
               <RefreshCw className="w-6 h-6 text-gold animate-spin" />
             </div>
           )}
         </div>
-        <button
-          type="button"
-          onClick={handleRegenerateAvatar}
-          disabled={isRegenerating}
-          className="flex items-center gap-2 text-sm text-gold hover:text-gold/80 transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={cn("w-4 h-4", isRegenerating && "animate-spin")} />
-          Generate new avatar
-        </button>
+        <div className="flex flex-col items-center gap-1">
+          <button
+            type="button"
+            onClick={handleRegenerateAvatar}
+            disabled={isRegenerating}
+            className="flex items-center gap-2 text-sm text-gold hover:text-gold/80 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={cn("w-4 h-4", isRegenerating && "animate-spin")} />
+            Generate new avatar
+          </button>
+          <p className="text-[10px] text-muted-foreground">
+            Style {(avatarVariation % AVATAR_STYLES.length) + 1} of {AVATAR_STYLES.length}
+          </p>
+        </div>
       </div>
 
       {/* Name */}

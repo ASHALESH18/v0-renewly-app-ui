@@ -47,6 +47,7 @@ export function mapUserSettingsRowToUI(row: UserSettingsRow) {
     emailNotifications: row.email_notifications,
     leakAlerts: row.leak_alerts,
     biometricEnabled: row.biometric_enabled,
+    timeZone: row.time_zone || undefined, // Include timezone from settings
   }
 }
 
