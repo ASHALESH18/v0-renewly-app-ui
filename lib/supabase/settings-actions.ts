@@ -53,6 +53,7 @@ export async function updateUserProfile(data: {
     }
 
     revalidateTag('user-profile')
+    revalidateTag('user-settings')
     return { success: true }
   } catch (error) {
     console.error('[v0] Update profile error:', error)
