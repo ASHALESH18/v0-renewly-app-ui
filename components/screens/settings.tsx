@@ -145,12 +145,19 @@ export function SettingsScreen() {
     }
   }, [section])
 
-  // Avatar URL
+  // Avatar URL - use persisted URL if available, otherwise generate
   const avatarUrl = useMemo(() => {
     if (!userProfile) return null
+    
+    // Prefer persisted avatar URL from database
+    if (userProfile.avatarUrl) {
+      return userProfile.avatarUrl
+    }
+    
+    // Fall back to generated avatar
     const seed = userProfile.avatarSeed || userProfile.email || 'default'
     return generateAvatar({ seed, size: 128 })
-  }, [userProfile?.email, userProfile?.avatarSeed])
+  }, [userProfile?.email, userProfile?.avatarSeed, userProfile?.avatarUrl])
 
   // Plan display
   const planNames: Record<string, string> = {
@@ -510,15 +517,17 @@ export function SettingsScreen() {
         </p>
       </div>
 
-      {/* Plan Selection Sheet */}
-      {
-        showPlanSheet && (
-          <PlanSelectionSheet
-            onClose={() => setShowPlanSheet(false)}
-            currentPlan={userProfile?.plan || 'free'}
-          />
-        )
-      }
+      {/* Plan Selection Sheet - wrapped in proper modal */}
+      <SettingsSheet
+        isOpen={showPlanSheet}
+        onClose={() => setShowPlanSheet(false)}
+        title="Choose Your Plan"
+      >
+        <PlanSelectionSheet
+          onClose={() => setShowPlanSheet(false)}
+          currentPlan={userProfile?.plan || 'free'}
+        />
+      </SettingsSheet>
 
       {/* Profile Sheet */}
       <SettingsSheet
@@ -531,7 +540,13 @@ export function SettingsScreen() {
           avatarUrl={avatarUrl}
           onSave={(data) => {
             if (userProfile) {
-              setUserProfile({ ...userProfile, ...data })
+              // Update store with new profile data including avatar
+              setUserProfile({ 
+                ...userProfile, 
+                name: data.name,
+                avatarUrl: data.avatarUrl, 
+                timeZone: data.timezone,
+              })
             }
             addToast({ type: 'success', title: 'Profile updated' })
             setActiveSheet(null)

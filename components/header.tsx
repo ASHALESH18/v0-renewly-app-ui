@@ -43,17 +43,23 @@ export function Header({
   const firstName = userProfile?.name?.split(' ')[0] || 'User'
   const avatar = firstName.charAt(0).toUpperCase()
 
-  // Generate avatar URL deterministically
+  // Use persisted avatar URL if available, otherwise generate deterministically
   const avatarUrl = useMemo(() => {
     if (!userProfile) return null
 
+    // Prefer persisted avatar URL from database
+    if (userProfile.avatarUrl) {
+      return userProfile.avatarUrl
+    }
+
+    // Fall back to generated avatar
     const seed =
       userProfile.avatarSeed ||
       [userProfile.name, userProfile.email].filter(Boolean).join('::') ||
       'default'
 
     return generateAvatar({ seed, size: 256 })
-  }, [userProfile?.name, userProfile?.email, userProfile?.avatarSeed])
+  }, [userProfile?.name, userProfile?.email, userProfile?.avatarSeed, userProfile?.avatarUrl])
 
   return (
     <motion.header

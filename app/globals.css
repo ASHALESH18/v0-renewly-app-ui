@@ -74,64 +74,64 @@ button,
 }
 
 /* === RENEWLY DESIGN SYSTEM === */
-/* Light Mode - Pearl Paper & Brushed Platinum */
+/* Light Mode - Pearl Paper & Brushed Platinum (High Contrast) */
 :root {
-  --background: #F8F2E9;
-  --foreground: #211B16;
+  --background: #F5EFE5;
+  --foreground: #1A1510;
   --card: #FFFDF9;
-  --card-foreground: #211B16;
+  --card-foreground: #1A1510;
   --popover: #FFFDF9;
-  --popover-foreground: #211B16;
+  --popover-foreground: #1A1510;
 
-  --primary: #C08E4B;
-  --primary-foreground: #1D1712;
+  --primary: #9A7035;
+  --primary-foreground: #FFFFFF;
 
-  --secondary: #F1E6D8;
-  --secondary-foreground: #211B16;
+  --secondary: #EDE4D5;
+  --secondary-foreground: #1A1510;
 
-  --muted: #ECE1D3;
-  --muted-foreground: #756B60;
+  --muted: #E8DFD0;
+  --muted-foreground: #5A5048;
 
-  --accent: #6B8A78;
-  --accent-foreground: #FAF6F0;
+  --accent: #4A7360;
+  --accent-foreground: #FFFFFF;
 
-  --destructive: #9A5A63;
-  --destructive-foreground: #FFF7F8;
+  --destructive: #8A4A53;
+  --destructive-foreground: #FFFFFF;
 
-  --border: #DED2C3;
-  --input: #F3EADE;
-  --ring: #C08E4B;
+  --border: #D5C9B8;
+  --input: #F0E8DB;
+  --ring: #9A7035;
 
-  --chart-1: #C08E4B;
-  --chart-2: #6B8A78;
-  --chart-3: #7F8FA8;
-  --chart-4: #D2A767;
-  --chart-5: #211B16;
+  --chart-1: #9A7035;
+  --chart-2: #4A7360;
+  --chart-3: #6A7A94;
+  --chart-4: #B8954A;
+  --chart-5: #1A1510;
 
   --radius: 1rem;
 
-  --sidebar: #FBF6EF;
-  --sidebar-foreground: #211B16;
-  --sidebar-primary: #C08E4B;
-  --sidebar-primary-foreground: #1D1712;
-  --sidebar-accent: #EFE3D5;
-  --sidebar-accent-foreground: #211B16;
-  --sidebar-border: #DCCFBE;
-  --sidebar-ring: #C08E4B;
+  --sidebar: #FAF5ED;
+  --sidebar-foreground: #1A1510;
+  --sidebar-primary: #9A7035;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #EBE0D0;
+  --sidebar-accent-foreground: #1A1510;
+  --sidebar-border: #D8CCB8;
+  --sidebar-ring: #9A7035;
 
-  /* Renewly custom tokens - Ivory Reserve */
-  --obsidian: #FBF6EF;
+  /* Renewly custom tokens - Ivory Reserve (High Contrast) */
+  --obsidian: #FAF5ED;
   --graphite: #FFFDF9;
-  --slate: #E9DDCF;
-  --ivory: #211B16;
-  --platinum: #756B60;
-  --gold: #C08E4B;
-  --muted-gold: #8E7352;
-  --emerald: #6B8A78;
-  --crimson: #9A5A63;
-  --glass: rgba(255, 255, 255, 0.72);
-  --glass-border: rgba(192, 142, 75, 0.14);
-  --hero-vignette: rgba(192, 142, 75, 0.18);
+  --slate: #E5D9C8;
+  --ivory: #1A1510;
+  --platinum: #4A4540;
+  --gold: #9A7035;
+  --muted-gold: #7A5A30;
+  --emerald: #4A7360;
+  --crimson: #8A4A53;
+  --glass: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(154, 112, 53, 0.18);
+  --hero-vignette: rgba(154, 112, 53, 0.12);
 }
 
 /* Dark Mode - Hero Mode (Obsidian Reserve) */

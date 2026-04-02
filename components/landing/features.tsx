@@ -54,8 +54,9 @@ export function Features() {
 
   return (
     <section
+      id="features"
       ref={ref}
-      className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-20 lg:py-32"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-20 lg:py-32 scroll-mt-24"
     >
       {/* Background elements */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl" />

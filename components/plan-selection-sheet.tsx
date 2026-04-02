@@ -1,10 +1,10 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { Check, ChevronRight, Sparkles } from 'lucide-react'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Check, ChevronRight, Sparkles, ArrowLeft, X } from 'lucide-react'
 import { springs } from '@/components/motion'
 import { getAllPlans } from '@/lib/plans'
-import Link from 'next/link'
 
 export interface PlanSheetProps {
   onClose: () => void
@@ -13,25 +13,21 @@ export interface PlanSheetProps {
 
 export function PlanSelectionSheet({ onClose, currentPlan = 'free' }: PlanSheetProps) {
   const plans = getAllPlans()
+  const [showComparison, setShowComparison] = useState(false)
+
+  // If showing comparison view
+  if (showComparison) {
+    return <PlanComparisonView onBack={() => setShowComparison(false)} currentPlan={currentPlan} />
+  }
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={springs.gentle}
-      className="rounded-2xl bg-slate/50 border border-glass-border p-6 space-y-4"
+      className="space-y-4"
     >
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-ivory">Choose Your Plan</h2>
-        <button
-          onClick={onClose}
-          className="text-muted-foreground hover:text-ivory transition-colors"
-        >
-          ✕
-        </button>
-      </div>
-
-      <div className="space-y-3 max-h-96 overflow-y-auto">
+      <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
         {plans.map((plan) => (
           <motion.div
             key={plan.id}
@@ -130,10 +126,143 @@ export function PlanSelectionSheet({ onClose, currentPlan = 'free' }: PlanSheetP
         ))}
       </div>
 
-      <div className="pt-4 border-t border-glass-border">
+      <div className="pt-4 border-t border-border">
         <p className="text-xs text-muted-foreground text-center">
-          Need help choosing? <a href="/help" className="text-gold hover:underline">View comparison</a>
+          Need help choosing?{' '}
+          <button
+            onClick={() => setShowComparison(true)}
+            className="text-gold hover:underline cursor-pointer"
+          >
+            View comparison
+          </button>
         </p>
+      </div>
+    </motion.div>
+  )
+}
+
+// Plan Comparison View Component
+function PlanComparisonView({ 
+  onBack, 
+  currentPlan 
+}: { 
+  onBack: () => void
+  currentPlan: string 
+}) {
+  const plans = getAllPlans()
+  
+  // Feature comparison matrix
+  const featureMatrix = [
+    { name: 'Subscriptions', free: 'Up to 2', pro: 'Unlimited', family: 'Unlimited', enterprise: 'Unlimited' },
+    { name: 'Analytics Dashboard', free: false, pro: true, family: true, enterprise: true },
+    { name: 'Leak Report', free: false, pro: true, family: true, enterprise: true },
+    { name: 'Multi-currency', free: false, pro: true, family: true, enterprise: true },
+    { name: 'Renewal Calendar', free: 'Basic', pro: 'Smart', family: 'Shared', enterprise: 'Shared' },
+    { name: 'Export (CSV/JSON)', free: false, pro: true, family: true, enterprise: true },
+    { name: 'Family Members', free: '-', pro: '-', family: 'Up to 4', enterprise: 'Unlimited' },
+    { name: 'Shared Dashboard', free: false, pro: false, family: true, enterprise: true },
+    { name: 'Team Analytics', free: false, pro: false, family: false, enterprise: true },
+    { name: 'Admin Controls', free: false, pro: false, family: false, enterprise: true },
+    { name: 'Audit Logs', free: false, pro: false, family: false, enterprise: true },
+    { name: 'Priority Support', free: false, pro: true, family: true, enterprise: 'Dedicated' },
+  ]
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      transition={springs.gentle}
+      className="space-y-4"
+    >
+      {/* Header with back button */}
+      <div className="flex items-center gap-3 pb-2">
+        <button
+          onClick={onBack}
+          className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-gold/50 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+        <h3 className="text-lg font-semibold text-foreground">Plan Comparison</h3>
+      </div>
+
+      {/* Comparison Table */}
+      <div className="overflow-x-auto -mx-2 px-2">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="text-left py-3 px-2 font-medium text-muted-foreground">Feature</th>
+              {plans.map((plan) => (
+                <th 
+                  key={plan.id} 
+                  className={`text-center py-3 px-2 font-semibold ${
+                    plan.id === currentPlan ? 'text-gold' : 'text-foreground'
+                  }`}
+                >
+                  {plan.name}
+                  {plan.id === currentPlan && (
+                    <span className="block text-xs font-normal text-gold/70">Current</span>
+                  )}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {/* Price Row */}
+            <tr className="border-b border-border/50 bg-muted/30">
+              <td className="py-3 px-2 font-medium text-foreground">Price</td>
+              {plans.map((plan) => (
+                <td key={plan.id} className="text-center py-3 px-2">
+                  {plan.price !== null ? (
+                    <span className="font-semibold text-foreground">
+                      ₹{plan.price}/{plan.period === 'forever' ? '' : plan.period?.slice(0, 2)}
+                    </span>
+                  ) : (
+                    <span className="text-gold font-medium">Custom</span>
+                  )}
+                </td>
+              ))}
+            </tr>
+            
+            {/* Feature Rows */}
+            {featureMatrix.map((feature, idx) => (
+              <tr key={feature.name} className={`border-b border-border/30 ${idx % 2 === 0 ? '' : 'bg-muted/20'}`}>
+                <td className="py-2.5 px-2 text-muted-foreground">{feature.name}</td>
+                {(['free', 'pro', 'family', 'enterprise'] as const).map((planId) => {
+                  const value = feature[planId]
+                  return (
+                    <td key={planId} className="text-center py-2.5 px-2">
+                      {typeof value === 'boolean' ? (
+                        value ? (
+                          <Check className="w-4 h-4 text-emerald mx-auto" />
+                        ) : (
+                          <X className="w-4 h-4 text-muted-foreground/40 mx-auto" />
+                        )
+                      ) : (
+                        <span className={`text-xs ${value === '-' ? 'text-muted-foreground/50' : 'text-foreground'}`}>
+                          {value}
+                        </span>
+                      )}
+                    </td>
+                  )
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* CTA */}
+      <div className="pt-4 border-t border-border">
+        <p className="text-xs text-center text-muted-foreground mb-3">
+          All paid plans include a 14-day free trial
+        </p>
+        <button
+          onClick={onBack}
+          className="w-full py-3 rounded-xl bg-gold text-obsidian font-semibold hover:bg-gold/90 transition-colors"
+        >
+          Choose a Plan
+        </button>
       </div>
     </motion.div>
   )
