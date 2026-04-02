@@ -1111,6 +1111,12 @@ function ProfileForm({
           Used for displaying renewal dates and sending notifications at the right time.
         </p>
       </div>
+      {error && (
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          {error}
+        </div>
+      )}
 
       <button
         type="submit"
@@ -1182,37 +1188,41 @@ function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
-    setErrorType(null)
-
-    if (!passwordsMatch) {
-      setError('Passwords do not match')
-      return
-    }
-
-    if (!allRulesPass) {
-      setError('Password does not meet all requirements')
-      return
-    }
-
     setIsLoading(true)
+    setError(null)
+
     try {
-      const { changeUserPassword } = await import('@/lib/supabase/settings-actions')
-      const result = await changeUserPassword(currentPassword, newPassword)
+      const { updateUserProfile } = await import('@/lib/supabase/settings-actions')
+      const result = await updateUserProfile({
+        firstName: name.split(' ')[0] || name,
+        lastName: name.split(' ').slice(1).join(' ') || undefined,
+        timezone,
+        avatarUrl: avatarUrl || undefined,
+      })
 
       if (result.success) {
         addToast({
           type: 'success',
-          title: 'Password updated',
-          message: 'Your password has been changed successfully.',
+          title: 'Profile updated',
+          message: 'Your profile has been saved successfully.',
         })
-        onSuccess()
+        onSave({ name, timezone, avatarUrl })
       } else {
-        setError(result.error || 'Failed to update password')
-        setErrorType(result.errorType || null)
+        setError(result.error || 'Failed to update profile.')
+        addToast({
+          type: 'error',
+          title: 'Update failed',
+          message: result.error || 'Failed to update profile.',
+        })
       }
-    } catch (err) {
-      setError('Failed to update password. Please try again.')
+    } catch (error) {
+      console.error('Profile save error:', error)
+      setError('An unexpected error occurred.')
+      addToast({
+        type: 'error',
+        title: 'Update failed',
+        message: 'An unexpected error occurred.',
+      })
     } finally {
       setIsLoading(false)
     }
