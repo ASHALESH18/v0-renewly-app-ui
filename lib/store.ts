@@ -191,9 +191,11 @@ const useStore = create<AppState>()(
           // Set profile with all persisted fields
           if (profile) {
             // Build full name from first/last or use full_name
-            const fullName = profile.first_name && profile.last_name
-              ? `${profile.first_name} ${profile.last_name}`.trim()
-              : profile.full_name || email.split('@')[0]
+            const fullName =
+              [profile.first_name, profile.last_name]
+                .filter(Boolean)
+                .join(' ')
+                .trim() || profile.full_name || email.split('@')[0]
 
             set({
               userProfile: {

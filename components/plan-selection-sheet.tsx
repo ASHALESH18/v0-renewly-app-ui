@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Check, ChevronRight, Sparkles, ArrowLeft, X } from 'lucide-react'
 import { springs } from '@/components/motion'
 import { getAllPlans } from '@/lib/plans'
-
+import Link from 'next/link'
 export interface PlanSheetProps {
   onClose: () => void
   currentPlan?: 'free' | 'pro' | 'family' | 'enterprise'
@@ -32,11 +32,10 @@ export function PlanSelectionSheet({ onClose, currentPlan = 'free' }: PlanSheetP
           <motion.div
             key={plan.id}
             whileHover={{ scale: 1.02 }}
-            className={`p-4 rounded-xl border transition-all cursor-pointer ${
-              currentPlan === plan.id
+            className={`p-4 rounded-xl border transition-all cursor-pointer ${currentPlan === plan.id
                 ? 'bg-gold/10 border-gold/50'
                 : 'bg-slate/30 border-glass-border hover:border-gold/30'
-            }`}
+              }`}
           >
             <div className="flex items-start gap-4">
               <div className="flex-1 min-w-0">
@@ -50,7 +49,7 @@ export function PlanSelectionSheet({ onClose, currentPlan = 'free' }: PlanSheetP
                   )}
                 </div>
                 <p className="text-xs text-platinum mb-2">{plan.description}</p>
-                
+
                 <div className="flex items-baseline gap-2 mb-2">
                   {plan.price !== null ? (
                     <>
@@ -60,7 +59,7 @@ export function PlanSelectionSheet({ onClose, currentPlan = 'free' }: PlanSheetP
                           ₹{plan.originalPrice.toLocaleString('en-IN')}
                         </span>
                       )}
-                      
+
                       {/* Current price */}
                       <span className="text-lg font-semibold text-ivory">₹{plan.price.toLocaleString('en-IN')}</span>
                       <span className="text-xs text-platinum">/{plan.period}</span>
@@ -93,7 +92,7 @@ export function PlanSelectionSheet({ onClose, currentPlan = 'free' }: PlanSheetP
                   ))}
                 </ul>
               </div>
-              
+
               <div className="shrink-0 pt-1">
                 {currentPlan === plan.id && (
                   <div className="rounded-full bg-gold/20 p-1">
@@ -142,15 +141,15 @@ export function PlanSelectionSheet({ onClose, currentPlan = 'free' }: PlanSheetP
 }
 
 // Plan Comparison View Component
-function PlanComparisonView({ 
-  onBack, 
-  currentPlan 
-}: { 
+function PlanComparisonView({
+  onBack,
+  currentPlan
+}: {
   onBack: () => void
-  currentPlan: string 
+  currentPlan: string
 }) {
   const plans = getAllPlans()
-  
+
   // Feature comparison matrix
   const featureMatrix = [
     { name: 'Subscriptions', free: 'Up to 2', pro: 'Unlimited', family: 'Unlimited', enterprise: 'Unlimited' },
@@ -193,11 +192,10 @@ function PlanComparisonView({
             <tr className="border-b border-border">
               <th className="text-left py-3 px-2 font-medium text-muted-foreground">Feature</th>
               {plans.map((plan) => (
-                <th 
-                  key={plan.id} 
-                  className={`text-center py-3 px-2 font-semibold ${
-                    plan.id === currentPlan ? 'text-gold' : 'text-foreground'
-                  }`}
+                <th
+                  key={plan.id}
+                  className={`text-center py-3 px-2 font-semibold ${plan.id === currentPlan ? 'text-gold' : 'text-foreground'
+                    }`}
                 >
                   {plan.name}
                   {plan.id === currentPlan && (
@@ -223,7 +221,7 @@ function PlanComparisonView({
                 </td>
               ))}
             </tr>
-            
+
             {/* Feature Rows */}
             {featureMatrix.map((feature, idx) => (
               <tr key={feature.name} className={`border-b border-border/30 ${idx % 2 === 0 ? '' : 'bg-muted/20'}`}>
