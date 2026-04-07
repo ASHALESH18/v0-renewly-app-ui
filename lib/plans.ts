@@ -63,7 +63,7 @@ export const plans: Plan[] = [
       'Export to CSV / JSON',
       'Priority support',
     ],
-    cta: 'Start free trial',
+    cta: 'Upgrade to Pro',
     ctaHref: '/auth/sign-in?next=/app/upgrade?plan=pro',
   },
   {
@@ -84,7 +84,7 @@ export const plans: Plan[] = [
       'Shared expense tracking',
       'Family reports',
     ],
-    cta: 'Start free trial',
+    cta: 'Upgrade to Family',
     ctaHref: '/auth/sign-in?next=/app/upgrade?plan=family',
   },
   {

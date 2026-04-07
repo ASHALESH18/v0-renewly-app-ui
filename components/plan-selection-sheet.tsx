@@ -251,13 +251,13 @@ function UpgradeFlowView({
         </ul>
       </div>
 
-      {/* Trial notice */}
-      <div className="p-3 rounded-xl bg-emerald/10 border border-emerald/20">
+      {/* Payment info */}
+      <div className="p-3 rounded-xl bg-gold/10 border border-gold/20">
         <div className="flex items-center gap-2">
-          <Zap className="w-4 h-4 text-emerald" />
-          <p className="text-sm text-emerald font-medium">14-day free trial included</p>
+          <Zap className="w-4 h-4 text-gold" />
+          <p className="text-sm text-gold font-medium">Secure payment via Razorpay</p>
         </div>
-        <p className="text-xs text-emerald/80 mt-1 ml-6">No charge until trial ends. Cancel anytime.</p>
+        <p className="text-xs text-gold/80 mt-1 ml-6">You&apos;ll be redirected to complete payment. Cancel anytime.</p>
       </div>
 
       {/* CTA */}
@@ -276,17 +276,17 @@ function UpgradeFlowView({
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                 className="w-4 h-4 border-2 border-obsidian/30 border-t-obsidian rounded-full"
               />
-              Processing...
+              Redirecting...
             </>
           ) : (
             <>
               <Zap className="w-4 h-4" />
-              Start Free Trial
+              Proceed to Upgrade
             </>
           )}
         </motion.button>
         <p className="text-xs text-center text-muted-foreground">
-          You&apos;ll be redirected to complete payment setup
+          You&apos;ll be taken to the secure payment page
         </p>
       </div>
     </motion.div>
