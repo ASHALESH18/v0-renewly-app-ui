@@ -714,11 +714,11 @@ export function SettingsScreen() {
           <div className="p-4 rounded-xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
             <p className="text-sm text-muted-foreground">Current Plan</p>
             <p className="text-2xl font-semibold text-gold mt-1">{planName}</p>
-            {userProfile?.plan === 'pro' && (
+            {isPremium && (
               <p className="text-xs text-muted-foreground mt-2">Your subscription is active</p>
             )}
           </div>
-          {userProfile?.plan !== 'pro' && (
+          {!isPremium && (
             <>
               <p className="text-sm text-muted-foreground">
                 Upgrade to Pro to unlock advanced features including analytics, leak detection, and more.

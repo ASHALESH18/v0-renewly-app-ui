@@ -89,6 +89,10 @@ export interface AppState {
   addToast: (toast: Omit<Toast, 'id'>) => void
   removeToast: (id: string) => void
 
+  // Actions - Plan Management
+  refreshPlanFromServer: () => Promise<void>
+  updatePlanLocally: (plan: 'free' | 'pro' | 'family' | 'enterprise') => void
+
   // Derived Selectors
   getMetrics: () => ReturnType<typeof calculateMetrics>
 }
@@ -409,6 +413,37 @@ const useStore = create<AppState>()(
       },
 
       setTheme: (theme) => set({ theme }),
+
+      // Refresh plan from server after successful upgrade
+      refreshPlanFromServer: async () => {
+        const state = get()
+        if (!state.currentUserId) return
+
+        try {
+          const res = await fetch('/api/hydrate-user-data')
+          if (!res.ok) throw new Error('Failed to fetch user data')
+          
+          const data = await res.json()
+          if (data.profile?.plan) {
+            set((s) => ({
+              userProfile: s.userProfile 
+                ? { ...s.userProfile, plan: data.profile.plan }
+                : null,
+            }))
+          }
+        } catch (error) {
+          console.error('[v0] Failed to refresh plan from server:', error)
+        }
+      },
+
+      // Update plan locally (for optimistic UI after payment success)
+      updatePlanLocally: (plan) => {
+        set((state) => ({
+          userProfile: state.userProfile 
+            ? { ...state.userProfile, plan }
+            : null,
+        }))
+      },
 
       // Update user profile with Supabase persistence
       updateUserProfileRemote: async (profileData: {

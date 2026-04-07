@@ -23,7 +23,7 @@ export function UpgradePrompt({
 }: UpgradePromptProps) {
   const [selectedPlan, setSelectedPlan] = useState<'pro' | 'family'>('pro')
 
-  const getReason Text = () => {
+  const getReasonText = () => {
     switch (reason) {
       case 'subscription-limit':
         return `You've reached the ${maxLimit}-subscription limit on your Free plan`

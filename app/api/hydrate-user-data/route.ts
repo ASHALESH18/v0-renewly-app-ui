@@ -3,6 +3,29 @@ import { getProfile, ensureProfile } from '@/lib/supabase/repositories/profile'
 import { getUserSettings, ensureUserSettings } from '@/lib/supabase/repositories/settings'
 import { getUserSubscriptions, countUserSubscriptions } from '@/lib/supabase/repositories/subscriptions'
 
+/**
+ * GET /api/hydrate-user-data
+ * Simple endpoint to fetch current user profile (used for plan refresh after upgrade)
+ */
+export async function GET() {
+  try {
+    const authUser = await getUser()
+    if (!authUser) {
+      return Response.json({ error: 'Unauthorized' }, { status: 403 })
+    }
+
+    const profile = await getProfile(authUser.id)
+    if (!profile) {
+      return Response.json({ error: 'Profile not found' }, { status: 404 })
+    }
+
+    return Response.json({ profile })
+  } catch (error) {
+    console.error('[v0] GET Hydration API error:', error)
+    return Response.json({ error: 'Failed to fetch profile' }, { status: 500 })
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const { userId, email } = await request.json()
