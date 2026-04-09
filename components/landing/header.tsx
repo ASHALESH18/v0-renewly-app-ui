@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { ArrowRight, LogOut } from 'lucide-react'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { signOutAndRedirectHome } from '@/lib/auth/sign-out'
+import { RenewlyLogo } from '@/components/renewly-logo'
 
 export function LandingHeader() {
   const { user, loading } = useAuth()
@@ -56,14 +57,7 @@ export function LandingHeader() {
       className="fixed top-0 left-0 right-0 z-50 px-4 py-4"
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gold to-gold/80 flex items-center justify-center">
-            <span className="text-obsidian font-bold text-lg">R</span>
-          </div>
-          <span className="text-xl font-serif text-foreground group-hover:text-gold transition-colors">
-            Renewly
-          </span>
-        </Link>
+        <RenewlyLogo size="md" />
 
         <nav className="hidden md:flex items-center gap-8">
           <a

@@ -5,7 +5,7 @@ Disallow: /admin/
 Disallow: /app/
 Allow: /
 
-Sitemap: https://renewly.app/sitemap.xml
+Sitemap: https://www.renewly.in/sitemap.xml
 
 User-agent: Googlebot
 Allow: /

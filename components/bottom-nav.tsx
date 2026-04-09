@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from './motion'
+import { RenewlyLogo } from '@/components/renewly-logo'
 
 interface BottomNavProps {
   activeTab: string
@@ -295,26 +296,22 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
               !shouldExpand && "justify-center px-2"
             )}
           >
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-gold via-gold/90 to-gold/70 flex items-center justify-center flex-shrink-0 shadow-[0_12px_28px_rgba(199,163,106,0.24)]">
-              <span className="text-obsidian font-semibold text-xl">R</span>
-            </div>
-
+            <RenewlyLogo 
+              size="lg" 
+              showWordmark={shouldExpand} 
+              linkToHome={false}
+            />
             <AnimatePresence>
               {shouldExpand && (
-                <motion.div
+                <motion.p
                   initial={{ opacity: 0, width: 0 }}
                   animate={{ opacity: 1, width: 'auto' }}
                   exit={{ opacity: 0, width: 0 }}
                   transition={{ duration: 0.15 }}
-                  className="overflow-hidden"
+                  className="text-[11px] text-muted-foreground whitespace-nowrap overflow-hidden"
                 >
-                  <h1 className="text-[1.05rem] font-semibold tracking-[0.02em] text-foreground whitespace-nowrap group-hover:text-gold transition-colors">
-                    Renewly
-                  </h1>
-                  <p className="text-[11px] text-muted-foreground whitespace-nowrap">
-                    Subscription Intelligence
-                  </p>
-                </motion.div>
+                  Subscription Intelligence
+                </motion.p>
               )}
             </AnimatePresence>
           </motion.div>

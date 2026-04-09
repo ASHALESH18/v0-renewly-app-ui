@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { Mail, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react'
+import { Mail, ArrowLeft, Check, AlertCircle } from 'lucide-react'
 import { AuthLayout } from '@/components/auth/auth-layout'
 import { createClient } from '@/lib/supabase/client'
 import { getURL } from '@/lib/supabase/url'
@@ -23,7 +23,7 @@ export default function ForgotPasswordPage() {
       const supabase = createClient()
 
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: getURL('auth/reset-password'),
+        redirectTo: getURL('auth/callback') + '?type=recovery',
       })
 
       if (resetError) {
@@ -32,11 +32,68 @@ export default function ForgotPasswordPage() {
         return
       }
 
+      // Success - stop loading and show submitted state
+      setIsLoading(false)
       setIsSubmitted(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send reset email')
       setIsLoading(false)
     }
+  }
+
+  // Success state - email sent
+  if (isSubmitted) {
+    return (
+      <AuthLayout
+        title="Check your email"
+        subtitle="We sent a password reset link"
+      >
+        <div className="text-center py-4 space-y-6">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+            className="w-16 h-16 rounded-full bg-gold/20 flex items-center justify-center mx-auto"
+          >
+            <Mail className="w-8 h-8 text-gold" />
+          </motion.div>
+
+          <div className="space-y-2">
+            <p className="text-ivory text-lg font-semibold">
+              Email sent!
+            </p>
+            <p className="text-sm text-platinum">
+              We sent a password reset link to <span className="text-gold">{email}</span>
+            </p>
+            <p className="text-xs text-muted-foreground mt-4">
+              Didn&apos;t receive the email? Check your spam folder or try again.
+            </p>
+          </div>
+
+          <div className="space-y-3 pt-2">
+            <button
+              onClick={() => {
+                setIsSubmitted(false)
+                setEmail('')
+              }}
+              className="w-full h-12 rounded-xl border border-gold/30 text-gold font-medium hover:bg-gold/10 transition-colors"
+            >
+              Try a different email
+            </button>
+            
+            <Link href="/auth/sign-in">
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                className="w-full h-12 rounded-xl gold-gradient text-obsidian font-semibold shadow-luxury"
+              >
+                Back to sign in
+              </motion.button>
+            </Link>
+          </div>
+        </div>
+      </AuthLayout>
+    )
   }
 
   return (

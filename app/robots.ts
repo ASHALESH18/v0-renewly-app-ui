@@ -20,6 +20,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/api/', '/admin/', '/app/'],
       },
     ],
-    sitemap: 'https://renewly.app/sitemap.xml',
+    sitemap: 'https://www.renewly.in/sitemap.xml',
   }
 }
