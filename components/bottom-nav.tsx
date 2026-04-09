@@ -297,7 +297,7 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
             )}
           >
             <RenewlyLogo 
-              size="md" 
+              size="lg" 
               showWordmark={false} 
               linkToHome={false}
             />

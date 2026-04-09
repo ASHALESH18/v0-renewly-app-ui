@@ -1,26 +1,125 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 interface RenewlyLogoProps {
   /** Show the text wordmark alongside the logo icon */
   showWordmark?: boolean
-  /** Size variant */
-  size?: 'sm' | 'md' | 'lg'
+  /** Size variant - xl and 2xl added for prominent branding */
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
   /** Additional CSS classes */
   className?: string
   /** Make the logo a clickable link to home */
   linkToHome?: boolean
-  /** Theme override (auto-detects by default) */
+  /** Theme override (auto-detects by default via CSS) */
   theme?: 'light' | 'dark' | 'auto'
 }
 
 const sizeMap = {
-  sm: { icon: 24, text: 'text-sm' },
-  md: { icon: 32, text: 'text-base' },
-  lg: { icon: 40, text: 'text-xl' },
+  sm: { icon: 24, text: 'text-sm', gap: 'gap-1.5' },
+  md: { icon: 32, text: 'text-base', gap: 'gap-2' },
+  lg: { icon: 40, text: 'text-xl', gap: 'gap-2.5' },
+  xl: { icon: 48, text: 'text-2xl', gap: 'gap-3' },
+  '2xl': { icon: 56, text: 'text-3xl', gap: 'gap-3.5' },
+}
+
+/**
+ * SVG Calendar-R Icon - The Renewly brand mark
+ * Premium calendar outline with elegant serif R inside
+ */
+function RenewlyIconSVG({ 
+  size, 
+  className,
+  theme = 'auto'
+}: { 
+  size: number
+  className?: string 
+  theme?: 'light' | 'dark' | 'auto'
+}) {
+  // Gold color for dark mode, bronze for light mode
+  const darkModeClass = theme === 'light' ? 'hidden' : theme === 'dark' ? 'block' : 'hidden dark:block'
+  const lightModeClass = theme === 'light' ? 'block' : theme === 'dark' ? 'hidden' : 'block dark:hidden'
+
+  return (
+    <div className={cn('relative flex-shrink-0', className)} style={{ width: size, height: size }}>
+      {/* Dark mode version - Gold on transparent */}
+      <svg
+        viewBox="0 0 48 48"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={cn('absolute inset-0 w-full h-full', darkModeClass)}
+        aria-hidden="true"
+      >
+        {/* Calendar outline */}
+        <rect
+          x="6"
+          y="10"
+          width="36"
+          height="32"
+          rx="4"
+          stroke="#C7A36A"
+          strokeWidth="2"
+          fill="none"
+        />
+        {/* Calendar header line */}
+        <line x1="6" y1="18" x2="42" y2="18" stroke="#C7A36A" strokeWidth="1.5" />
+        {/* Calendar binding tabs */}
+        <rect x="14" y="6" width="4" height="8" rx="1" fill="#C7A36A" />
+        <rect x="30" y="6" width="4" height="8" rx="1" fill="#C7A36A" />
+        {/* Elegant serif R */}
+        <text
+          x="24"
+          y="35"
+          textAnchor="middle"
+          fill="#C7A36A"
+          fontFamily="Georgia, 'Times New Roman', serif"
+          fontSize="18"
+          fontWeight="600"
+        >
+          R
+        </text>
+      </svg>
+
+      {/* Light mode version - Bronze on transparent */}
+      <svg
+        viewBox="0 0 48 48"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={cn('absolute inset-0 w-full h-full', lightModeClass)}
+        aria-hidden="true"
+      >
+        {/* Calendar outline */}
+        <rect
+          x="6"
+          y="10"
+          width="36"
+          height="32"
+          rx="4"
+          stroke="#8B6914"
+          strokeWidth="2"
+          fill="none"
+        />
+        {/* Calendar header line */}
+        <line x1="6" y1="18" x2="42" y2="18" stroke="#8B6914" strokeWidth="1.5" />
+        {/* Calendar binding tabs */}
+        <rect x="14" y="6" width="4" height="8" rx="1" fill="#8B6914" />
+        <rect x="30" y="6" width="4" height="8" rx="1" fill="#8B6914" />
+        {/* Elegant serif R */}
+        <text
+          x="24"
+          y="35"
+          textAnchor="middle"
+          fill="#8B6914"
+          fontFamily="Georgia, 'Times New Roman', serif"
+          fontSize="18"
+          fontWeight="600"
+        >
+          R
+        </text>
+      </svg>
+    </div>
+  )
 }
 
 export function RenewlyLogo({
@@ -30,37 +129,12 @@ export function RenewlyLogo({
   linkToHome = true,
   theme = 'auto',
 }: RenewlyLogoProps) {
-  const { icon, text } = sizeMap[size]
+  const { icon, text, gap } = sizeMap[size]
 
   const content = (
-    <div className={cn('flex items-center gap-2 group', className)}>
-      {/* Logo icon - uses CSS to swap based on theme */}
-      <div className="relative flex-shrink-0" style={{ width: icon, height: icon }}>
-        {/* Dark mode icon (gold calendar-R on black) */}
-        <Image
-          src="/images/renewly-icon-dark.jpg"
-          alt="Renewly"
-          width={icon}
-          height={icon}
-          className={cn(
-            'rounded-lg object-cover',
-            theme === 'light' ? 'hidden' : theme === 'dark' ? 'block' : 'hidden dark:block'
-          )}
-          priority
-        />
-        {/* Light mode icon (bronze calendar-R on cream) */}
-        <Image
-          src="/images/renewly-icon-light.jpg"
-          alt="Renewly"
-          width={icon}
-          height={icon}
-          className={cn(
-            'rounded-lg object-cover',
-            theme === 'light' ? 'block' : theme === 'dark' ? 'hidden' : 'block dark:hidden'
-          )}
-          priority
-        />
-      </div>
+    <div className={cn('flex items-center group', gap, className)}>
+      {/* SVG Logo Icon */}
+      <RenewlyIconSVG size={icon} theme={theme} />
 
       {/* Wordmark */}
       {showWordmark && (
@@ -106,3 +180,8 @@ export function RenewlyIcon({
     />
   )
 }
+
+/**
+ * Export the raw SVG icon component for special use cases
+ */
+export { RenewlyIconSVG }
