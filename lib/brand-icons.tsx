@@ -152,6 +152,84 @@ const PlayStationIcon = () => (
   </svg>
 )
 
+const XboxIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+    <path d="M14.952.1c.694.025 1.35.16 1.967.385-.71.77-1.33 1.656-1.89 2.52.376.035.75.087 1.126.14 1.24.204 2.452.576 3.621 1.118.93 1.238 1.607 2.695 1.94 4.243.256 1.223.334 2.476.22 3.716.13 1.24.21 2.484.104 3.718.114 1.233.027 2.477-.291 3.705-.333 1.55-1.01 3.004-1.94 4.244-1.17.541-2.38.912-3.62 1.116-.376.052-.75.105-1.126.14.56.863 1.18 1.75 1.89 2.52-.617.225-1.273.36-1.967.385-.854.026-1.708-.1-2.514-.378-.807-.278-1.557-.74-2.21-1.366.206-.156.41-.314.61-.475-.562-.63-1.015-1.367-1.33-2.18-.162-.414-.299-.84-.404-1.27-.105.43-.242.856-.404 1.27-.315.813-.768 1.55-1.33 2.18.2.16.404.319.61.475-.654.626-1.403 1.088-2.21 1.366-.806.277-1.66.403-2.514.378-.694-.025-1.35-.16-1.967-.385.71-.77 1.33-1.656 1.89-2.52-.376-.035-.75-.088-1.126-.14-1.24-.204-2.452-.576-3.62-1.116-.93-1.24-1.608-2.695-1.94-4.244-.256-1.228-.335-2.472-.22-3.705-.114-1.234-.027-2.478.29-3.718.333-1.548 1.01-3.005 1.94-4.243 1.169-.542 2.38-.914 3.62-1.118.376-.053.75-.105 1.127-.14-.56-.864-1.18-1.75-1.89-2.52.617-.225 1.273-.36 1.967-.385.854-.026 1.708.1 2.514.378.807.278 1.557.74 2.21 1.366-.206.155-.41.314-.61.474.562.631 1.015 1.368 1.33 2.18.162.415.299.84.404 1.27.105-.43.242-.855.404-1.27.315-.812.768-1.549 1.33-2.18-.2-.16-.404-.32-.61-.474.654-.625 1.403-1.088 2.21-1.366.806-.278 1.66-.404 2.514-.378z"/>
+  </svg>
+)
+
+const AppleMusicIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+    <path d="M23.994 6.124a.5.5 0 0 0-.438-.25h-.002c-2.814-.055-5.463-1.447-7.126-3.776a.5.5 0 0 0-.858 0C12.91 4.427 10.26 5.819 7.447 5.874a.5.5 0 0 0-.438.25.5.5 0 0 0 .012.488c2.234 3.27 3.468 6.934 3.468 10.764 0 7.322-6.335 13.25-14.118 13.25-2.39 0-4.663-.633-6.619-1.84a.5.5 0 0 0-.625.754C2.015 22.27 5.062 23.5 8.34 23.5c8.644 0 15.66-6.864 15.66-15.375 0-3.622-1.067-7.003-2.993-9.901a.5.5 0 0 0-.013-.1z"/>
+  </svg>
+)
+
+const NintendoIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+    <path d="M12.27 0h.07L22.3 5.38v13.24L12.27 24 2.24 18.62V5.38L12.27 0zm-6.1 9.98h4.22v5.06h-4.22v-5.06zM21 11.04h-4.23v5.06H21v-5.06z"/>
+  </svg>
+)
+
+const DuolingoIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+    <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm0 4.5c1.72 0 3.3.64 4.5 1.68V7.5h-2.16c-.48-1.08-1.56-1.8-2.76-1.8-1.68 0-3.06 1.38-3.06 3.06 0 1.68 1.38 3.06 3.06 3.06 1.2 0 2.28-.72 2.76-1.8h2.16v2.32c-1.2 1.04-2.78 1.68-4.5 1.68-3.78 0-6.84-3.06-6.84-6.84S8.22 4.5 12 4.5zm0 10.8c-1.44 0-2.76-.72-3.54-1.8H6.3c.84 1.56 2.52 2.64 4.44 2.64 1.56 0 2.94-.72 3.84-1.8h-2.16c-.78 1.08-2.1 1.8-3.54 1.8z"/>
+  </svg>
+)
+
+const HeadspaceIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 3c2.485 0 4.5 2.015 4.5 4.5S14.485 12 12 12s-4.5-2.015-4.5-4.5S9.515 3 12 3zm0 15c-2.625 0-4.957-.987-6.75-2.598.486-1.704 2.1-2.904 3.975-2.904.375 0 .75.045 1.102.135.705.168 1.39.375 2.048.615.658-.24 1.343-.447 2.048-.615.352-.09.727-.135 1.102-.135 1.875 0 3.489 1.2 3.975 2.904C16.957 17.013 14.625 18 12 18z"/>
+  </svg>
+)
+
+const CalmIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 3c1.656 0 3 1.344 3 3s-1.344 3-3 3-3-1.344-3-3 1.344-3 3-3zm0 15.5c-3.584 0-6.714-1.785-8.515-4.5C5.236 16.265 8.442 17.5 12 17.5c3.558 0 6.764-1.235 8.515-3.5C18.714 16.715 15.584 18.5 12 18.5z"/>
+  </svg>
+)
+
+const HotstarIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15h-2v-5h2v5zm4-5h-2v5h2v-5zm0-4h-2v2h2v-2zm4 9h-2v-5h2v5z"/>
+  </svg>
+)
+
+const AirtelXstreamIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.657 0 3 1.343 3 3s-1.343 3-3 3-3-1.343-3-3 1.343-3 3-3zm4 12h-8v-2h8v2zm0-4h-8v-2h8v2z"/>
+  </svg>
+)
+
+const SwiggyOneIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+    <path d="M12 1C5.925 1 1 5.925 1 12s4.925 11 11 11 11-4.925 11-11S18.075 1 12 1zm0 2c4.972 0 9 4.029 9 9s-4.029 9-9 9-9-4.029-9-9 4.029-9 9-9zm-2 4h4v2h-4v-2zm0 4h4v2h-4v-2zm0 4h4v2h-4v-2z"/>
+  </svg>
+)
+
+const ZomatoGoldIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+    <path d="M12 1C5.925 1 1 5.925 1 12s4.925 11 11 11 11-4.925 11-11S18.075 1 12 1zm0 2c4.972 0 9 4.029 9 9s-4.029 9-9 9-9-4.029-9-9 4.029-9 9-9zm0 2c-3.866 0-7 3.134-7 7s3.134 7 7 7 7-3.134 7-7-3.134-7-7-7z"/>
+  </svg>
+)
+
+const Microsoft365Icon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+    <path d="M0 0v11.408h11.408V0zm12.594 0v11.408H24V0zM0 12.594V24h11.408V12.594zm12.594 0V24H24V12.594z"/>
+  </svg>
+)
+
+const iCloudIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+    <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09z"/>
+  </svg>
+)
+
+const GoogleOneIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+    <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/>
+  </svg>
+)
+
 // Brand configuration map - normalized service names to brand config
 const brandMap: Record<string, BrandConfig> = {
   // Streaming
@@ -304,6 +382,34 @@ const brandMap: Record<string, BrandConfig> = {
     color: '#003791',
     textColor: '#FFFFFF',
   },
+  xbox: {
+    name: 'xbox',
+    displayName: 'Xbox Game Pass',
+    icon: <XboxIcon />,
+    color: '#107C10',
+    textColor: '#FFFFFF',
+  },
+  'xbox game pass': {
+    name: 'xbox game pass',
+    displayName: 'Xbox Game Pass',
+    icon: <XboxIcon />,
+    color: '#107C10',
+    textColor: '#FFFFFF',
+  },
+  nintendo: {
+    name: 'nintendo',
+    displayName: 'Nintendo Switch Online',
+    icon: <NintendoIcon />,
+    color: '#E60012',
+    textColor: '#FFFFFF',
+  },
+  'nintendo switch online': {
+    name: 'nintendo switch online',
+    displayName: 'Nintendo Switch Online',
+    icon: <NintendoIcon />,
+    color: '#E60012',
+    textColor: '#FFFFFF',
+  },
 
   // Apple
   apple: {
@@ -344,15 +450,43 @@ const brandMap: Record<string, BrandConfig> = {
   icloud: {
     name: 'icloud',
     displayName: 'iCloud',
-    icon: <AppleIcon />,
+    icon: <iCloudIcon />,
     color: '#3693F3',
     textColor: '#FFFFFF',
   },
   'icloud+': {
     name: 'icloud+',
     displayName: 'iCloud+',
-    icon: <AppleIcon />,
+    icon: <iCloudIcon />,
     color: '#3693F3',
+    textColor: '#FFFFFF',
+  },
+  'google one': {
+    name: 'google one',
+    displayName: 'Google One',
+    icon: <GoogleOneIcon />,
+    color: '#4285F4',
+    textColor: '#FFFFFF',
+  },
+  microsoft: {
+    name: 'microsoft',
+    displayName: 'Microsoft 365',
+    icon: <Microsoft365Icon />,
+    color: '#0078D4',
+    textColor: '#FFFFFF',
+  },
+  'microsoft 365': {
+    name: 'microsoft 365',
+    displayName: 'Microsoft 365',
+    icon: <Microsoft365Icon />,
+    color: '#0078D4',
+    textColor: '#FFFFFF',
+  },
+  'office 365': {
+    name: 'office 365',
+    displayName: 'Microsoft 365',
+    icon: <Microsoft365Icon />,
+    color: '#0078D4',
     textColor: '#FFFFFF',
   },
 
@@ -580,6 +714,80 @@ const brandMap: Record<string, BrandConfig> = {
     displayName: 'LinkedIn Premium',
     icon: <LinkedInIcon />,
     color: '#0A66C2',
+    textColor: '#FFFFFF',
+  },
+
+  // Wellness & Learning
+  duolingo: {
+    name: 'duolingo',
+    displayName: 'Duolingo Super',
+    icon: <DuolingoIcon />,
+    color: '#58CC02',
+    textColor: '#FFFFFF',
+  },
+  'duolingo super': {
+    name: 'duolingo super',
+    displayName: 'Duolingo Super',
+    icon: <DuolingoIcon />,
+    color: '#58CC02',
+    textColor: '#FFFFFF',
+  },
+  headspace: {
+    name: 'headspace',
+    displayName: 'Headspace',
+    icon: <HeadspaceIcon />,
+    color: '#0ACE6B',
+    textColor: '#FFFFFF',
+  },
+  calm: {
+    name: 'calm',
+    displayName: 'Calm',
+    icon: <CalmIcon />,
+    color: '#FDD835',
+    textColor: '#000000',
+  },
+
+  // India-specific Services
+  hotstar: {
+    name: 'hotstar',
+    displayName: 'Disney+ Hotstar',
+    icon: <HotstarIcon />,
+    color: '#1F51BA',
+    textColor: '#FFFFFF',
+  },
+  'disney+ hotstar': {
+    name: 'disney+ hotstar',
+    displayName: 'Disney+ Hotstar',
+    icon: <HotstarIcon />,
+    color: '#1F51BA',
+    textColor: '#FFFFFF',
+  },
+  jiohotstar: {
+    name: 'jiohotstar',
+    displayName: 'JioHotstar',
+    icon: <HotstarIcon />,
+    color: '#1F51BA',
+    textColor: '#FFFFFF',
+  },
+  'airtel xstream': {
+    name: 'airtel xstream',
+    displayName: 'Airtel Xstream',
+    icon: <AirtelXstreamIcon />,
+    color: '#E2231A',
+    textColor: '#FFFFFF',
+  },
+  'swiggy one': {
+    name: 'swiggy one',
+    displayName: 'Swiggy One',
+    icon: <SwiggyOneIcon />,
+    color: '#F1511B',
+    textColor: '#FFFFFF',
+  },
+  'zomato gold': {
+    name: 'zomato gold',
+    displayName: 'Zomato Gold',
+    icon: <ZomatoGoldIcon />,
+    color: '#EF4F5F',
     textColor: '#FFFFFF',
   },
 }
