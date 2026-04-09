@@ -286,32 +286,37 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
       className="hidden lg:flex fixed left-0 top-0 bottom-0 flex-col border-r border-sidebar-border bg-[linear-gradient(180deg,rgba(251,246,239,0.98)_0%,rgba(242,231,217,0.98)_100%)] dark:bg-[linear-gradient(180deg,rgba(14,18,24,0.98)_0%,rgba(10,13,18,0.98)_100%)] backdrop-blur-xl shadow-[14px_0_48px_rgba(87,63,38,0.08)] dark:shadow-[14px_0_48px_rgba(0,0,0,0.24)] z-40"
     >
       {/* Logo */}
-      <div className="p-4 border-b border-gold/10">
+      <div className="p-3 border-b border-gold/10">
         <Link href="/" className="block cursor-pointer">
           <motion.div
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
             className={cn(
-              "group flex items-center gap-3 rounded-2xl border border-gold/16 bg-[linear-gradient(180deg,rgba(255,255,255,0.76),rgba(241,230,216,0.52))] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(199,163,106,0.05))] px-3 py-3 shadow-[0_12px_30px_rgba(87,63,38,0.07)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.18)] transition-all duration-200 hover:border-gold/30 hover:shadow-[0_18px_44px_rgba(192,142,75,0.14)]",
+              "group flex items-center gap-2.5 rounded-xl border border-gold/16 bg-[linear-gradient(180deg,rgba(255,255,255,0.76),rgba(241,230,216,0.52))] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(199,163,106,0.05))] px-2.5 py-2.5 shadow-[0_8px_20px_rgba(87,63,38,0.06)] dark:shadow-[0_8px_20px_rgba(0,0,0,0.15)] transition-all duration-200 hover:border-gold/30",
               !shouldExpand && "justify-center px-2"
             )}
           >
             <RenewlyLogo 
-              size="lg" 
-              showWordmark={shouldExpand} 
+              size="md" 
+              showWordmark={false} 
               linkToHome={false}
             />
             <AnimatePresence>
               {shouldExpand && (
-                <motion.p
+                <motion.div
                   initial={{ opacity: 0, width: 0 }}
                   animate={{ opacity: 1, width: 'auto' }}
                   exit={{ opacity: 0, width: 0 }}
                   transition={{ duration: 0.15 }}
-                  className="text-[11px] text-muted-foreground whitespace-nowrap overflow-hidden"
+                  className="flex flex-col min-w-0 overflow-hidden"
                 >
-                  Subscription Intelligence
-                </motion.p>
+                  <span className="text-base font-serif font-semibold text-foreground group-hover:text-gold transition-colors truncate">
+                    Renewly
+                  </span>
+                  <span className="text-[10px] text-muted-foreground truncate">
+                    Subscription Intelligence
+                  </span>
+                </motion.div>
               )}
             </AnimatePresence>
           </motion.div>

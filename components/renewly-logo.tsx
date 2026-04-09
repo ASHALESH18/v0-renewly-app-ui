@@ -19,8 +19,8 @@ interface RenewlyLogoProps {
 
 const sizeMap = {
   sm: { icon: 24, text: 'text-sm' },
-  md: { icon: 32, text: 'text-lg' },
-  lg: { icon: 48, text: 'text-2xl' },
+  md: { icon: 32, text: 'text-base' },
+  lg: { icon: 40, text: 'text-xl' },
 }
 
 export function RenewlyLogo({
@@ -36,9 +36,9 @@ export function RenewlyLogo({
     <div className={cn('flex items-center gap-2 group', className)}>
       {/* Logo icon - uses CSS to swap based on theme */}
       <div className="relative flex-shrink-0" style={{ width: icon, height: icon }}>
-        {/* Dark mode logo (gold on transparent) */}
+        {/* Dark mode icon (gold calendar-R on black) */}
         <Image
-          src="/images/renewly-logo.jpg"
+          src="/images/renewly-icon-dark.jpg"
           alt="Renewly"
           width={icon}
           height={icon}
@@ -48,9 +48,9 @@ export function RenewlyLogo({
           )}
           priority
         />
-        {/* Light mode logo (bronze on cream) */}
+        {/* Light mode icon (bronze calendar-R on cream) */}
         <Image
-          src="/images/renewly-logo-light.jpg"
+          src="/images/renewly-icon-light.jpg"
           alt="Renewly"
           width={icon}
           height={icon}
