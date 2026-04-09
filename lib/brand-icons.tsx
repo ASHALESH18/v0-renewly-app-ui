@@ -268,6 +268,13 @@ const brandMap: Record<string, BrandConfig> = {
     color: '#FF0000',
     textColor: '#FFFFFF',
   },
+  'youtube music premium': {
+    name: 'youtube music premium',
+    displayName: 'YouTube Music Premium',
+    icon: <YouTubeIcon />,
+    color: '#FF0000',
+    textColor: '#FFFFFF',
+  },
   disney: {
     name: 'disney',
     displayName: 'Disney+',
@@ -326,6 +333,13 @@ const brandMap: Record<string, BrandConfig> = {
   },
   'hbo max': {
     name: 'hbo max',
+    displayName: 'HBO Max',
+    icon: <HBOIcon />,
+    color: '#5822B4',
+    textColor: '#FFFFFF',
+  },
+  'hbomax': {
+    name: 'hbomax',
     displayName: 'HBO Max',
     icon: <HBOIcon />,
     color: '#5822B4',
@@ -695,6 +709,13 @@ const brandMap: Record<string, BrandConfig> = {
     color: '#181717',
     textColor: '#FFFFFF',
   },
+  'github pro': {
+    name: 'github pro',
+    displayName: 'GitHub Pro',
+    icon: <GitHubIcon />,
+    color: '#181717',
+    textColor: '#FFFFFF',
+  },
   'github copilot': {
     name: 'github copilot',
     displayName: 'GitHub Copilot',
@@ -794,9 +815,15 @@ const brandMap: Record<string, BrandConfig> = {
 
 /**
  * Normalize a service name for lookup
+ * Converts: "Apple Music" → "apple music", "apple-music" → "apple music"
  */
 export function normalizeServiceName(name: string): string {
-  return name.toLowerCase().trim().replace(/\s+/g, ' ')
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/-/g, ' ')  // Convert hyphens to spaces
+    .replace(/\s+/g, ' ') // Normalize multiple spaces to single space
+    .replace(/\+/g, '') // Remove plus signs (for iCloud+, Disney+, etc.)
 }
 
 /**
