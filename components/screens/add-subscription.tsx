@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
+import {
   X, Search, Plus, ChevronRight, Check,
   Tv, Music, Briefcase, Cloud, Dumbbell, Newspaper, Gamepad2, Package
 } from 'lucide-react'
@@ -65,39 +65,70 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
   const [amount, setAmount] = useState('')
   const [currency, setCurrency] = useState('INR')
   const [nextBilling, setNextBilling] = useState('')
-  
+  const [description, setDescription] = useState('')
+
   const addSubscriptionRemote = useStore((state) => state.addSubscriptionRemote)
   const addToast = useStore((state) => state.addToast)
   const notificationSettings = useStore((state) => state.notificationSettings)
   const [isSaving, setIsSaving] = useState(false)
-  
+
   // Use user's preferred currency from settings, fallback to INR
   const defaultCurrency = notificationSettings?.currencyCode || 'INR'
-  
+
+  const currencySymbolMap: Record<string, string> = {
+    INR: '₹',
+    USD: '$',
+    EUR: '€',
+    GBP: '£',
+    JPY: '¥',
+    CNY: '¥',
+    AUD: 'A$',
+    CAD: 'C$',
+    SGD: 'S$',
+  }
+
+  const currencySymbol = currencySymbolMap[currency] || currency
+
   const filteredServices = popularServices.filter(service =>
     service.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
-  
+
+  const resetFormState = () => {
+    setStep('select')
+    setSearchQuery('')
+    setBrowseCategoryId(null)
+    setSelectedService(null)
+    setCustomName('')
+    setSelectedCategory('Entertainment')
+    setSelectedCycle('monthly')
+    setAmount('')
+    setCurrency(defaultCurrency)
+    setNextBilling('')
+    setDescription('')
+  }
+
   const handleBrowseCategory = (categoryId: string) => {
     setBrowseCategoryId(categoryId)
     setStep('category-services')
   }
-  
+
   const handleSelectService = (service: any) => {
     setSelectedService(service)
     const mappedCategory = categoryMap[service.category.toLowerCase()] || 'Other'
     setSelectedCategory(mappedCategory as SubscriptionCategory)
     setAmount('')
     setCurrency(defaultCurrency)
+    setDescription('')
     setStep('details')
   }
-  
+
   const handleCreateCustom = () => {
     setSelectedService(null)
     setCurrency(defaultCurrency)
+    setDescription('')
     setStep('details')
   }
-  
+
   const handleSave = async () => {
     if (!amount || !nextBilling) {
       addToast({
@@ -109,18 +140,18 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
     }
 
     setIsSaving(true)
-    
-    // Use canonical Subscription shape for persistence
+
     const result = await addSubscriptionRemote({
       name: selectedService?.name || customName || 'New Subscription',
       category: selectedCategory,
       amount: parseFloat(amount),
-      currency: currency,
+      currency,
       billingCycle: selectedCycle,
-      status: 'active',
       renewalDate: nextBilling,
-      color: selectedService?.color,
-      logo: selectedService?.logo,
+      description: description.trim() || undefined,
+      status: 'active',
+      logo: selectedService?.logo || undefined,
+      color: selectedService?.color || selectedService?.brandColor || undefined,
     })
 
     setIsSaving(false)
@@ -133,17 +164,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
       })
 
       onClose()
-      // Reset state
-      setStep('select')
-      setSearchQuery('')
-      setSelectedService(null)
-      setCustomName('')
-      setSelectedCategory('Entertainment')
-      setSelectedCycle('monthly')
-      setAmount('')
-      setCurrency(defaultCurrency)
-      setNextBilling('')
-      setBrowseCategoryId(null)
+      resetFormState()
     } else {
       addToast({
         type: 'error',
@@ -152,24 +173,18 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
       })
     }
   }
-  
+
   const handleClose = () => {
     onClose()
-    // Reset state after animation
     setTimeout(() => {
-      setStep('select')
-      setSearchQuery('')
-      setSelectedService(null)
-      setCustomName('')
-      setBrowseCategoryId(null)
+      resetFormState()
     }, 300)
   }
-  
+
   return (
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -177,8 +192,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
             onClick={handleClose}
             className="fixed inset-0 bg-obsidian/80 backdrop-blur-sm z-50"
           />
-          
-          {/* Sheet */}
+
           <motion.div
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
@@ -186,12 +200,10 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
             className="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-hidden rounded-t-3xl bg-card"
           >
-            {/* Handle */}
             <div className="flex justify-center pt-3 pb-2">
               <div className="w-12 h-1.5 rounded-full bg-muted-foreground/30" />
             </div>
-            
-            {/* Header */}
+
             <div className="flex items-center justify-between px-4 pb-4">
               <div className="flex items-center gap-3">
                 {(step === 'details' || step === 'category-services') && (
@@ -209,7 +221,11 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                   </button>
                 )}
                 <h2 className="text-xl font-semibold text-foreground">
-                  {step === 'select' ? 'Add Subscription' : step === 'category-services' ? 'Browse Services' : 'Subscription Details'}
+                  {step === 'select'
+                    ? 'Add Subscription'
+                    : step === 'category-services'
+                      ? 'Browse Services'
+                      : 'Subscription Details'}
                 </h2>
               </div>
               <button
@@ -219,7 +235,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                 <X className="w-5 h-5 text-muted-foreground" />
               </button>
             </div>
-            
+
             <div className="overflow-y-auto max-h-[calc(90vh-100px)] pb-safe">
               <AnimatePresence mode="wait">
                 {step === 'select' ? (
@@ -230,7 +246,6 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                     exit={{ opacity: 0, x: -20 }}
                     className="px-4 pb-8"
                   >
-                    {/* Search */}
                     <div className="relative mb-6">
                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                       <Input
@@ -240,8 +255,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                         className="pl-12 h-12 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground"
                       />
                     </div>
-                    
-                    {/* Popular Services */}
+
                     <div className="mb-6">
                       <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
                         Popular Services
@@ -255,8 +269,8 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                             onClick={() => handleSelectService(service)}
                             className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-secondary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50 focus:ring-offset-2 focus:ring-offset-background"
                           >
-                            <SubscriptionIcon 
-                              name={service.name} 
+                            <SubscriptionIcon
+                              name={service.name}
                               fallbackColor={service.color}
                               size="lg"
                             />
@@ -267,8 +281,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                         ))}
                       </div>
                     </div>
-                    
-                    {/* Categories */}
+
                     <div className="mb-6">
                       <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
                         Browse by Category
@@ -293,8 +306,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                         })}
                       </div>
                     </div>
-                    
-                    {/* Custom Entry */}
+
                     <motion.button
                       whileTap={{ scale: 0.98 }}
                       whileHover={{ scale: 1.02 }}
@@ -313,7 +325,6 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                     exit={{ opacity: 0, x: 20 }}
                     className="px-4 pb-8"
                   >
-                    {/* Category Services Grid */}
                     {browseCategoryId && (
                       <div>
                         <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
@@ -321,7 +332,13 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                         </h3>
                         <div className="grid grid-cols-4 gap-3">
                           {popularServices
-                            .filter(service => service.category === browseCategoryId || (browseCategoryId === 'entertainment' && (service.category === 'entertainment' || service.category === 'streaming' || service.category === 'gaming')))
+                            .filter(service =>
+                              service.category === browseCategoryId ||
+                              (browseCategoryId === 'entertainment' &&
+                                (service.category === 'entertainment' ||
+                                  service.category === 'streaming' ||
+                                  service.category === 'gaming'))
+                            )
                             .map((service) => (
                               <motion.button
                                 key={service.id}
@@ -330,8 +347,8 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                                 onClick={() => handleSelectService(service)}
                                 className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-secondary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50 focus:ring-offset-2 focus:ring-offset-background"
                               >
-                                <SubscriptionIcon 
-                                  name={service.name} 
+                                <SubscriptionIcon
+                                  name={service.name}
                                   fallbackColor={service.color}
                                   size="lg"
                                 />
@@ -352,11 +369,10 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                     exit={{ opacity: 0, x: 20 }}
                     className="px-4 pb-8 space-y-6"
                   >
-                    {/* Service Preview */}
                     {selectedService && (
                       <div className="flex items-center gap-4 p-4 rounded-xl bg-secondary/50">
-                        <SubscriptionIcon 
-                          name={selectedService.name} 
+                        <SubscriptionIcon
+                          name={selectedService.name}
                           fallbackColor={selectedService.color}
                           size="lg"
                         />
@@ -366,8 +382,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                         </div>
                       </div>
                     )}
-                    
-                    {/* Custom Name Input (only for custom) */}
+
                     {!selectedService && (
                       <div>
                         <label className="text-sm font-medium text-muted-foreground mb-2 block">
@@ -381,17 +396,16 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                         />
                       </div>
                     )}
-                    
-                    {/* Amount and Currency */}
+
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-muted-foreground mb-2 block">
                         Amount & Currency
                       </label>
                       <div className="flex gap-3">
                         <div className="relative flex-1">
-                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none font-semibold">
-                            {currency === 'INR' ? '₹' : currency === 'USD' ? '$' : currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : currency === 'JPY' ? '¥' : currency === 'CNY' ? '¥' : currency}
-                          </div>
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-semibold text-muted-foreground pointer-events-none">
+                            {currencySymbol}
+                          </span>
                           <Input
                             type="number"
                             value={amount}
@@ -416,8 +430,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                         Selected: {currencies.find(c => c.code === currency)?.name}
                       </p>
                     </div>
-                    
-                    {/* Billing Cycle */}
+
                     <div>
                       <label className="text-sm font-medium text-muted-foreground mb-2 block">
                         Billing Cycle
@@ -439,17 +452,34 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                         ))}
                       </div>
                     </div>
-                    
-                    {/* Next Billing Date */}
+
                     <DatePickerField
                       label="Next Billing Date"
                       value={nextBilling}
                       onChange={setNextBilling}
-                      locale={notificationSettings?.language === 'es' ? 'es-ES' : notificationSettings?.language === 'fr' ? 'fr-FR' : 'en-IN'}
+                      locale={
+                        notificationSettings?.language === 'es'
+                          ? 'es-ES'
+                          : notificationSettings?.language === 'fr'
+                            ? 'fr-FR'
+                            : 'en-IN'
+                      }
                       placeholder="Select renewal date"
                     />
-                    
-                    {/* Category (only for custom) */}
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                        Notes
+                      </label>
+                      <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Add comments, account details, billing notes, or reminder context"
+                        rows={4}
+                        className="w-full px-4 py-3 rounded-xl bg-secondary border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors resize-none"
+                      />
+                    </div>
+
                     {!selectedService && (
                       <div>
                         <label className="text-sm font-medium text-muted-foreground mb-2 block">
@@ -457,7 +487,6 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                         </label>
                         <div className="grid grid-cols-4 gap-2">
                           {categories.slice(0, 4).map((cat) => {
-                            // Map the UI id to the canonical category type
                             const mappedCategory = categoryMap[cat.id] || 'Other'
                             const IconComponent = cat.icon
                             return (
@@ -479,8 +508,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                         </div>
                       </div>
                     )}
-                    
-                    {/* Save Button */}
+
                     <Button
                       onClick={handleSave}
                       disabled={isSaving}
