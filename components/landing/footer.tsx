@@ -54,8 +54,8 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
           {/* Brand column */}
           <div className="col-span-2 md:col-span-1">
-            <div className="mb-4">
-              <RenewlyLogo size="md" />
+            <div className="mb-5">
+              <RenewlyLogo size="lg" />
             </div>
             <p className="text-sm text-platinum mb-6 max-w-xs">
               Own every renewal. Track, understand, and reduce every recurring payment with elegance.

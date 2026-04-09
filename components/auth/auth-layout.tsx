@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { springs } from '../motion'
+import { RenewlyLogo } from '@/components/renewly-logo'
 
 interface AuthLayoutProps {
   children: React.ReactNode
@@ -26,12 +27,7 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
         transition={springs.gentle}
         className="relative z-10 p-4 flex items-center justify-between"
       >
-        <Link href="/" className="inline-flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg gold-gradient flex items-center justify-center">
-            <span className="text-obsidian font-semibold text-sm">R</span>
-          </div>
-          <span className="font-semibold text-ivory">Renewly</span>
-        </Link>
+        <RenewlyLogo size="lg" theme="dark" />
         
         {/* Back to Home link */}
         <Link 
