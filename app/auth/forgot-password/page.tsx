@@ -33,15 +33,15 @@ export default function ForgotPasswordPage() {
 
       if (resetError) {
         setError(resetError.message || 'Failed to send reset email')
-        setIsLoading(false)
         return
       }
 
-      // Success - stop loading and show submitted state
-      setIsLoading(false)
+      // Success - show submitted state
       setIsSubmitted(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send reset email')
+    } finally {
+      // Always stop loading regardless of outcome
       setIsLoading(false)
     }
   }
