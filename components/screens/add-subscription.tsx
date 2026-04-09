@@ -238,8 +238,9 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                           <motion.button
                             key={service.id}
                             whileTap={{ scale: 0.95 }}
+                            whileHover={{ scale: 1.02 }}
                             onClick={() => handleSelectService(service)}
-                            className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-secondary/50 transition-colors"
+                            className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-secondary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50 focus:ring-offset-2 focus:ring-offset-background"
                           >
                             <SubscriptionIcon 
                               name={service.name} 
@@ -266,7 +267,13 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                             <motion.button
                               key={category.id}
                               whileTap={{ scale: 0.98 }}
-                              className="flex items-center gap-3 p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors"
+                              whileHover={{ scale: 1.02 }}
+                              onClick={() => {
+                                const mappedCategory = categoryMap[category.id] || 'Other'
+                                setSelectedCategory(mappedCategory as SubscriptionCategory)
+                                setStep('details')
+                              }}
+                              className="flex items-center gap-3 p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50 focus:ring-offset-2 focus:ring-offset-background"
                             >
                               <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">
                                 <IconComponent className="w-5 h-5 text-gold" />
@@ -281,8 +288,9 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                     {/* Custom Entry */}
                     <motion.button
                       whileTap={{ scale: 0.98 }}
+                      whileHover={{ scale: 1.02 }}
                       onClick={handleCreateCustom}
-                      className="w-full flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-dashed border-gold/30 text-gold hover:bg-gold/5 transition-colors"
+                      className="w-full flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-dashed border-gold/30 text-gold hover:bg-gold/5 hover:border-gold/60 transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50 focus:ring-offset-2 focus:ring-offset-background"
                     >
                       <Plus className="w-5 h-5" />
                       <span className="font-medium">Add Custom Subscription</span>
