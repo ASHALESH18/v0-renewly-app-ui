@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { Calendar } from 'lucide-react'
 
 interface DatePickerFieldProps {
@@ -12,9 +12,6 @@ interface DatePickerFieldProps {
   placeholder?: string
 }
 
-/**
- * Format date as DD/MM/YYYY
- */
 function formatDateDDMMYYYY(date: Date): string {
   const day = String(date.getDate()).padStart(2, '0')
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -22,9 +19,6 @@ function formatDateDDMMYYYY(date: Date): string {
   return `${day}/${month}/${year}`
 }
 
-/**
- * Get today's date in YYYY-MM-DD format (for date input min attribute)
- */
 function getTodayString(): string {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -42,14 +36,13 @@ export function DatePickerField({
   disabled = false,
   placeholder = 'Select a date',
 }: DatePickerFieldProps) {
-  const [open, setOpen] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
-  // Format display date as DD/MM/YYYY
   const displayDate = useMemo(() => {
     if (!value) return placeholder
+
     try {
       const date = new Date(value)
-      // Validate the date
       if (isNaN(date.getTime())) return placeholder
       return formatDateDDMMYYYY(date)
     } catch {
@@ -57,64 +50,64 @@ export function DatePickerField({
     }
   }, [value, placeholder])
 
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newDate = e.target.value
-    if (onChange && newDate) {
-      // Validate that the selected date is in the future
-      const selectedDate = new Date(newDate)
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      
-      if (selectedDate >= today) {
-        onChange(newDate)
-      }
-    }
-    setOpen(false)
+  const today = getTodayString()
+
+  const handleWrapperClick = () => {
+    if (disabled) return
+    inputRef.current?.showPicker?.()
+    inputRef.current?.focus()
+    inputRef.current?.click()
   }
 
-  const today = getTodayString()
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = e.target.value
+    if (!onChange || !newDate) return
+
+    const selectedDate = new Date(newDate)
+    const todayDate = new Date()
+    todayDate.setHours(0, 0, 0, 0)
+
+    if (selectedDate >= todayDate) {
+      onChange(newDate)
+    }
+  }
 
   return (
     <div className="space-y-2">
       {label && (
-        <label className="block text-sm font-medium text-foreground">
+        <label className="text-sm font-medium text-muted-foreground block">
           {label}
         </label>
       )}
-      
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => setOpen(!open)}
+
+      <div
+        onClick={handleWrapperClick}
+        className="relative w-full h-12 rounded-xl bg-secondary text-foreground cursor-pointer"
+      >
+        <input
+          ref={inputRef}
+          type="date"
+          value={value || ''}
+          min={today}
+          onChange={handleDateChange}
           disabled={disabled}
-          className="w-full px-4 py-3 rounded-xl bg-secondary border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between h-12"
-        >
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          aria-label={label || placeholder}
+        />
+
+        <div className="w-full h-full px-4 flex items-center justify-between pointer-events-none">
           <span className={value ? 'text-foreground' : 'text-muted-foreground'}>
             {displayDate}
           </span>
-          <Calendar className="w-4 h-4 text-muted-foreground" />
-        </button>
-
-        {open && !disabled && (
-          <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-background border border-gold/20 rounded-xl shadow-luxury z-50">
-            <div className="space-y-3">
-              <input
-                type="date"
-                value={value || ''}
-                onChange={handleDateChange}
-                min={today}
-                className="w-full px-4 py-2 rounded-xl bg-secondary border-0 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors cursor-pointer"
-                autoFocus
-              />
-              {value && (
-                <div className="pt-3 border-t border-gold/10 text-sm text-muted-foreground">
-                  Selected: <span className="text-foreground font-medium">{displayDate}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+          <Calendar className="w-5 h-5 text-muted-foreground" />
+        </div>
       </div>
+
+      {value && (
+        <p className="text-sm text-muted-foreground">
+          Selected: <span className="font-semibold text-foreground">{displayDate}</span>
+        </p>
+      )}
     </div>
   )
 }
