@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Twitter, Instagram, Send } from 'lucide-react'
 import { springs } from '../motion'
 import Link from 'next/link'
+import { RenewlyLogo } from '@/components/renewly-logo'
 
 const footerLinks = {
   product: [
@@ -53,12 +54,9 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
           {/* Brand column */}
           <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="inline-flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg gold-gradient flex items-center justify-center">
-                <span className="text-obsidian font-semibold text-sm">R</span>
-              </div>
-              <span className="font-semibold text-foreground">Renewly</span>
-            </Link>
+            <div className="mb-4">
+              <RenewlyLogo size="md" />
+            </div>
             <p className="text-sm text-platinum mb-6 max-w-xs">
               Own every renewal. Track, understand, and reduce every recurring payment with elegance.
             </p>

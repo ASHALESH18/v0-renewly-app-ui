@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-const baseUrl = 'https://renewly.app'
+const baseUrl = 'https://www.renewly.in'
 
 export const baseMetadata: Metadata = {
   metadataBase: new URL(baseUrl),

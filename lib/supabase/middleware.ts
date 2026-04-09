@@ -44,11 +44,14 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(signInUrl)
   }
 
-  // Redirect authenticated users away from auth pages (except callback and sign-out)
+  // Redirect authenticated users away from auth pages (except callback, sign-out, and reset-password)
+  // Note: reset-password needs to be accessible for users in the password recovery flow
+  // who are technically "authenticated" via the recovery token
   if (
     pathname.startsWith('/auth') &&
     !pathname.includes('callback') &&
     !pathname.includes('sign-out') &&
+    !pathname.includes('reset-password') &&
     user
   ) {
     return NextResponse.redirect(new URL('/app', request.url))

@@ -22,7 +22,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://renewly.app'),
+  metadataBase: new URL('https://www.renewly.in'),
   title: 'Renewly - Own Every Renewal | Subscription Management',
   description: 'Track, understand, and reduce every recurring payment with elegance. Premium subscription intelligence for the discerning individual. Manage your subscriptions effortlessly.',
   keywords: [
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://renewly.app',
+    url: 'https://www.renewly.in',
     siteName: 'Renewly',
     title: 'Renewly - Own Every Renewal',
     description: 'Premium subscription tracking and management with intelligent insights.',
@@ -68,14 +68,13 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon.jpg', sizes: 'any' },
       {
-        url: '/icon-light-32x32.jpg',
+        url: '/icon-light-32x32.png',
         sizes: '32x32',
         media: '(prefers-color-scheme: light)',
       },
       {
-        url: '/icon-dark-32x32.jpg',
+        url: '/icon-dark-32x32.png',
         sizes: '32x32',
         media: '(prefers-color-scheme: dark)',
       },
@@ -84,7 +83,7 @@ export const metadata: Metadata = {
         type: 'image/svg+xml',
       },
     ],
-    apple: '/apple-icon.jpg',
+    apple: '/apple-icon.png',
   },
   robots: {
     index: true,
@@ -98,7 +97,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: 'https://renewly.app',
+    canonical: 'https://www.renewly.in',
   },
 }
 
@@ -128,12 +127,12 @@ export default async function RootLayout({
     '@type': 'SoftwareApplication',
     name: 'Renewly',
     description: 'Premium subscription tracking and management platform',
-    url: 'https://renewly.app',
+    url: 'https://www.renewly.in',
     applicationCategory: 'FinanceApplication',
     offers: {
       '@type': 'Offer',
       price: '0',
-      priceCurrency: 'USD',
+      priceCurrency: 'INR',
       description: 'Freemium subscription management service'
     },
     aggregateRating: {
@@ -144,7 +143,7 @@ export default async function RootLayout({
     author: {
       '@type': 'Organization',
       name: 'Renewly',
-      url: 'https://renewly.app',
+      url: 'https://www.renewly.in',
     },
   }
 

@@ -33,7 +33,11 @@ export async function GET(request: NextRequest) {
       if (type === 'signup' || type === 'email') {
         return NextResponse.redirect(new URL('/auth/verified', origin))
       }
-      // Other OTP types (recovery, invite) - go to appropriate destination
+      // Password recovery flow - redirect to reset password page
+      if (type === 'recovery') {
+        return NextResponse.redirect(new URL('/auth/reset-password', origin))
+      }
+      // Other OTP types (invite) - go to appropriate destination
       return NextResponse.redirect(new URL(next || '/app/dashboard', origin))
     }
 

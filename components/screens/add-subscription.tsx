@@ -64,9 +64,10 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
   const [currency, setCurrency] = useState('INR')
   const [nextBilling, setNextBilling] = useState('')
   
-  const addSubscription = useStore((state) => state.addSubscription)
+  const addSubscriptionRemote = useStore((state) => state.addSubscriptionRemote)
   const addToast = useStore((state) => state.addToast)
   const notificationSettings = useStore((state) => state.notificationSettings)
+  const [isSaving, setIsSaving] = useState(false)
   
   // Use user's preferred currency from settings, fallback to INR
   const defaultCurrency = notificationSettings?.currencyCode || 'INR'
@@ -90,7 +91,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
     setStep('details')
   }
   
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!amount || !nextBilling) {
       addToast({
         type: 'error',
@@ -100,35 +101,48 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
       return
     }
 
-    const subscription = addSubscription({
+    setIsSaving(true)
+    
+    // Use remote-backed subscription action for persistence
+    const result = await addSubscriptionRemote({
       name: selectedService?.name || customName || 'New Subscription',
       category: selectedCategory,
-      amount: parseFloat(amount),
+      price: parseFloat(amount),
       currency: currency,
       billingCycle: selectedCycle,
-      status: 'active',
-      renewalDate: nextBilling,
+      isActive: true,
+      nextRenewalDate: nextBilling,
       color: selectedService?.color,
       logo: selectedService?.logo,
     })
 
-    addToast({
-      type: 'success',
-      title: 'Subscription added',
-      message: `${selectedService?.name || customName} has been added to your subscriptions`
-    })
+    setIsSaving(false)
 
-    onClose()
-    // Reset state
-    setStep('select')
-    setSearchQuery('')
-    setSelectedService(null)
-    setCustomName('')
-    setSelectedCategory('Entertainment')
-    setSelectedCycle('monthly')
-    setAmount('')
-    setCurrency(defaultCurrency)
-    setNextBilling('')
+    if (result.success) {
+      addToast({
+        type: 'success',
+        title: 'Subscription added',
+        message: `${selectedService?.name || customName} has been added to your subscriptions`
+      })
+
+      onClose()
+      // Reset state
+      setStep('select')
+      setSearchQuery('')
+      setSelectedService(null)
+      setCustomName('')
+      setSelectedCategory('Entertainment')
+      setSelectedCycle('monthly')
+      setAmount('')
+      setCurrency(defaultCurrency)
+      setNextBilling('')
+    } else {
+      addToast({
+        type: 'error',
+        title: 'Failed to add subscription',
+        message: result.error || 'Please try again'
+      })
+    }
   }
   
   const handleClose = () => {
@@ -379,21 +393,25 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                           Category
                         </label>
                         <div className="grid grid-cols-4 gap-2">
-                          {categories.slice(0, 4).map((cat) => (
-                            <button
-                              key={cat.id}
-                              onClick={() => setSelectedCategory(cat.id)}
-                              className={cn(
-                                "py-3 rounded-xl text-sm font-medium transition-all flex flex-col items-center gap-1",
-                                selectedCategory === cat.id
-                                  ? "bg-gold text-obsidian"
-                                  : "bg-secondary text-muted-foreground hover:text-foreground"
-                              )}
-                            >
-                              <span>{cat.icon}</span>
-                              <span className="text-xs">{cat.label}</span>
-                            </button>
-                          ))}
+                          {categories.slice(0, 4).map((cat) => {
+                            // Map the UI id to the canonical category type
+                            const mappedCategory = categoryMap[cat.id] || 'Other'
+                            return (
+                              <button
+                                key={cat.id}
+                                onClick={() => setSelectedCategory(mappedCategory)}
+                                className={cn(
+                                  "py-3 rounded-xl text-sm font-medium transition-all flex flex-col items-center gap-1",
+                                  selectedCategory === mappedCategory
+                                    ? "bg-gold text-obsidian"
+                                    : "bg-secondary text-muted-foreground hover:text-foreground"
+                                )}
+                              >
+                                <span>{cat.icon}</span>
+                                <span className="text-xs">{cat.label}</span>
+                              </button>
+                            )
+                          })}
                         </div>
                       </div>
                     )}
@@ -417,10 +435,24 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                     {/* Save Button */}
                     <Button
                       onClick={handleSave}
-                      className="w-full h-14 rounded-xl bg-gold hover:bg-gold/90 text-obsidian font-semibold text-lg"
+                      disabled={isSaving}
+                      className="w-full h-14 rounded-xl bg-gold hover:bg-gold/90 text-obsidian font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Check className="w-5 h-5 mr-2" />
-                      Save Subscription
+                      {isSaving ? (
+                        <>
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                            className="w-5 h-5 mr-2 border-2 border-obsidian/30 border-t-obsidian rounded-full"
+                          />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Check className="w-5 h-5 mr-2" />
+                          Save Subscription
+                        </>
+                      )}
                     </Button>
                   </motion.div>
                 )}
