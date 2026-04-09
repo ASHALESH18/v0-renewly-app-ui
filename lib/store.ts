@@ -88,6 +88,11 @@ export interface AppState {
   setTheme: (theme: 'light' | 'dark') => void
   addToast: (toast: Omit<Toast, 'id'>) => void
   removeToast: (id: string) => void
+  
+  // UI State - Add Subscription Sheet
+  isAddSubscriptionSheetOpen: boolean
+  openAddSubscriptionSheet: () => void
+  closeAddSubscriptionSheet: () => void
 
   // Actions - Plan Management
   refreshPlanFromServer: () => Promise<void>
@@ -122,6 +127,7 @@ const useStore = create<AppState>()(
       hasHydratedFromCloud: false,
       syncError: null,
       hasMigratedLocalData: false,
+      isAddSubscriptionSheetOpen: false,
 
       // Set current authenticated user
       setCurrentUser: (userId, email) => set({
@@ -413,6 +419,10 @@ const useStore = create<AppState>()(
       },
 
       setTheme: (theme) => set({ theme }),
+
+      // Add subscription sheet controls
+      openAddSubscriptionSheet: () => set({ isAddSubscriptionSheetOpen: true }),
+      closeAddSubscriptionSheet: () => set({ isAddSubscriptionSheetOpen: false }),
 
       // Refresh plan from server after successful upgrade
       refreshPlanFromServer: async () => {

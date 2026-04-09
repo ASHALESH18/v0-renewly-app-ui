@@ -21,6 +21,7 @@ import {
 import { cn } from '@/lib/utils'
 import { springs } from './motion'
 import { RenewlyLogo } from '@/components/renewly-logo'
+import useStore from '@/lib/store'
 
 interface BottomNavProps {
   activeTab: string
@@ -41,6 +42,7 @@ const moreNavItems = [
 
 export function BottomNav({ activeTab }: BottomNavProps) {
   const [showMore, setShowMore] = useState(false)
+  const openAddSubscriptionSheet = useStore((state) => state.openAddSubscriptionSheet)
 
   return (
     <>
@@ -63,7 +65,7 @@ export function BottomNav({ activeTab }: BottomNavProps) {
                     key={item.id}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    // TODO: Handle add subscription action
+                    onClick={openAddSubscriptionSheet}
                     className="relative -mt-6"
                   >
                     <div className="w-14 h-14 rounded-full gold-gradient flex items-center justify-center shadow-luxury">
@@ -225,6 +227,7 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isPinned, setIsPinned] = useState(true)
   const [isHovered, setIsHovered] = useState(false)
+  const openAddSubscriptionSheet = useStore((state) => state.openAddSubscriptionSheet)
 
   // Load persisted state on mount
   useEffect(() => {
@@ -438,7 +441,7 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          // TODO: Handle add subscription modal/sheet action
+          onClick={openAddSubscriptionSheet}
           className={cn(
             "flex items-center justify-center gap-2 rounded-xl gold-gradient text-obsidian font-semibold shadow-luxury transition-all cursor-pointer",
             shouldExpand ? "w-full px-4 py-3" : "w-10 h-10"
