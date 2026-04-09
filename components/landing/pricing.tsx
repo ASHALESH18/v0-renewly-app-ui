@@ -6,12 +6,26 @@ import { Check, X, Sparkles } from 'lucide-react'
 import { springs, staggerContainer, staggerItem, premiumCardHover, badgeEntrance } from '../motion'
 import { getAllPlans } from '@/lib/plans'
 import Link from 'next/link'
+import { useAuth } from '@/lib/hooks/use-auth'
+import { getUpgradeDestination, getStartedDestination } from '@/lib/upgrade-flow'
 
 export function Pricing() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
+  const { isAuthenticated } = useAuth()
 
   const plans = getAllPlans()
+
+  // Get auth-aware CTA href for each plan
+  const getCtaHref = (planId: string): string => {
+    if (planId === 'free') {
+      return getStartedDestination(isAuthenticated)
+    }
+    if (planId === 'pro' || planId === 'family' || planId === 'enterprise') {
+      return getUpgradeDestination(planId, isAuthenticated)
+    }
+    return '/auth/sign-up'
+  }
 
   return (
     <section id="pricing" ref={ref} className="py-24 lg:py-32 px-4 bg-card dark:bg-graphite relative overflow-hidden scroll-mt-24">
@@ -214,7 +228,7 @@ export function Pricing() {
                   </motion.p>
                 )}
 
-                <Link href={plan.ctaHref || '/auth/sign-up'}>
+                <Link href={getCtaHref(plan.id)}>
                   <motion.button
                     whileHover={{ 
                       scale: 1.03,

@@ -97,7 +97,6 @@ function AppShellSkeleton() {
 export function AppShellClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const [showAddSheet, setShowAddSheet] = useState(false)
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null)
   const [showDetailSheet, setShowDetailSheet] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
@@ -107,6 +106,8 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
   const userProfile = useStore((state) => state.userProfile)
   const isHydratingUserData = useStore((state) => state.isHydratingUserData)
   const hasHydratedFromCloud = useStore((state) => state.hasHydratedFromCloud)
+  const isAddSubscriptionSheetOpen = useStore((state) => state.isAddSubscriptionSheetOpen)
+  const closeAddSubscriptionSheet = useStore((state) => state.closeAddSubscriptionSheet)
 
   // Extract section from pathname: /app/dashboard -> dashboard
   const pathSegments = pathname.split('/')
@@ -211,7 +212,7 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
       <BottomNav activeTab={activeTab} />
 
       {/* Add subscription sheet */}
-      <AddSubscriptionSheet open={showAddSheet} onClose={() => setShowAddSheet(false)} />
+      <AddSubscriptionSheet open={isAddSubscriptionSheetOpen} onClose={closeAddSubscriptionSheet} />
 
       {/* Subscription detail/edit sheet */}
       <SubscriptionDetailSheet

@@ -65,10 +65,10 @@ export default function ForgotPasswordPage() {
 
           <div className="space-y-2">
             <p className="text-ivory text-lg font-semibold">
-              Email sent!
+              Check your inbox
             </p>
             <p className="text-sm text-platinum">
-              We sent a password reset link to <span className="text-gold">{email}</span>
+              If an account exists for <span className="text-gold">{email}</span>, you&apos;ll receive a password reset link shortly.
             </p>
             <p className="text-xs text-muted-foreground mt-4">
               Didn&apos;t receive the email? Check your spam folder or try again.
@@ -95,6 +95,16 @@ export default function ForgotPasswordPage() {
                 Back to sign in
               </motion.button>
             </Link>
+          </div>
+
+          {/* Sign up prompt */}
+          <div className="pt-4 border-t border-glass-border">
+            <p className="text-sm text-center text-platinum">
+              Don&apos;t have an account?{' '}
+              <Link href="/auth/sign-up" className="text-gold hover:underline font-medium">
+                Sign up
+              </Link>
+            </p>
           </div>
         </div>
       </AuthLayout>
@@ -169,6 +179,16 @@ export default function ForgotPasswordPage() {
           <ArrowLeft className="w-4 h-4" />
           Back to sign in
         </Link>
+
+        {/* Sign up prompt */}
+        <div className="pt-4 border-t border-glass-border mt-4">
+          <p className="text-sm text-center text-platinum">
+            Don&apos;t have an account?{' '}
+            <Link href="/auth/sign-up" className="text-gold hover:underline font-medium">
+              Sign up
+            </Link>
+          </p>
+        </div>
       </form>
     </AuthLayout>
   )
