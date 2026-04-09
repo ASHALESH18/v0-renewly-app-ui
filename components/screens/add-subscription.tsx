@@ -4,11 +4,13 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   X, Search, Plus, Calendar, DollarSign, Tag, 
-  Bell, Camera, Link2, ChevronRight, Check
+  Bell, Camera, Link2, ChevronRight, Check,
+  Tv, Music, Briefcase, Cloud, Dumbbell, Newspaper, Gamepad2, Package
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { usePopularServices } from '@/lib/hooks/use-remote-data'
 import { Input } from '@/components/ui/input'
+import { SubscriptionIcon } from '@/lib/brand-icons'
 import { Button } from '@/components/ui/button'
 import { DatePickerField } from '@/components/date-picker-field'
 import useStore from '@/lib/store'
@@ -35,14 +37,14 @@ const categoryMap: Record<string, SubscriptionCategory> = {
 }
 
 const categories = [
-  { id: 'streaming', label: 'Streaming', icon: '🎬' },
-  { id: 'music', label: 'Music', icon: '🎵' },
-  { id: 'productivity', label: 'Productivity', icon: '💼' },
-  { id: 'cloud', label: 'Cloud & Storage', icon: '☁️' },
-  { id: 'fitness', label: 'Fitness', icon: '💪' },
-  { id: 'news', label: 'News & Media', icon: '📰' },
-  { id: 'gaming', label: 'Gaming', icon: '🎮' },
-  { id: 'other', label: 'Other', icon: '📦' },
+  { id: 'streaming', label: 'Streaming', icon: Tv },
+  { id: 'music', label: 'Music', icon: Music },
+  { id: 'productivity', label: 'Productivity', icon: Briefcase },
+  { id: 'cloud', label: 'Cloud & Storage', icon: Cloud },
+  { id: 'fitness', label: 'Fitness', icon: Dumbbell },
+  { id: 'news', label: 'News & Media', icon: Newspaper },
+  { id: 'gaming', label: 'Gaming', icon: Gamepad2 },
+  { id: 'other', label: 'Other', icon: Package },
 ]
 
 const billingCycles: { id: BillingCycle; label: string }[] = [
@@ -239,12 +241,11 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                             onClick={() => handleSelectService(service)}
                             className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-secondary/50 transition-colors"
                           >
-                          <div 
-                            className="w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold"
-                            style={{ backgroundColor: service.color + '20', color: service.color }}
-                          >
-                            {service.logo}
-                          </div>
+                            <SubscriptionIcon 
+                              name={service.name} 
+                              fallbackColor={service.color}
+                              size="lg"
+                            />
                             <span className="text-xs text-foreground text-center truncate w-full">
                               {service.name}
                             </span>
@@ -259,16 +260,21 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                         Browse by Category
                       </h3>
                       <div className="grid grid-cols-2 gap-3">
-                        {categories.map((category) => (
-                          <motion.button
-                            key={category.id}
-                            whileTap={{ scale: 0.98 }}
-                            className="flex items-center gap-3 p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors"
-                          >
-                            <span className="text-2xl">{category.icon}</span>
-                            <span className="text-foreground font-medium">{category.label}</span>
-                          </motion.button>
-                        ))}
+                        {categories.map((category) => {
+                          const IconComponent = category.icon
+                          return (
+                            <motion.button
+                              key={category.id}
+                              whileTap={{ scale: 0.98 }}
+                              className="flex items-center gap-3 p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors"
+                            >
+                              <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">
+                                <IconComponent className="w-5 h-5 text-gold" />
+                              </div>
+                              <span className="text-foreground font-medium">{category.label}</span>
+                            </motion.button>
+                          )
+                        })}
                       </div>
                     </div>
                     
@@ -293,12 +299,11 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                     {/* Service Preview */}
                     {selectedService && (
                       <div className="flex items-center gap-4 p-4 rounded-xl bg-secondary/50">
-                        <div 
-                          className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-bold"
-                          style={{ backgroundColor: selectedService.color + '20', color: selectedService.color }}
-                        >
-                          {selectedService.logo}
-                        </div>
+                        <SubscriptionIcon 
+                          name={selectedService.name} 
+                          fallbackColor={selectedService.color}
+                          size="lg"
+                        />
                         <div>
                           <h3 className="text-lg font-semibold text-foreground">{selectedService.name}</h3>
                           <p className="text-sm text-muted-foreground capitalize">{selectedService.category}</p>
@@ -396,6 +401,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                           {categories.slice(0, 4).map((cat) => {
                             // Map the UI id to the canonical category type
                             const mappedCategory = categoryMap[cat.id] || 'Other'
+                            const IconComponent = cat.icon
                             return (
                               <button
                                 key={cat.id}
@@ -407,7 +413,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                                     : "bg-secondary text-muted-foreground hover:text-foreground"
                                 )}
                               >
-                                <span>{cat.icon}</span>
+                                <IconComponent className="w-5 h-5" />
                                 <span className="text-xs">{cat.label}</span>
                               </button>
                             )
