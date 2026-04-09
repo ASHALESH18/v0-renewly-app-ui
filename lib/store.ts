@@ -566,29 +566,33 @@ export function selectUpcomingRenewals(state: AppState) {
 export function selectLeakReportData(state: AppState) {
   const subscriptions = state.subscriptions
   const categories: Record<string, number> = {}
+
   let mostExpensiveCategory = ''
   let mostExpensiveAmount = 0
 
-  subscriptions.forEach(sub => {
-    categories[sub.category] = (categories[sub.category] || 0) + (sub.price || 0)
-    if ((sub.price || 0) > mostExpensiveAmount) {
-      mostExpensiveAmount = sub.price || 0
+  subscriptions.forEach((sub) => {
+    categories[sub.category] = (categories[sub.category] || 0) + (sub.amount || 0)
+
+    if ((sub.amount || 0) > mostExpensiveAmount) {
+      mostExpensiveAmount = sub.amount || 0
       mostExpensiveCategory = sub.category
     }
   })
 
-  const unusedSubscriptions = subscriptions.filter(sub => !sub.isActive)
+  const unusedSubscriptions = subscriptions.filter(
+    (sub) => sub.status === 'unused' || sub.status === 'paused' || sub.status === 'cancelled'
+  )
+
+  const totalSpend = state.subscriptions.reduce((sum, s) => sum + (s.amount || 0), 0)
 
   return {
     categorySpending: Object.entries(categories).map(([category, amount]) => ({
       category,
       amount,
-      percentage: state.subscriptions.length > 0
-        ? (amount / state.subscriptions.reduce((sum, s) => sum + (s.price || 0), 0)) * 100
-        : 0,
+      percentage: totalSpend > 0 ? (amount / totalSpend) * 100 : 0,
     })),
     mostExpensiveCategory,
     unusedSubscriptionsCount: unusedSubscriptions.length,
-    potentialSavings: unusedSubscriptions.reduce((sum, sub) => sum + (sub.price || 0), 0),
+    potentialSavings: unusedSubscriptions.reduce((sum, sub) => sum + (sub.amount || 0), 0),
   }
 }
