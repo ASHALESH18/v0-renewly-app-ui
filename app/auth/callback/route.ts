@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  // Handle code exchange (OAuth, PKCE flow)
+  // Handle code exchange (OAuth, PKCE flow, Password Recovery)
   if (code) {
     const supabase = await createClient()
     const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
@@ -57,6 +57,11 @@ export async function GET(request: NextRequest) {
       // Check if this is an email verification callback
       if (type === 'signup' || type === 'email') {
         return NextResponse.redirect(new URL('/auth/verified', origin))
+      }
+      
+      // Password recovery flow - redirect to reset password page
+      if (type === 'recovery') {
+        return NextResponse.redirect(new URL('/auth/reset-password', origin))
       }
       
       // Regular auth callback (OAuth, etc.)

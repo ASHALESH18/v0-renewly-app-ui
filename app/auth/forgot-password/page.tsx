@@ -22,8 +22,13 @@ export default function ForgotPasswordPage() {
     try {
       const supabase = createClient()
 
+      // Build the redirect URL with type=recovery parameter
+      // Supabase will append its own parameters (code, etc.) to this URL
+      const redirectUrl = new URL(getURL('auth/callback'))
+      redirectUrl.searchParams.set('type', 'recovery')
+      
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: getURL('auth/callback') + '?type=recovery',
+        redirectTo: redirectUrl.toString(),
       })
 
       if (resetError) {
