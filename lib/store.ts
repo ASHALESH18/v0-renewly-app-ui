@@ -304,17 +304,26 @@ const useStore = create<AppState>()(
           const result = await createSubscription({
             name: subscription.name,
             category: subscription.category,
-            amount: subscription.price,
+            amount: subscription.amount,
             currency: subscription.currency || 'INR',
             billingCycle: subscription.billingCycle,
-            renewalDate: subscription.nextRenewalDate,
+            renewalDate: subscription.renewalDate,
             description: subscription.description,
           })
 
           if (result.success && result.data?.[0]) {
             const newSub: Subscription = {
-              ...subscription,
               id: result.data[0].id,
+              name: subscription.name,
+              category: subscription.category,
+              amount: subscription.amount,
+              currency: subscription.currency || 'INR',
+              billingCycle: subscription.billingCycle,
+              status: subscription.status || 'active',
+              renewalDate: subscription.renewalDate,
+              description: subscription.description,
+              logo: subscription.logo,
+              color: subscription.color,
             }
             set((state) => ({
               subscriptions: [...state.subscriptions, newSub],
