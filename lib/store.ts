@@ -88,7 +88,7 @@ export interface AppState {
   setTheme: (theme: 'light' | 'dark') => void
   addToast: (toast: Omit<Toast, 'id'>) => void
   removeToast: (id: string) => void
-  
+
   // UI State - Add Subscription Sheet
   isAddSubscriptionSheetOpen: boolean
   openAddSubscriptionSheet: () => void
@@ -300,6 +300,7 @@ const useStore = create<AppState>()(
       // Remote-backed subscription actions
       addSubscriptionRemote: async (subscription) => {
         set({ isSyncingUserData: true, syncError: null })
+
         try {
           const result = await createSubscription({
             name: subscription.name,
@@ -309,25 +310,19 @@ const useStore = create<AppState>()(
             billingCycle: subscription.billingCycle,
             renewalDate: subscription.renewalDate,
             description: subscription.description,
+            status: subscription.status ?? 'active',
           })
 
           if (result.success && result.data?.[0]) {
             const newSub: Subscription = {
+              ...subscription,
               id: result.data[0].id,
-              name: subscription.name,
-              category: subscription.category,
-              amount: subscription.amount,
-              currency: subscription.currency || 'INR',
-              billingCycle: subscription.billingCycle,
-              status: subscription.status || 'active',
-              renewalDate: subscription.renewalDate,
-              description: subscription.description,
-              logo: subscription.logo,
-              color: subscription.color,
             }
+
             set((state) => ({
               subscriptions: [...state.subscriptions, newSub],
             }))
+
             return { success: true }
           }
 
@@ -344,22 +339,26 @@ const useStore = create<AppState>()(
 
       updateSubscriptionRemote: async (id, updates) => {
         set({ isSyncingUserData: true, syncError: null })
+
         try {
           const result = await updateSubscription(id, {
             name: updates.name,
-            amount: updates.price,
+            amount: updates.amount,
             billingCycle: updates.billingCycle,
-            renewalDate: updates.nextRenewalDate,
+            renewalDate: updates.renewalDate,
             description: updates.description,
-            status: updates.isActive === false ? 'inactive' : updates.isActive === true ? 'active' : undefined,
+            status: updates.status,
+            currency: updates.currency,
+            category: updates.category,
           })
 
           if (result.success) {
             set((state) => ({
-              subscriptions: state.subscriptions.map(sub =>
+              subscriptions: state.subscriptions.map((sub) =>
                 sub.id === id ? { ...sub, ...updates } : sub
               ),
             }))
+
             return { success: true }
           }
 
@@ -441,11 +440,11 @@ const useStore = create<AppState>()(
         try {
           const res = await fetch('/api/hydrate-user-data')
           if (!res.ok) throw new Error('Failed to fetch user data')
-          
+
           const data = await res.json()
           if (data.profile?.plan) {
             set((s) => ({
-              userProfile: s.userProfile 
+              userProfile: s.userProfile
                 ? { ...s.userProfile, plan: data.profile.plan }
                 : null,
             }))
@@ -458,7 +457,7 @@ const useStore = create<AppState>()(
       // Update plan locally (for optimistic UI after payment success)
       updatePlanLocally: (plan) => {
         set((state) => ({
-          userProfile: state.userProfile 
+          userProfile: state.userProfile
             ? { ...state.userProfile, plan }
             : null,
         }))
@@ -548,41 +547,52 @@ export function selectMetrics(state: AppState) {
 
 export function selectUpcomingRenewals(state: AppState) {
   return state.subscriptions
-    .filter(sub => {
+    .filter((sub) => {
+      if (!sub.renewalDate) return false
+
       const daysUntilRenewal = Math.ceil(
-        (new Date(sub.nextRenewalDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+        (new Date(sub.renewalDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
       )
+
       return daysUntilRenewal <= 30 && daysUntilRenewal > 0
     })
-    .sort((a, b) => new Date(a.nextRenewalDate).getTime() - new Date(b.nextRenewalDate).getTime())
+    .sort((a, b) => {
+      const aTime = a.renewalDate ? new Date(a.renewalDate).getTime() : Number.MAX_SAFE_INTEGER
+      const bTime = b.renewalDate ? new Date(b.renewalDate).getTime() : Number.MAX_SAFE_INTEGER
+      return aTime - bTime
+    })
 }
 
 export function selectLeakReportData(state: AppState) {
   const subscriptions = state.subscriptions
   const categories: Record<string, number> = {}
+
   let mostExpensiveCategory = ''
   let mostExpensiveAmount = 0
 
-  subscriptions.forEach(sub => {
-    categories[sub.category] = (categories[sub.category] || 0) + (sub.price || 0)
-    if ((sub.price || 0) > mostExpensiveAmount) {
-      mostExpensiveAmount = sub.price || 0
+  subscriptions.forEach((sub) => {
+    categories[sub.category] = (categories[sub.category] || 0) + (sub.amount || 0)
+
+    if ((sub.amount || 0) > mostExpensiveAmount) {
+      mostExpensiveAmount = sub.amount || 0
       mostExpensiveCategory = sub.category
     }
   })
 
-  const unusedSubscriptions = subscriptions.filter(sub => !sub.isActive)
+  const unusedSubscriptions = subscriptions.filter(
+    (sub) => sub.status === 'unused' || sub.status === 'paused' || sub.status === 'cancelled'
+  )
+
+  const totalSpend = state.subscriptions.reduce((sum, s) => sum + (s.amount || 0), 0)
 
   return {
     categorySpending: Object.entries(categories).map(([category, amount]) => ({
       category,
       amount,
-      percentage: state.subscriptions.length > 0
-        ? (amount / state.subscriptions.reduce((sum, s) => sum + (s.price || 0), 0)) * 100
-        : 0,
+      percentage: totalSpend > 0 ? (amount / totalSpend) * 100 : 0,
     })),
     mostExpensiveCategory,
     unusedSubscriptionsCount: unusedSubscriptions.length,
-    potentialSavings: unusedSubscriptions.reduce((sum, sub) => sum + (sub.price || 0), 0),
+    potentialSavings: unusedSubscriptions.reduce((sum, sub) => sum + (sub.amount || 0), 0),
   }
 }
