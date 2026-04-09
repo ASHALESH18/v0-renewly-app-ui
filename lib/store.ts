@@ -339,22 +339,26 @@ const useStore = create<AppState>()(
 
       updateSubscriptionRemote: async (id, updates) => {
         set({ isSyncingUserData: true, syncError: null })
+
         try {
           const result = await updateSubscription(id, {
             name: updates.name,
-            amount: updates.price,
+            amount: updates.amount,
             billingCycle: updates.billingCycle,
-            renewalDate: updates.nextRenewalDate,
+            renewalDate: updates.renewalDate,
             description: updates.description,
-            status: updates.isActive === false ? 'inactive' : updates.isActive === true ? 'active' : undefined,
+            status: updates.status,
+            currency: updates.currency,
+            category: updates.category,
           })
 
           if (result.success) {
             set((state) => ({
-              subscriptions: state.subscriptions.map(sub =>
+              subscriptions: state.subscriptions.map((sub) =>
                 sub.id === id ? { ...sub, ...updates } : sub
               ),
             }))
+
             return { success: true }
           }
 
