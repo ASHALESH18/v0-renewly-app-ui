@@ -547,13 +547,20 @@ export function selectMetrics(state: AppState) {
 
 export function selectUpcomingRenewals(state: AppState) {
   return state.subscriptions
-    .filter(sub => {
+    .filter((sub) => {
+      if (!sub.renewalDate) return false
+
       const daysUntilRenewal = Math.ceil(
-        (new Date(sub.nextRenewalDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+        (new Date(sub.renewalDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
       )
+
       return daysUntilRenewal <= 30 && daysUntilRenewal > 0
     })
-    .sort((a, b) => new Date(a.nextRenewalDate).getTime() - new Date(b.nextRenewalDate).getTime())
+    .sort((a, b) => {
+      const aTime = a.renewalDate ? new Date(a.renewalDate).getTime() : Number.MAX_SAFE_INTEGER
+      const bTime = b.renewalDate ? new Date(b.renewalDate).getTime() : Number.MAX_SAFE_INTEGER
+      return aTime - bTime
+    })
 }
 
 export function selectLeakReportData(state: AppState) {
