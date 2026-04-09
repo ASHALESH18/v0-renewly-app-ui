@@ -88,7 +88,7 @@ export interface AppState {
   setTheme: (theme: 'light' | 'dark') => void
   addToast: (toast: Omit<Toast, 'id'>) => void
   removeToast: (id: string) => void
-  
+
   // UI State - Add Subscription Sheet
   isAddSubscriptionSheetOpen: boolean
   openAddSubscriptionSheet: () => void
@@ -300,6 +300,7 @@ const useStore = create<AppState>()(
       // Remote-backed subscription actions
       addSubscriptionRemote: async (subscription) => {
         set({ isSyncingUserData: true, syncError: null })
+
         try {
           const result = await createSubscription({
             name: subscription.name,
@@ -309,25 +310,19 @@ const useStore = create<AppState>()(
             billingCycle: subscription.billingCycle,
             renewalDate: subscription.renewalDate,
             description: subscription.description,
+            status: subscription.status ?? 'active',
           })
 
           if (result.success && result.data?.[0]) {
             const newSub: Subscription = {
+              ...subscription,
               id: result.data[0].id,
-              name: subscription.name,
-              category: subscription.category,
-              amount: subscription.amount,
-              currency: subscription.currency || 'INR',
-              billingCycle: subscription.billingCycle,
-              status: subscription.status || 'active',
-              renewalDate: subscription.renewalDate,
-              description: subscription.description,
-              logo: subscription.logo,
-              color: subscription.color,
             }
+
             set((state) => ({
               subscriptions: [...state.subscriptions, newSub],
             }))
+
             return { success: true }
           }
 
@@ -441,11 +436,11 @@ const useStore = create<AppState>()(
         try {
           const res = await fetch('/api/hydrate-user-data')
           if (!res.ok) throw new Error('Failed to fetch user data')
-          
+
           const data = await res.json()
           if (data.profile?.plan) {
             set((s) => ({
-              userProfile: s.userProfile 
+              userProfile: s.userProfile
                 ? { ...s.userProfile, plan: data.profile.plan }
                 : null,
             }))
@@ -458,7 +453,7 @@ const useStore = create<AppState>()(
       // Update plan locally (for optimistic UI after payment success)
       updatePlanLocally: (plan) => {
         set((state) => ({
-          userProfile: state.userProfile 
+          userProfile: state.userProfile
             ? { ...state.userProfile, plan }
             : null,
         }))
