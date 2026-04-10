@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MoreHorizontal, Trash2, Eye, EyeOff, Edit2, Copy, ExternalLink } from 'lucide-react'
+import { MoreHorizontal, Trash2, Edit2 } from 'lucide-react'
 import useStore from '@/lib/store'
 import type { Subscription } from '@/lib/types'
 
@@ -68,7 +68,7 @@ export function SubscriptionActions({ subscription, onEdit }: SubscriptionAction
               onClick={() => setShowMenu(false)}
               className="fixed inset-0 z-40"
             />
-            
+
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: -8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -81,13 +81,23 @@ export function SubscriptionActions({ subscription, onEdit }: SubscriptionAction
                     onEdit()
                     setShowMenu(false)
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary/50 transition-colors text-foreground text-sm"
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary/50 transition-colors text-foreground text-sm cursor-pointer"
                 >
                   <Edit2 className="w-4 h-4" />
-                  Edit Details
+                  Edit Subscription
                 </button>
               )}
-              
+
+              <div className="h-px bg-border my-1" />
+
+              <button
+                onClick={handleDelete}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-crimson/10 transition-colors text-crimson text-sm cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                Remove Subscription
+              </button>
+
               <button
                 onClick={handleCopyDetails}
                 className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary/50 transition-colors text-foreground text-sm"
@@ -95,7 +105,7 @@ export function SubscriptionActions({ subscription, onEdit }: SubscriptionAction
                 <Copy className="w-4 h-4" />
                 Copy Details
               </button>
-              
+
               <button
                 onClick={handleMarkUnused}
                 className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary/50 transition-colors text-muted-foreground text-sm"
@@ -103,9 +113,9 @@ export function SubscriptionActions({ subscription, onEdit }: SubscriptionAction
                 <Eye className="w-4 h-4" />
                 Mark Unused
               </button>
-              
+
               <div className="h-px bg-border my-1" />
-              
+
               <button
                 onClick={handleDelete}
                 className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-crimson/10 transition-colors text-crimson text-sm"
