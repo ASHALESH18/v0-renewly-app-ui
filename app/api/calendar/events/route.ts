@@ -39,9 +39,9 @@ export async function GET() {
         const item: CalendarSubscriptionItem = {
           id: sub.id,
           name: sub.name,
-          amount: Number(sub.amount),
-          currency: sub.currency,
-          category: sub.category,
+          amount: Number(sub.amount ?? 0),
+          currency: sub.currency || '₹',
+          category: sub.category || 'Other',
           logo: sub.logo,
           color: sub.color,
           status: sub.status,

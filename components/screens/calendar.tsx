@@ -55,8 +55,38 @@ export function CalendarScreen() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [isMounted, setIsMounted] = useState(false)
 
-  const { calendarEvents, isLoading } = useCalendarEvents()
-  const events = useMemo(() => (calendarEvents || []) as CalendarEventItem[], [calendarEvents])
+  const { calendarEvents, isLoading, error } = useCalendarEvents()
+
+  const events = useMemo<CalendarEventItem[]>(() => {
+    if (!Array.isArray(calendarEvents)) return []
+
+    return calendarEvents
+      .map((event: any) => {
+        const safeSubscriptions = Array.isArray(event?.subscriptions)
+          ? event.subscriptions.map((sub: any, index: number) => ({
+            id: String(sub?.id ?? `${event?.date ?? 'unknown'}-${sub?.name ?? 'item'}-${index}`),
+            name: String(sub?.name ?? 'Unknown'),
+            amount: Number(sub?.amount ?? 0),
+            currency: String(sub?.currency ?? '₹'),
+            category: String(sub?.category ?? 'Other'),
+            logo: typeof sub?.logo === 'string' ? sub.logo : null,
+            color: typeof sub?.color === 'string' ? sub.color : null,
+            status: typeof sub?.status === 'string' ? sub.status : undefined,
+            billingCycle: typeof sub?.billingCycle === 'string' ? sub.billingCycle : undefined,
+          }))
+          : []
+
+        return {
+          date: String(event?.date ?? ''),
+          subscriptions: safeSubscriptions,
+          totalAmount: Number(
+            event?.totalAmount ??
+            safeSubscriptions.reduce((sum: number, sub: CalendarSubscriptionItem) => sum + sub.amount, 0)
+          ),
+        }
+      })
+      .filter((event) => event.date)
+  }, [calendarEvents])
 
   useEffect(() => {
     setIsMounted(true)
@@ -85,6 +115,19 @@ export function CalendarScreen() {
 
   if (!isMounted || isLoading) {
     return <CalendarSkeleton />
+  }
+
+  if (error) {
+    return (
+      <PageTransition className="min-h-screen">
+        <Header title="Calendar" subtitle="Renewal schedule" showSearch={false} />
+        <div className="px-4 lg:px-6 pb-8">
+          <div className="rounded-2xl bg-card border border-border p-4 text-sm text-muted-foreground">
+            Failed to load calendar data. Please refresh once.
+          </div>
+        </div>
+      </PageTransition>
+    )
   }
 
   const currentYear = currentDate.getFullYear()
@@ -124,7 +167,7 @@ export function CalendarScreen() {
     return events
       .filter((event) => {
         const eventDate = new Date(`${event.date}T00:00:00`)
-        return eventDate >= today
+        return !Number.isNaN(eventDate.getTime()) && eventDate >= today
       })
       .slice(0, 5)
   }, [events])
@@ -221,7 +264,7 @@ export function CalendarScreen() {
                         {day}
                       </span>
 
-                      {event && (
+                      {event && event.subscriptions.length > 0 && (
                         <div className="absolute bottom-1.5 flex items-center gap-1">
                           {event.subscriptions.slice(0, 2).map((sub) => (
                             <div
@@ -294,7 +337,7 @@ export function CalendarScreen() {
                       {date.getDate()}
                     </p>
 
-                    {event && (
+                    {event && event.subscriptions.length > 0 && (
                       <div className="mt-2 flex justify-center items-center gap-1">
                         {event.subscriptions.slice(0, 2).map((sub) => (
                           <div
@@ -340,8 +383,8 @@ export function CalendarScreen() {
               </div>
 
               <span className="text-sm font-semibold text-foreground whitespace-nowrap">
-                {selectedEvent.subscriptions[0]?.currency}
-                {selectedEvent.totalAmount.toLocaleString('en-IN')}
+                {(selectedEvent.subscriptions[0]?.currency || '₹') +
+                  Number(selectedEvent.totalAmount || 0).toLocaleString('en-IN')}
               </span>
             </div>
 
@@ -366,8 +409,7 @@ export function CalendarScreen() {
                   </div>
 
                   <span className="font-semibold text-foreground whitespace-nowrap">
-                    {sub.currency}
-                    {sub.amount.toLocaleString('en-IN')}
+                    {(sub.currency || '₹') + Number(sub.amount || 0).toLocaleString('en-IN')}
                   </span>
                 </div>
               ))}
@@ -422,8 +464,7 @@ export function CalendarScreen() {
                           </div>
 
                           <span className="font-semibold text-foreground whitespace-nowrap">
-                            {sub.currency}
-                            {sub.amount.toLocaleString('en-IN')}
+                            {(sub.currency || '₹') + Number(sub.amount || 0).toLocaleString('en-IN')}
                           </span>
                         </div>
                       ))}
@@ -441,6 +482,11 @@ export function CalendarScreen() {
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr)
+
+  if (Number.isNaN(date.getTime())) {
+    return 'Invalid date'
+  }
+
   return date.toLocaleDateString('en-IN', {
     weekday: 'long',
     day: 'numeric',
