@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react'
 import { Header } from '@/components/header'
 import { PageTransition, springs, staggerItem, StaggerList } from '@/components/motion'
 import { SegmentedControl } from '@/components/filter-chips'
 import { useCalendarEvents } from '@/lib/hooks/use-remote-data'
-import useStore from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { CalendarSkeleton } from '@/components/skeletons'
 
@@ -21,14 +20,32 @@ const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'
 ]
+type CalendarSubscriptionItem = {
+  id: string
+  name: string
+  amount: number
+  currency: string
+  category: string
+  logo?: string | null
+  color?: string | null
+  status?: string
+  billingCycle?: string
+}
+
+type CalendarEventItem = {
+  date: string
+  subscriptions: CalendarSubscriptionItem[]
+  totalAmount: number
+}
 
 export function CalendarScreen() {
   const [viewMode, setViewMode] = useState('month')
   const [currentDate, setCurrentDate] = useState(() => new Date())
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [isMounted, setIsMounted] = useState(false)
 
   const { calendarEvents, isLoading } = useCalendarEvents()
-  const subscriptions = useStore((state) => state.subscriptions)
+  const events = (calendarEvents || []) as CalendarEventItem[]
 
   // Wait for store hydration before rendering
   useEffect(() => {
@@ -51,6 +68,17 @@ export function CalendarScreen() {
 
   const nextMonth = () => {
     setCurrentDate(new Date(currentYear, currentMonth + 1, 1))
+  }
+  const toDateKey = (date: Date) => {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  }
+
+  const getInitial = (name: string) => {
+    return name.trim().charAt(0).toUpperCase()
+  }
+
+  const getEventsForDate = (dateStr: string) => {
+    return events.find((event) => event.date === dateStr)
   }
 
   // Get events for a specific date
