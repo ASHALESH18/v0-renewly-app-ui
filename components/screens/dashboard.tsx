@@ -108,7 +108,7 @@ export function DashboardScreen({
 
   // Early return: Don't render any content until store is hydrated
   // This prevents blank page states and ensures all data is available
-  if (!mounted || isHydratingUserData || !hasHydratedFromCloud) {
+  if (!mounted) {
     return null
   }
 
@@ -362,7 +362,13 @@ export function DashboardScreen({
 
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
               {upcoming.slice(0, 5).map((sub, index) => (
-                <UpcomingCard key={sub.id} subscription={sub} index={index} />
+                <UpcomingCard
+                  key={sub.id || `${sub.name}-${sub.renewalDate}-${index}`}
+                  subscription={sub}
+                  index={index}
+                  preferredCurrency={preferredCurrency}
+                  preferredLanguage={preferredLanguage}
+                />
               ))}
             </div>
           </div>
@@ -454,7 +460,9 @@ function AnimatedMetricItem({
     >
       <p className="text-sm text-muted-foreground mb-1">{label}</p>
       <p className="text-3xl font-bold text-gold">
-        {prefix}{formatNumberForLocale(displayValue, language)}{suffix && <span className="text-lg text-muted-foreground ml-1">{suffix}</span>}
+        {prefix}
+        {formatNumberForLocale(displayValue, language)}
+        {suffix || ''}
       </p>
     </motion.div>
   )
