@@ -373,45 +373,56 @@ export function DashboardScreen({
 }
 
 interface UpcomingCardProps {
-  subscription: any
+  subscription: Subscription
   index: number
+  preferredCurrency: string
+  preferredLanguage: string
 }
 
-function UpcomingCard({ subscription, index }: UpcomingCardProps) {
+function UpcomingCard({
+  subscription,
+  index,
+  preferredCurrency,
+  preferredLanguage,
+}: UpcomingCardProps) {
   const daysUntil = getDaysUntil(subscription.renewalDate || '')
   const isUrgent = daysUntil <= 3
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.3 + index * 0.1, ...springs.gentle }}
-      whileHover={{ y: -2 }}
+      variants={staggerItem}
       className={cn(
-        'flex-shrink-0 w-36 p-4 rounded-xl border cursor-pointer transition-all',
+        'rounded-2xl border p-4 transition-all',
         isUrgent
-          ? 'bg-crimson/10 border-crimson/20 hover:border-crimson/40'
-          : 'bg-card border-border hover:border-gold/40'
+          ? 'border-red-500/30 bg-red-500/5'
+          : 'border-border bg-card'
       )}
     >
-      <div
-        className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-medium text-sm mb-3"
-        style={{ backgroundColor: subscription.color || '#C7A36A' }}
-      >
-        {subscription.logo || subscription.name.charAt(0)}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-semibold shrink-0"
+            style={{ backgroundColor: subscription.color || '#7c6a46' }}
+          >
+            {subscription.logo || subscription.name.charAt(0)}
+          </div>
+
+          <div className="min-w-0">
+            <p className="font-medium text-foreground truncate">{subscription.name}</p>
+            <p className="text-sm text-muted-foreground">
+              {daysUntil === 0 ? 'Due today' : `${daysUntil} days left`}
+            </p>
+          </div>
+        </div>
+
+        <span className="font-semibold text-foreground whitespace-nowrap">
+          {formatMoney(
+            subscription.amount,
+            subscription.currency || preferredCurrency,
+            preferredLanguage
+          )}
+        </span>
       </div>
-      <p className="font-medium text-foreground text-sm truncate">
-        {subscription.name}
-      </p>
-      <p className={cn(
-        'text-xs mt-1',
-        isUrgent ? 'text-crimson' : 'text-muted-foreground'
-      )}>
-        {daysUntil === 0 ? 'Due today' : `${daysUntil} days left`}
-      </p>
-      <p className="text-sm font-semibold text-foreground mt-2">
-        {formatMoney(subscription.amount, subscription.currency || preferredCurrency, preferredLanguage)}
-      </p>
     </motion.div>
   )
 }
