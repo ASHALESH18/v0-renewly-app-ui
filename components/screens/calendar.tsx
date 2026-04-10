@@ -41,10 +41,11 @@ type CalendarEventItem = {
 export function CalendarScreen() {
   const [viewMode, setViewMode] = useState('month')
   const [currentDate, setCurrentDate] = useState(() => new Date())
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [isMounted, setIsMounted] = useState(false)
 
   const { calendarEvents, isLoading } = useCalendarEvents()
-  const subscriptions = useStore((state) => state.subscriptions)
+  const events = (calendarEvents || []) as CalendarEventItem[]
 
   // Wait for store hydration before rendering
   useEffect(() => {
@@ -67,6 +68,17 @@ export function CalendarScreen() {
 
   const nextMonth = () => {
     setCurrentDate(new Date(currentYear, currentMonth + 1, 1))
+  }
+  const toDateKey = (date: Date) => {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  }
+
+  const getInitial = (name: string) => {
+    return name.trim().charAt(0).toUpperCase()
+  }
+
+  const getEventsForDate = (dateStr: string) => {
+    return events.find((event) => event.date === dateStr)
   }
 
   // Get events for a specific date
