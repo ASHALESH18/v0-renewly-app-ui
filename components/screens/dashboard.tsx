@@ -313,10 +313,10 @@ export function DashboardScreen({
           {displayedSubscriptions.map((subscription, index) => (
             viewMode === 'cards' ? (
               <SubscriptionCard
-                key={subscription.id}
                 subscription={subscription}
                 index={index}
                 onClick={() => onSubscriptionSelect?.(subscription)}
+                onEdit={() => onSubscriptionSelect?.(subscription)}
               />
             ) : (
               <motion.div
@@ -329,7 +329,11 @@ export function DashboardScreen({
                 onClick={() => onSubscriptionSelect?.(subscription)}
                 className="cursor-pointer"
               >
-                <SubscriptionCardCompact subscription={subscription} />
+                <SubscriptionCardCompact
+                  subscription={subscription}
+                  onClick={() => onSubscriptionSelect?.(subscription)}
+                  onEdit={() => onSubscriptionSelect?.(subscription)}
+                />
               </motion.div>
             )
           ))}

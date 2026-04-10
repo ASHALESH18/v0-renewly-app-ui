@@ -1,9 +1,9 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { 
-  RefreshCw, 
-  Users, 
+import {
+  RefreshCw,
+  Users,
   CreditCard,
   Calendar
 } from 'lucide-react'
@@ -13,10 +13,10 @@ import { cardLift, springs, staggerItem } from './motion'
 import { SubscriptionActions } from './subscription-actions'
 import { SubscriptionIcon } from '@/lib/brand-icons'
 
-interface SubscriptionCardProps {
+interface SubscriptionCardCompactProps {
   subscription: Subscription
-  index?: number
   onClick?: () => void
+  onEdit?: () => void
 }
 
 export function SubscriptionCard({ subscription, index = 0, onClick }: SubscriptionCardProps) {
@@ -36,13 +36,13 @@ export function SubscriptionCard({ subscription, index = 0, onClick }: Subscript
       onClick={onClick}
       className="cursor-pointer"
     >
-    <motion.div
-      variants={cardLift}
-      whileHover={{ y: -4, boxShadow: '0 12px 32px -8px rgba(199, 163, 106, 0.15)' }}
-      className="relative overflow-hidden rounded-2xl bg-card border border-border p-5 shadow-card transition-shadow"
-    >
+      <motion.div
+        variants={cardLift}
+        whileHover={{ y: -4, boxShadow: '0 12px 32px -8px rgba(199, 163, 106, 0.15)' }}
+        className="relative overflow-hidden rounded-2xl bg-card border border-border p-5 shadow-card transition-shadow"
+      >
         {/* Animated gradient accent overlay on hover */}
-        <motion.div 
+        <motion.div
           className="absolute top-0 left-0 right-0 h-1 opacity-0 group-hover:opacity-100"
           style={{ background: subscription.color }}
           initial={{ opacity: 0 }}
@@ -61,9 +61,9 @@ export function SubscriptionCard({ subscription, index = 0, onClick }: Subscript
 
         <div className="relative z-10 flex items-start gap-4">
           {/* Logo - Uses brand icons when available */}
-          <SubscriptionIcon 
-            name={subscription.name} 
-            fallbackColor={subscription.color} 
+          <SubscriptionIcon
+            name={subscription.name}
+            fallbackColor={subscription.color}
             size="lg"
           />
 
@@ -78,11 +78,11 @@ export function SubscriptionCard({ subscription, index = 0, onClick }: Subscript
                   {subscription.category}
                 </p>
               </div>
-              <div 
+              <div
                 className="p-1.5 rounded-lg cursor-pointer"
                 onClick={(e) => e.stopPropagation()}
               >
-                <SubscriptionActions subscription={subscription} />
+                <SubscriptionActions subscription={subscription} onEdit={onEdit} />
               </div>
             </div>
 
@@ -105,7 +105,7 @@ export function SubscriptionCard({ subscription, index = 0, onClick }: Subscript
               )}>
                 <Calendar className="w-3.5 h-3.5" />
                 <span>
-                  {isUrgent 
+                  {isUrgent
                     ? `${daysUntilRenewal === 0 ? 'Today' : `${daysUntilRenewal}d left`}`
                     : subscription.renewalDate ? formatDate(subscription.renewalDate) : 'N/A'
                   }
@@ -151,12 +151,12 @@ export function SubscriptionCardCompact({ subscription, onClick }: SubscriptionC
       onClick={onClick}
       className="flex items-center gap-4 p-4 rounded-xl bg-card border border-border cursor-pointer"
     >
-      <SubscriptionIcon 
-        name={subscription.name} 
-        fallbackColor={subscription.color} 
+      <SubscriptionIcon
+        name={subscription.name}
+        fallbackColor={subscription.color}
         size="md"
       />
-      
+
       <div className="flex-1 min-w-0">
         <p className="font-medium text-foreground truncate">{subscription.name}</p>
         <p className="text-xs text-muted-foreground">{subscription.category}</p>
@@ -170,8 +170,8 @@ export function SubscriptionCardCompact({ subscription, onClick }: SubscriptionC
           'text-xs',
           isUrgent ? 'text-crimson' : 'text-muted-foreground'
         )}>
-          {daysUntilRenewal === 0 
-            ? 'Due today' 
+          {daysUntilRenewal === 0
+            ? 'Due today'
             : `${daysUntilRenewal}d left`
           }
         </p>
