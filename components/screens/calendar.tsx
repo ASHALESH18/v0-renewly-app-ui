@@ -476,7 +476,7 @@ export function CalendarScreen() {
                                 name={sub.name}
                                 fallbackColor={sub.color || undefined}
                                 size="sm"
-                              />sub.logo || getInitial(sub.name)}
+                              />
                             </div>
                             <span className="font-medium text-foreground truncate">{sub.name}</span>
                           </div>
