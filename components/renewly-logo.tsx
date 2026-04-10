@@ -17,12 +17,13 @@ interface RenewlyLogoProps {
 }
 
 // Refined size map for premium visual harmony across devices
+// Gap values tightened for cohesive icon-text pairing
 const sizeMap = {
-  sm: { icon: 20, text: 'text-sm', gap: 'gap-1.5', tracking: 'tracking-tight' },
-  md: { icon: 26, text: 'text-base', gap: 'gap-2', tracking: 'tracking-normal' },
-  lg: { icon: 32, text: 'text-lg', gap: 'gap-2.5', tracking: 'tracking-wide' },
-  xl: { icon: 38, text: 'text-xl', gap: 'gap-3', tracking: 'tracking-wide' },
-  '2xl': { icon: 44, text: 'text-2xl', gap: 'gap-3', tracking: 'tracking-wide' },
+  sm: { icon: 20, text: 'text-sm', gap: 'gap-1', tracking: 'tracking-tight' },
+  md: { icon: 26, text: 'text-base', gap: 'gap-1.5', tracking: 'tracking-normal' },
+  lg: { icon: 32, text: 'text-lg', gap: 'gap-1.5', tracking: 'tracking-wide' },
+  xl: { icon: 38, text: 'text-xl', gap: 'gap-2', tracking: 'tracking-wide' },
+  '2xl': { icon: 44, text: 'text-2xl', gap: 'gap-2', tracking: 'tracking-wide' },
 }
 
 /**
