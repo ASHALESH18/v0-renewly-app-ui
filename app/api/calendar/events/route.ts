@@ -20,6 +20,24 @@ type CalendarEventItem = {
   totalAmount: number
 }
 
+function normalizeDateKey(input: string | null | undefined): string | null {
+  if (!input) return null
+
+  const raw = String(input).trim()
+  if (!raw) return null
+
+  if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+    return raw.slice(0, 10)
+  }
+
+  const parsed = new Date(raw)
+  if (Number.isNaN(parsed.getTime())) {
+    return null
+  }
+
+  return parsed.toISOString().split('T')[0]
+}
+
 export async function GET() {
   try {
     const user = await getUser()
@@ -29,41 +47,41 @@ export async function GET() {
     }
 
     const subscriptions = await getUserSubscriptions()
+    const grouped = new Map<string, CalendarEventItem>()
 
-    const calendarEvents = subscriptions
-      .filter((sub) => sub.renewal_date)
-      .reduce<CalendarEventItem[]>((acc, sub) => {
-        const renewalDate = new Date(sub.renewal_date as string)
-        const dateStr = renewalDate.toISOString().split('T')[0]
+    for (const sub of subscriptions) {
+      const dateStr = normalizeDateKey(sub.renewal_date)
+      if (!dateStr) continue
 
-        const item: CalendarSubscriptionItem = {
-          id: sub.id,
-          name: sub.name,
-          amount: Number(sub.amount ?? 0),
-          currency: sub.currency || '₹',
-          category: sub.category || 'Other',
-          logo: sub.logo,
-          color: sub.color,
-          status: sub.status,
-          billingCycle: sub.billing_cycle,
-        }
+      const item: CalendarSubscriptionItem = {
+        id: sub.id,
+        name: sub.name || 'Unknown',
+        amount: Number(sub.amount ?? 0),
+        currency: sub.currency || '₹',
+        category: sub.category || 'Other',
+        logo: sub.logo ?? null,
+        color: sub.color ?? null,
+        status: sub.status || 'active',
+        billingCycle: sub.billing_cycle || 'monthly',
+      }
 
-        const existing = acc.find((event) => event.date === dateStr)
+      const existing = grouped.get(dateStr)
 
-        if (existing) {
-          existing.subscriptions.push(item)
-          existing.totalAmount += item.amount
-        } else {
-          acc.push({
-            date: dateStr,
-            subscriptions: [item],
-            totalAmount: item.amount,
-          })
-        }
+      if (existing) {
+        existing.subscriptions.push(item)
+        existing.totalAmount += item.amount
+      } else {
+        grouped.set(dateStr, {
+          date: dateStr,
+          subscriptions: [item],
+          totalAmount: item.amount,
+        })
+      }
+    }
 
-        return acc
-      })
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    const calendarEvents = Array.from(grouped.values()).sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    )
 
     return NextResponse.json({
       calendarEvents,
