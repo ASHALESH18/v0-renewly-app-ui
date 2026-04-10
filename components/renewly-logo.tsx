@@ -16,12 +16,13 @@ interface RenewlyLogoProps {
   theme?: 'light' | 'dark' | 'auto'
 }
 
+// Refined size map for premium visual harmony across devices
 const sizeMap = {
-  sm: { icon: 24, text: 'text-sm', gap: 'gap-1.5' },
-  md: { icon: 32, text: 'text-base', gap: 'gap-2' },
-  lg: { icon: 40, text: 'text-xl', gap: 'gap-2.5' },
-  xl: { icon: 48, text: 'text-2xl', gap: 'gap-3' },
-  '2xl': { icon: 56, text: 'text-3xl', gap: 'gap-3.5' },
+  sm: { icon: 20, text: 'text-sm', gap: 'gap-1.5', tracking: 'tracking-tight' },
+  md: { icon: 26, text: 'text-base', gap: 'gap-2', tracking: 'tracking-normal' },
+  lg: { icon: 32, text: 'text-lg', gap: 'gap-2.5', tracking: 'tracking-wide' },
+  xl: { icon: 38, text: 'text-xl', gap: 'gap-3', tracking: 'tracking-wide' },
+  '2xl': { icon: 44, text: 'text-2xl', gap: 'gap-3', tracking: 'tracking-wide' },
 }
 
 /**
@@ -129,19 +130,20 @@ export function RenewlyLogo({
   linkToHome = true,
   theme = 'auto',
 }: RenewlyLogoProps) {
-  const { icon, text, gap } = sizeMap[size]
+  const { icon, text, gap, tracking } = sizeMap[size]
 
   const content = (
     <div className={cn('flex items-center group', gap, className)}>
       {/* SVG Logo Icon */}
       <RenewlyIconSVG size={icon} theme={theme} />
 
-      {/* Wordmark */}
+      {/* Wordmark - Premium serif with refined letter-spacing */}
       {showWordmark && (
         <span
           className={cn(
             'font-serif font-semibold text-foreground group-hover:text-gold transition-colors',
-            text
+            text,
+            tracking
           )}
         >
           Renewly

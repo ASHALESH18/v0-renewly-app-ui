@@ -328,6 +328,24 @@ button,
   background-clip: text;
 }
 
+/* Premium typography - refined letter spacing for luxury feel */
+.text-luxury {
+  letter-spacing: 0.02em;
+  font-feature-settings: 'kern' 1, 'liga' 1;
+}
+
+.text-luxury-wide {
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-feature-settings: 'kern' 1, 'liga' 1;
+}
+
+/* Premium heading styles */
+.heading-premium {
+  letter-spacing: -0.01em;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+}
+
 /* Micro-interaction animations */
 @keyframes press {
   0% {
