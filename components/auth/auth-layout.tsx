@@ -27,7 +27,7 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
         transition={springs.gentle}
         className="relative z-10 p-4 flex items-center justify-between"
       >
-        <RenewlyLogo size="lg" theme="dark" />
+        <RenewlyLogo size="md" theme="dark" />
         
         {/* Back to Home link */}
         <Link 

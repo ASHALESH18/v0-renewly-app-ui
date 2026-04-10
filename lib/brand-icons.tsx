@@ -885,10 +885,11 @@ export function FallbackBadge({
     .map((word) => word[0]?.toUpperCase() || '')
     .join('')
 
+  // Refined sizes for premium visual harmony
   const sizeClasses = {
-    sm: 'w-8 h-8 text-xs',
-    md: 'w-10 h-10 text-sm',
-    lg: 'w-12 h-12 text-base',
+    sm: 'w-7 h-7 text-[10px]',
+    md: 'w-9 h-9 text-xs',
+    lg: 'w-10 h-10 text-sm',
   }
 
   return (
@@ -916,16 +917,17 @@ export function SubscriptionIcon({
 }) {
   const brandConfig = getBrandConfig(name)
 
+  // Refined sizes for premium visual harmony across devices
   const sizeClasses = {
-    sm: 'w-8 h-8',
-    md: 'w-10 h-10',
-    lg: 'w-12 h-12',
+    sm: 'w-7 h-7',
+    md: 'w-9 h-9',
+    lg: 'w-10 h-10',
   }
 
   const iconSizeClasses = {
-    sm: 'w-4 h-4',
-    md: 'w-5 h-5',
-    lg: 'w-6 h-6',
+    sm: 'w-3.5 h-3.5',
+    md: 'w-4 h-4',
+    lg: 'w-5 h-5',
   }
 
   if (brandConfig) {

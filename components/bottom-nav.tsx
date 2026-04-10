@@ -300,7 +300,7 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
             )}
           >
             <RenewlyLogo 
-              size="lg" 
+              size="md" 
               showWordmark={false} 
               linkToHome={false}
             />
@@ -313,10 +313,10 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
                   transition={{ duration: 0.15 }}
                   className="flex flex-col min-w-0 overflow-hidden"
                 >
-                  <span className="text-base font-serif font-semibold text-foreground group-hover:text-gold transition-colors truncate">
+                  <span className="text-base font-serif font-semibold text-foreground group-hover:text-gold transition-colors truncate tracking-wide">
                     Renewly
                   </span>
-                  <span className="text-[10px] text-muted-foreground truncate">
+                  <span className="text-[10px] text-muted-foreground truncate tracking-wider uppercase">
                     Subscription Intelligence
                   </span>
                 </motion.div>
