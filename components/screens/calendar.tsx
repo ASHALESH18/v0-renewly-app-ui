@@ -291,7 +291,7 @@ export function CalendarScreen() {
                               <SubscriptionIcon
                                 name={sub.name}
                                 fallbackColor={sub.color || undefined}
-                                size="sm"
+                                size="md"
                               />
                             </div>
                           ))}
@@ -363,7 +363,7 @@ export function CalendarScreen() {
                             <SubscriptionIcon
                               name={sub.name}
                               fallbackColor={sub.color || undefined}
-                              size="sm"
+                              size="md"
                             />
                           </div>
                         ))}
@@ -415,7 +415,7 @@ export function CalendarScreen() {
                       <SubscriptionIcon
                         name={sub.name}
                         fallbackColor={sub.color || undefined}
-                        size="sm"
+                        size="md"
                       />
                     </div>
 
@@ -475,7 +475,7 @@ export function CalendarScreen() {
                               <SubscriptionIcon
                                 name={sub.name}
                                 fallbackColor={sub.color || undefined}
-                                size="sm"
+                                size="md"
                               />
                             </div>
                             <span className="font-medium text-foreground truncate">{sub.name}</span>
