@@ -16,12 +16,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Pin,
-  PinOff
+  PinOff,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from './motion'
 import { RenewlyLogo } from '@/components/renewly-logo'
 import useStore from '@/lib/store'
+import { useNotifications } from '@/lib/hooks/use-remote-data'
 
 interface BottomNavProps {
   activeTab: string
@@ -43,6 +44,9 @@ const moreNavItems = [
 export function BottomNav({ activeTab }: BottomNavProps) {
   const [showMore, setShowMore] = useState(false)
   const openAddSubscriptionSheet = useStore((state) => state.openAddSubscriptionSheet)
+  const { unreadCount } = useNotifications()
+  const hasUnreadNotifications = unreadCount > 0
+
   useEffect(() => {
     setShowMore(false)
   }, [activeTab])
@@ -55,7 +59,6 @@ export function BottomNav({ activeTab }: BottomNavProps) {
         transition={springs.gentle}
         className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
       >
-        {/* Glass background */}
         <div className="glass-strong mx-4 mb-4 rounded-2xl">
           <div className="flex items-center justify-around px-2 py-3">
             {primaryNavItems.map((item) => {
@@ -69,7 +72,8 @@ export function BottomNav({ activeTab }: BottomNavProps) {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={openAddSubscriptionSheet}
-                    className="relative -mt-6"
+                    className="relative -mt-6 cursor-pointer"
+                    type="button"
                   >
                     <div className="w-14 h-14 rounded-full gold-gradient flex items-center justify-center shadow-luxury">
                       <Icon className="w-6 h-6 text-obsidian" />
@@ -86,7 +90,8 @@ export function BottomNav({ activeTab }: BottomNavProps) {
                 >
                   <motion.button
                     whileTap={{ scale: 0.9 }}
-                    className="relative flex flex-col items-center gap-1 px-3 py-2"
+                    className="relative flex flex-col items-center gap-1 px-3 py-2 cursor-pointer"
+                    type="button"
                   >
                     <Icon
                       className={cn(
@@ -114,11 +119,11 @@ export function BottomNav({ activeTab }: BottomNavProps) {
               )
             })}
 
-            {/* More button */}
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => setShowMore(!showMore)}
-              className="relative flex flex-col items-center gap-1 px-3 py-2"
+              className="relative flex flex-col items-center gap-1 px-3 py-2 cursor-pointer"
+              type="button"
             >
               <MoreHorizontal
                 className={cn(
@@ -134,6 +139,11 @@ export function BottomNav({ activeTab }: BottomNavProps) {
               >
                 More
               </span>
+
+              {hasUnreadNotifications && !showMore && (
+                <span className="absolute top-1 right-2 w-2 h-2 rounded-full bg-crimson" />
+              )}
+
               {showMore && (
                 <motion.div
                   layoutId="activeTab"
@@ -146,7 +156,6 @@ export function BottomNav({ activeTab }: BottomNavProps) {
         </div>
       </motion.nav>
 
-      {/* More menu sheet */}
       <AnimatePresence>
         {showMore && (
           <>
@@ -170,7 +179,8 @@ export function BottomNav({ activeTab }: BottomNavProps) {
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowMore(false)}
-                  className="p-1 rounded-lg hover:bg-secondary transition-colors"
+                  className="p-1 rounded-lg hover:bg-secondary transition-colors cursor-pointer"
+                  type="button"
                 >
                   <X className="w-4 h-4 text-muted-foreground" />
                 </motion.button>
@@ -179,6 +189,7 @@ export function BottomNav({ activeTab }: BottomNavProps) {
               {moreNavItems.map((item) => {
                 const isActive = activeTab === item.id
                 const Icon = item.icon
+                const isNotificationsItem = item.id === 'notifications'
 
                 return (
                   <Link
@@ -189,14 +200,20 @@ export function BottomNav({ activeTab }: BottomNavProps) {
                     <motion.button
                       whileTap={{ scale: 0.98 }}
                       className={cn(
-                        'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors',
+                        'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors cursor-pointer',
                         isActive
                           ? 'bg-gold/14 text-foreground shadow-[inset_0_0_0_1px_rgba(192,142,75,0.26)]'
                           : 'text-muted-foreground hover:bg-[rgba(192,142,75,0.08)] hover:text-foreground'
                       )}
+                      type="button"
                     >
                       <Icon className="w-5 h-5" />
-                      <span className="font-medium flex-1 text-left">{item.label}</span>
+                      <span className="font-medium flex items-center gap-2 flex-1 text-left">
+                        {item.label}
+                        {isNotificationsItem && hasUnreadNotifications && (
+                          <span className="w-2 h-2 rounded-full bg-crimson shrink-0" />
+                        )}
+                      </span>
                       {isActive && (
                         <motion.div
                           initial={{ scale: 0 }}
@@ -216,7 +233,6 @@ export function BottomNav({ activeTab }: BottomNavProps) {
   )
 }
 
-// Desktop sidebar navigation with collapsible mode
 interface SidebarNavProps {
   activeTab: string
 }
@@ -230,7 +246,6 @@ const sidebarItems = [
   { id: 'settings', icon: Settings, label: 'Settings', href: '/app/settings' },
 ]
 
-// Sidebar state persistence key
 const SIDEBAR_COLLAPSED_KEY = 'renewly-sidebar-collapsed'
 const SIDEBAR_PINNED_KEY = 'renewly-sidebar-pinned'
 
@@ -238,9 +253,11 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isPinned, setIsPinned] = useState(true)
   const [isHovered, setIsHovered] = useState(false)
-  const openAddSubscriptionSheet = useStore((state) => state.openAddSubscriptionSheet)
 
-  // Load persisted state on mount
+  const openAddSubscriptionSheet = useStore((state) => state.openAddSubscriptionSheet)
+  const { unreadCount } = useNotifications()
+  const hasUnreadNotifications = unreadCount > 0
+
   useEffect(() => {
     const savedCollapsed = localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
     const savedPinned = localStorage.getItem(SIDEBAR_PINNED_KEY)
@@ -252,7 +269,6 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
     setIsCollapsed(pinned ? false : collapsed)
   }, [])
 
-  // Persist state changes
   const toggleCollapsed = () => {
     const nextCollapsed = !isCollapsed
     setIsCollapsed(nextCollapsed)
@@ -277,12 +293,9 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
     localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(nextCollapsed))
   }
 
-  // Pinned means expanded and stable.
-  // Unpinned means collapsed by default, then expands on hover.
   const shouldExpand = isPinned || !isCollapsed || (isHovered && !isPinned)
   const sidebarWidth = shouldExpand ? 280 : 72
 
-  // Set CSS variable for main content margin
   useEffect(() => {
     document.documentElement.style.setProperty('--sidebar-width', `${sidebarWidth}px`)
   }, [sidebarWidth])
@@ -299,15 +312,14 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
       onMouseLeave={() => setIsHovered(false)}
       className="hidden lg:flex fixed left-0 top-0 bottom-0 flex-col border-r border-sidebar-border bg-[linear-gradient(180deg,rgba(251,246,239,0.98)_0%,rgba(242,231,217,0.98)_100%)] dark:bg-[linear-gradient(180deg,rgba(14,18,24,0.98)_0%,rgba(10,13,18,0.98)_100%)] backdrop-blur-xl shadow-[14px_0_48px_rgba(87,63,38,0.08)] dark:shadow-[14px_0_48px_rgba(0,0,0,0.24)] z-40"
     >
-      {/* Logo */}
       <div className="p-3 border-b border-gold/10">
         <Link href="/" className="block cursor-pointer">
           <motion.div
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
             className={cn(
-              "group flex items-center gap-1.5 rounded-xl border border-gold/16 bg-[linear-gradient(180deg,rgba(255,255,255,0.76),rgba(241,230,216,0.52))] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(199,163,106,0.05))] px-2.5 py-2.5 shadow-[0_8px_20px_rgba(87,63,38,0.06)] dark:shadow-[0_8px_20px_rgba(0,0,0,0.15)] transition-all duration-200 hover:border-gold/30",
-              !shouldExpand && "justify-center px-2"
+              'group flex items-center gap-1.5 rounded-xl border border-gold/16 bg-[linear-gradient(180deg,rgba(255,255,255,0.76),rgba(241,230,216,0.52))] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(199,163,106,0.05))] px-2.5 py-2.5 shadow-[0_8px_20px_rgba(87,63,38,0.06)] dark:shadow-[0_8px_20px_rgba(0,0,0,0.15)] transition-all duration-200 hover:border-gold/30',
+              !shouldExpand && 'justify-center px-2'
             )}
           >
             <RenewlyLogo
@@ -337,11 +349,11 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
         </Link>
       </div>
 
-      {/* Navigation items */}
       <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
         {sidebarItems.map((item) => {
           const isActive = activeTab === item.id
           const Icon = item.icon
+          const isNotificationsItem = item.id === 'notifications'
 
           return (
             <Link key={item.id} href={item.href}>
@@ -350,14 +362,16 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
                 whileTap={{ scale: 0.98 }}
                 title={!shouldExpand ? item.label : undefined}
                 className={cn(
-                  'w-full flex items-center gap-3 rounded-xl transition-all duration-200 cursor-pointer',
+                  'relative w-full flex items-center gap-3 rounded-xl transition-all duration-200 cursor-pointer',
                   shouldExpand ? 'px-4 py-3' : 'px-0 py-3 justify-center',
                   isActive
                     ? 'bg-gold/14 text-foreground shadow-[inset_0_0_0_1px_rgba(192,142,75,0.26)]'
                     : 'text-muted-foreground hover:bg-[rgba(192,142,75,0.08)] hover:text-foreground'
                 )}
+                type="button"
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
+
                 <AnimatePresence>
                   {shouldExpand && (
                     <motion.span
@@ -371,6 +385,15 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
                     </motion.span>
                   )}
                 </AnimatePresence>
+
+                {isNotificationsItem && hasUnreadNotifications && shouldExpand && (
+                  <span className="w-2 h-2 rounded-full bg-crimson flex-shrink-0" />
+                )}
+
+                {isNotificationsItem && hasUnreadNotifications && !shouldExpand && (
+                  <span className="absolute top-3 right-4 w-2 h-2 rounded-full bg-crimson" />
+                )}
+
                 {isActive && shouldExpand && (
                   <motion.div
                     layoutId="activeSidebar"
@@ -384,12 +407,12 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
         })}
       </nav>
 
-      {/* Collapse/Pin controls */}
-      <div className={cn(
-        "p-2 border-t border-border",
-        !shouldExpand && "flex flex-col items-center"
-      )}>
-        {/* Pin button - only show when expanded */}
+      <div
+        className={cn(
+          'p-2 border-t border-border',
+          !shouldExpand && 'flex flex-col items-center'
+        )}
+      >
         <AnimatePresence>
           {shouldExpand && (
             <motion.button
@@ -399,29 +422,24 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
               onClick={togglePinned}
               className="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all mb-2 cursor-pointer"
               title={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
+              type="button"
             >
-              {isPinned ? (
-                <Pin className="w-4 h-4" />
-              ) : (
-                <PinOff className="w-4 h-4" />
-              )}
-              <span className="text-sm">
-                {isPinned ? 'Pinned' : 'Unpinned'}
-              </span>
+              {isPinned ? <Pin className="w-4 h-4" /> : <PinOff className="w-4 h-4" />}
+              <span className="text-sm">{isPinned ? 'Pinned' : 'Unpinned'}</span>
             </motion.button>
           )}
         </AnimatePresence>
 
-        {/* Collapse/Expand toggle */}
         <motion.button
           onClick={toggleCollapsed}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className={cn(
-            "flex items-center gap-3 rounded-xl text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all cursor-pointer",
-            shouldExpand ? "w-full px-4 py-2" : "w-10 h-10 justify-center"
+            'flex items-center gap-3 rounded-xl text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all cursor-pointer',
+            shouldExpand ? 'w-full px-4 py-2' : 'w-10 h-10 justify-center'
           )}
           title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          type="button"
         >
           {isCollapsed ? (
             <ChevronRight className="w-4 h-4" />
@@ -444,20 +462,22 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
         </motion.button>
       </div>
 
-      {/* Add subscription button */}
-      <div className={cn(
-        "p-2 border-t border-border",
-        !shouldExpand && "flex justify-center"
-      )}>
+      <div
+        className={cn(
+          'p-2 border-t border-border',
+          !shouldExpand && 'flex justify-center'
+        )}
+      >
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={openAddSubscriptionSheet}
           className={cn(
-            "flex items-center justify-center gap-2 rounded-xl gold-gradient text-obsidian font-semibold shadow-luxury transition-all cursor-pointer",
-            shouldExpand ? "w-full px-4 py-3" : "w-10 h-10"
+            'flex items-center justify-center gap-2 rounded-xl gold-gradient text-obsidian font-semibold shadow-luxury transition-all cursor-pointer',
+            shouldExpand ? 'w-full px-4 py-3' : 'w-10 h-10'
           )}
           title={!shouldExpand ? 'Add Subscription' : undefined}
+          type="button"
         >
           <Plus className="w-5 h-5 flex-shrink-0" />
           <AnimatePresence>
