@@ -7,6 +7,7 @@ import { PageTransition } from '@/components/motion'
 import { useCalendarEvents } from '@/lib/hooks/use-remote-data'
 import { cn } from '@/lib/utils'
 import { CalendarSkeleton } from '@/components/skeletons'
+import { SubscriptionIcon } from '@/lib/brand-icons'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const MONTHS = [
@@ -287,7 +288,11 @@ export function CalendarScreen() {
                               style={{ backgroundColor: sub.color || '#7c6a46' }}
                               title={sub.name}
                             >
-                              {sub.logo || getInitial(sub.name)}
+                              <SubscriptionIcon
+                                name={sub.name}
+                                fallbackColor={sub.color || undefined}
+                                size="md"
+                              />
                             </div>
                           ))}
 
@@ -355,7 +360,11 @@ export function CalendarScreen() {
                             style={{ backgroundColor: sub.color || '#7c6a46' }}
                             title={sub.name}
                           >
-                            {sub.logo || getInitial(sub.name)}
+                            <SubscriptionIcon
+                              name={sub.name}
+                              fallbackColor={sub.color || undefined}
+                              size="md"
+                            />
                           </div>
                         ))}
 
@@ -403,7 +412,11 @@ export function CalendarScreen() {
                       className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-semibold text-white shrink-0"
                       style={{ backgroundColor: sub.color || '#7c6a46' }}
                     >
-                      {sub.logo || getInitial(sub.name)}
+                      <SubscriptionIcon
+                        name={sub.name}
+                        fallbackColor={sub.color || undefined}
+                        size="md"
+                      />
                     </div>
 
                     <div className="min-w-0">
@@ -459,7 +472,11 @@ export function CalendarScreen() {
                               className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-medium shrink-0"
                               style={{ backgroundColor: sub.color || '#7c6a46' }}
                             >
-                              {sub.logo || getInitial(sub.name)}
+                              <SubscriptionIcon
+                                name={sub.name}
+                                fallbackColor={sub.color || undefined}
+                                size="md"
+                              />
                             </div>
                             <span className="font-medium text-foreground truncate">{sub.name}</span>
                           </div>
