@@ -2,13 +2,19 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { ChevronLeft, ChevronRight, CalendarDays, Clock } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react'
 import { Header } from '@/components/header'
 import { PageTransition, springs } from '@/components/motion'
+import { SegmentedControl } from '@/components/filter-chips'
 import { useCalendarEvents } from '@/lib/hooks/use-remote-data'
+import { SubscriptionIcon } from '@/lib/brand-icons'
 import { cn } from '@/lib/utils'
 import { CalendarSkeleton } from '@/components/skeletons'
-import { SubscriptionIcon } from '@/lib/brand-icons'
+
+const viewSegments = [
+  { id: 'month', label: 'Month' },
+  { id: 'week', label: 'Week' },
+]
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const MONTHS = [
@@ -32,8 +38,10 @@ type CalendarSubscriptionItem = {
   amount: number
   currency: string
   category: string
-  logo: string | null
-  color: string | null
+  logo?: string | null
+  color?: string | null
+  status?: string
+  billingCycle?: string
 }
 
 type CalendarEventItem = {
@@ -56,18 +64,19 @@ function normalizeEvents(input: unknown): CalendarEventItem[] {
           category: String(sub?.category ?? 'Other'),
           logo: typeof sub?.logo === 'string' ? sub.logo : null,
           color: typeof sub?.color === 'string' ? sub.color : null,
+          status: typeof sub?.status === 'string' ? sub.status : undefined,
+          billingCycle:
+            typeof sub?.billingCycle === 'string' ? sub.billingCycle : undefined,
         }))
         : []
-
-      const totalAmount =
-        typeof event?.totalAmount === 'number'
-          ? event.totalAmount
-          : subscriptions.reduce((sum, sub) => sum + Number(sub.amount || 0), 0)
 
       return {
         date: String(event?.date ?? ''),
         subscriptions,
-        totalAmount: Number(totalAmount || 0),
+        totalAmount: Number(
+          event?.totalAmount ??
+          subscriptions.reduce((sum, sub) => sum + Number(sub.amount || 0), 0)
+        ),
       }
     })
     .filter((event) => event.date)
@@ -79,12 +88,7 @@ function toDateKey(date: Date) {
   ).padStart(2, '0')}`
 }
 
-function getInitial(name: string) {
-  const safe = String(name || '').trim()
-  return safe ? safe.charAt(0).toUpperCase() : '?'
-}
-
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string) {
   const date = new Date(`${dateStr}T00:00:00`)
   if (Number.isNaN(date.getTime())) return 'Invalid date'
 
@@ -96,30 +100,33 @@ function formatDate(dateStr: string): string {
 }
 
 export function CalendarScreen() {
-  const [viewMode, setViewMode] = useState<'month' | 'week'>('month')
+  const [viewMode, setViewMode] = useState('month')
   const [currentDate, setCurrentDate] = useState(() => new Date())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [isMounted, setIsMounted] = useState(false)
 
   const { calendarEvents, isLoading, error } = useCalendarEvents()
-  const events = useMemo(() => normalizeEvents(calendarEvents), [calendarEvents])
+
+  const events = useMemo<CalendarEventItem[]>(
+    () => normalizeEvents(calendarEvents),
+    [calendarEvents]
+  )
 
   useEffect(() => {
     setIsMounted(true)
   }, [])
 
   useEffect(() => {
-    if (!events.length) {
-      setSelectedDate(null)
-      return
-    }
-
-    if (selectedDate) return
+    if (!events.length || selectedDate) return
 
     const todayKey = toDateKey(new Date())
     const todayEvent = events.find((event) => event.date === todayKey)
     setSelectedDate(todayEvent?.date ?? events[0]?.date ?? null)
   }, [events, selectedDate])
+
+  const getEventForDate = (dateStr: string) => {
+    return events.find((event) => event.date === dateStr) ?? null
+  }
 
   if (!isMounted || isLoading) {
     return <CalendarSkeleton />
@@ -129,21 +136,6 @@ export function CalendarScreen() {
   const currentMonth = currentDate.getMonth()
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay()
-
-  const getEventForDate = (dateStr: string) => {
-    return events.find((event) => event.date === dateStr) ?? null
-  }
-
-  const selectedEvent = selectedDate ? getEventForDate(selectedDate) : null
-
-  const upcomingEvents = events
-    .filter((event) => {
-      const d = new Date(`${event.date}T00:00:00`)
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      return !Number.isNaN(d.getTime()) && d >= today
-    })
-    .slice(0, 5)
 
   const prevMonth = () => {
     setCurrentDate(new Date(currentYear, currentMonth - 1, 1))
@@ -160,7 +152,7 @@ export function CalendarScreen() {
     const startOfWeek = new Date(baseDate)
     startOfWeek.setDate(baseDate.getDate() - dayOfWeek)
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 7; i += 1) {
       const date = new Date(startOfWeek)
       date.setDate(startOfWeek.getDate() + i)
       dates.push(date)
@@ -169,84 +161,80 @@ export function CalendarScreen() {
     return dates
   }
 
+  const selectedEvent = selectedDate ? getEventForDate(selectedDate) : null
+
+  const upcomingEvents = useMemo(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    return events
+      .filter((event) => {
+        const eventDate = new Date(`${event.date}T00:00:00`)
+        return !Number.isNaN(eventDate.getTime()) && eventDate >= today
+      })
+      .slice(0, 5)
+  }, [events])
+
   return (
     <PageTransition className="min-h-screen">
       <Header title="Calendar" subtitle="Renewal schedule" showSearch={false} />
 
       <div className="px-4 lg:px-6 space-y-6 pb-8">
         {error && (
-          <div className="rounded-2xl bg-card border border-border p-4 text-sm text-muted-foreground">
-            Calendar data loaded with a temporary client warning. Refresh once after deploy.
+          <div className="rounded-2xl border border-crimson/20 bg-crimson/10 px-4 py-3 text-sm text-crimson">
+            Failed to refresh calendar data. Existing data may still be shown.
           </div>
         )}
 
         <div className="flex justify-center">
-          <div className="inline-flex rounded-xl bg-muted p-1">
-            <button
-              type="button"
-              onClick={() => setViewMode('month')}
-              className={cn(
-                'px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer',
-                viewMode === 'month' ? 'bg-card text-foreground' : 'text-muted-foreground'
-              )}
-            >
-              Month
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('week')}
-              className={cn(
-                'px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer',
-                viewMode === 'week' ? 'bg-card text-foreground' : 'text-muted-foreground'
-              )}
-            >
-              Week
-            </button>
-          </div>
+          <SegmentedControl
+            segments={viewSegments}
+            selectedSegment={viewMode}
+            onSegmentSelect={setViewMode}
+          />
         </div>
 
         {viewMode === 'month' ? (
-          <>
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <button
-                type="button"
+              <motion.button
+                whileTap={{ scale: 0.95 }}
                 onClick={prevMonth}
                 className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                type="button"
               >
                 <ChevronLeft className="w-5 h-5" />
-              </button>
+              </motion.button>
 
               <h2 className="text-lg font-semibold text-foreground">
                 {MONTHS[currentMonth]} {currentYear}
               </h2>
 
-              <button
-                type="button"
+              <motion.button
+                whileTap={{ scale: 0.95 }}
                 onClick={nextMonth}
                 className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                type="button"
               >
                 <ChevronRight className="w-5 h-5" />
-              </button>
+              </motion.button>
             </div>
 
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={springs.gentle}
-              className="rounded-2xl bg-card/80 backdrop-blur-sm border border-gold/10 p-5 shadow-card overflow-hidden relative"
+              className="rounded-2xl bg-card border border-border p-4"
             >
-              {/* Ambient glow */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-gold/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-
-              <div className="relative grid grid-cols-7 gap-1 mb-3">
+              <div className="grid grid-cols-7 gap-1 mb-2">
                 {DAYS.map((day) => (
-                  <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
+                  <div key={day} className="text-center text-xs text-muted-foreground py-2">
                     {day}
                   </div>
                 ))}
               </div>
 
-              <div className="relative grid grid-cols-7 gap-1.5">
+              <div className="grid grid-cols-7 gap-1">
                 {Array.from({ length: firstDayOfMonth }).map((_, i) => (
                   <div key={`empty-${i}`} className="aspect-square" />
                 ))}
@@ -269,17 +257,17 @@ export function CalendarScreen() {
                   return (
                     <motion.button
                       key={day}
-                      type="button"
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.96 }}
                       onClick={() => setSelectedDate(dateStr)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
                       className={cn(
-                        'aspect-square rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all duration-200 relative group',
-                        isToday && 'bg-gradient-to-br from-gold to-gold/80 text-obsidian shadow-[0_4px_16px_-4px_rgba(199,163,106,0.5)]',
-                        !isToday && event && 'bg-gold/10 border border-gold/20 hover:border-gold/40',
-                        !isToday && !event && 'hover:bg-muted/50',
-                        selectedDate === dateStr && !isToday && 'ring-2 ring-gold/60 bg-gold/5'
+                        'aspect-square rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors relative',
+                        isToday && 'bg-gold text-obsidian',
+                        !isToday && event && 'bg-gold/10',
+                        !isToday && !event && 'hover:bg-muted',
+                        selectedDate === dateStr && !isToday && 'ring-2 ring-gold/60'
                       )}
+                      type="button"
                     >
                       <span
                         className={cn(
@@ -295,14 +283,13 @@ export function CalendarScreen() {
                           {event.subscriptions.slice(0, 2).map((sub) => (
                             <div
                               key={sub.id}
-                              className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-semibold text-white shadow-sm"
-                              style={{ backgroundColor: sub.color || '#7c6a46' }}
+                              className="w-5 h-5 rounded-full overflow-hidden bg-muted ring-1 ring-white/10"
                               title={sub.name}
                             >
                               <SubscriptionIcon
                                 name={sub.name}
                                 fallbackColor={sub.color || undefined}
-                                size="md"
+                                size="sm"
                               />
                             </div>
                           ))}
@@ -318,10 +305,15 @@ export function CalendarScreen() {
                   )
                 })}
               </div>
-            </div>
-          </>
+            </motion.div>
+          </div>
         ) : (
-          <div className="rounded-2xl bg-card border border-border p-4">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={springs.gentle}
+            className="rounded-2xl bg-card border border-border p-4"
+          >
             <div className="flex gap-2 overflow-x-auto pb-2">
               {getWeekDates().map((date, i) => {
                 const todayRef = new Date()
@@ -334,15 +326,16 @@ export function CalendarScreen() {
                 const event = getEventForDate(dateStr)
 
                 return (
-                  <button
+                  <motion.button
                     key={i}
-                    type="button"
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => setSelectedDate(dateStr)}
                     className={cn(
                       'flex-1 min-w-[60px] p-3 rounded-xl text-center cursor-pointer transition-colors',
                       isToday ? 'bg-gold text-obsidian' : 'bg-muted hover:bg-muted/80',
                       selectedDate === dateStr && !isToday && 'ring-2 ring-gold/60'
                     )}
+                    type="button"
                   >
                     <p
                       className={cn(
@@ -367,14 +360,13 @@ export function CalendarScreen() {
                         {event.subscriptions.slice(0, 2).map((sub) => (
                           <div
                             key={sub.id}
-                            className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold text-white shadow-sm"
-                            style={{ backgroundColor: sub.color || '#7c6a46' }}
+                            className="w-6 h-6 rounded-full overflow-hidden bg-muted ring-1 ring-white/10"
                             title={sub.name}
                           >
                             <SubscriptionIcon
                               name={sub.name}
                               fallbackColor={sub.color || undefined}
-                              size="md"
+                              size="sm"
                             />
                           </div>
                         ))}
@@ -386,15 +378,20 @@ export function CalendarScreen() {
                         )}
                       </div>
                     )}
-                  </button>
+                  </motion.button>
                 )
               })}
             </div>
-          </div>
+          </motion.div>
         )}
 
         {selectedEvent && (
-          <div className="rounded-2xl bg-card border border-border p-4">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={springs.gentle}
+            className="rounded-2xl bg-card border border-border p-4"
+          >
             <div className="flex items-center justify-between mb-4 gap-4">
               <div>
                 <h3 className="text-base font-semibold text-foreground">
@@ -419,10 +416,7 @@ export function CalendarScreen() {
                   className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/30 p-3 gap-3"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-semibold text-white shrink-0"
-                      style={{ backgroundColor: sub.color || '#7c6a46' }}
-                    >
+                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-muted ring-1 ring-white/10 shrink-0">
                       <SubscriptionIcon
                         name={sub.name}
                         fallbackColor={sub.color || undefined}
@@ -442,7 +436,7 @@ export function CalendarScreen() {
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
 
         <div>
@@ -458,7 +452,13 @@ export function CalendarScreen() {
           ) : (
             <div className="space-y-3">
               {upcomingEvents.map((event, index) => (
-                <div key={`${event.date}-${index}`} className="relative pl-6">
+                <motion.div
+                  key={`${event.date}-${index}`}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.04, ...springs.gentle }}
+                  className="relative pl-6"
+                >
                   {index < upcomingEvents.length - 1 && (
                     <div className="absolute left-[7px] top-8 bottom-0 w-0.5 bg-border" />
                   )}
@@ -479,17 +479,18 @@ export function CalendarScreen() {
                       {event.subscriptions.map((sub) => (
                         <div key={sub.id} className="flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3 min-w-0">
-                            <div
-                              className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-medium shrink-0"
-                              style={{ backgroundColor: sub.color || '#7c6a46' }}
-                            >
+                            <div className="w-9 h-9 rounded-xl overflow-hidden bg-muted ring-1 ring-white/10 shrink-0">
                               <SubscriptionIcon
                                 name={sub.name}
                                 fallbackColor={sub.color || undefined}
-                                size="md"
+                                size="sm"
                               />
                             </div>
-                            <span className="font-medium text-foreground truncate">{sub.name}</span>
+
+                            <div className="min-w-0">
+                              <p className="font-medium text-foreground truncate">{sub.name}</p>
+                              <p className="text-xs text-muted-foreground">{sub.category}</p>
+                            </div>
                           </div>
 
                           <span className="font-semibold text-foreground whitespace-nowrap">
@@ -499,7 +500,7 @@ export function CalendarScreen() {
                       ))}
                     </div>
                   </button>
-                </div>
+                </motion.div>
               ))}
             </div>
           )}
