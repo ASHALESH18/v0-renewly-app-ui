@@ -154,7 +154,7 @@ export function NotificationsScreen() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="sticky top-0 z-10 glass-premium border-b border-gold/10"
@@ -165,7 +165,8 @@ export function NotificationsScreen() {
               <h1 className="text-2xl font-bold text-foreground tracking-tight">Notifications</h1>
               {unreadCount > 0 && (
                 <p className="text-sm text-muted-foreground mt-1">
-                  <span className="text-gold font-medium">{unreadCount}</span> unread notification{unreadCount !== 1 ? 's' : ''}
+                  <span className="text-gold font-medium">{unreadCount}</span> unread
+                  notification{unreadCount !== 1 ? 's' : ''}
                 </p>
               )}
             </div>
@@ -177,6 +178,7 @@ export function NotificationsScreen() {
                 onClick={() => void markAllAsRead()}
                 disabled={isMarkingAll}
                 className="px-4 py-2 rounded-xl text-sm font-medium text-gold bg-gold/10 border border-gold/20 hover:bg-gold/15 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                type="button"
               >
                 Mark all read
               </motion.button>
@@ -196,6 +198,7 @@ export function NotificationsScreen() {
                     ? 'bg-gradient-to-r from-gold to-gold/80 text-obsidian shadow-[0_4px_12px_-4px_rgba(199,163,106,0.4)]'
                     : 'bg-card/60 border border-border text-muted-foreground hover:text-foreground hover:border-gold/20'
                 )}
+                type="button"
               >
                 {tab === 'all' ? 'All' : `Unread (${unreadCount})`}
               </motion.button>
@@ -208,7 +211,7 @@ export function NotificationsScreen() {
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       <div className="px-4 py-4">
         {isLoading ? (
@@ -238,17 +241,17 @@ export function NotificationsScreen() {
                     initial={{ opacity: 0, y: 20, filter: 'blur(4px)' }}
                     animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                     exit={{ opacity: 0, x: -100, filter: 'blur(4px)' }}
-                    whileHover={{ y: -2, boxShadow: '0 12px 24px -8px rgba(199, 163, 106, 0.12)' }}
+                    whileHover={{
+                      y: -2,
+                      boxShadow: '0 12px 24px -8px rgba(199, 163, 106, 0.12)',
+                    }}
                     onClick={() => {
                       if (!notification.read) {
                         void markAsRead(notification.id)
                       }
                     }}
                     onKeyDown={(event) => {
-                      if (
-                        !notification.read &&
-                        (event.key === 'Enter' || event.key === ' ')
-                      ) {
+                      if (!notification.read && (event.key === 'Enter' || event.key === ' ')) {
                         event.preventDefault()
                         void markAsRead(notification.id)
                       }
@@ -257,17 +260,20 @@ export function NotificationsScreen() {
                     tabIndex={0}
                     className={cn(
                       'relative p-5 rounded-2xl bg-card/60 backdrop-blur-sm border transition-all cursor-pointer group overflow-hidden',
-                      !notification.read 
-                        ? 'border-gold/30 bg-gradient-to-br from-gold/5 to-transparent shadow-[0_0_0_1px_rgba(199,163,106,0.1)]' 
+                      !notification.read
+                        ? 'border-gold/30 bg-gradient-to-br from-gold/5 to-transparent shadow-[0_0_0_1px_rgba(199,163,106,0.1)]'
                         : 'border-border hover:border-gold/20',
                       pending && 'opacity-70'
                     )}
                   >
-                    {/* Hover glow */}
                     <motion.div
                       className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-                      style={{ background: 'radial-gradient(circle at top left, rgba(199,163,106,0.08) 0%, transparent 60%)' }}
+                      style={{
+                        background:
+                          'radial-gradient(circle at top left, rgba(199,163,106,0.08) 0%, transparent 60%)',
+                      }}
                     />
+
                     {!notification.read && (
                       <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-gold" />
                     )}
@@ -310,6 +316,7 @@ export function NotificationsScreen() {
                             onClick={() => void markAsRead(notification.id)}
                             disabled={pending}
                             className="p-1.5 rounded-full hover:bg-secondary/50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            type="button"
                           >
                             <Check className="w-4 h-4 text-muted-foreground" />
                           </button>
@@ -319,6 +326,7 @@ export function NotificationsScreen() {
                           onClick={() => void dismissNotification(notification.id)}
                           disabled={pending}
                           className="p-1.5 rounded-full hover:bg-crimson/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          type="button"
                         >
                           <Trash2 className="w-4 h-4 text-muted-foreground hover:text-crimson" />
                         </button>

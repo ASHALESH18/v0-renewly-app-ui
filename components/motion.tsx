@@ -69,8 +69,8 @@ export const fadeInScale: Variants = {
 // Cinematic reveals - Premium Visual System
 export const cinematicFadeInUp: Variants = {
   initial: { opacity: 0, y: 30, filter: 'blur(10px)' },
-  animate: { 
-    opacity: 1, 
+  animate: {
+    opacity: 1,
     y: 0,
     filter: 'blur(0px)',
     transition: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }
@@ -80,8 +80,8 @@ export const cinematicFadeInUp: Variants = {
 
 export const cinematicScale: Variants = {
   initial: { opacity: 0, scale: 0.9, filter: 'blur(6px)' },
-  animate: { 
-    opacity: 1, 
+  animate: {
+    opacity: 1,
     scale: 1,
     filter: 'blur(0px)',
     transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }
@@ -92,8 +92,8 @@ export const cinematicScale: Variants = {
 // Premium card hover with glow
 export const premiumCardHover: Variants = {
   initial: { y: 0, boxShadow: '0 4px 16px -4px rgba(0,0,0,0.1)' },
-  hover: { 
-    y: -4, 
+  hover: {
+    y: -4,
     boxShadow: '0 20px 40px -12px rgba(199, 163, 106, 0.2), 0 0 0 1px rgba(199, 163, 106, 0.1)',
     transition: { duration: 0.3, ease: 'easeOut' }
   },
@@ -102,8 +102,8 @@ export const premiumCardHover: Variants = {
 // Luxury entrance for hero elements
 export const luxuryReveal: Variants = {
   initial: { opacity: 0, y: 40, filter: 'blur(12px)' },
-  animate: { 
-    opacity: 1, 
+  animate: {
+    opacity: 1,
     y: 0,
     filter: 'blur(0px)',
     transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
@@ -131,19 +131,19 @@ export const slideInUp: Variants = {
 
 // Luxury slide for sheets/modals
 export const luxurySlideUp: Variants = {
-  initial: { 
-    y: '100%', 
+  initial: {
+    y: '100%',
     opacity: 0,
     filter: 'blur(12px)',
   },
-  animate: { 
-    y: 0, 
+  animate: {
+    y: 0,
     opacity: 1,
     filter: 'blur(0px)',
     transition: { ...springs.luxury, duration: 0.5 },
   },
-  exit: { 
-    y: '100%', 
+  exit: {
+    y: '100%',
     opacity: 0,
     filter: 'blur(12px)',
     transition: { duration: 0.3 },
@@ -186,8 +186,8 @@ export const staggerContainer: Variants = {
 
 export const staggerItem: Variants = {
   initial: { opacity: 0, y: 16 },
-  animate: { 
-    opacity: 1, 
+  animate: {
+    opacity: 1,
     y: 0,
     transition: springs.gentle,
   },
@@ -196,8 +196,8 @@ export const staggerItem: Variants = {
 // Premium stagger for cards with blur
 export const luxuryStaggerItem: Variants = {
   initial: { opacity: 0, y: 20, filter: 'blur(4px)' },
-  animate: { 
-    opacity: 1, 
+  animate: {
+    opacity: 1,
     y: 0,
     filter: 'blur(0px)',
     transition: { ...springs.cinematic, duration: 0.5 }
@@ -207,20 +207,20 @@ export const luxuryStaggerItem: Variants = {
 // Card lift effect
 export const cardLift: Variants = {
   initial: { y: 0, scale: 1 },
-  hover: { 
-    y: -6, 
+  hover: {
+    y: -6,
     scale: 1.01,
     transition: springs.gentle,
   },
-  tap: { 
-    y: 0, 
+  tap: {
+    y: 0,
     scale: 0.98,
     transition: springs.snappy,
   },
 }
 
 // Premium card with gold glow on hover
-export const premiumCardHover: Variants = {
+/*export const premiumCardHover: Variants = {
   initial: { y: 0 },
   hover: { 
     y: -8,
@@ -231,7 +231,7 @@ export const premiumCardHover: Variants = {
     y: -2,
     transition: springs.snappy,
   },
-}
+}*/
 
 // Animated card wrapper
 interface AnimatedCardProps extends HTMLMotionProps<'div'> {
@@ -318,16 +318,16 @@ export function StaggerList({ children, className }: StaggerListProps) {
 
 // Bottom sheet animation
 export const bottomSheetVariants: Variants = {
-  initial: { 
+  initial: {
     y: '100%',
     opacity: 0,
   },
-  animate: { 
+  animate: {
     y: 0,
     opacity: 1,
     transition: springs.gentle,
   },
-  exit: { 
+  exit: {
     y: '100%',
     opacity: 0,
     transition: { duration: 0.2 },
@@ -344,13 +344,13 @@ export const backdropVariants: Variants = {
 // Premium backdrop with blur
 export const premiumBackdropVariants: Variants = {
   initial: { opacity: 0, filter: 'blur(0px)' },
-  animate: { 
-    opacity: 1, 
+  animate: {
+    opacity: 1,
     filter: 'blur(4px)',
     transition: { duration: 0.3 }
   },
-  exit: { 
-    opacity: 0, 
+  exit: {
+    opacity: 0,
     filter: 'blur(0px)',
     transition: { duration: 0.2 }
   },
@@ -372,7 +372,7 @@ export function PremiumSkeletonShimmer({ className }: { className?: string }) {
   return (
     <motion.div
       className={cn('rounded-xl bg-gradient-to-r from-muted via-muted-foreground/10 to-muted', className)}
-      animate={{ 
+      animate={{
         backgroundPosition: ['0% 0%', '100% 0%', '0% 0%'],
       }}
       transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
@@ -403,8 +403,8 @@ export function CardSkeleton() {
 // Premium chip animation
 export const chipVariants: Variants = {
   initial: { scale: 0.9, opacity: 0 },
-  animate: { 
-    scale: 1, 
+  animate: {
+    scale: 1,
     opacity: 1,
     transition: springs.snappy,
   },
@@ -439,11 +439,11 @@ interface ProgressRingProps {
   className?: string
 }
 
-export function ProgressRing({ 
-  progress, 
-  size = 120, 
+export function ProgressRing({
+  progress,
+  size = 120,
   strokeWidth = 8,
-  className 
+  className
 }: ProgressRingProps) {
   const radius = (size - strokeWidth) / 2
   const circumference = radius * 2 * Math.PI
@@ -509,8 +509,8 @@ export const screenTransition: Variants = {
 // Success animation for actions
 export const successCheckmark: Variants = {
   initial: { scale: 0, rotate: -45 },
-  animate: { 
-    scale: 1, 
+  animate: {
+    scale: 1,
     rotate: 0,
     transition: {
       type: 'spring',
@@ -544,8 +544,8 @@ export const cascadingItem: Variants = {
 // Badge/tag entrance animation
 export const badgeEntrance: Variants = {
   initial: { scale: 0, opacity: 0 },
-  animate: { 
-    scale: 1, 
+  animate: {
+    scale: 1,
     opacity: 1,
     transition: springs.snappy,
   },
@@ -555,11 +555,11 @@ export const badgeEntrance: Variants = {
 // Button hover and press animations
 export const buttonHoverVariants: Variants = {
   initial: { scale: 1 },
-  hover: { 
+  hover: {
     scale: 1.02,
     transition: springs.gentle,
   },
-  tap: { 
+  tap: {
     scale: 0.96,
     transition: springs.snappy,
   },
@@ -568,12 +568,12 @@ export const buttonHoverVariants: Variants = {
 // Magnetic button effect
 export const magneticButtonVariants: Variants = {
   initial: { scale: 1, x: 0, y: 0 },
-  hover: { 
+  hover: {
     scale: 1.05,
     boxShadow: '0 12px 24px rgba(199, 163, 106, 0.2)',
     transition: springs.gentle,
   },
-  tap: { 
+  tap: {
     scale: 0.94,
     transition: springs.snappy,
   },
@@ -582,8 +582,8 @@ export const magneticButtonVariants: Variants = {
 // Number reveal animation for metrics
 export const numberReveal: Variants = {
   initial: { opacity: 0, y: 8 },
-  animate: { 
-    opacity: 1, 
+  animate: {
+    opacity: 1,
     y: 0,
     transition: { ...springs.gentle, duration: 0.6 }
   },
