@@ -204,21 +204,43 @@ export function LeakReportScreen({
       />
 
       <div className="px-4 lg:px-6 space-y-8 pb-8">
-        {/* Full-screen hero leak score card */}
+        {/* Premium Command Center Hero */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={springs.gentle}
-          className="relative rounded-3xl overflow-hidden"
+          initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="relative rounded-[28px] overflow-hidden"
         >
-          {/* Luxury background gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-emerald/5" />
+          {/* Cinematic ambient background */}
+          <div className="absolute inset-0">
+            <div className="absolute inset-0 bg-gradient-to-br from-card via-card to-secondary/30 dark:from-graphite dark:via-obsidian dark:to-slate/20" />
+            
+            {/* Animated glow orbs */}
+            <motion.div
+              className="absolute -top-32 -right-32 w-96 h-96 rounded-full blur-[100px]"
+              style={{ background: 'radial-gradient(circle, rgba(199, 163, 106, 0.15) 0%, transparent 70%)' }}
+              animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
+              transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <motion.div
+              className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full blur-[80px]"
+              style={{ background: 'radial-gradient(circle, rgba(46, 94, 82, 0.12) 0%, transparent 70%)' }}
+              animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.5, 0.3] }}
+              transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+            />
+            
+            {/* Subtle grid */}
+            <div 
+              className="absolute inset-0 opacity-[0.02]"
+              style={{
+                backgroundImage: 'linear-gradient(rgba(199, 163, 106, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(199, 163, 106, 0.5) 1px, transparent 1px)',
+                backgroundSize: '40px 40px'
+              }}
+            />
+          </div>
 
-          {/* Premium border and glass effect */}
-          <div className="relative bg-graphite/40 backdrop-blur-lg border border-gold/20 p-8 md:p-12">
-            {/* Decorative elements */}
-            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-gold/10 blur-3xl" />
-            <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-emerald/5 blur-3xl" />
+          {/* Premium glass surface */}
+          <div className="relative glass-premium border border-gold/10 p-8 md:p-12">
 
             <div className="relative z-10">
               {/* Header */}

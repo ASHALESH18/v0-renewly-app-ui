@@ -833,7 +833,7 @@ export function SettingsScreen() {
   )
 }
 
-// Settings Section Component
+// Settings Section Component - Premium styled
 function SettingsSection({
   title,
   children,
@@ -845,21 +845,21 @@ function SettingsSection({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ ...springs.gentle, delay }}
+      initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
+      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      transition={{ duration: 0.4, delay, ease: 'easeOut' }}
     >
-      <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3 px-1">
+      <h3 className="text-xs font-semibold text-gold uppercase tracking-wider mb-3 px-1">
         {title}
       </h3>
-      <div className="rounded-2xl glass overflow-hidden divide-y divide-border">
+      <div className="rounded-2xl bg-card/60 backdrop-blur-sm border border-gold/10 overflow-hidden divide-y divide-border/50">
         {children}
       </div>
     </motion.div>
   )
 }
 
-// Settings Item Component
+// Settings Item Component - Premium styled
 function SettingsItem({
   icon: Icon,
   label,
@@ -874,27 +874,34 @@ function SettingsItem({
   disabled?: boolean
 }) {
   return (
-    <button
+    <motion.button
       onClick={onClick}
       disabled={disabled}
+      whileHover={!disabled ? { x: 4, backgroundColor: 'rgba(199,163,106,0.05)' } : undefined}
+      whileTap={!disabled ? { scale: 0.995 } : undefined}
       className={cn(
-        "w-full flex items-center gap-4 p-4 transition-colors text-left",
+        "w-full flex items-center gap-4 p-4 transition-all text-left group",
         disabled
-          ? "opacity-60 cursor-not-allowed bg-muted/20"
-          : "hover:bg-secondary/30 cursor-pointer"
+          ? "opacity-60 cursor-not-allowed bg-muted/10"
+          : "hover:bg-gold/5 cursor-pointer"
       )}
     >
-      <div className={cn("w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0", disabled ? "bg-muted/30" : "bg-secondary")}>
-        <Icon className="w-5 h-5 text-foreground" />
+      <div className={cn(
+        "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all", 
+        disabled 
+          ? "bg-muted/30" 
+          : "bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/10 group-hover:border-gold/20"
+      )}>
+        <Icon className="w-5 h-5 text-gold" />
       </div>
       <div className="flex-1 min-w-0">
-        <span className="text-foreground font-medium block">{label}</span>
+        <span className="text-foreground font-medium block group-hover:text-gold transition-colors">{label}</span>
         {description && (
           <p className="text-sm text-muted-foreground truncate">{description}</p>
         )}
       </div>
-      {!disabled && <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />}
-    </button>
+      {!disabled && <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-gold transition-colors flex-shrink-0" />}
+    </motion.button>
   )
 }
 

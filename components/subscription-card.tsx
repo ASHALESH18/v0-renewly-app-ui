@@ -43,40 +43,62 @@ export function SubscriptionCard({
       custom={index}
       transition={{ ...springs.gentle, delay: index * 0.05 }}
       onClick={onClick}
-      className="cursor-pointer"
+      className="cursor-pointer group"
     >
       <motion.div
         variants={cardLift}
-        whileHover={{ y: -4, boxShadow: '0 12px 32px -8px rgba(199, 163, 106, 0.15)' }}
-        className="relative overflow-hidden rounded-2xl bg-card border border-border p-5 shadow-card transition-shadow"
+        whileHover={{ 
+          y: -4, 
+          boxShadow: '0 20px 40px -12px rgba(199, 163, 106, 0.18), 0 0 0 1px rgba(199, 163, 106, 0.1)' 
+        }}
+        className="relative overflow-hidden rounded-2xl bg-card/80 backdrop-blur-sm border border-border p-5 shadow-card transition-all duration-300"
       >
+        {/* Colored accent line at top */}
         <motion.div
-          className="absolute top-0 left-0 right-0 h-1 opacity-0"
-          style={{ background: subscription.color || '#7c6a46' }}
-          initial={{ opacity: 0 }}
-          whileHover={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
+          className="absolute top-0 left-0 right-0 h-0.5"
+          style={{ 
+            background: `linear-gradient(90deg, ${subscription.color || '#C7A36A'}80 0%, ${subscription.color || '#C7A36A'}40 50%, transparent 100%)` 
+          }}
+          initial={{ scaleX: 0, originX: 0 }}
+          whileHover={{ scaleX: 1 }}
+          transition={{ duration: 0.4 }}
         />
 
+        {/* Ambient glow on hover */}
         <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent"
+          className="absolute -inset-1 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          style={{ 
+            background: `radial-gradient(circle at top left, ${subscription.color || '#C7A36A'}10 0%, transparent 60%)` 
+          }}
+        />
+
+        {/* Shimmer effect */}
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent"
           initial={{ x: '-100%' }}
-          whileHover={{ x: '100%' }}
-          transition={{ duration: 0.8, ease: 'easeInOut' }}
-          style={{ pointerEvents: 'none', opacity: 0.05 }}
+          whileHover={{ x: '200%' }}
+          transition={{ duration: 1, ease: 'easeInOut' }}
+          style={{ pointerEvents: 'none' }}
         />
 
         <div className="relative z-10 flex items-start gap-4">
-          <SubscriptionIcon
-            name={subscription.name}
-            fallbackColor={subscription.color}
-            size="lg"
-          />
+          {/* Icon with glow effect */}
+          <div className="relative">
+            <motion.div
+              className="absolute -inset-1 rounded-xl blur-md opacity-0 group-hover:opacity-50 transition-opacity"
+              style={{ backgroundColor: subscription.color || '#C7A36A' }}
+            />
+            <SubscriptionIcon
+              name={subscription.name}
+              fallbackColor={subscription.color}
+              size="lg"
+            />
+          </div>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <h3 className="font-semibold text-foreground truncate">
+                <h3 className="font-semibold text-foreground truncate group-hover:text-gold transition-colors">
                   {subscription.name}
                 </h3>
                 <p className="text-sm text-muted-foreground">
@@ -85,7 +107,7 @@ export function SubscriptionCard({
               </div>
 
               <div
-                className="p-1.5 rounded-lg cursor-pointer"
+                className="p-1.5 rounded-lg cursor-pointer opacity-60 group-hover:opacity-100 transition-opacity"
                 onClick={(e) => e.stopPropagation()}
               >
                 <SubscriptionActions subscription={subscription} onEdit={onEdit} />
@@ -93,7 +115,7 @@ export function SubscriptionCard({
             </div>
 
             <div className="mt-3 flex items-baseline gap-1">
-              <span className="text-xl font-semibold text-foreground">
+              <span className="text-xl font-bold text-foreground tracking-tight">
                 {subscription.currency}
                 {Number(subscription.amount || 0).toLocaleString('en-IN')}
               </span>
@@ -102,13 +124,18 @@ export function SubscriptionCard({
               </span>
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              <div className={cn('flex items-center gap-1.5', isUrgent && 'text-crimson')}>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+              <div className={cn(
+                'flex items-center gap-1.5 px-2 py-1 rounded-full',
+                isUrgent 
+                  ? 'bg-crimson/10 text-crimson' 
+                  : 'bg-muted/50 text-muted-foreground'
+              )}>
                 <Calendar className="w-3.5 h-3.5" />
                 <span>
                   {isUrgent
                     ? daysUntilRenewal === 0
-                      ? 'Today'
+                      ? 'Due Today'
                       : `${daysUntilRenewal}d left`
                     : subscription.renewalDate
                       ? formatDate(subscription.renewalDate)
@@ -117,14 +144,14 @@ export function SubscriptionCard({
               </div>
 
               {subscription.status === 'paused' && (
-                <div className="flex items-center gap-1.5 text-gold">
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-gold/10 text-gold">
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>Paused</span>
                 </div>
               )}
 
               {subscription.status === 'unused' && (
-                <div className="flex items-center gap-1.5 text-muted-foreground">
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 text-muted-foreground">
                   <Users className="w-3.5 h-3.5" />
                   <span>Unused</span>
                 </div>

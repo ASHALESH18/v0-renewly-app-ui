@@ -1,20 +1,24 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import {
   CreditCard,
   Calendar,
   TrendingDown,
   Sparkles,
   ChevronRight,
-  Search
+  Search,
+  ArrowUpRight,
+  Zap
 } from 'lucide-react'
 import { Header, SearchOverlay } from '@/components/header'
 import { MetricCard } from '@/components/metric-card'
 import { SubscriptionCard, SubscriptionCardCompact } from '@/components/subscription-card'
 import { FilterChips, SegmentedControl } from '@/components/filter-chips'
 import { PageTransition, StaggerList, staggerItem, springs } from '@/components/motion'
+import { AmbientBackground } from '@/components/premium/ambient-background'
+import { PremiumSurface } from '@/components/premium/premium-surface'
 import useStore from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { useCountUp } from '@/lib/hooks/use-count-up'
@@ -127,97 +131,190 @@ export function DashboardScreen({
       />
 
       <div className="px-4 lg:px-6 space-y-6 pb-8">
-        {/* Premium hero card with animated metrics */}
+        {/* Premium Command Center Hero */}
         {mounted && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={springs.gentle}
-            className="rounded-3xl glass-strong p-6 md:p-8 overflow-hidden relative"
+            initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="rounded-[28px] overflow-hidden relative"
           >
-            {/* Animated background gradient accent */}
-            <div className="absolute inset-0 opacity-30">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-gold/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            {/* Cinematic ambient background */}
+            <div className="absolute inset-0">
+              <div className="absolute inset-0 bg-gradient-to-br from-card via-card to-secondary/50 dark:from-graphite dark:via-obsidian dark:to-slate/30" />
+              
+              {/* Animated glow orbs */}
+              <motion.div
+                className="absolute -top-32 -right-32 w-96 h-96 rounded-full blur-[100px]"
+                style={{ background: 'radial-gradient(circle, rgba(199, 163, 106, 0.2) 0%, transparent 70%)' }}
+                animate={{ 
+                  scale: [1, 1.2, 1],
+                  opacity: [0.3, 0.6, 0.3]
+                }}
+                transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+              />
+              <motion.div
+                className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full blur-[80px]"
+                style={{ background: 'radial-gradient(circle, rgba(46, 94, 82, 0.15) 0%, transparent 70%)' }}
+                animate={{ 
+                  scale: [1, 1.15, 1],
+                  opacity: [0.2, 0.4, 0.2]
+                }}
+                transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+              />
+              
+              {/* Subtle grid pattern */}
+              <div 
+                className="absolute inset-0 opacity-[0.02]"
+                style={{
+                  backgroundImage: 'linear-gradient(rgba(199, 163, 106, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(199, 163, 106, 0.5) 1px, transparent 1px)',
+                  backgroundSize: '40px 40px'
+                }}
+              />
+              
+              {/* Top highlight line */}
+              <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
             </div>
-
-            <div className="relative z-10">
-              <motion.h2
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.1 }}
-                className="text-sm font-medium text-gold mb-2"
+            
+            {/* Glass surface */}
+            <div className="relative glass-premium border border-gold/10 p-6 md:p-8">
+              {/* Eyebrow */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="flex items-center gap-2 mb-6"
               >
-                Your Financial Overview
-              </motion.h2>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold/10 border border-gold/20">
+                  <motion.div
+                    className="w-2 h-2 rounded-full bg-gold"
+                    animate={{ scale: [1, 1.3, 1], opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                  <span className="text-xs font-medium text-gold tracking-wide uppercase">Financial Command Center</span>
+                </div>
+              </motion.div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
-                <AnimatedMetricItem
-                  label="Monthly Spend"
-                  value={Math.round(metrics.totalMonthly)}
-                  prefix={currencySymbol}
-                  delay={0.2}
-                  language={preferredLanguage}
-                />
-                <AnimatedMetricItem
-                  label="Annual Projected"
-                  value={Math.round(metrics.totalYearly)}
-                  prefix={currencySymbol}
-                  delay={0.3}
-                  language={preferredLanguage}
-                />
-                <AnimatedMetricItem
-                  label="Potential Savings"
-                  value={Math.round(metrics.savingsPotential)}
-                  prefix={currencySymbol}
-                  suffix="/month"
-                  delay={0.4}
-                  language={preferredLanguage}
-                />
-              </div>
-
-              {/* Leak score indicator */}
-              <div className="flex items-center justify-between pt-6 border-t border-glass-border">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Subscription Health</p>
-                  <p className="text-lg font-semibold text-foreground">
-                    {metrics.leakScore > 70
-                      ? '🚨 Review Subscriptions'
-                      : metrics.leakScore > 40
-                        ? '⚠️ Some Unused Services'
-                        : '✓ Well Optimized'}
+              {/* Main metrics grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-8">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="relative"
+                >
+                  <div className="absolute -inset-2 rounded-2xl bg-gradient-to-br from-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <p className="text-sm text-muted-foreground mb-2">Monthly Spend</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl md:text-5xl font-bold text-gold tracking-tight">
+                      {currencySymbol}
+                      <AnimatedNumber value={Math.round(metrics.totalMonthly)} language={preferredLanguage} />
+                    </span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-2 text-emerald text-sm">
+                    <TrendingDown className="w-4 h-4" />
+                    <span>12% vs last month</span>
+                  </div>
+                </motion.div>
+                
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <p className="text-sm text-muted-foreground mb-2">Annual Projected</p>
+                  <p className="text-3xl md:text-4xl font-semibold text-foreground tracking-tight">
+                    {currencySymbol}
+                    <AnimatedNumber value={Math.round(metrics.totalYearly)} language={preferredLanguage} />
                   </p>
-                </div>
-                <div className="relative w-16 h-16">
-                  <svg className="w-full h-full transform -rotate-90">
-                    <circle
-                      cx="32"
-                      cy="32"
-                      r="28"
-                      fill="none"
-                      stroke="rgba(192,142,75,0.16)"
-                      strokeWidth="4"
-                    />
-                    <motion.circle
-                      cx="32"
-                      cy="32"
-                      r="28"
-                      fill="none"
-                      stroke="#C7A36A"
-                      strokeWidth="4"
-                      strokeDasharray={`${2 * Math.PI * 28}`}
-                      initial={{ strokeDashoffset: 2 * Math.PI * 28 }}
-                      animate={{
-                        strokeDashoffset: 2 * Math.PI * 28 * (1 - metrics.leakScore / 100)
-                      }}
-                      transition={{ delay: 0.5, duration: 1.5, ease: 'easeOut' }}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-sm font-semibold">
-                    {metrics.leakScore}%
-                  </span>
-                </div>
+                  <p className="mt-2 text-sm text-muted-foreground">Based on current spend</p>
+                </motion.div>
+                
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="relative"
+                >
+                  <div className="absolute -inset-3 rounded-2xl bg-gradient-to-br from-emerald/5 to-transparent" />
+                  <div className="relative">
+                    <p className="text-sm text-muted-foreground mb-2">Potential Savings</p>
+                    <p className="text-3xl md:text-4xl font-semibold text-emerald tracking-tight">
+                      {currencySymbol}
+                      <AnimatedNumber value={Math.round(metrics.savingsPotential)} language={preferredLanguage} />
+                      <span className="text-lg text-muted-foreground">/mo</span>
+                    </p>
+                    <p className="mt-2 text-sm text-emerald/80">Review unused subscriptions</p>
+                  </div>
+                </motion.div>
               </div>
+
+              {/* Health score section */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="flex items-center justify-between pt-6 border-t border-glass-border"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="relative w-16 h-16">
+                    {/* Glow effect behind ring */}
+                    <div className="absolute inset-0 rounded-full bg-gold/20 blur-lg animate-glow-pulse" />
+                    <svg className="relative w-full h-full transform -rotate-90">
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="28"
+                        fill="none"
+                        stroke="rgba(199,163,106,0.1)"
+                        strokeWidth="4"
+                      />
+                      <motion.circle
+                        cx="32"
+                        cy="32"
+                        r="28"
+                        fill="none"
+                        stroke="url(#healthGradient)"
+                        strokeWidth="4"
+                        strokeDasharray={`${2 * Math.PI * 28}`}
+                        initial={{ strokeDashoffset: 2 * Math.PI * 28 }}
+                        animate={{
+                          strokeDashoffset: 2 * Math.PI * 28 * (1 - metrics.leakScore / 100)
+                        }}
+                        transition={{ delay: 0.7, duration: 1.8, ease: 'easeOut' }}
+                        strokeLinecap="round"
+                      />
+                      <defs>
+                        <linearGradient id="healthGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#C7A36A" />
+                          <stop offset="100%" stopColor="#2E5E52" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-base font-bold text-foreground">
+                      {metrics.leakScore}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Subscription Health Score</p>
+                    <p className="text-base font-semibold text-foreground">
+                      {metrics.leakScore > 70
+                        ? 'Needs Attention'
+                        : metrics.leakScore > 40
+                          ? 'Some Optimization Possible'
+                          : 'Well Optimized'}
+                    </p>
+                  </div>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02, x: 2 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-gold/10 text-gold text-sm font-medium border border-gold/20 hover:bg-gold/15 transition-colors cursor-pointer"
+                >
+                  View Report
+                  <ArrowUpRight className="w-4 h-4" />
+                </motion.button>
+              </motion.div>
             </div>
           </motion.div>
         )}
@@ -262,28 +359,58 @@ export function DashboardScreen({
           />
         </StaggerList>
 
-        {/* Quick insights card */}
+        {/* Premium Quick Insights Card */}
         <motion.div
-          variants={staggerItem}
-          initial="initial"
-          animate="animate"
-          className="rounded-2xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20 p-4 cursor-pointer hover:from-gold/15 hover:to-gold/10 transition-colors"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          whileHover={{ y: -2, boxShadow: '0 20px 40px -12px rgba(199, 163, 106, 0.15)' }}
+          className="relative rounded-2xl overflow-hidden cursor-pointer group"
         >
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gold/20 flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-gold" />
+          {/* Gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-gold/8 via-card to-emerald/5 dark:from-gold/10 dark:via-graphite dark:to-emerald/5" />
+          
+          {/* Animated light sweep */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+            initial={{ x: '-100%' }}
+            whileHover={{ x: '100%' }}
+            transition={{ duration: 0.8 }}
+          />
+          
+          {/* Content */}
+          <div className="relative border border-gold/15 rounded-2xl p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gold/20 to-gold/10 flex items-center justify-center border border-gold/20">
+                    <Zap className="w-6 h-6 text-gold" />
+                  </div>
+                  <motion.div
+                    className="absolute -inset-1 rounded-xl bg-gold/20 blur-md -z-10"
+                    animate={{ opacity: [0.3, 0.6, 0.3] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="font-semibold text-foreground">AI Insight</p>
+                    <span className="px-2 py-0.5 rounded-full bg-gold/10 text-gold text-[10px] font-medium uppercase tracking-wider">New</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
+                    {metrics.leakScore > 0
+                      ? `You could save ${formatMoney(metrics.savingsPotential, preferredCurrency, preferredLanguage)} monthly by reviewing unused subscriptions.`
+                      : 'All your subscriptions are being actively used. Great job!'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium text-foreground mb-1">Smart Insight</p>
-                <p className="text-sm text-muted-foreground">
-                  {metrics.leakScore > 0
-                    ? `You could save ${formatMoney(metrics.savingsPotential, preferredCurrency, preferredLanguage)} monthly by reviewing unused subscriptions.`
-                    : 'All your subscriptions are being actively used. Great job!'}
-                </p>
-              </div>
+              <motion.div
+                className="p-2 rounded-lg bg-gold/10 text-gold group-hover:bg-gold/20 transition-colors"
+                whileHover={{ x: 2 }}
+              >
+                <ChevronRight className="w-5 h-5" />
+              </motion.div>
             </div>
-            <ChevronRight className="w-5 h-5 text-gold shrink-0" />
           </div>
         </motion.div>
 
@@ -436,39 +563,14 @@ function UpcomingCard({
   )
 }
 
-interface AnimatedMetricItemProps {
-  label: string
+interface AnimatedNumberProps {
   value: number
-  prefix?: string
-  suffix?: string
-  delay?: number
   language?: string
 }
 
-function AnimatedMetricItem({
-  label,
-  value,
-  prefix = '',
-  suffix = '',
-  delay = 0,
-  language = 'en'
-}: AnimatedMetricItemProps) {
-  const displayValue = useCountUp(value, 1500, delay * 1000)
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, ...springs.gentle }}
-    >
-      <p className="text-sm text-muted-foreground mb-1">{label}</p>
-      <p className="text-3xl font-bold text-gold">
-        {prefix}
-        {formatNumberForLocale(displayValue, language)}
-        {suffix || ''}
-      </p>
-    </motion.div>
-  )
+function AnimatedNumber({ value, language = 'en' }: AnimatedNumberProps) {
+  const displayValue = useCountUp(value, 1500, 0)
+  return <>{formatNumberForLocale(displayValue, language)}</>
 }
 
 function getDaysUntil(dateStr: string): number {

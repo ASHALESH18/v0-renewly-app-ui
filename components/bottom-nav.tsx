@@ -54,13 +54,19 @@ export function BottomNav({ activeTab }: BottomNavProps) {
   return (
     <>
       <motion.nav
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        transition={springs.gentle}
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
         className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
       >
-        <div className="glass-strong mx-4 mb-4 rounded-2xl">
-          <div className="flex items-center justify-around px-2 py-3">
+        <div className="relative mx-4 mb-4 rounded-2xl overflow-hidden">
+          {/* Premium glass background */}
+          <div className="absolute inset-0 bg-card/90 dark:bg-graphite/95 backdrop-blur-2xl border border-gold/10 rounded-2xl shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)]" />
+          
+          {/* Top highlight line */}
+          <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
+          
+          <div className="relative flex items-center justify-around px-2 py-3">
             {primaryNavItems.map((item) => {
               const isActive = activeTab === item.id
               const Icon = item.icon
@@ -69,14 +75,20 @@ export function BottomNav({ activeTab }: BottomNavProps) {
                 return (
                   <motion.button
                     key={item.id}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.92 }}
                     onClick={openAddSubscriptionSheet}
-                    className="relative -mt-6 cursor-pointer"
+                    className="relative -mt-8 cursor-pointer"
                     type="button"
                   >
-                    <div className="w-14 h-14 rounded-full gold-gradient flex items-center justify-center shadow-luxury">
-                      <Icon className="w-6 h-6 text-obsidian" />
+                    {/* Glow effect */}
+                    <motion.div
+                      className="absolute inset-0 rounded-full bg-gold/40 blur-xl"
+                      animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                    <div className="relative w-16 h-16 rounded-full gold-gradient flex items-center justify-center shadow-[0_8px_24px_-4px_rgba(199,163,106,0.5)]">
+                      <Icon className="w-7 h-7 text-obsidian" />
                     </div>
                   </motion.button>
                 )

@@ -39,10 +39,10 @@ export function MetricCard({
   const isNegativeChange = change && change < 0
 
   const variantStyles = {
-    default: 'bg-card border-border',
-    gold: 'bg-gold/5 border-gold/20',
-    emerald: 'bg-emerald/5 border-emerald/20',
-    crimson: 'bg-crimson/5 border-crimson/20',
+    default: 'bg-card/80 border-border hover:border-gold/20',
+    gold: 'bg-gradient-to-br from-gold/8 to-gold/3 border-gold/20 hover:border-gold/30',
+    emerald: 'bg-gradient-to-br from-emerald/8 to-emerald/3 border-emerald/20 hover:border-emerald/30',
+    crimson: 'bg-gradient-to-br from-crimson/8 to-crimson/3 border-crimson/20 hover:border-crimson/30',
   }
 
   return (
@@ -50,14 +50,28 @@ export function MetricCard({
       variants={staggerItem}
       initial="initial"
       animate="animate"
+      whileHover={{ y: -3, transition: { duration: 0.2 } }}
       custom={index}
       transition={{ ...springs.gentle, delay: index * 0.08 }}
       className={cn(
-        'rounded-2xl border p-5 shadow-card',
+        'relative rounded-2xl border p-5 shadow-card backdrop-blur-sm transition-all duration-300 overflow-hidden group',
         variantStyles[variant]
       )}
     >
-      <div className="flex items-start justify-between">
+      {/* Subtle ambient glow on hover */}
+      <motion.div
+        className="absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+        style={{
+          background: iconColor 
+            ? `radial-gradient(circle at top right, ${iconColor}15 0%, transparent 70%)`
+            : 'radial-gradient(circle at top right, rgba(199,163,106,0.1) 0%, transparent 70%)'
+        }}
+      />
+      
+      {/* Top highlight line */}
+      <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+      <div className="relative flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm text-muted-foreground font-medium">{title}</p>
           <motion.p 
@@ -68,22 +82,22 @@ export function MetricCard({
           >
             {prefix}
             {typeof value === 'number' ? formatNumber(value) : value}
-            {suffix && <span className="text-lg text-muted-foreground ml-1">{suffix}</span>}
+            {suffix && <span className="text-base text-muted-foreground ml-1">{suffix}</span>}
           </motion.p>
           
           {(change !== undefined || changeLabel) && (
             <motion.div 
-              className="mt-2 flex items-center gap-1.5"
+              className="mt-3 flex items-center gap-2"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: index * 0.08 + 0.3 }}
             >
               {change !== undefined && (
                 <span className={cn(
-                  'flex items-center gap-0.5 text-xs font-medium',
-                  isPositiveChange && 'text-emerald',
-                  isNegativeChange && 'text-crimson',
-                  !isPositiveChange && !isNegativeChange && 'text-muted-foreground'
+                  'flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium',
+                  isPositiveChange && 'bg-emerald/10 text-emerald',
+                  isNegativeChange && 'bg-crimson/10 text-crimson',
+                  !isPositiveChange && !isNegativeChange && 'bg-muted text-muted-foreground'
                 )}>
                   {isPositiveChange && <TrendingUp className="w-3 h-3" />}
                   {isNegativeChange && <TrendingDown className="w-3 h-3" />}
@@ -99,18 +113,24 @@ export function MetricCard({
         </div>
 
         {Icon && (
-          <div 
+          <motion.div 
             className={cn(
-              'w-10 h-10 rounded-xl flex items-center justify-center',
+              'relative w-11 h-11 rounded-xl flex items-center justify-center',
               iconColor ? '' : 'bg-muted'
             )}
-            style={iconColor ? { backgroundColor: `${iconColor}20` } : undefined}
+            style={iconColor ? { backgroundColor: `${iconColor}15` } : undefined}
+            whileHover={{ scale: 1.05 }}
           >
+            {/* Icon glow effect */}
+            <div 
+              className="absolute inset-0 rounded-xl blur-lg opacity-40"
+              style={iconColor ? { backgroundColor: `${iconColor}30` } : undefined}
+            />
             <Icon 
-              className="w-5 h-5" 
+              className="relative w-5 h-5" 
               style={iconColor ? { color: iconColor } : undefined}
             />
-          </div>
+          </motion.div>
         )}
       </div>
     </motion.div>

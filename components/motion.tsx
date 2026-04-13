@@ -66,27 +66,48 @@ export const fadeInScale: Variants = {
   exit: { opacity: 0, scale: 0.95 },
 }
 
-// Cinematic reveals
+// Cinematic reveals - Premium Visual System
 export const cinematicFadeInUp: Variants = {
-  initial: { opacity: 0, y: 24, filter: 'blur(8px)' },
+  initial: { opacity: 0, y: 30, filter: 'blur(10px)' },
   animate: { 
     opacity: 1, 
     y: 0,
     filter: 'blur(0px)',
-    transition: { duration: 0.6, ease: 'easeOut' }
+    transition: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }
   },
-  exit: { opacity: 0, y: 24, filter: 'blur(8px)' },
+  exit: { opacity: 0, y: 20, filter: 'blur(6px)' },
 }
 
 export const cinematicScale: Variants = {
-  initial: { opacity: 0, scale: 0.92, filter: 'blur(4px)' },
+  initial: { opacity: 0, scale: 0.9, filter: 'blur(6px)' },
   animate: { 
     opacity: 1, 
     scale: 1,
     filter: 'blur(0px)',
-    transition: { duration: 0.5, ease: 'easeOut' }
+    transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }
   },
-  exit: { opacity: 0, scale: 0.92, filter: 'blur(4px)' },
+  exit: { opacity: 0, scale: 0.95, filter: 'blur(4px)' },
+}
+
+// Premium card hover with glow
+export const premiumCardHover: Variants = {
+  initial: { y: 0, boxShadow: '0 4px 16px -4px rgba(0,0,0,0.1)' },
+  hover: { 
+    y: -4, 
+    boxShadow: '0 20px 40px -12px rgba(199, 163, 106, 0.2), 0 0 0 1px rgba(199, 163, 106, 0.1)',
+    transition: { duration: 0.3, ease: 'easeOut' }
+  },
+}
+
+// Luxury entrance for hero elements
+export const luxuryReveal: Variants = {
+  initial: { opacity: 0, y: 40, filter: 'blur(12px)' },
+  animate: { 
+    opacity: 1, 
+    y: 0,
+    filter: 'blur(0px)',
+    transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
+  },
 }
 
 // Slide variants
