@@ -1,17 +1,28 @@
-"use client"
+'use client'
 
-import { useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  X, Calendar, DollarSign, Tag, Trash2, Edit2, Check, AlertCircle,
-  Pause, Play
+  X,
+  Trash2,
+  Edit2,
+  Check,
+  AlertCircle,
+  Pause,
+  Play,
+  Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import useStore from '@/lib/store'
-import type { Subscription, SubscriptionStatus, SubscriptionCategory, BillingCycle } from '@/lib/types'
-import { springs } from './motion'
+import type {
+  Subscription,
+  SubscriptionStatus,
+  SubscriptionCategory,
+  BillingCycle,
+} from '@/lib/types'
+import { SubscriptionIcon } from '@/lib/brand-icons'
 
 interface SubscriptionDetailSheetProps {
   subscription: Subscription | null
@@ -19,7 +30,7 @@ interface SubscriptionDetailSheetProps {
   onClose: () => void
 }
 
-const statusOptions: { value: SubscriptionStatus; label: string; icon: React.ReactNode }[] = [
+const statusOptions: { value: SubscriptionStatus; label: string; icon: ReactNode }[] = [
   { value: 'active', label: 'Active', icon: <Play className="w-4 h-4" /> },
   { value: 'paused', label: 'Paused', icon: <Pause className="w-4 h-4" /> },
   { value: 'unused', label: 'Unused', icon: <AlertCircle className="w-4 h-4" /> },
@@ -54,45 +65,114 @@ export function SubscriptionDetailSheet({
   const [isEditing, setIsEditing] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [formData, setFormData] = useState<Subscription | null>(subscription)
+  const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
-  const updateSubscription = useStore((state) => state.updateSubscription)
-  const deleteSubscription = useStore((state) => state.deleteSubscription)
+  const updateSubscriptionRemote = useStore((state) => state.updateSubscriptionRemote)
+  const deleteSubscriptionRemote = useStore((state) => state.deleteSubscriptionRemote)
   const addToast = useStore((state) => state.addToast)
 
-  // Update formData when subscription changes
+  useEffect(() => {
+    if (open) {
+      setIsEditing(false)
+      setShowDeleteConfirm(false)
+      setFormData(subscription)
+    } else {
+      setIsEditing(false)
+      setShowDeleteConfirm(false)
+      setFormData(null)
+      setIsSaving(false)
+      setIsDeleting(false)
+    }
+  }, [subscription, open])
+
   const displaySubscription = formData || subscription
 
-  const handleSave = () => {
-    if (!subscription || !formData) return
+  const handleSave = async () => {
+    if (!subscription || !formData || isSaving) return
 
-    if (!formData.name || !formData.amount || !formData.renewalDate) {
+    const trimmedName = formData.name.trim()
+
+    if (!trimmedName || !formData.amount || !formData.renewalDate) {
       addToast({
         type: 'error',
         title: 'Missing information',
-        message: 'Please fill in all required fields'
+        message: 'Please fill in all required fields',
       })
       return
     }
 
-    updateSubscription(subscription.id, formData)
-    addToast({
-      type: 'success',
-      title: 'Subscription updated',
-      message: `${formData.name} has been updated`
-    })
-    setIsEditing(false)
+    try {
+      setIsSaving(true)
+
+      const result = await updateSubscriptionRemote(subscription.id, {
+        name: trimmedName,
+        amount: formData.amount,
+        billingCycle: formData.billingCycle,
+        renewalDate: formData.renewalDate,
+        category: formData.category,
+        status: formData.status,
+        currency: formData.currency,
+        description: formData.description,
+      })
+
+      if (!result.success) {
+        addToast({
+          type: 'error',
+          title: 'Update failed',
+          message: result.error || 'Could not update subscription',
+        })
+        return
+      }
+
+      setFormData((prev) =>
+        prev
+          ? {
+            ...prev,
+            name: trimmedName,
+          }
+          : prev
+      )
+
+      addToast({
+        type: 'success',
+        title: 'Subscription updated',
+        message: `${trimmedName} has been updated`,
+      })
+
+      setIsEditing(false)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
-  const handleDelete = () => {
-    if (!subscription) return
+  const handleDelete = async () => {
+    if (!subscription || isDeleting) return
 
-    deleteSubscription(subscription.id)
-    addToast({
-      type: 'success',
-      title: 'Subscription deleted',
-      message: `${subscription.name} has been removed`
-    })
-    onClose()
+    try {
+      setIsDeleting(true)
+
+      const result = await deleteSubscriptionRemote(subscription.id)
+
+      if (!result.success) {
+        addToast({
+          type: 'error',
+          title: 'Delete failed',
+          message: result.error || 'Could not delete subscription',
+        })
+        return
+      }
+
+      addToast({
+        type: 'success',
+        title: 'Subscription deleted',
+        message: `${subscription.name} has been removed`,
+      })
+
+      handleClose()
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   const handleClose = () => {
@@ -108,7 +188,6 @@ export function SubscriptionDetailSheet({
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -117,7 +196,6 @@ export function SubscriptionDetailSheet({
             className="fixed inset-0 bg-obsidian/80 backdrop-blur-sm z-50"
           />
 
-          {/* Sheet */}
           <motion.div
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
@@ -125,19 +203,18 @@ export function SubscriptionDetailSheet({
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
             className="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-hidden rounded-t-3xl bg-card"
           >
-            {/* Handle */}
             <div className="flex justify-center pt-3 pb-2">
               <div className="w-12 h-1.5 rounded-full bg-muted-foreground/30" />
             </div>
 
-            {/* Header */}
             <div className="flex items-center justify-between px-4 pb-4 border-b border-border">
               <h2 className="text-xl font-semibold text-foreground">
                 {isEditing ? 'Edit Subscription' : 'Subscription Details'}
               </h2>
               <button
                 onClick={handleClose}
-                className="p-2 rounded-full hover:bg-secondary/50 transition-colors"
+                className="p-2 rounded-full hover:bg-secondary/50 transition-colors cursor-pointer"
+                type="button"
               >
                 <X className="w-5 h-5 text-muted-foreground" />
               </button>
@@ -145,19 +222,12 @@ export function SubscriptionDetailSheet({
 
             <div className="overflow-y-auto max-h-[calc(90vh-100px)] pb-safe">
               <div className="px-4 py-6 space-y-6">
-                {/* Service Preview */}
                 <div className="flex items-center gap-4 p-4 rounded-xl bg-secondary/50">
-                  {displaySubscription.logo && (
-                    <div
-                      className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-bold"
-                      style={{
-                        backgroundColor: (displaySubscription.color || '#C7A36A') + '20',
-                        color: displaySubscription.color || '#C7A36A'
-                      }}
-                    >
-                      {displaySubscription.logo}
-                    </div>
-                  )}
+                  <SubscriptionIcon
+                    name={displaySubscription.name}
+                    fallbackColor={displaySubscription.color}
+                    size="lg"
+                  />
                   <div>
                     <h3 className="text-lg font-semibold text-foreground">
                       {displaySubscription.name}
@@ -170,9 +240,7 @@ export function SubscriptionDetailSheet({
 
                 {isEditing ? (
                   <>
-                    {/* Edit Form */}
                     <div className="space-y-4">
-                      {/* Name */}
                       <div>
                         <label className="text-sm font-medium text-muted-foreground mb-2 block">
                           Service Name
@@ -186,22 +254,24 @@ export function SubscriptionDetailSheet({
                         />
                       </div>
 
-                      {/* Amount */}
                       <div>
                         <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                          Amount (₹)
+                          Amount ({displaySubscription.currency || '₹'})
                         </label>
                         <Input
                           type="number"
                           value={formData?.amount || ''}
                           onChange={(e) =>
-                            setFormData(formData ? { ...formData, amount: parseFloat(e.target.value) || 0 } : null)
+                            setFormData(
+                              formData
+                                ? { ...formData, amount: parseFloat(e.target.value) || 0 }
+                                : null
+                            )
                           }
                           className="h-12 bg-secondary border-0 rounded-xl text-foreground"
                         />
                       </div>
 
-                      {/* Billing Cycle */}
                       <div>
                         <label className="text-sm font-medium text-muted-foreground mb-2 block">
                           Billing Cycle
@@ -216,11 +286,12 @@ export function SubscriptionDetailSheet({
                                 )
                               }
                               className={cn(
-                                'py-3 rounded-xl text-sm font-medium transition-all',
+                                'py-3 rounded-xl text-sm font-medium transition-all cursor-pointer',
                                 formData?.billingCycle === cycle.id
                                   ? 'bg-gold text-obsidian'
                                   : 'bg-secondary text-muted-foreground hover:text-foreground'
                               )}
+                              type="button"
                             >
                               {cycle.label}
                             </button>
@@ -228,7 +299,6 @@ export function SubscriptionDetailSheet({
                         </div>
                       </div>
 
-                      {/* Renewal Date */}
                       <div>
                         <label className="text-sm font-medium text-muted-foreground mb-2 block">
                           Next Renewal Date
@@ -237,13 +307,14 @@ export function SubscriptionDetailSheet({
                           type="date"
                           value={formData?.renewalDate || ''}
                           onChange={(e) =>
-                            setFormData(formData ? { ...formData, renewalDate: e.target.value } : null)
+                            setFormData(
+                              formData ? { ...formData, renewalDate: e.target.value } : null
+                            )
                           }
                           className="h-12 bg-secondary border-0 rounded-xl text-foreground"
                         />
                       </div>
 
-                      {/* Category */}
                       <div>
                         <label className="text-sm font-medium text-muted-foreground mb-2 block">
                           Category
@@ -256,11 +327,12 @@ export function SubscriptionDetailSheet({
                                 setFormData(formData ? { ...formData, category: cat.id } : null)
                               }
                               className={cn(
-                                'py-3 rounded-xl text-sm font-medium transition-all truncate',
+                                'py-3 rounded-xl text-sm font-medium transition-all truncate cursor-pointer',
                                 formData?.category === cat.id
                                   ? 'bg-gold text-obsidian'
                                   : 'bg-secondary text-muted-foreground hover:text-foreground'
                               )}
+                              type="button"
                             >
                               {cat.label}
                             </button>
@@ -268,7 +340,6 @@ export function SubscriptionDetailSheet({
                         </div>
                       </div>
 
-                      {/* Status */}
                       <div>
                         <label className="text-sm font-medium text-muted-foreground mb-2 block">
                           Status
@@ -281,11 +352,12 @@ export function SubscriptionDetailSheet({
                                 setFormData(formData ? { ...formData, status: status.value } : null)
                               }
                               className={cn(
-                                'flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all',
+                                'flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all cursor-pointer',
                                 formData?.status === status.value
                                   ? 'bg-gold text-obsidian'
                                   : 'bg-secondary text-muted-foreground hover:text-foreground'
                               )}
+                              type="button"
                             >
                               {status.icon}
                               {status.label}
@@ -295,13 +367,17 @@ export function SubscriptionDetailSheet({
                       </div>
                     </div>
 
-                    {/* Save/Cancel Buttons */}
                     <div className="flex gap-3 pt-4">
                       <Button
-                        onClick={handleSave}
+                        onClick={() => void handleSave()}
+                        disabled={isSaving || isDeleting}
                         className="flex-1 h-14 rounded-xl bg-gold hover:bg-gold/90 text-obsidian font-semibold"
                       >
-                        <Check className="w-5 h-5 mr-2" />
+                        {isSaving ? (
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        ) : (
+                          <Check className="w-5 h-5 mr-2" />
+                        )}
                         Save Changes
                       </Button>
                       <Button
@@ -309,6 +385,7 @@ export function SubscriptionDetailSheet({
                           setIsEditing(false)
                           setFormData(subscription)
                         }}
+                        disabled={isSaving || isDeleting}
                         className="flex-1 h-14 rounded-xl bg-secondary hover:bg-secondary/70 text-foreground font-semibold"
                       >
                         Cancel
@@ -317,13 +394,13 @@ export function SubscriptionDetailSheet({
                   </>
                 ) : (
                   <>
-                    {/* View Mode */}
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="p-4 rounded-xl bg-secondary/50">
                           <p className="text-sm text-muted-foreground mb-1">Amount</p>
                           <p className="text-2xl font-semibold text-gold">
-                            ₹{displaySubscription.amount.toLocaleString('en-US')}
+                            {(displaySubscription.currency || '₹')}
+                            {Number(displaySubscription.amount || 0).toLocaleString('en-IN')}
                           </p>
                         </div>
                         <div className="p-4 rounded-xl bg-secondary/50">
@@ -352,10 +429,10 @@ export function SubscriptionDetailSheet({
                               displaySubscription.status === 'active'
                                 ? 'bg-green-500/20 text-green-400'
                                 : displaySubscription.status === 'paused'
-                                ? 'bg-yellow-500/20 text-yellow-400'
-                                : displaySubscription.status === 'unused'
-                                ? 'bg-orange-500/20 text-orange-400'
-                                : 'bg-red-500/20 text-red-400'
+                                  ? 'bg-yellow-500/20 text-yellow-400'
+                                  : displaySubscription.status === 'unused'
+                                    ? 'bg-orange-500/20 text-orange-400'
+                                    : 'bg-red-500/20 text-red-400'
                             )}
                           >
                             {displaySubscription.status}
@@ -364,10 +441,10 @@ export function SubscriptionDetailSheet({
                       </div>
                     </div>
 
-                    {/* Action Buttons */}
                     <div className="flex gap-3 pt-4">
                       <Button
                         onClick={() => setIsEditing(true)}
+                        disabled={isSaving || isDeleting}
                         className="flex-1 h-14 rounded-xl bg-gold hover:bg-gold/90 text-obsidian font-semibold"
                       >
                         <Edit2 className="w-5 h-5 mr-2" />
@@ -375,6 +452,7 @@ export function SubscriptionDetailSheet({
                       </Button>
                       <Button
                         onClick={() => setShowDeleteConfirm(true)}
+                        disabled={isSaving || isDeleting}
                         className="flex-1 h-14 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 font-semibold"
                       >
                         <Trash2 className="w-5 h-5 mr-2" />
@@ -384,7 +462,6 @@ export function SubscriptionDetailSheet({
                   </>
                 )}
 
-                {/* Delete Confirmation */}
                 {showDeleteConfirm && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -399,13 +476,19 @@ export function SubscriptionDetailSheet({
                     </p>
                     <div className="flex gap-2">
                       <Button
-                        onClick={handleDelete}
+                        onClick={() => void handleDelete()}
+                        disabled={isDeleting || isSaving}
                         className="flex-1 h-12 rounded-xl bg-red-500 hover:bg-red-600 text-white font-semibold"
                       >
-                        Delete
+                        {isDeleting ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          'Delete'
+                        )}
                       </Button>
                       <Button
                         onClick={() => setShowDeleteConfirm(false)}
+                        disabled={isDeleting || isSaving}
                         className="flex-1 h-12 rounded-xl bg-secondary hover:bg-secondary/70 text-foreground font-semibold"
                       >
                         Cancel
