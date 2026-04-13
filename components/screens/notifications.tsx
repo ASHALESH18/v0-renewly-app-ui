@@ -154,43 +154,51 @@ export function NotificationsScreen() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="sticky top-0 z-10 glass-strong">
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="sticky top-0 z-10 glass-premium border-b border-gold/10"
+      >
         <div className="px-4 pt-12 pb-4">
           <div className="flex items-center justify-between mb-4 gap-4">
             <div>
-              <h1 className="text-2xl font-semibold text-foreground">Notifications</h1>
+              <h1 className="text-2xl font-bold text-foreground tracking-tight">Notifications</h1>
               {unreadCount > 0 && (
                 <p className="text-sm text-muted-foreground mt-1">
-                  {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
+                  <span className="text-gold font-medium">{unreadCount}</span> unread notification{unreadCount !== 1 ? 's' : ''}
                 </p>
               )}
             </div>
 
             {unreadCount > 0 && (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => void markAllAsRead()}
                 disabled={isMarkingAll}
-                className="px-4 py-2 rounded-full text-sm font-medium text-gold hover:bg-gold/10 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-xl text-sm font-medium text-gold bg-gold/10 border border-gold/20 hover:bg-gold/15 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Mark all read
-              </button>
+              </motion.button>
             )}
           </div>
 
           <div className="flex gap-2">
             {(['all', 'unread'] as const).map((tab) => (
-              <button
+              <motion.button
                 key={tab}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setFilter(tab)}
                 className={cn(
-                  'px-4 py-2 rounded-full text-sm font-medium transition-all cursor-pointer',
+                  'px-4 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer',
                   filter === tab
-                    ? 'bg-gold text-obsidian'
-                    : 'glass text-muted-foreground hover:text-foreground'
+                    ? 'bg-gradient-to-r from-gold to-gold/80 text-obsidian shadow-[0_4px_12px_-4px_rgba(199,163,106,0.4)]'
+                    : 'bg-card/60 border border-border text-muted-foreground hover:text-foreground hover:border-gold/20'
                 )}
               >
                 {tab === 'all' ? 'All' : `Unread (${unreadCount})`}
-              </button>
+              </motion.button>
             ))}
           </div>
 
@@ -227,9 +235,10 @@ export function NotificationsScreen() {
                   <motion.div
                     key={notification.id}
                     layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -100 }}
+                    initial={{ opacity: 0, y: 20, filter: 'blur(4px)' }}
+                    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                    exit={{ opacity: 0, x: -100, filter: 'blur(4px)' }}
+                    whileHover={{ y: -2, boxShadow: '0 12px 24px -8px rgba(199, 163, 106, 0.12)' }}
                     onClick={() => {
                       if (!notification.read) {
                         void markAsRead(notification.id)
@@ -247,11 +256,18 @@ export function NotificationsScreen() {
                     role="button"
                     tabIndex={0}
                     className={cn(
-                      'relative p-4 rounded-2xl glass transition-all cursor-pointer',
-                      !notification.read && 'ring-1 ring-gold/30',
+                      'relative p-5 rounded-2xl bg-card/60 backdrop-blur-sm border transition-all cursor-pointer group overflow-hidden',
+                      !notification.read 
+                        ? 'border-gold/30 bg-gradient-to-br from-gold/5 to-transparent shadow-[0_0_0_1px_rgba(199,163,106,0.1)]' 
+                        : 'border-border hover:border-gold/20',
                       pending && 'opacity-70'
                     )}
                   >
+                    {/* Hover glow */}
+                    <motion.div
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                      style={{ background: 'radial-gradient(circle at top left, rgba(199,163,106,0.08) 0%, transparent 60%)' }}
+                    />
                     {!notification.read && (
                       <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-gold" />
                     )}

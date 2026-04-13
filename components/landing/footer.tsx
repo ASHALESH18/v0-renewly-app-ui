@@ -49,8 +49,18 @@ const socialLinks = [
 
 export function Footer() {
   return (
-    <footer className="bg-card dark:bg-graphite border-t border-glass-border">
-      <div className="max-w-6xl mx-auto px-4 py-16">
+    <footer className="relative bg-card dark:bg-graphite border-t border-gold/10 overflow-hidden">
+      {/* Ambient background */}
+      <div className="absolute inset-0 pointer-events-none">
+        <motion.div
+          className="absolute bottom-0 left-1/4 w-96 h-96 rounded-full blur-[120px]"
+          style={{ background: 'radial-gradient(circle, rgba(199, 163, 106, 0.06) 0%, transparent 70%)' }}
+          animate={{ opacity: [0.3, 0.5, 0.3] }}
+          transition={{ duration: 8, repeat: Infinity }}
+        />
+      </div>
+      
+      <div className="relative max-w-6xl mx-auto px-4 py-20">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
           {/* Brand column */}
           <div className="col-span-2 md:col-span-1">

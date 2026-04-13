@@ -29,21 +29,22 @@ export function FilterChips({ chips, selectedChip, onChipSelect }: FilterChipsPr
             initial="initial"
             animate="animate"
             whileTap="tap"
+            whileHover={{ scale: 1.02 }}
             custom={index}
             transition={{ ...springs.snappy, delay: index * 0.03 }}
             onClick={() => onChipSelect(chip.id)}
             className={cn(
-              'relative px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors cursor-pointer',
+              'relative px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all cursor-pointer border',
               isSelected
-                ? 'bg-gold text-obsidian'
-                : 'bg-muted text-muted-foreground hover:text-foreground'
+                ? 'bg-gradient-to-r from-gold to-gold/90 text-obsidian border-gold/50 shadow-[0_4px_12px_-4px_rgba(199,163,106,0.4)]'
+                : 'bg-card/60 border-border text-muted-foreground hover:text-foreground hover:border-gold/30 hover:bg-gold/5'
             )}
           >
             {chip.label}
             {chip.count !== undefined && (
               <span className={cn(
-                'ml-1.5',
-                isSelected ? 'text-obsidian/70' : 'text-muted-foreground'
+                'ml-1.5 px-1.5 py-0.5 rounded-md text-xs',
+                isSelected ? 'bg-obsidian/20 text-obsidian' : 'bg-muted text-muted-foreground'
               )}>
                 {chip.count}
               </span>
@@ -71,7 +72,7 @@ export function SegmentedControl({
 }: SegmentedControlProps) {
   return (
     <div className={cn(
-      'inline-flex p-1 rounded-xl bg-muted',
+      'inline-flex p-1 rounded-xl bg-card/60 border border-border backdrop-blur-sm',
       fullWidth && 'w-full'
     )}>
       {segments.map((segment) => {
@@ -81,16 +82,18 @@ export function SegmentedControl({
           <motion.button
             key={segment.id}
             onClick={() => onSegmentSelect(segment.id)}
+            whileHover={!isSelected ? { backgroundColor: 'rgba(199,163,106,0.05)' } : undefined}
+            whileTap={{ scale: 0.98 }}
             className={cn(
-              'relative px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer',
+              'relative px-4 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer',
               fullWidth && 'flex-1',
-              isSelected ? 'text-foreground' : 'text-muted-foreground'
+              isSelected ? 'text-obsidian' : 'text-muted-foreground hover:text-foreground'
             )}
           >
             {isSelected && (
               <motion.div
                 layoutId="segmentBg"
-                className="absolute inset-0 bg-card rounded-lg shadow-sm"
+                className="absolute inset-0 bg-gradient-to-r from-gold to-gold/90 rounded-lg shadow-[0_2px_8px_-2px_rgba(199,163,106,0.4)]"
                 transition={springs.snappy}
               />
             )}

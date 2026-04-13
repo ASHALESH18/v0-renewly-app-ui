@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { ChevronLeft, ChevronRight, CalendarDays, Clock } from 'lucide-react'
 import { Header } from '@/components/header'
-import { PageTransition } from '@/components/motion'
+import { PageTransition, springs } from '@/components/motion'
 import { useCalendarEvents } from '@/lib/hooks/use-remote-data'
 import { cn } from '@/lib/utils'
 import { CalendarSkeleton } from '@/components/skeletons'
@@ -228,16 +229,24 @@ export function CalendarScreen() {
               </button>
             </div>
 
-            <div className="rounded-2xl bg-card border border-border p-4">
-              <div className="grid grid-cols-7 gap-1 mb-2">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={springs.gentle}
+              className="rounded-2xl bg-card/80 backdrop-blur-sm border border-gold/10 p-5 shadow-card overflow-hidden relative"
+            >
+              {/* Ambient glow */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gold/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+              
+              <div className="relative grid grid-cols-7 gap-1 mb-3">
                 {DAYS.map((day) => (
-                  <div key={day} className="text-center text-xs text-muted-foreground py-2">
+                  <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
                     {day}
                   </div>
                 ))}
               </div>
 
-              <div className="grid grid-cols-7 gap-1">
+              <div className="relative grid grid-cols-7 gap-1.5">
                 {Array.from({ length: firstDayOfMonth }).map((_, i) => (
                   <div key={`empty-${i}`} className="aspect-square" />
                 ))}
@@ -258,16 +267,18 @@ export function CalendarScreen() {
                     currentYear === today.getFullYear()
 
                   return (
-                    <button
+                    <motion.button
                       key={day}
                       type="button"
                       onClick={() => setSelectedDate(dateStr)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                       className={cn(
-                        'aspect-square rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors relative',
-                        isToday && 'bg-gold text-obsidian',
-                        !isToday && event && 'bg-gold/10',
-                        !isToday && !event && 'hover:bg-muted',
-                        selectedDate === dateStr && !isToday && 'ring-2 ring-gold/60'
+                        'aspect-square rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all duration-200 relative group',
+                        isToday && 'bg-gradient-to-br from-gold to-gold/80 text-obsidian shadow-[0_4px_16px_-4px_rgba(199,163,106,0.5)]',
+                        !isToday && event && 'bg-gold/10 border border-gold/20 hover:border-gold/40',
+                        !isToday && !event && 'hover:bg-muted/50',
+                        selectedDate === dateStr && !isToday && 'ring-2 ring-gold/60 bg-gold/5'
                       )}
                     >
                       <span

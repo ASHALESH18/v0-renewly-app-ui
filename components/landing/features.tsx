@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, useInView } from 'framer-motion'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import {
   Calendar,
   Bell,
@@ -11,7 +11,8 @@ import {
   Zap,
   CreditCard,
   TrendingDown,
-  Globe
+  Globe,
+  ArrowRight
 } from 'lucide-react'
 import { springs, staggerContainer, staggerItem } from '../motion'
 
@@ -20,94 +21,194 @@ const features = [
     icon: Calendar,
     title: 'Smart Calendar',
     description: 'See every upcoming renewal at a glance. Never be surprised by an unexpected charge again.',
+    color: '#C7A36A',
   },
   {
     icon: Bell,
     title: 'Timely Reminders',
     description: 'Custom alerts before each renewal. Cancel or keep, the choice is always yours.',
+    color: '#2E5E52',
   },
   {
     icon: PieChart,
     title: 'Spend Analytics',
     description: 'Understand where your money flows with beautiful, insightful breakdowns.',
+    color: '#C7A36A',
   },
   {
     icon: TrendingDown,
     title: 'Leak Detection',
     description: 'Our signature Leak Report identifies unused subscriptions and duplicate services.',
+    color: '#7A3940',
   },
   {
     icon: CreditCard,
     title: 'Payment Tracking',
     description: 'Track which cards and accounts are linked to each subscription.',
+    color: '#BCC2CC',
   },
   {
     icon: Shield,
     title: 'Bank-Grade Security',
     description: 'Your financial data is encrypted and protected with enterprise-level security.',
+    color: '#2E5E52',
   },
 ]
 
 export function Features() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
   return (
     <section
       id="features"
       ref={ref}
-      className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-20 lg:py-32 scroll-mt-24"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-24 lg:py-40 scroll-mt-24"
     >
-      {/* Background elements */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald/5 rounded-full blur-3xl" />
+      {/* Premium ambient background */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Animated mesh gradient orbs */}
+        <motion.div
+          className="absolute top-20 left-[10%] w-[600px] h-[600px] rounded-full blur-[120px]"
+          style={{ background: 'radial-gradient(circle, rgba(199, 163, 106, 0.08) 0%, transparent 70%)' }}
+          animate={{ 
+            scale: [1, 1.2, 1],
+            opacity: [0.4, 0.7, 0.4],
+            x: [0, 50, 0]
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute bottom-20 right-[10%] w-[500px] h-[500px] rounded-full blur-[100px]"
+          style={{ background: 'radial-gradient(circle, rgba(46, 94, 82, 0.08) 0%, transparent 70%)' }}
+          animate={{ 
+            scale: [1, 1.15, 1],
+            opacity: [0.3, 0.5, 0.3]
+          }}
+          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
+        />
+        
+        {/* Subtle grid */}
+        <div 
+          className="absolute inset-0 opacity-[0.015]"
+          style={{
+            backgroundImage: 'linear-gradient(rgba(199, 163, 106, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(199, 163, 106, 0.5) 1px, transparent 1px)',
+            backgroundSize: '80px 80px'
+          }}
+        />
+      </div>
 
       <div className="max-w-6xl mx-auto relative z-10">
-        {/* Section header */}
+        {/* Section header with premium treatment */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={springs.gentle}
-          className="text-center mb-16"
+          initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
+          animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+          transition={{ duration: 0.7, ease: 'easeOut' }}
+          className="text-center mb-20"
         >
-          <p className="text-gold text-sm font-medium tracking-wide uppercase mb-4">
-            Features
-          </p>
-          <h2 className="text-3xl md:text-4xl font-semibold text-foreground tracking-tight">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={isInView ? { opacity: 1, scale: 1 } : {}}
+            transition={{ delay: 0.1 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 border border-gold/20 mb-6"
+          >
+            <motion.span
+              className="w-2 h-2 rounded-full bg-gold"
+              animate={{ scale: [1, 1.3, 1], opacity: [0.7, 1, 0.7] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            <span className="text-sm text-gold font-medium tracking-wide uppercase">Features</span>
+          </motion.div>
+          
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-foreground tracking-tight leading-tight">
             Everything you need to
             <br />
-            <span className="text-gold-gradient">master your subscriptions</span>
+            <span className="text-gold-gradient font-serif italic">master your subscriptions</span>
           </h2>
+          
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.3 }}
+            className="mt-6 text-lg text-platinum max-w-2xl mx-auto"
+          >
+            Powerful tools designed to give you complete control over your recurring expenses
+          </motion.p>
         </motion.div>
 
-        {/* Features grid */}
+        {/* Premium Features grid */}
         <motion.div
-          ref={ref}
           variants={staggerContainer}
           initial="initial"
           animate={isInView ? 'animate' : 'initial'}
-          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
         >
           {features.map((feature, index) => (
             <motion.div
               key={feature.title}
               variants={staggerItem}
               custom={index}
-              whileHover={{ y: -4, transition: springs.gentle }}
-              initial={{ opacity: 0, y: 20, filter: 'blur(4px)' }}
+              onMouseEnter={() => setHoveredIndex(index)}
+              onMouseLeave={() => setHoveredIndex(null)}
+              initial={{ opacity: 0, y: 30, filter: 'blur(6px)' }}
               animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
               transition={{ delay: index * 0.1, duration: 0.5 }}
-              className="group p-6 rounded-2xl bg-secondary/50 dark:bg-slate/50 border border-glass-border hover:border-gold/30 transition-colors"
+              className="group relative"
             >
-              <div className="w-12 h-12 rounded-xl bg-gold/10 flex items-center justify-center mb-4 group-hover:bg-gold/20 transition-colors">
-                <feature.icon className="w-6 h-6 text-gold" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                {feature.title}
-              </h3>
-              <p className="text-platinum text-sm leading-relaxed">
-                {feature.description}
-              </p>
+              <motion.div
+                whileHover={{ y: -6 }}
+                transition={{ duration: 0.3 }}
+                className="relative h-full p-6 lg:p-8 rounded-2xl bg-card/60 backdrop-blur-xl border border-glass-border overflow-hidden"
+              >
+                {/* Hover glow effect */}
+                <motion.div
+                  className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  style={{
+                    background: `radial-gradient(circle at top left, ${feature.color}15 0%, transparent 60%)`
+                  }}
+                />
+                
+                {/* Top accent line */}
+                <motion.div
+                  className="absolute top-0 left-0 right-0 h-0.5"
+                  style={{ backgroundColor: feature.color }}
+                  initial={{ scaleX: 0 }}
+                  whileHover={{ scaleX: 1 }}
+                  transition={{ duration: 0.4 }}
+                />
+                
+                {/* Icon with glow */}
+                <div className="relative mb-5">
+                  <motion.div
+                    className="absolute -inset-2 rounded-xl blur-lg opacity-0 group-hover:opacity-60 transition-opacity duration-500"
+                    style={{ backgroundColor: `${feature.color}40` }}
+                  />
+                  <div 
+                    className="relative w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105"
+                    style={{ backgroundColor: `${feature.color}15` }}
+                  >
+                    <feature.icon className="w-7 h-7" style={{ color: feature.color }} />
+                  </div>
+                </div>
+                
+                <h3 className="text-xl font-semibold text-foreground mb-3 group-hover:text-gold transition-colors">
+                  {feature.title}
+                </h3>
+                <p className="text-platinum text-sm leading-relaxed mb-4">
+                  {feature.description}
+                </p>
+                
+                {/* Learn more link */}
+                <motion.div
+                  className="flex items-center gap-2 text-sm font-medium text-gold opacity-0 group-hover:opacity-100 transition-opacity"
+                  initial={{ x: -10 }}
+                  whileHover={{ x: 0 }}
+                >
+                  <span>Learn more</span>
+                  <ArrowRight className="w-4 h-4" />
+                </motion.div>
+              </motion.div>
             </motion.div>
           ))}
         </motion.div>

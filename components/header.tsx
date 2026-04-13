@@ -184,12 +184,12 @@ export function Header({
 
   return (
     <motion.header
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={springs.gentle}
+      initial={{ y: -20, opacity: 0, filter: 'blur(10px)' }}
+      animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
       className={cn(
         'sticky top-0 z-30 px-4 py-4 lg:px-6',
-        !transparent && 'glass-strong',
+        !transparent && 'glass-premium border-b border-gold/5',
         className
       )}
     >
@@ -237,12 +237,16 @@ export function Header({
               <AnimatePresence>
                 {isNotificationsOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                    transition={springs.gentle}
-                    className="absolute right-0 top-12 z-50 w-[340px] max-w-[calc(100vw-2rem)] rounded-2xl border border-glass-border bg-card/95 backdrop-blur-xl shadow-depth-lg p-3"
+                    initial={{ opacity: 0, y: 12, scale: 0.95, filter: 'blur(8px)' }}
+                    animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+                    exit={{ opacity: 0, y: 8, scale: 0.98, filter: 'blur(4px)' }}
+                    transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    className="absolute right-0 top-14 z-50 w-[360px] max-w-[calc(100vw-2rem)] rounded-2xl border border-gold/10 bg-card/98 backdrop-blur-2xl shadow-depth-lg overflow-hidden"
                   >
+                    {/* Top gradient accent */}
+                    <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
+                    
+                    <div className="p-4">
                     <div className="flex items-center justify-between gap-3 mb-3">
                       <div>
                         <p className="text-sm font-semibold text-foreground">Notifications</p>

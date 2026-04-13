@@ -51,37 +51,33 @@ export function LandingHeader() {
 
   return (
     <motion.header
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.1 }}
+      initial={{ opacity: 0, y: -20, filter: 'blur(10px)' }}
+      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
       className="fixed top-0 left-0 right-0 z-50 px-4 py-4"
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <RenewlyLogo size="lg" />
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between px-4 py-2 rounded-2xl glass-premium border border-gold/10">
+          <RenewlyLogo size="lg" />
 
-        <nav className="hidden md:flex items-center gap-8">
-          <a
-            href="/#features"
-            onClick={(e) => handleAnchorClick(e, 'features')}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-          >
-            Features
-          </a>
-          <a
-            href="/#pricing"
-            onClick={(e) => handleAnchorClick(e, 'pricing')}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-          >
-            Pricing
-          </a>
-          <a
-            href="/#faq"
-            onClick={(e) => handleAnchorClick(e, 'faq')}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-          >
-            FAQ
-          </a>
-        </nav>
+          <nav className="hidden md:flex items-center gap-1">
+            {[
+              { href: '/#features', id: 'features', label: 'Features' },
+              { href: '/#pricing', id: 'pricing', label: 'Pricing' },
+              { href: '/#faq', id: 'faq', label: 'FAQ' },
+            ].map((item) => (
+              <motion.a
+                key={item.id}
+                href={item.href}
+                onClick={(e) => handleAnchorClick(e, item.id)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="relative px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer rounded-lg hover:bg-gold/5"
+              >
+                {item.label}
+              </motion.a>
+            ))}
+          </nav>
 
         <div className="flex items-center gap-3">
           {loading ? (
