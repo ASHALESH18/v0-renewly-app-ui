@@ -229,7 +229,7 @@ export function CalendarScreen() {
               </button>
             </div>
 
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={springs.gentle}
@@ -237,7 +237,7 @@ export function CalendarScreen() {
             >
               {/* Ambient glow */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-gold/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-              
+
               <div className="relative grid grid-cols-7 gap-1 mb-3">
                 {DAYS.map((day) => (
                   <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
@@ -314,7 +314,7 @@ export function CalendarScreen() {
                           )}
                         </div>
                       )}
-                    </button>
+                    </motion.button>
                   )
                 })}
               </div>

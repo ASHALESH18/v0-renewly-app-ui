@@ -245,26 +245,27 @@ export function Header({
                   >
                     {/* Top gradient accent */}
                     <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
-                    
-                    <div className="p-4">
-                    <div className="flex items-center justify-between gap-3 mb-3">
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">Notifications</p>
-                        <p className="text-xs text-muted-foreground">
-                          {liveUnreadCount} unread
-                        </p>
-                      </div>
 
-                      {liveUnreadCount > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => void handleMarkAllRead()}
-                          disabled={isUpdatingNotifications}
-                          className="text-xs font-medium text-gold hover:text-gold/80 transition-colors cursor-pointer disabled:opacity-50"
-                        >
-                          Mark all read
-                        </button>
-                      )}
+                    <div className="p-4">
+                      <div className="flex items-center justify-between gap-3 mb-3">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">Notifications</p>
+                          <p className="text-xs text-muted-foreground">
+                            {liveUnreadCount} unread
+                          </p>
+                        </div>
+
+                        {liveUnreadCount > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => void handleMarkAllRead()}
+                            disabled={isUpdatingNotifications}
+                            className="text-xs font-medium text-gold hover:text-gold/80 transition-colors cursor-pointer disabled:opacity-50"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {notificationsLoading ? (

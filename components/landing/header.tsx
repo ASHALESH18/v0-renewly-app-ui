@@ -18,7 +18,7 @@ export function LandingHeader() {
   // Handle anchor navigation with proper smooth scroll
   const handleAnchorClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
     e.preventDefault()
-    
+
     const scrollToSection = () => {
       const element = document.getElementById(sectionId)
       if (element) {
@@ -79,57 +79,58 @@ export function LandingHeader() {
             ))}
           </nav>
 
-        <div className="flex items-center gap-3">
-          {loading ? (
-            <div className="w-32 h-10 rounded-lg bg-graphite/50 animate-pulse" />
-          ) : user ? (
-            <>
-              <Link href="/app/dashboard">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gold text-obsidian font-medium text-sm cursor-pointer"
-                >
-                  Dashboard
-                  <ArrowRight className="w-4 h-4" />
-                </motion.button>
-              </Link>
+          <div className="flex items-center gap-3">
+            {loading ? (
+              <div className="w-32 h-10 rounded-lg bg-graphite/50 animate-pulse" />
+            ) : user ? (
+              <>
+                <Link href="/app/dashboard">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gold text-obsidian font-medium text-sm cursor-pointer"
+                  >
+                    Dashboard
+                    <ArrowRight className="w-4 h-4" />
+                  </motion.button>
+                </Link>
 
-              <motion.button
-                whileHover={{ scale: isSigningOut ? 1 : 1.02 }}
-                whileTap={{ scale: isSigningOut ? 1 : 0.98 }}
-                onClick={handleLogout}
-                disabled={isSigningOut}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gold/25 bg-card/70 text-foreground font-medium text-sm transition-colors hover:border-gold/45 hover:text-gold disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <LogOut className="w-4 h-4" />
-                {isSigningOut ? 'Signing out...' : 'Logout'}
-              </motion.button>
-            </>
-          ) : (
-            <>
-              <Link href="/auth/sign-in">
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  whileHover={{ scale: isSigningOut ? 1 : 1.02 }}
+                  whileTap={{ scale: isSigningOut ? 1 : 0.98 }}
+                  onClick={handleLogout}
+                  disabled={isSigningOut}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gold/25 bg-card/70 text-foreground font-medium text-sm transition-colors hover:border-gold/45 hover:text-gold disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  Sign in
+                  <LogOut className="w-4 h-4" />
+                  {isSigningOut ? 'Signing out...' : 'Logout'}
                 </motion.button>
-              </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/auth/sign-in">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    Sign in
+                  </motion.button>
+                </Link>
 
-              <Link href="/auth/sign-up">
-                <motion.button
-                  whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(199, 163, 106, 0.2)' }}
-                  whileTap={{ scale: 0.98 }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gold text-obsidian font-medium text-sm cursor-pointer"
-                >
-                  Get started
-                  <ArrowRight className="w-4 h-4" />
-                </motion.button>
-              </Link>
-            </>
-          )}
+                <Link href="/auth/sign-up">
+                  <motion.button
+                    whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(199, 163, 106, 0.2)' }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gold text-obsidian font-medium text-sm cursor-pointer"
+                  >
+                    Get started
+                    <ArrowRight className="w-4 h-4" />
+                  </motion.button>
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </motion.header>
