@@ -18,7 +18,7 @@ interface FilterChipsProps {
 
 export function FilterChips({ chips, selectedChip, onChipSelect }: FilterChipsProps) {
   return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+    <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
       {chips.map((chip, index) => {
         const isSelected = selectedChip === chip.id
         
@@ -29,22 +29,30 @@ export function FilterChips({ chips, selectedChip, onChipSelect }: FilterChipsPr
             initial="initial"
             animate="animate"
             whileTap="tap"
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ scale: 1.05, y: -2 }}
             custom={index}
             transition={{ ...springs.snappy, delay: index * 0.03 }}
             onClick={() => onChipSelect(chip.id)}
             className={cn(
-              'relative px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all cursor-pointer border',
+              'relative px-5 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all cursor-pointer border group',
               isSelected
-                ? 'bg-gradient-to-r from-gold to-gold/90 text-obsidian border-gold/50 shadow-[0_4px_12px_-4px_rgba(199,163,106,0.4)]'
-                : 'bg-card/60 border-border text-muted-foreground hover:text-foreground hover:border-gold/30 hover:bg-gold/5'
+                ? 'bg-gradient-to-r from-gold via-gold/95 to-gold/90 text-obsidian border-gold/60 shadow-[0_8px_24px_-4px_rgba(199,163,106,0.5),0_0_0_1px_rgba(199,163,106,0.2)]'
+                : 'bg-card/70 backdrop-blur-sm border-border text-muted-foreground hover:text-foreground hover:border-gold/40 hover:bg-gold/8 hover:shadow-[0_4px_16px_-4px_rgba(199,163,106,0.2)]'
             )}
           >
+            {/* Glow effect when selected */}
+            {isSelected && (
+              <motion.div
+                className="absolute -inset-1 rounded-2xl bg-gold/30 blur-lg -z-10"
+                animate={{ opacity: [0.4, 0.6, 0.4] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+            )}
             {chip.label}
             {chip.count !== undefined && (
               <span className={cn(
-                'ml-1.5 px-1.5 py-0.5 rounded-md text-xs',
-                isSelected ? 'bg-obsidian/20 text-obsidian' : 'bg-muted text-muted-foreground'
+                'ml-2 px-2 py-0.5 rounded-lg text-xs font-bold',
+                isSelected ? 'bg-obsidian/25 text-obsidian' : 'bg-muted text-muted-foreground'
               )}>
                 {chip.count}
               </span>
@@ -72,9 +80,12 @@ export function SegmentedControl({
 }: SegmentedControlProps) {
   return (
     <div className={cn(
-      'inline-flex p-1 rounded-xl bg-card/60 border border-border backdrop-blur-sm',
+      'relative inline-flex p-1.5 rounded-2xl bg-card/80 border border-gold/15 backdrop-blur-xl shadow-[0_4px_16px_-4px_rgba(87,63,38,0.1)]',
       fullWidth && 'w-full'
     )}>
+      {/* Subtle inner highlight */}
+      <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-gold/15 to-transparent" />
+      
       {segments.map((segment) => {
         const isSelected = selectedSegment === segment.id
         
@@ -82,10 +93,10 @@ export function SegmentedControl({
           <motion.button
             key={segment.id}
             onClick={() => onSegmentSelect(segment.id)}
-            whileHover={!isSelected ? { backgroundColor: 'rgba(199,163,106,0.05)' } : undefined}
-            whileTap={{ scale: 0.98 }}
+            whileHover={!isSelected ? { backgroundColor: 'rgba(199,163,106,0.08)' } : undefined}
+            whileTap={{ scale: 0.96 }}
             className={cn(
-              'relative px-4 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer',
+              'relative px-5 py-2.5 text-sm font-semibold rounded-xl transition-all cursor-pointer',
               fullWidth && 'flex-1',
               isSelected ? 'text-obsidian' : 'text-muted-foreground hover:text-foreground'
             )}
@@ -93,7 +104,7 @@ export function SegmentedControl({
             {isSelected && (
               <motion.div
                 layoutId="segmentBg"
-                className="absolute inset-0 bg-gradient-to-r from-gold to-gold/90 rounded-lg shadow-[0_2px_8px_-2px_rgba(199,163,106,0.4)]"
+                className="absolute inset-0 bg-gradient-to-r from-gold via-gold/95 to-gold/90 rounded-xl shadow-[0_4px_16px_-4px_rgba(199,163,106,0.5),0_0_0_1px_rgba(199,163,106,0.2)]"
                 transition={springs.snappy}
               />
             )}

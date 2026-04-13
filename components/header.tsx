@@ -184,15 +184,21 @@ export function Header({
 
   return (
     <motion.header
-      initial={{ y: -20, opacity: 0, filter: 'blur(10px)' }}
+      initial={{ y: -30, opacity: 0, filter: 'blur(16px)' }}
       animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
+      transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
       className={cn(
-        'sticky top-0 z-30 px-4 py-4 lg:px-6',
-        !transparent && 'glass-premium border-b border-gold/5',
+        'sticky top-0 z-30 px-4 py-5 lg:px-6',
+        !transparent && 'glass-premium border-b border-gold/10 shadow-[0_4px_24px_-4px_rgba(199,163,106,0.08)]',
         className
       )}
     >
+      {/* Subtle top highlight */}
+      <motion.div 
+        className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/25 to-transparent"
+        animate={{ opacity: [0.3, 0.5, 0.3] }}
+        transition={{ duration: 4, repeat: Infinity }}
+      />
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1 min-w-0">
           {title ? (
@@ -412,16 +418,22 @@ interface HeaderButtonProps {
 function HeaderButton({ children, onClick, badge }: HeaderButtonProps) {
   return (
     <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: 1.08, y: -2 }}
+      whileTap={{ scale: 0.92 }}
       onClick={onClick}
-      className="relative w-10 h-10 rounded-xl border border-gold/15 bg-[radial-gradient(circle_at_top,rgba(199,163,106,0.12),rgba(255,255,255,0.02))] flex items-center justify-center text-foreground/80 hover:text-gold hover:border-gold/35 hover:bg-gold/10 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50"
+      className="relative w-11 h-11 rounded-2xl border border-gold/20 bg-[radial-gradient(circle_at_top,rgba(199,163,106,0.15),rgba(255,255,255,0.03))] flex items-center justify-center text-foreground/80 hover:text-gold hover:border-gold/40 hover:bg-gold/15 hover:shadow-[0_8px_24px_-8px_rgba(199,163,106,0.25)] transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50 group"
     >
+      {/* Glow effect on hover */}
+      <div className="absolute inset-0 rounded-2xl bg-gold/10 blur-lg opacity-0 group-hover:opacity-60 transition-opacity -z-10" />
       {children}
       {badge !== undefined && badge > 0 && (
-        <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-crimson text-[10px] font-semibold text-ivory flex items-center justify-center">
+        <motion.span 
+          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-crimson text-[10px] font-bold text-ivory flex items-center justify-center shadow-[0_4px_8px_-2px_rgba(122,57,64,0.5)]"
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
           {badge > 9 ? '9+' : badge}
-        </span>
+        </motion.span>
       )}
     </motion.button>
   )

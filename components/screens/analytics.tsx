@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { motion } from 'framer-motion'
 import {
   TrendingUp,
   TrendingDown,
@@ -57,29 +58,42 @@ function MetricCard({
 }) {
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -3, boxShadow: '0 20px 40px -12px rgba(199, 163, 106, 0.15)' }}
-      className="relative rounded-3xl border border-gold/10 bg-card/80 backdrop-blur-xl p-6 shadow-card overflow-hidden group"
+      initial={{ opacity: 0, y: 30, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      whileHover={{ 
+        y: -8, 
+        boxShadow: '0 32px 64px -16px rgba(199, 163, 106, 0.25), 0 0 0 1px rgba(199, 163, 106, 0.15), 0 0 60px -20px rgba(199, 163, 106, 0.15)'
+      }}
+      transition={{ duration: 0.6 }}
+      className="relative rounded-3xl border border-gold/15 bg-card/90 backdrop-blur-2xl p-7 shadow-card overflow-hidden group"
     >
-      {/* Ambient glow on hover */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-2xl" />
-      </div>
+      {/* DRAMATIC: Multi-layer ambient glow on hover */}
+      <motion.div 
+        className="absolute -inset-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        style={{ background: 'radial-gradient(circle at top right, rgba(199, 163, 106, 0.2) 0%, transparent 60%)' }}
+      />
+      <motion.div 
+        className="absolute -inset-4 opacity-0 group-hover:opacity-60 transition-opacity duration-700 pointer-events-none"
+        style={{ background: 'radial-gradient(circle at bottom left, rgba(199, 163, 106, 0.1) 0%, transparent 50%)' }}
+      />
       
-      {/* Top highlight line */}
-      <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
+      {/* Animated top highlight line */}
+      <motion.div 
+        className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent"
+        animate={{ opacity: [0.3, 0.6, 0.3] }}
+        transition={{ duration: 3, repeat: Infinity }}
+      />
 
       <div className="relative flex items-start justify-between gap-4">
         <div>
           <p className="text-sm text-muted-foreground font-medium">{label}</p>
-          <p className="mt-2 text-3xl font-bold text-foreground tracking-tight">{value}</p>
+          <p className="mt-3 text-3xl font-bold text-foreground tracking-tight">{value}</p>
 
           {trend ? (
             <div
-              className={`mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium ${trend.positive
-                  ? 'bg-emerald/10 text-emerald border border-emerald/20'
-                  : 'bg-crimson/10 text-crimson border border-crimson/20'
+              className={`mt-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${trend.positive
+                  ? 'bg-emerald/15 text-emerald border border-emerald/25'
+                  : 'bg-crimson/15 text-crimson border border-crimson/25'
                 }`}
             >
               {trend.positive ? (
@@ -93,10 +107,11 @@ function MetricCard({
           ) : null}
         </div>
 
-        <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-gold/15 to-gold/5 text-gold border border-gold/10">
-          {/* Icon glow */}
-          <div className="absolute inset-0 rounded-2xl bg-gold/20 blur-md opacity-0 group-hover:opacity-60 transition-opacity" />
-          <Icon className="relative h-6 w-6" />
+        <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-gold/20 to-gold/8 text-gold border border-gold/15">
+          {/* DRAMATIC: Multi-layer icon glow */}
+          <div className="absolute -inset-2 rounded-2xl bg-gold/15 blur-xl opacity-0 group-hover:opacity-80 transition-opacity duration-500" />
+          <div className="absolute inset-0 rounded-2xl bg-gold/20 blur-md opacity-0 group-hover:opacity-60 transition-opacity duration-300" />
+          <Icon className="relative h-7 w-7" />
         </div>
       </div>
     </motion.div>

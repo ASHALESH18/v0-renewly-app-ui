@@ -39,10 +39,10 @@ export function MetricCard({
   const isNegativeChange = change && change < 0
 
   const variantStyles = {
-    default: 'bg-card/80 border-border hover:border-gold/20',
-    gold: 'bg-gradient-to-br from-gold/8 to-gold/3 border-gold/20 hover:border-gold/30',
-    emerald: 'bg-gradient-to-br from-emerald/8 to-emerald/3 border-emerald/20 hover:border-emerald/30',
-    crimson: 'bg-gradient-to-br from-crimson/8 to-crimson/3 border-crimson/20 hover:border-crimson/30',
+    default: 'bg-card/90 border-border hover:border-gold/30',
+    gold: 'bg-gradient-to-br from-gold/12 to-gold/4 border-gold/25 hover:border-gold/40',
+    emerald: 'bg-gradient-to-br from-emerald/12 to-emerald/4 border-emerald/25 hover:border-emerald/40',
+    crimson: 'bg-gradient-to-br from-crimson/12 to-crimson/4 border-crimson/25 hover:border-crimson/40',
   }
 
   return (
@@ -50,26 +50,46 @@ export function MetricCard({
       variants={staggerItem}
       initial="initial"
       animate="animate"
-      whileHover={{ y: -3, transition: { duration: 0.2 } }}
+      whileHover={{ 
+        y: -6, 
+        boxShadow: iconColor 
+          ? `0 24px 48px -12px ${iconColor}30, 0 0 0 1px ${iconColor}20`
+          : '0 24px 48px -12px rgba(199,163,106,0.2), 0 0 0 1px rgba(199,163,106,0.15)',
+        transition: { duration: 0.3 } 
+      }}
       custom={index}
       transition={{ ...springs.gentle, delay: index * 0.08 }}
       className={cn(
-        'relative rounded-2xl border p-5 shadow-card backdrop-blur-sm transition-all duration-300 overflow-hidden group',
+        'relative rounded-3xl border p-6 shadow-card backdrop-blur-xl transition-all duration-400 overflow-hidden group',
         variantStyles[variant]
       )}
     >
-      {/* Subtle ambient glow on hover */}
+      {/* DRAMATIC: Multi-layer ambient glow on hover */}
       <motion.div
-        className="absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+        className="absolute -inset-4 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
         style={{
           background: iconColor 
-            ? `radial-gradient(circle at top right, ${iconColor}15 0%, transparent 70%)`
-            : 'radial-gradient(circle at top right, rgba(199,163,106,0.1) 0%, transparent 70%)'
+            ? `radial-gradient(circle at top right, ${iconColor}25 0%, transparent 60%)`
+            : 'radial-gradient(circle at top right, rgba(199,163,106,0.2) 0%, transparent 60%)'
         }}
       />
       
-      {/* Top highlight line */}
-      <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      {/* Secondary glow at bottom */}
+      <motion.div
+        className="absolute -inset-4 rounded-3xl opacity-0 group-hover:opacity-60 transition-opacity duration-700 pointer-events-none"
+        style={{
+          background: iconColor 
+            ? `radial-gradient(circle at bottom left, ${iconColor}15 0%, transparent 50%)`
+            : 'radial-gradient(circle at bottom left, rgba(199,163,106,0.1) 0%, transparent 50%)'
+        }}
+      />
+      
+      {/* Top highlight line - animated */}
+      <motion.div 
+        className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-gold/25 to-transparent"
+        animate={{ opacity: [0.3, 0.6, 0.3] }}
+        transition={{ duration: 3, repeat: Infinity }}
+      />
 
       <div className="relative flex items-start justify-between">
         <div className="flex-1">

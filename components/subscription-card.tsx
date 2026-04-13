@@ -48,51 +48,66 @@ export function SubscriptionCard({
       <motion.div
         variants={cardLift}
         whileHover={{ 
-          y: -4, 
-          boxShadow: '0 20px 40px -12px rgba(199, 163, 106, 0.18), 0 0 0 1px rgba(199, 163, 106, 0.1)' 
+          y: -8, 
+          boxShadow: '0 32px 64px -16px rgba(199, 163, 106, 0.25), 0 0 0 1px rgba(199, 163, 106, 0.15), 0 0 60px -20px rgba(199, 163, 106, 0.15)' 
         }}
-        className="relative overflow-hidden rounded-2xl bg-card/80 backdrop-blur-sm border border-border p-5 shadow-card transition-all duration-300"
+        className="relative overflow-hidden rounded-3xl bg-card/90 backdrop-blur-xl border border-border p-6 shadow-card transition-all duration-400"
       >
-        {/* Colored accent line at top */}
+        {/* DRAMATIC: Colored accent line at top - thicker and animated */}
         <motion.div
-          className="absolute top-0 left-0 right-0 h-0.5"
+          className="absolute top-0 left-0 right-0 h-1"
           style={{ 
-            background: `linear-gradient(90deg, ${subscription.color || '#C7A36A'}80 0%, ${subscription.color || '#C7A36A'}40 50%, transparent 100%)` 
+            background: `linear-gradient(90deg, ${subscription.color || '#C7A36A'} 0%, ${subscription.color || '#C7A36A'}60 50%, transparent 100%)` 
           }}
           initial={{ scaleX: 0, originX: 0 }}
           whileHover={{ scaleX: 1 }}
-          transition={{ duration: 0.4 }}
+          transition={{ duration: 0.5 }}
         />
 
-        {/* Ambient glow on hover */}
+        {/* DRAMATIC: Ambient glow on hover - more visible */}
         <motion.div
-          className="absolute -inset-1 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          className="absolute -inset-4 rounded-3xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
           style={{ 
-            background: `radial-gradient(circle at top left, ${subscription.color || '#C7A36A'}10 0%, transparent 60%)` 
+            background: `radial-gradient(circle at top left, ${subscription.color || '#C7A36A'}20 0%, transparent 50%)` 
+          }}
+        />
+        
+        {/* DRAMATIC: Secondary glow at bottom */}
+        <motion.div
+          className="absolute -inset-4 rounded-3xl pointer-events-none opacity-0 group-hover:opacity-60 transition-opacity duration-700"
+          style={{ 
+            background: `radial-gradient(circle at bottom right, ${subscription.color || '#C7A36A'}10 0%, transparent 50%)` 
           }}
         />
 
-        {/* Shimmer effect */}
+        {/* DRAMATIC: Shimmer effect - slower and more visible */}
         <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent"
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent"
           initial={{ x: '-100%' }}
           whileHover={{ x: '200%' }}
-          transition={{ duration: 1, ease: 'easeInOut' }}
+          transition={{ duration: 1.2, ease: 'easeInOut' }}
           style={{ pointerEvents: 'none' }}
         />
 
-        <div className="relative z-10 flex items-start gap-4">
-          {/* Icon with glow effect */}
+        <div className="relative z-10 flex items-start gap-5">
+          {/* DRAMATIC: Icon with animated glow effect */}
           <div className="relative">
+            {/* Multi-layer glow */}
             <motion.div
-              className="absolute -inset-1 rounded-xl blur-md opacity-0 group-hover:opacity-50 transition-opacity"
+              className="absolute -inset-2 rounded-2xl blur-lg opacity-0 group-hover:opacity-70 transition-opacity duration-500"
               style={{ backgroundColor: subscription.color || '#C7A36A' }}
             />
-            <SubscriptionIcon
-              name={subscription.name}
-              fallbackColor={subscription.color}
-              size="lg"
+            <motion.div
+              className="absolute -inset-1 rounded-xl blur-md opacity-0 group-hover:opacity-40 transition-opacity duration-300"
+              style={{ backgroundColor: subscription.color || '#C7A36A' }}
             />
+            <div className="relative">
+              <SubscriptionIcon
+                name={subscription.name}
+                fallbackColor={subscription.color}
+                size="lg"
+              />
+            </div>
           </div>
 
           <div className="flex-1 min-w-0">
