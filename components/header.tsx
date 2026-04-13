@@ -241,7 +241,7 @@ export function Header({
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.98 }}
                     transition={springs.gentle}
-                    className="absolute right-0 top-12 z-50 w-[340px] max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-background/95 backdrop-blur-xl shadow-2xl p-3"
+                    className="absolute right-0 top-12 z-50 w-[340px] max-w-[calc(100vw-2rem)] rounded-2xl border border-glass-border bg-card/95 backdrop-blur-xl shadow-depth-lg p-3"
                   >
                     <div className="flex items-center justify-between gap-3 mb-3">
                       <div>
