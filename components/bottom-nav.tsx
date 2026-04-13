@@ -43,6 +43,9 @@ const moreNavItems = [
 export function BottomNav({ activeTab }: BottomNavProps) {
   const [showMore, setShowMore] = useState(false)
   const openAddSubscriptionSheet = useStore((state) => state.openAddSubscriptionSheet)
+  useEffect(() => {
+    setShowMore(false)
+  }, [activeTab])
 
   return (
     <>
@@ -76,7 +79,11 @@ export function BottomNav({ activeTab }: BottomNavProps) {
               }
 
               return (
-                <Link key={item.id} href={item.href!}>
+                <Link
+                  key={item.id}
+                  href={item.href!}
+                  onClick={() => setShowMore(false)}
+                >
                   <motion.button
                     whileTap={{ scale: 0.9 }}
                     className="relative flex flex-col items-center gap-1 px-3 py-2"
@@ -174,7 +181,11 @@ export function BottomNav({ activeTab }: BottomNavProps) {
                 const Icon = item.icon
 
                 return (
-                  <Link key={item.id} href={item.href!}>
+                  <Link
+                    key={item.id}
+                    href={item.href!}
+                    onClick={() => setShowMore(false)}
+                  >
                     <motion.button
                       whileTap={{ scale: 0.98 }}
                       className={cn(
@@ -299,9 +310,9 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
               !shouldExpand && "justify-center px-2"
             )}
           >
-            <RenewlyLogo 
-              size="md" 
-              showWordmark={false} 
+            <RenewlyLogo
+              size="md"
+              showWordmark={false}
               linkToHome={false}
             />
             <AnimatePresence>

@@ -1,17 +1,19 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import {
-  RefreshCw,
-  Users,
-  CreditCard,
-  Calendar
-} from 'lucide-react'
+import { RefreshCw, Users, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Subscription } from '@/lib/types'
 import { cardLift, springs, staggerItem } from './motion'
 import { SubscriptionActions } from './subscription-actions'
 import { SubscriptionIcon } from '@/lib/brand-icons'
+
+interface SubscriptionCardProps {
+  subscription: Subscription
+  index?: number
+  onClick?: () => void
+  onEdit?: () => void
+}
 
 interface SubscriptionCardCompactProps {
   subscription: Subscription
@@ -19,8 +21,15 @@ interface SubscriptionCardCompactProps {
   onEdit?: () => void
 }
 
-export function SubscriptionCard({ subscription, index = 0, onClick }: SubscriptionCardProps) {
-  const daysUntilRenewal = subscription.renewalDate ? getDaysUntilRenewal(subscription.renewalDate) : 0
+export function SubscriptionCard({
+  subscription,
+  index = 0,
+  onClick,
+  onEdit,
+}: SubscriptionCardProps) {
+  const daysUntilRenewal = subscription.renewalDate
+    ? getDaysUntilRenewal(subscription.renewalDate)
+    : 0
   const isUrgent = daysUntilRenewal <= 3
   const billingLabel = getBillingLabel(subscription.billingCycle)
 
@@ -41,16 +50,14 @@ export function SubscriptionCard({ subscription, index = 0, onClick }: Subscript
         whileHover={{ y: -4, boxShadow: '0 12px 32px -8px rgba(199, 163, 106, 0.15)' }}
         className="relative overflow-hidden rounded-2xl bg-card border border-border p-5 shadow-card transition-shadow"
       >
-        {/* Animated gradient accent overlay on hover */}
         <motion.div
-          className="absolute top-0 left-0 right-0 h-1 opacity-0 group-hover:opacity-100"
-          style={{ background: subscription.color }}
+          className="absolute top-0 left-0 right-0 h-1 opacity-0"
+          style={{ background: subscription.color || '#7c6a46' }}
           initial={{ opacity: 0 }}
           whileHover={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
         />
 
-        {/* Subtle shine effect on hover */}
         <motion.div
           className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent"
           initial={{ x: '-100%' }}
@@ -60,17 +67,15 @@ export function SubscriptionCard({ subscription, index = 0, onClick }: Subscript
         />
 
         <div className="relative z-10 flex items-start gap-4">
-          {/* Logo - Uses brand icons when available */}
           <SubscriptionIcon
             name={subscription.name}
             fallbackColor={subscription.color}
             size="lg"
           />
 
-          {/* Details */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <div>
+              <div className="min-w-0">
                 <h3 className="font-semibold text-foreground truncate">
                   {subscription.name}
                 </h3>
@@ -78,6 +83,7 @@ export function SubscriptionCard({ subscription, index = 0, onClick }: Subscript
                   {subscription.category}
                 </p>
               </div>
+
               <div
                 className="p-1.5 rounded-lg cursor-pointer"
                 onClick={(e) => e.stopPropagation()}
@@ -86,33 +92,30 @@ export function SubscriptionCard({ subscription, index = 0, onClick }: Subscript
               </div>
             </div>
 
-            {/* Amount and cycle */}
             <div className="mt-3 flex items-baseline gap-1">
               <span className="text-xl font-semibold text-foreground">
-                {subscription.currency}{subscription.amount.toLocaleString('en-IN')}
+                {subscription.currency}
+                {Number(subscription.amount || 0).toLocaleString('en-IN')}
               </span>
               <span className="text-sm text-muted-foreground">
                 /{billingLabel}
               </span>
             </div>
 
-            {/* Meta info */}
             <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              {/* Next renewal */}
-              <div className={cn(
-                'flex items-center gap-1.5',
-                isUrgent && 'text-crimson'
-              )}>
+              <div className={cn('flex items-center gap-1.5', isUrgent && 'text-crimson')}>
                 <Calendar className="w-3.5 h-3.5" />
                 <span>
                   {isUrgent
-                    ? `${daysUntilRenewal === 0 ? 'Today' : `${daysUntilRenewal}d left`}`
-                    : subscription.renewalDate ? formatDate(subscription.renewalDate) : 'N/A'
-                  }
+                    ? daysUntilRenewal === 0
+                      ? 'Today'
+                      : `${daysUntilRenewal}d left`
+                    : subscription.renewalDate
+                      ? formatDate(subscription.renewalDate)
+                      : 'N/A'}
                 </span>
               </div>
 
-              {/* Status badge */}
               {subscription.status === 'paused' && (
                 <div className="flex items-center gap-1.5 text-gold">
                   <RefreshCw className="w-3.5 h-3.5" />
@@ -134,14 +137,14 @@ export function SubscriptionCard({ subscription, index = 0, onClick }: Subscript
   )
 }
 
-// Compact card variant for lists
-interface SubscriptionCardCompactProps {
-  subscription: Subscription
-  onClick?: () => void
-}
-
-export function SubscriptionCardCompact({ subscription, onClick }: SubscriptionCardCompactProps) {
-  const daysUntilRenewal = subscription.renewalDate ? getDaysUntilRenewal(subscription.renewalDate) : 0
+export function SubscriptionCardCompact({
+  subscription,
+  onClick,
+  onEdit,
+}: SubscriptionCardCompactProps) {
+  const daysUntilRenewal = subscription.renewalDate
+    ? getDaysUntilRenewal(subscription.renewalDate)
+    : 0
   const isUrgent = daysUntilRenewal <= 3
 
   return (
@@ -164,34 +167,43 @@ export function SubscriptionCardCompact({ subscription, onClick }: SubscriptionC
 
       <div className="text-right shrink-0">
         <p className="font-semibold text-foreground">
-          {subscription.currency}{subscription.amount.toLocaleString('en-IN')}
+          {subscription.currency}
+          {Number(subscription.amount || 0).toLocaleString('en-IN')}
         </p>
-        <p className={cn(
-          'text-xs',
-          isUrgent ? 'text-crimson' : 'text-muted-foreground'
-        )}>
-          {daysUntilRenewal === 0
-            ? 'Due today'
-            : `${daysUntilRenewal}d left`
-          }
+        <p className={cn('text-xs', isUrgent ? 'text-crimson' : 'text-muted-foreground')}>
+          {daysUntilRenewal === 0 ? 'Due today' : `${daysUntilRenewal}d left`}
         </p>
+      </div>
+
+      <div
+        className="shrink-0 p-1 rounded-lg cursor-pointer"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <SubscriptionActions subscription={subscription} onEdit={onEdit} />
       </div>
     </motion.div>
   )
 }
 
-// Helper functions
 function getDaysUntilRenewal(dateStr: string): number {
+  if (!dateStr) return 0
+
   const renewalDate = new Date(dateStr)
+  if (Number.isNaN(renewalDate.getTime())) return 0
+
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   renewalDate.setHours(0, 0, 0, 0)
+
   const diffTime = renewalDate.getTime() - today.getTime()
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-IN', {
+  const date = new Date(dateStr)
+  if (Number.isNaN(date.getTime())) return 'N/A'
+
+  return date.toLocaleDateString('en-IN', {
     day: 'numeric',
     month: 'short',
   })
@@ -199,11 +211,17 @@ function formatDate(dateStr: string): string {
 
 function getBillingLabel(cycle: string): string {
   switch (cycle) {
-    case 'daily': return 'day'
-    case 'weekly': return 'wk'
-    case 'monthly': return 'mo'
-    case 'quarterly': return 'qtr'
-    case 'yearly': return 'yr'
-    default: return 'mo'
+    case 'daily':
+      return 'day'
+    case 'weekly':
+      return 'wk'
+    case 'monthly':
+      return 'mo'
+    case 'quarterly':
+      return 'qtr'
+    case 'yearly':
+      return 'yr'
+    default:
+      return 'mo'
   }
 }
