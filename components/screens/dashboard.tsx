@@ -116,7 +116,6 @@ export function DashboardScreen({
     <PageTransition className="min-h-screen">
       <Header
         showProfile
-        notificationCount={0}
         onSearchClick={() => setShowSearch(true)}
       />
 
