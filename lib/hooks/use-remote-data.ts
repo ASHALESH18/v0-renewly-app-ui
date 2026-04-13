@@ -1,13 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 let calendarEventsCache: any = null
+let notificationsCache: any = null
 
 export function useCalendarEvents() {
   const [data, setData] = useState(calendarEventsCache)
   const [isLoading, setIsLoading] = useState(!calendarEventsCache)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<any>(null)
 
   useEffect(() => {
     let active = true
@@ -69,14 +70,14 @@ export function useAnalyticsData() {
       }
     }
 
-    fetchData()
+    void fetchData()
   }, [])
 
   return {
     monthlySpendData: data?.monthlySpendData || [],
     categoryBreakdown: data?.categoryBreakdown || [],
     isLoading,
-    error
+    error,
   }
 }
 
@@ -100,44 +101,87 @@ export function useFAQItems() {
       }
     }
 
-    fetchData()
+    void fetchData()
   }, [])
 
   return {
     faqItems: data?.faqItems || [],
     isLoading,
-    error
+    error,
   }
 }
 
 export function useNotifications() {
-  const [data, setData] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [data, setData] = useState<any>(notificationsCache)
+  const [isLoading, setIsLoading] = useState(!notificationsCache)
   const [error, setError] = useState<any>(null)
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
+  const fetchNotifications = useCallback(async (force = false) => {
+    try {
+      if (!notificationsCache || force) {
         setIsLoading(true)
-        const res = await fetch('/api/notifications')
-        if (!res.ok) throw new Error('Failed to fetch notifications')
-        const json = await res.json()
-        setData(json)
-      } catch (err) {
-        setError(err)
-      } finally {
-        setIsLoading(false)
+      }
+
+      const res = await fetch('/api/notifications', {
+        method: 'GET',
+        cache: 'no-store',
+      })
+
+      if (!res.ok) {
+        throw new Error('Failed to fetch notifications')
+      }
+
+      const json = await res.json()
+      notificationsCache = json
+      setData(json)
+      setError(null)
+      return json
+    } catch (err) {
+      setError(err)
+      throw err
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    let active = true
+
+    const load = async () => {
+      try {
+        if (!notificationsCache) {
+          await fetchNotifications()
+        } else if (active) {
+          setData(notificationsCache)
+          setIsLoading(false)
+        }
+      } catch {
+        // handled in fetchNotifications
       }
     }
 
-    fetchData()
+    void load()
+
+    return () => {
+      active = false
+    }
+  }, [fetchNotifications])
+
+  const refresh = useCallback(async () => {
+    return fetchNotifications(true)
+  }, [fetchNotifications])
+
+  const clearNotificationCache = useCallback(() => {
+    notificationsCache = null
   }, [])
 
   return {
     notifications: data?.notifications || [],
     unreadCount: data?.unreadCount || 0,
     isLoading,
-    error
+    error,
+    refresh,
+    clearNotificationCache,
   }
 }
 
@@ -161,12 +205,12 @@ export function usePopularServices() {
       }
     }
 
-    fetchData()
+    void fetchData()
   }, [])
 
   return {
     popularServices: data?.popularServices || [],
     isLoading,
-    error
+    error,
   }
 }

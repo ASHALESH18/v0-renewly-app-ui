@@ -1,13 +1,15 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { motion } from 'framer-motion'
-import { Bell, Search, Settings } from 'lucide-react'
+import Link from 'next/link'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Bell, Search, Settings, Check, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from './motion'
 import useStore from '@/lib/store'
 import { generateAvatar } from '@/lib/avatar-utils'
 import { ProfileMenu } from './profile-menu'
+import { useNotifications } from '@/lib/hooks/use-remote-data'
 
 interface HeaderProps {
   title?: string
@@ -24,6 +26,16 @@ interface HeaderProps {
   className?: string
 }
 
+interface NotificationItem {
+  id: string
+  type: 'reminder' | 'alert' | 'info'
+  title: string
+  message: string
+  date: string
+  read: boolean
+  subscriptionId?: string
+}
+
 export function Header({
   title,
   subtitle,
@@ -34,25 +46,42 @@ export function Header({
   onNotificationClick,
   onProfileClick,
   onSettingsClick,
-  notificationCount = 0,
+  notificationCount,
   transparent = false,
   className,
 }: HeaderProps) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+  const [isUpdatingNotifications, setIsUpdatingNotifications] = useState(false)
+
+  const notificationPanelRef = useRef<HTMLDivElement | null>(null)
+
   const userProfile = useStore((state) => state.userProfile)
   const firstName = userProfile?.name?.split(' ')[0] || 'User'
   const avatar = firstName.charAt(0).toUpperCase()
 
-  // Use persisted avatar URL if available, otherwise generate deterministically
+  const {
+    notifications,
+    unreadCount: liveUnreadCount,
+    isLoading: notificationsLoading,
+    refresh: refreshNotifications,
+  } = useNotifications()
+
+  const recentNotifications = useMemo<NotificationItem[]>(
+    () => ((notifications || []) as NotificationItem[]).slice(0, 3),
+    [notifications]
+  )
+
+  const resolvedNotificationCount =
+    typeof notificationCount === 'number' ? notificationCount : liveUnreadCount
+
   const avatarUrl = useMemo(() => {
     if (!userProfile) return null
 
-    // Prefer persisted avatar URL from database
     if (userProfile.avatarUrl) {
       return userProfile.avatarUrl
     }
 
-    // Fall back to generated avatar
     const seed =
       userProfile.avatarSeed ||
       [userProfile.name, userProfile.email].filter(Boolean).join('::') ||
@@ -60,6 +89,98 @@ export function Header({
 
     return generateAvatar({ seed, size: 256 })
   }, [userProfile?.name, userProfile?.email, userProfile?.avatarSeed, userProfile?.avatarUrl])
+
+  useEffect(() => {
+    if (!isNotificationsOpen) return
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        notificationPanelRef.current &&
+        !notificationPanelRef.current.contains(event.target as Node)
+      ) {
+        setIsNotificationsOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isNotificationsOpen])
+
+  const persistNotificationAction = async (payload: {
+    action: 'mark_read' | 'mark_all_read' | 'dismiss'
+    id?: string
+    ids?: string[]
+  }) => {
+    const res = await fetch('/api/notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+
+    if (!res.ok) {
+      throw new Error('Failed to update notifications')
+    }
+  }
+
+  const handleMarkRead = async (id: string, alreadyRead: boolean) => {
+    if (alreadyRead || isUpdatingNotifications) return
+
+    try {
+      setIsUpdatingNotifications(true)
+      await persistNotificationAction({ action: 'mark_read', id })
+      await refreshNotifications()
+    } finally {
+      setIsUpdatingNotifications(false)
+    }
+  }
+
+  const handleDismiss = async (id: string) => {
+    if (isUpdatingNotifications) return
+
+    try {
+      setIsUpdatingNotifications(true)
+      await persistNotificationAction({ action: 'dismiss', id })
+      await refreshNotifications()
+    } finally {
+      setIsUpdatingNotifications(false)
+    }
+  }
+
+  const handleMarkAllRead = async () => {
+    if (!liveUnreadCount || isUpdatingNotifications) return
+
+    try {
+      setIsUpdatingNotifications(true)
+      const unreadIds = ((notifications || []) as NotificationItem[])
+        .filter((item) => !item.read)
+        .map((item) => item.id)
+
+      if (!unreadIds.length) return
+
+      await persistNotificationAction({ action: 'mark_all_read', ids: unreadIds })
+      await refreshNotifications()
+    } finally {
+      setIsUpdatingNotifications(false)
+    }
+  }
+
+  const formatTimeAgo = (dateStr: string) => {
+    const date = new Date(dateStr)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.max(0, Math.floor(diffMs / (1000 * 60)))
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+    if (diffMins < 1) return 'Just now'
+    if (diffMins < 60) return `${diffMins} min ago`
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
+  }
 
   return (
     <motion.header
@@ -73,17 +194,12 @@ export function Header({
       )}
     >
       <div className="flex items-center justify-between gap-4">
-        {/* Left side - Title or Logo */}
         <div className="flex-1 min-w-0">
           {title ? (
             <div>
-              <h1 className="text-xl font-semibold text-foreground truncate">
-                {title}
-              </h1>
+              <h1 className="text-xl font-semibold text-foreground truncate">{title}</h1>
               {subtitle && (
-                <p className="text-sm text-muted-foreground truncate">
-                  {subtitle}
-                </p>
+                <p className="text-sm text-muted-foreground truncate">{subtitle}</p>
               )}
             </div>
           ) : (
@@ -99,7 +215,6 @@ export function Header({
           )}
         </div>
 
-        {/* Right side - Actions */}
         <div className="flex items-center gap-2">
           {showSearch && (
             <HeaderButton onClick={onSearchClick}>
@@ -108,9 +223,136 @@ export function Header({
           )}
 
           {showNotifications && (
-            <HeaderButton onClick={onNotificationClick} badge={notificationCount}>
-              <Bell className="w-5 h-5" />
-            </HeaderButton>
+            <div className="relative" ref={notificationPanelRef}>
+              <HeaderButton
+                onClick={() => {
+                  setIsNotificationsOpen((prev) => !prev)
+                  onNotificationClick?.()
+                }}
+                badge={resolvedNotificationCount}
+              >
+                <Bell className="w-5 h-5" />
+              </HeaderButton>
+
+              <AnimatePresence>
+                {isNotificationsOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                    transition={springs.gentle}
+                    className="absolute right-0 top-12 z-50 w-[340px] max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-background/95 backdrop-blur-xl shadow-2xl p-3"
+                  >
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">Notifications</p>
+                        <p className="text-xs text-muted-foreground">
+                          {liveUnreadCount} unread
+                        </p>
+                      </div>
+
+                      {liveUnreadCount > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => void handleMarkAllRead()}
+                          disabled={isUpdatingNotifications}
+                          className="text-xs font-medium text-gold hover:text-gold/80 transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                    </div>
+
+                    {notificationsLoading ? (
+                      <div className="rounded-xl border border-border bg-card/60 p-4 text-sm text-muted-foreground">
+                        Loading notifications...
+                      </div>
+                    ) : recentNotifications.length === 0 ? (
+                      <div className="rounded-xl border border-border bg-card/60 p-4 text-sm text-muted-foreground">
+                        You’re all caught up.
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {recentNotifications.map((notification) => (
+                          <div
+                            key={notification.id}
+                            className={cn(
+                              'rounded-xl border p-3 transition-colors',
+                              notification.read
+                                ? 'border-border bg-card/40'
+                                : 'border-gold/20 bg-gold/5'
+                            )}
+                          >
+                            <button
+                              type="button"
+                              onClick={() =>
+                                void handleMarkRead(notification.id, notification.read)
+                              }
+                              className="w-full text-left cursor-pointer"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p
+                                    className={cn(
+                                      'text-sm font-medium truncate',
+                                      notification.read
+                                        ? 'text-foreground'
+                                        : 'text-gold'
+                                    )}
+                                  >
+                                    {notification.title}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                    {notification.message}
+                                  </p>
+                                  <p className="text-[11px] text-muted-foreground mt-2">
+                                    {formatTimeAgo(notification.date)}
+                                  </p>
+                                </div>
+
+                                {!notification.read && (
+                                  <span className="mt-1 w-2 h-2 rounded-full bg-gold shrink-0" />
+                                )}
+                              </div>
+                            </button>
+
+                            <div className="flex items-center justify-end gap-2 mt-2">
+                              {!notification.read && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    void handleMarkRead(notification.id, notification.read)
+                                  }
+                                  className="p-1.5 rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer"
+                                >
+                                  <Check className="w-4 h-4 text-muted-foreground" />
+                                </button>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => void handleDismiss(notification.id)}
+                                className="p-1.5 rounded-lg hover:bg-crimson/10 transition-colors cursor-pointer"
+                              >
+                                <Trash2 className="w-4 h-4 text-muted-foreground hover:text-crimson" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <Link
+                      href="/app/notifications"
+                      onClick={() => setIsNotificationsOpen(false)}
+                      className="mt-3 flex items-center justify-center rounded-xl border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-card/60 transition-colors"
+                    >
+                      View all notifications
+                    </Link>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           )}
 
           {showProfile && (
@@ -136,6 +378,7 @@ export function Header({
                   </div>
                 )}
               </motion.button>
+
               <ProfileMenu
                 isOpen={isProfileMenuOpen}
                 onClose={() => setIsProfileMenuOpen(false)}
@@ -179,7 +422,6 @@ function HeaderButton({ children, onClick, badge }: HeaderButtonProps) {
   )
 }
 
-// Search overlay component
 interface SearchOverlayProps {
   isOpen: boolean
   onClose: () => void
@@ -191,7 +433,7 @@ export function SearchOverlay({
   isOpen,
   onClose,
   searchQuery,
-  onSearchChange
+  onSearchChange,
 }: SearchOverlayProps) {
   if (!isOpen) return null
 
@@ -218,7 +460,7 @@ export function SearchOverlay({
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={onClose}
-            className="px-4 py-3 text-muted-foreground hover:text-foreground transition-colors"
+            className="px-4 py-3 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
             Cancel
           </motion.button>
