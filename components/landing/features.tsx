@@ -66,35 +66,70 @@ export function Features() {
       ref={ref}
       className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-24 lg:py-40 scroll-mt-24"
     >
-      {/* Premium ambient background */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Animated mesh gradient orbs */}
+      {/* DRAMATIC: Full cinematic ambient background */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* DRAMATIC: Large animated gold orb - top left */}
         <motion.div
-          className="absolute top-20 left-[10%] w-[600px] h-[600px] rounded-full blur-[120px]"
-          style={{ background: 'radial-gradient(circle, rgba(199, 163, 106, 0.08) 0%, transparent 70%)' }}
-          animate={{ 
-            scale: [1, 1.2, 1],
-            opacity: [0.4, 0.7, 0.4],
-            x: [0, 50, 0]
+          className="absolute -top-[10%] -left-[10%] w-[800px] h-[800px] rounded-full"
+          style={{ 
+            background: 'radial-gradient(circle, rgba(199, 163, 106, 0.2) 0%, rgba(199, 163, 106, 0.05) 40%, transparent 70%)',
+            filter: 'blur(100px)'
           }}
-          transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute bottom-20 right-[10%] w-[500px] h-[500px] rounded-full blur-[100px]"
-          style={{ background: 'radial-gradient(circle, rgba(46, 94, 82, 0.08) 0%, transparent 70%)' }}
           animate={{ 
-            scale: [1, 1.15, 1],
-            opacity: [0.3, 0.5, 0.3]
+            scale: [1, 1.3, 1],
+            x: [0, 80, 0],
+            y: [0, 40, 0],
+            opacity: [0.3, 0.6, 0.3]
           }}
-          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
+          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
         />
         
-        {/* Subtle grid */}
-        <div 
-          className="absolute inset-0 opacity-[0.015]"
+        {/* DRAMATIC: Emerald orb - bottom right */}
+        <motion.div
+          className="absolute -bottom-[15%] -right-[10%] w-[700px] h-[700px] rounded-full"
+          style={{ 
+            background: 'radial-gradient(circle, rgba(46, 94, 82, 0.18) 0%, rgba(46, 94, 82, 0.05) 45%, transparent 70%)',
+            filter: 'blur(120px)'
+          }}
+          animate={{ 
+            scale: [1, 1.25, 1],
+            x: [0, -40, 0],
+            y: [0, -60, 0],
+            opacity: [0.25, 0.5, 0.25]
+          }}
+          transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
+        />
+        
+        {/* DRAMATIC: Center spotlight */}
+        <motion.div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[600px]"
+          style={{ 
+            background: 'radial-gradient(ellipse at center, rgba(199, 163, 106, 0.08) 0%, transparent 60%)'
+          }}
+          animate={{ 
+            scale: [1, 1.1, 1],
+            opacity: [0.3, 0.5, 0.3]
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        
+        {/* DRAMATIC: Light sweep */}
+        <motion.div
+          className="absolute inset-0"
           style={{
-            backgroundImage: 'linear-gradient(rgba(199, 163, 106, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(199, 163, 106, 0.5) 1px, transparent 1px)',
-            backgroundSize: '80px 80px'
+            background: 'linear-gradient(115deg, transparent 0%, rgba(199, 163, 106, 0.05) 25%, rgba(199, 163, 106, 0.1) 50%, rgba(199, 163, 106, 0.05) 75%, transparent 100%)',
+            transform: 'skewX(-15deg)'
+          }}
+          animate={{ x: ['-150%', '150%'] }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', repeatDelay: 8 }}
+        />
+        
+        {/* Grid pattern - more visible */}
+        <div 
+          className="absolute inset-0 opacity-[0.025]"
+          style={{
+            backgroundImage: 'linear-gradient(rgba(199, 163, 106, 0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(199, 163, 106, 0.6) 1px, transparent 1px)',
+            backgroundSize: '100px 100px'
           }}
         />
       </div>
@@ -157,38 +192,51 @@ export function Features() {
               className="group relative"
             >
               <motion.div
-                whileHover={{ y: -6 }}
-                transition={{ duration: 0.3 }}
-                className="relative h-full p-6 lg:p-8 rounded-2xl bg-card/60 backdrop-blur-xl border border-glass-border overflow-hidden"
+                whileHover={{ 
+                  y: -10,
+                  boxShadow: `0 32px 64px -16px ${feature.color}30, 0 0 0 1px ${feature.color}20`
+                }}
+                transition={{ duration: 0.4 }}
+                className="relative h-full p-7 lg:p-9 rounded-3xl bg-card/80 backdrop-blur-2xl border border-glass-border overflow-hidden shadow-card"
               >
-                {/* Hover glow effect */}
+                {/* DRAMATIC: Multi-layer hover glow effect */}
                 <motion.div
-                  className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  className="absolute -inset-4 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                   style={{
-                    background: `radial-gradient(circle at top left, ${feature.color}15 0%, transparent 60%)`
+                    background: `radial-gradient(circle at top left, ${feature.color}25 0%, transparent 50%)`
+                  }}
+                />
+                <motion.div
+                  className="absolute -inset-4 pointer-events-none opacity-0 group-hover:opacity-60 transition-opacity duration-700"
+                  style={{
+                    background: `radial-gradient(circle at bottom right, ${feature.color}15 0%, transparent 50%)`
                   }}
                 />
                 
-                {/* Top accent line */}
+                {/* DRAMATIC: Top accent line - thicker */}
                 <motion.div
-                  className="absolute top-0 left-0 right-0 h-0.5"
+                  className="absolute top-0 left-0 right-0 h-1"
                   style={{ backgroundColor: feature.color }}
                   initial={{ scaleX: 0 }}
                   whileHover={{ scaleX: 1 }}
-                  transition={{ duration: 0.4 }}
+                  transition={{ duration: 0.5 }}
                 />
                 
-                {/* Icon with glow */}
-                <div className="relative mb-5">
+                {/* DRAMATIC: Icon with multi-layer glow */}
+                <div className="relative mb-6">
                   <motion.div
-                    className="absolute -inset-2 rounded-xl blur-lg opacity-0 group-hover:opacity-60 transition-opacity duration-500"
+                    className="absolute -inset-3 rounded-2xl blur-xl opacity-0 group-hover:opacity-70 transition-opacity duration-500"
+                    style={{ backgroundColor: `${feature.color}50` }}
+                  />
+                  <motion.div
+                    className="absolute -inset-1 rounded-xl blur-md opacity-0 group-hover:opacity-40 transition-opacity duration-300"
                     style={{ backgroundColor: `${feature.color}40` }}
                   />
                   <div 
-                    className="relative w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105"
-                    style={{ backgroundColor: `${feature.color}15` }}
+                    className="relative w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110"
+                    style={{ backgroundColor: `${feature.color}18` }}
                   >
-                    <feature.icon className="w-7 h-7" style={{ color: feature.color }} />
+                    <feature.icon className="w-8 h-8" style={{ color: feature.color }} />
                   </div>
                 </div>
                 

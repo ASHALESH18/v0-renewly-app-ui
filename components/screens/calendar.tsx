@@ -221,11 +221,14 @@ export function CalendarScreen() {
             </div>
 
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={springs.gentle}
-              className="rounded-2xl bg-card border border-border p-4"
+              initial={{ opacity: 0, y: 20, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="relative rounded-3xl bg-card/90 backdrop-blur-xl border border-gold/10 p-5 shadow-card overflow-hidden"
             >
+              {/* Subtle ambient glow */}
+              <div className="absolute -top-24 -right-24 w-48 h-48 bg-gold/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
               <div className="grid grid-cols-7 gap-1 mb-2">
                 {DAYS.map((day) => (
                   <div key={day} className="text-center text-xs text-muted-foreground py-2">
@@ -257,18 +260,26 @@ export function CalendarScreen() {
                   return (
                     <motion.button
                       key={day}
-                      whileHover={{ scale: 1.04 }}
-                      whileTap={{ scale: 0.96 }}
+                      whileHover={{ scale: 1.08, y: -2 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => setSelectedDate(dateStr)}
                       className={cn(
-                        'aspect-square rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors relative',
-                        isToday && 'bg-gold text-obsidian',
-                        !isToday && event && 'bg-gold/10',
-                        !isToday && !event && 'hover:bg-muted',
-                        selectedDate === dateStr && !isToday && 'ring-2 ring-gold/60'
+                        'aspect-square rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all relative group',
+                        isToday && 'bg-gold text-obsidian shadow-[0_8px_24px_-4px_rgba(199,163,106,0.4)]',
+                        !isToday && event && 'bg-gold/15 hover:bg-gold/25',
+                        !isToday && !event && 'hover:bg-muted/60',
+                        selectedDate === dateStr && !isToday && 'ring-2 ring-gold/70 bg-gold/10'
                       )}
                       type="button"
                     >
+                      {/* Glow effect on today */}
+                      {isToday && (
+                        <motion.div
+                          className="absolute -inset-1 rounded-2xl bg-gold/30 blur-md -z-10"
+                          animate={{ opacity: [0.4, 0.7, 0.4] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        />
+                      )}
                       <span
                         className={cn(
                           'text-sm font-medium',

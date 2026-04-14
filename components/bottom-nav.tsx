@@ -59,12 +59,19 @@ export function BottomNav({ activeTab }: BottomNavProps) {
         transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
         className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
       >
-        <div className="relative mx-4 mb-4 rounded-2xl overflow-hidden">
-          {/* Premium glass background */}
-          <div className="absolute inset-0 bg-card/90 dark:bg-graphite/95 backdrop-blur-2xl border border-gold/10 rounded-2xl shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)]" />
+        <div className="relative mx-4 mb-4 rounded-3xl overflow-hidden">
+          {/* DRAMATIC: Premium glass background with depth */}
+          <div className="absolute inset-0 bg-card/95 dark:bg-graphite/98 backdrop-blur-3xl border border-gold/15 rounded-3xl shadow-[0_-12px_48px_-8px_rgba(199,163,106,0.15),0_-4px_16px_-4px_rgba(0,0,0,0.1)]" />
           
-          {/* Top highlight line */}
-          <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
+          {/* DRAMATIC: Animated top highlight line */}
+          <motion.div 
+            className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent"
+            animate={{ opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          />
+          
+          {/* Subtle inner glow */}
+          <div className="absolute inset-x-4 top-1 h-8 bg-gradient-to-b from-gold/5 to-transparent rounded-t-3xl pointer-events-none" />
           
           <div className="relative flex items-center justify-around px-2 py-3">
             {primaryNavItems.map((item) => {
@@ -75,20 +82,25 @@ export function BottomNav({ activeTab }: BottomNavProps) {
                 return (
                   <motion.button
                     key={item.id}
-                    whileHover={{ scale: 1.08 }}
-                    whileTap={{ scale: 0.92 }}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                     onClick={openAddSubscriptionSheet}
-                    className="relative -mt-8 cursor-pointer"
+                    className="relative -mt-10 cursor-pointer"
                     type="button"
                   >
-                    {/* Glow effect */}
+                    {/* DRAMATIC: Multi-layer glow effect */}
                     <motion.div
-                      className="absolute inset-0 rounded-full bg-gold/40 blur-xl"
-                      animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
-                      transition={{ duration: 2, repeat: Infinity }}
+                      className="absolute -inset-3 rounded-full bg-gold/30 blur-2xl"
+                      animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
+                      transition={{ duration: 2.5, repeat: Infinity }}
                     />
-                    <div className="relative w-16 h-16 rounded-full gold-gradient flex items-center justify-center shadow-[0_8px_24px_-4px_rgba(199,163,106,0.5)]">
-                      <Icon className="w-7 h-7 text-obsidian" />
+                    <motion.div
+                      className="absolute -inset-1 rounded-full bg-gold/50 blur-lg"
+                      animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+                    />
+                    <div className="relative w-18 h-18 rounded-full gold-gradient flex items-center justify-center shadow-[0_12px_32px_-4px_rgba(199,163,106,0.6),0_4px_12px_-2px_rgba(199,163,106,0.4)]">
+                      <Icon className="w-8 h-8 text-obsidian" />
                     </div>
                   </motion.button>
                 )

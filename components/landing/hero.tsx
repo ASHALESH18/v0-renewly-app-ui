@@ -66,38 +66,89 @@ export function Hero() {
       ref={ref}
       className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-20 lg:py-32"
     >
-
       {/* ============================================ */}
-      {/* LAYER A: FAR DEPTH PLANE - Matte Black Base */}
+      {/* CINEMATIC AMBIENT LAYER - Full Visual Treatment */}
       {/* ============================================ */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
-        aria-hidden="true"
-        style={{ y: 0 }}
-      >
-        <div className="absolute inset-0" />
-        {/* Deep volumetric haze - subtle depth atmosphere */}
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        {/* Base gradient with depth */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-secondary/30" />
+        
+        {/* DRAMATIC: Large animated gold orb - top right */}
         <motion.div
-          className="absolute inset-0"
+          className="absolute -top-[30%] -right-[15%] w-[800px] h-[800px] rounded-full"
           style={{
-            background: 'radial-gradient(ellipse 120% 80% at 50% 40%, rgba(199, 163, 106, 0.03) 0%, transparent 60%)'
+            background: 'radial-gradient(circle, rgba(199, 163, 106, 0.35) 0%, rgba(199, 163, 106, 0.1) 40%, transparent 70%)',
+            filter: 'blur(100px)'
           }}
           animate={prefersReducedMotion ? {} : {
-            opacity: [0.4, 0.7, 0.4],
+            scale: [1, 1.25, 1],
+            x: [0, 50, 0],
+            y: [0, 30, 0],
+            opacity: [0.3, 0.6, 0.3]
           }}
           transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
         />
-
-        {/* Subtle grid texture - brushed metal feel */}
-        <div
-          className="absolute inset-0 opacity-[0.015]"
+        
+        {/* DRAMATIC: Emerald orb - bottom left */}
+        <motion.div
+          className="absolute -bottom-[25%] -left-[15%] w-[700px] h-[700px] rounded-full"
           style={{
-            backgroundImage: `linear-gradient(rgba(199, 163, 106, 0.4) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(199, 163, 106, 0.4) 1px, transparent 1px)`,
-            backgroundSize: '80px 80px',
+            background: 'radial-gradient(circle, rgba(46, 94, 82, 0.3) 0%, rgba(46, 94, 82, 0.08) 45%, transparent 70%)',
+            filter: 'blur(120px)'
+          }}
+          animate={prefersReducedMotion ? {} : {
+            scale: [1, 1.2, 1],
+            x: [0, -30, 0],
+            y: [0, -40, 0],
+            opacity: [0.25, 0.5, 0.25]
+          }}
+          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
+        />
+        
+        {/* DRAMATIC: Central spotlight glow */}
+        <motion.div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px]"
+          style={{
+            background: 'radial-gradient(ellipse at center, rgba(199, 163, 106, 0.15) 0%, rgba(199, 163, 106, 0.05) 30%, transparent 60%)',
+          }}
+          animate={prefersReducedMotion ? {} : {
+            scale: [1, 1.15, 1],
+            opacity: [0.4, 0.8, 0.4]
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        
+        {/* DRAMATIC: Spotlight sweep across screen */}
+        <motion.div
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(115deg, transparent 0%, rgba(199, 163, 106, 0.08) 25%, rgba(199, 163, 106, 0.15) 50%, rgba(199, 163, 106, 0.08) 75%, transparent 100%)',
+            transform: 'skewX(-15deg)'
+          }}
+          animate={prefersReducedMotion ? {} : {
+            x: ['-150%', '150%']
+          }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', repeatDelay: 6 }}
+        />
+
+        {/* Grid pattern - more visible */}
+        <div
+          className="absolute inset-0 opacity-[0.025]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(199, 163, 106, 0.6) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(199, 163, 106, 0.6) 1px, transparent 1px)`,
+            backgroundSize: '100px 100px',
           }}
         />
-      </motion.div>
+        
+        {/* Vignette for cinematic depth */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, rgba(10, 10, 13, 0.25) 100%)'
+          }}
+        />
+      </div>
 
       {/* ============================================ */}
       {/* LAYER B: MID DEPTH PLANE - Ghost Glass Panels */}
@@ -345,53 +396,69 @@ export function Hero() {
         initial="initial"
         animate={isLoaded ? "animate" : "initial"}
       >
-        {/* Eyebrow with pulse - reveals first */}
+        {/* DRAMATIC: Premium eyebrow badge with glow */}
         <motion.div
-          initial={{ opacity: 0, y: 16, filter: 'blur(6px)' }}
-          animate={isLoaded ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-          transition={{ duration: 0.5, delay: 0.12, ease: 'easeOut' }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 border border-gold/20 mb-8"
+          initial={{ opacity: 0, y: 24, filter: 'blur(10px)', scale: 0.9 }}
+          animate={isLoaded ? { opacity: 1, y: 0, filter: 'blur(0px)', scale: 1 } : {}}
+          transition={{ duration: 0.6, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="relative inline-flex items-center gap-3 px-5 py-2.5 rounded-full mb-10"
         >
-          <motion.span
-            className="w-2 h-2 rounded-full bg-gold"
-            animate={prefersReducedMotion ? {} : { scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <span className="text-sm text-gold font-medium">Now available on iOS and Android</span>
+          {/* Glowing border effect */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-gold/20 via-gold/30 to-gold/20 animate-border-glow" />
+          <div className="absolute inset-[1px] rounded-full bg-card/80 backdrop-blur-sm" />
+          
+          {/* Content */}
+          <div className="relative flex items-center gap-3">
+            <motion.div
+              className="relative w-2.5 h-2.5"
+              animate={prefersReducedMotion ? {} : { scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <span className="absolute inset-0 rounded-full bg-gold" />
+              <span className="absolute inset-0 rounded-full bg-gold blur-sm" />
+            </motion.div>
+            <span className="text-sm text-foreground font-medium tracking-wide">Now available on iOS and Android</span>
+          </div>
         </motion.div>
 
-        {/* Headline with luxury masked reveal - reveals second */}
+        {/* DRAMATIC: Cinematic headline with staggered reveal */}
         <motion.h1
-          className="text-4xl md:text-6xl lg:text-7xl font-semibold text-foreground tracking-tight leading-[1.1]"
+          className="text-5xl md:text-7xl lg:text-8xl font-bold text-foreground tracking-tight leading-[1.05]"
         >
-          {/* First line with blur reveal */}
+          {/* First line - dramatic scale entrance */}
           <span className="block overflow-hidden">
             <motion.span
               className="block"
-              initial={{ opacity: 0, filter: 'blur(10px)', y: 24 }}
-              animate={isLoaded ? { opacity: 1, filter: 'blur(0px)', y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.22, ease: 'easeOut' }}
+              initial={{ opacity: 0, filter: 'blur(16px)', y: 40, scale: 0.95 }}
+              animate={isLoaded ? { opacity: 1, filter: 'blur(0px)', y: 0, scale: 1 } : {}}
+              transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
             >
               Own every
             </motion.span>
           </span>
 
-          {/* Emphasis word with gold light sweep */}
-          <span className="block overflow-hidden mt-2 relative">
+          {/* DRAMATIC: Emphasis word with glow effect */}
+          <span className="block overflow-hidden mt-3 relative">
             <motion.span
-              className="block text-gold-gradient font-serif italic relative"
-              initial={{ opacity: 0, filter: 'blur(10px)', y: 24 }}
-              animate={isLoaded ? { opacity: 1, filter: 'blur(0px)', y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.32, ease: 'easeOut' }}
+              className="relative inline-block"
+              initial={{ opacity: 0, filter: 'blur(16px)', y: 40, scale: 0.95 }}
+              animate={isLoaded ? { opacity: 1, filter: 'blur(0px)', y: 0, scale: 1 } : {}}
+              transition={{ duration: 0.8, delay: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
             >
-              renewal.
+              {/* Glow behind text */}
+              <span className="absolute inset-0 text-gold blur-2xl opacity-50">renewal.</span>
+              
+              {/* Main text with gradient */}
+              <span className="relative text-gold-gradient font-serif italic">
+                renewal.
+              </span>
 
-              {/* Gold light sweep across text */}
+              {/* Animated light sweep */}
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none"
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none"
                 initial={{ x: '-100%', opacity: 0 }}
-                animate={isLoaded ? { x: '200%', opacity: [0, 1, 0] } : {}}
-                transition={{ duration: 1.2, delay: 0.6, ease: 'easeInOut' }}
+                animate={isLoaded ? { x: '300%', opacity: [0, 0.8, 0] } : {}}
+                transition={{ duration: 1.5, delay: 0.8, ease: 'easeInOut' }}
               />
             </motion.span>
           </span>
@@ -407,13 +474,14 @@ export function Hero() {
           Renewly helps you track, understand, and reduce every recurring payment with elegance.
         </motion.p>
 
-        {/* CTA buttons - reveal fourth */}
+        {/* DRAMATIC: Premium CTA buttons with glow effects */}
         <motion.div
-          initial={{ opacity: 0, y: 16, filter: 'blur(6px)' }}
+          initial={{ opacity: 0, y: 24, filter: 'blur(10px)' }}
           animate={isLoaded ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-          transition={{ duration: 0.5, delay: 0.55, ease: 'easeOut' }}
-          className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+          transition={{ duration: 0.6, delay: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-5"
         >
+          {/* Primary CTA with dramatic glow */}
           <motion.button
             onClick={handleGetStarted}
             disabled={isNavigating}
@@ -421,29 +489,47 @@ export function Hero() {
             initial="initial"
             whileHover="hover"
             whileTap="tap"
-            className="w-full sm:w-auto px-8 py-4 rounded-xl gold-gradient text-obsidian font-semibold shadow-luxury flex items-center justify-center gap-2 disabled:opacity-70"
+            className="relative w-full sm:w-auto group cursor-pointer disabled:opacity-70"
           >
-            {isNavigating ? 'Loading...' : 'Start for free'}
-            {!isNavigating && (
-              <motion.div
-                initial={{ x: 0 }}
-                whileHover={{ x: 4 }}
-                transition={springs.gentle}
-              >
-                <ArrowRight className="w-4 h-4" />
-              </motion.div>
-            )}
+            {/* Animated glow behind button */}
+            <motion.div
+              className="absolute -inset-1 rounded-2xl gold-gradient opacity-50 blur-lg group-hover:opacity-80 transition-opacity"
+              animate={prefersReducedMotion ? {} : {
+                scale: [1, 1.05, 1],
+                opacity: [0.4, 0.6, 0.4]
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            
+            <div className="relative px-10 py-5 rounded-2xl gold-gradient text-obsidian font-bold text-lg shadow-luxury flex items-center justify-center gap-3">
+              {isNavigating ? 'Loading...' : 'Start for free'}
+              {!isNavigating && (
+                <motion.div
+                  initial={{ x: 0 }}
+                  whileHover={{ x: 6 }}
+                  transition={springs.gentle}
+                >
+                  <ArrowRight className="w-5 h-5" />
+                </motion.div>
+              )}
+            </div>
           </motion.button>
 
+          {/* Secondary CTA with glass effect */}
           <motion.button
             onClick={() => setIsDemoOpen(true)}
             variants={magneticButtonVariants}
             initial="initial"
             whileHover="hover"
             whileTap="tap"
-            className="w-full sm:w-auto px-8 py-4 rounded-xl border border-glass-border text-foreground font-medium flex items-center justify-center gap-2 cursor-pointer"
+            className="relative w-full sm:w-auto px-10 py-5 rounded-2xl bg-card/50 backdrop-blur-xl border border-gold/20 text-foreground font-semibold text-lg flex items-center justify-center gap-3 cursor-pointer hover:border-gold/40 hover:bg-card/70 transition-all group"
           >
-            <Play className="w-4 h-4" />
+            <motion.div
+              animate={prefersReducedMotion ? {} : { scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <Play className="w-5 h-5 text-gold" />
+            </motion.div>
             Watch demo
           </motion.button>
         </motion.div>
