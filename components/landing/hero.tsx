@@ -74,372 +74,39 @@ export function Hero() {
       className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-20 lg:py-32"
     >
       {/* ============================================ */}
-      {/* CINEMATIC AMBIENT LAYER - Full Visual Treatment */}
+      {/* HERO AMBIENT ENHANCEMENT */}
+      {/* Blends with global AmbientBackground */}
       {/* ============================================ */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        {/* Base gradient with depth */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-secondary/30" />
-
-        {/* DRAMATIC: Large animated gold orb - top right */}
+        {/* Central focus glow - enhances the hero area */}
         <motion.div
-          className="absolute -top-[30%] -right-[15%] w-[800px] h-[800px] rounded-full"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] md:w-[900px] md:h-[600px]"
           style={{
             background:
-              'radial-gradient(circle, rgba(199, 163, 106, 0.35) 0%, rgba(199, 163, 106, 0.1) 40%, transparent 70%)',
-            filter: 'blur(100px)',
+              'radial-gradient(ellipse at center, rgba(199, 163, 106, 0.1) 0%, rgba(199, 163, 106, 0.03) 40%, transparent 70%)',
+            filter: 'blur(60px)',
           }}
-          animate={
-            prefersReducedMotion
-              ? {}
-              : {
-                scale: [1, 1.25, 1],
-                x: [0, 50, 0],
-                y: [0, 30, 0],
-                opacity: [0.3, 0.6, 0.3],
-              }
-          }
-          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
-        />
-
-        {/* DRAMATIC: Emerald orb - bottom left */}
-        <motion.div
-          className="absolute -bottom-[25%] -left-[15%] w-[700px] h-[700px] rounded-full"
-          style={{
-            background:
-              'radial-gradient(circle, rgba(46, 94, 82, 0.3) 0%, rgba(46, 94, 82, 0.08) 45%, transparent 70%)',
-            filter: 'blur(120px)',
-          }}
-          animate={
-            prefersReducedMotion
-              ? {}
-              : {
-                scale: [1, 1.2, 1],
-                x: [0, -30, 0],
-                y: [0, -40, 0],
-                opacity: [0.25, 0.5, 0.25],
-              }
-          }
-          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
-        />
-
-        {/* DRAMATIC: Central spotlight glow */}
-        <motion.div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px]"
-          style={{
-            background:
-              'radial-gradient(ellipse at center, rgba(199, 163, 106, 0.15) 0%, rgba(199, 163, 106, 0.05) 30%, transparent 60%)',
-          }}
-          animate={
-            prefersReducedMotion
-              ? {}
-              : {
-                scale: [1, 1.15, 1],
-                opacity: [0.4, 0.8, 0.4],
-              }
-          }
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        />
-
-        {/* DRAMATIC: Spotlight sweep across screen */}
-        <motion.div
-          className="absolute inset-0"
-          style={{
-            background:
-              'linear-gradient(115deg, transparent 0%, rgba(199, 163, 106, 0.08) 25%, rgba(199, 163, 106, 0.15) 50%, rgba(199, 163, 106, 0.08) 75%, transparent 100%)',
-            transform: 'skewX(-15deg)',
-          }}
-          animate={prefersReducedMotion ? {} : { x: ['-150%', '150%'] }}
-          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', repeatDelay: 6 }}
-        />
-
-        {/* Grid pattern - more visible */}
-        <div
-          className="absolute inset-0 opacity-[0.025]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(199, 163, 106, 0.6) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(199, 163, 106, 0.6) 1px, transparent 1px)`,
-            backgroundSize: '100px 100px',
-          }}
-        />
-
-        {/* Vignette for cinematic depth */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, rgba(10, 10, 13, 0.25) 100%)',
-          }}
-        />
-      </div>
-
-      {/* ============================================ */}
-      {/* LAYER B: MID DEPTH PLANE - Ghost Glass Panels */}
-      {/* ============================================ */}
-      {!isMobile && (
-        <motion.div
-          className="absolute inset-0 pointer-events-none"
-          aria-hidden="true"
-          style={{ y: prefersReducedMotion ? 0 : yMid }}
-        >
-          {/* Volumetric light field - directional champagne sweep */}
-          <motion.div
-            className="absolute inset-0"
-            style={{
-              background:
-                'linear-gradient(135deg, transparent 0%, rgba(199, 163, 106, 0.04) 30%, transparent 60%)',
-            }}
-            animate={
-              prefersReducedMotion
-                ? {}
-                : {
-                  opacity: [0.3, 0.6, 0.3],
-                  x: ['-5%', '5%', '-5%'],
-                }
-            }
-            transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
-          />
-
-          {/* Secondary light sweep - cross direction */}
-          <motion.div
-            className="absolute inset-0"
-            style={{
-              background:
-                'linear-gradient(-45deg, transparent 40%, rgba(199, 163, 106, 0.025) 50%, transparent 60%)',
-            }}
-            animate={prefersReducedMotion ? {} : { opacity: [0.2, 0.5, 0.2] }}
-            transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
-          />
-
-          {/* Ghost glass panel 1 - premium financial card silhouette */}
-          <motion.div
-            className="absolute top-[18%] left-[12%] w-72 h-44 rounded-3xl"
-            style={{
-              background:
-                'linear-gradient(145deg, rgba(199, 163, 106, 0.04) 0%, rgba(199, 163, 106, 0.01) 100%)',
-              border: '1px solid rgba(199, 163, 106, 0.06)',
-              backdropFilter: 'blur(1px)',
-              boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.02)',
-            }}
-            initial={{ opacity: 0, y: 30, rotate: -2 }}
-            animate={
-              isLoaded
-                ? {
-                  opacity: prefersReducedMotion ? 0.08 : [0.06, 0.1, 0.06],
-                  y: prefersReducedMotion ? 0 : [0, 12, 0],
-                  rotate: prefersReducedMotion ? -2 : [-2, -1, -2],
-                }
-                : {}
-            }
-            transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-          >
-            {/* Card inner structure hint */}
-            <div className="absolute top-4 left-4 w-10 h-10 rounded-xl bg-gold/[0.04]" />
-            <div className="absolute top-5 left-16 w-24 h-2 rounded bg-platinum/[0.03]" />
-            <div className="absolute top-9 left-16 w-16 h-1.5 rounded bg-platinum/[0.02]" />
-            <div className="absolute bottom-4 right-4 w-14 h-5 rounded-lg bg-gold/[0.03]" />
-          </motion.div>
-
-          {/* Ghost glass panel 2 - insight card silhouette */}
-          <motion.div
-            className="absolute bottom-[22%] right-[10%] w-64 h-40 rounded-3xl"
-            style={{
-              background:
-                'linear-gradient(155deg, rgba(229, 228, 226, 0.03) 0%, rgba(229, 228, 226, 0.01) 100%)',
-              border: '1px solid rgba(229, 228, 226, 0.05)',
-              backdropFilter: 'blur(1px)',
-              boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.015)',
-            }}
-            initial={{ opacity: 0, y: -20, rotate: 1.5 }}
-            animate={
-              isLoaded
-                ? {
-                  opacity: prefersReducedMotion ? 0.06 : [0.05, 0.09, 0.05],
-                  y: prefersReducedMotion ? 0 : [0, -10, 0],
-                  rotate: prefersReducedMotion ? 1.5 : [1.5, 2.5, 1.5],
-                }
-                : {}
-            }
-            transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut', delay: 2.5 }}
-          >
-            {/* Chart hint */}
-            <div className="absolute bottom-6 left-4 right-4 h-12 flex items-end gap-1">
-              {[0.4, 0.6, 0.3, 0.8, 0.5, 0.7, 0.9].map((h, i) => (
-                <div
-                  key={i}
-                  className="flex-1 rounded-t bg-platinum/[0.03]"
-                  style={{ height: `${h * 100}%` }}
-                />
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Ghost glass panel 3 - small metric chip */}
-          <motion.div
-            className="absolute top-[35%] right-[18%] w-36 h-20 rounded-2xl"
-            style={{
-              background:
-                'linear-gradient(135deg, rgba(199, 163, 106, 0.035) 0%, transparent 100%)',
-              border: '1px solid rgba(199, 163, 106, 0.04)',
-            }}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={
-              isLoaded
-                ? {
-                  opacity: prefersReducedMotion ? 0.05 : [0.04, 0.08, 0.04],
-                  scale: prefersReducedMotion ? 1 : [1, 1.02, 1],
-                }
-                : {}
-            }
-            transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
-          >
-            <div className="absolute top-3 left-3 w-8 h-8 rounded-full bg-gold/[0.04]" />
-            <div className="absolute bottom-3 right-3 w-12 h-3 rounded bg-platinum/[0.03]" />
-          </motion.div>
-        </motion.div>
-      )}
-
-      {/* ============================================ */}
-      {/* LAYER C: NEAR DEPTH PLANE - Spotlight & Focus */}
-      {/* ============================================ */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
-        aria-hidden="true"
-        style={{ y: prefersReducedMotion ? 0 : yNear }}
-      >
-        {/* Central spotlight - hero product focus */}
-        <motion.div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] md:w-[800px] md:h-[800px]"
-          style={{
-            background:
-              'radial-gradient(ellipse at center, rgba(199, 163, 106, 0.08) 0%, rgba(199, 163, 106, 0.02) 40%, transparent 70%)',
-          }}
-          initial={{ opacity: 0, scale: 0.8 }}
+          initial={{ opacity: 0, scale: 0.9 }}
           animate={
             isLoaded
               ? {
-                opacity: prefersReducedMotion ? 0.6 : [0.5, 0.8, 0.5],
-                scale: prefersReducedMotion ? 1 : [1, 1.08, 1],
-              }
+                  opacity: prefersReducedMotion ? 0.6 : [0.5, 0.7, 0.5],
+                  scale: prefersReducedMotion ? 1 : [1, 1.03, 1],
+                }
               : {}
           }
-          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
         />
 
         {/* Soft vignette - cinematic framing */}
-        <motion.div
+        <div
           className="absolute inset-0"
           style={{
             background:
               'radial-gradient(ellipse 80% 70% at 50% 45%, transparent 0%, var(--hero-vignette) 100%)',
           }}
-          animate={prefersReducedMotion ? {} : { opacity: [0.4, 0.6, 0.4] }}
-          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
         />
-      </motion.div>
-
-      {/* ============================================ */}
-      {/* SIGNATURE RENEWAL INTELLIGENCE PATH */}
-      {/* ============================================ */}
-      {!isMobile && !prefersReducedMotion && (
-        <svg
-          className="absolute inset-0 w-full h-full pointer-events-none"
-          aria-hidden="true"
-          preserveAspectRatio="xMidYMid slice"
-        >
-          <defs>
-            <linearGradient id="renewalPathGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="rgba(199, 163, 106, 0)" />
-              <stop offset="40%" stopColor="rgba(199, 163, 106, 0.6)" />
-              <stop offset="60%" stopColor="rgba(199, 163, 106, 0.6)" />
-              <stop offset="100%" stopColor="rgba(199, 163, 106, 0)" />
-            </linearGradient>
-            <filter id="pathGlow">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* Main intelligence path */}
-          <motion.path
-            d="M -50 55% Q 20% 45%, 35% 52% T 65% 48% Q 80% 42%, 110% 50%"
-            stroke="url(#renewalPathGradient)"
-            strokeWidth="1.5"
-            fill="none"
-            filter="url(#pathGlow)"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{
-              pathLength: [0, 1, 1, 0],
-              opacity: [0, 0.5, 0.5, 0],
-            }}
-            transition={{
-              duration: 4,
-              times: [0, 0.35, 0.65, 1],
-              repeat: Infinity,
-              repeatDelay: 12,
-              ease: 'easeInOut',
-              delay: 0.8,
-            }}
-          />
-
-          {/* Activation node 1 - pulses when path reaches */}
-          <motion.circle
-            cx="35%"
-            cy="52%"
-            r="4"
-            fill="rgba(199, 163, 106, 0.6)"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{
-              scale: [0, 1.5, 0],
-              opacity: [0, 0.7, 0],
-            }}
-            transition={{
-              duration: 1,
-              repeat: Infinity,
-              repeatDelay: 16,
-              delay: 1.4,
-            }}
-          />
-
-          {/* Activation node 2 */}
-          <motion.circle
-            cx="65%"
-            cy="48%"
-            r="3"
-            fill="rgba(229, 228, 226, 0.5)"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{
-              scale: [0, 1.3, 0],
-              opacity: [0, 0.6, 0],
-            }}
-            transition={{
-              duration: 0.9,
-              repeat: Infinity,
-              repeatDelay: 16,
-              delay: 1.8,
-            }}
-          />
-        </svg>
-      )}
-
-      {/* ============================================ */}
-      {/* AMBIENT LIGHT SWEEP - Top Edge */}
-      {/* ============================================ */}
-      <motion.div
-        className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent pointer-events-none"
-        aria-hidden="true"
-        animate={
-          prefersReducedMotion
-            ? {}
-            : {
-              opacity: [0, 0.6, 0],
-              scaleX: [0.5, 1, 0.5],
-            }
-        }
-        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-      />
+      </div>
 
       {/* ============================================ */}
       {/* HERO CONTENT - Sequenced Reveal */}
