@@ -5,6 +5,7 @@ import { Inter, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ToastContainer } from '@/components/toast-container'
 import { ThemeProvider } from '@/components/theme-provider'
+import { AmbientBackground } from '@/components/ambient-background'
 import './globals.css'
 import { PreferencesBridge } from '@/components/preferences-bridge'
 
@@ -210,26 +211,8 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <PreferencesBridge />
-          {/* Global ambient background layer */}
-          <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
-            {/* Large ambient orb - top right */}
-            <div 
-              className="absolute -top-[20%] -right-[15%] w-[600px] h-[600px] rounded-full animate-orb-breathe"
-              style={{ 
-                background: 'radial-gradient(circle, rgba(199, 163, 106, 0.08) 0%, transparent 70%)',
-                filter: 'blur(100px)'
-              }}
-            />
-            {/* Secondary orb - bottom left */}
-            <div 
-              className="absolute -bottom-[15%] -left-[10%] w-[500px] h-[500px] rounded-full animate-orb-breathe"
-              style={{ 
-                background: 'radial-gradient(circle, rgba(46, 94, 82, 0.06) 0%, transparent 70%)',
-                filter: 'blur(120px)',
-                animationDelay: '4s'
-              }}
-            />
-          </div>
+          {/* Global ambient background - flowing silk ribbons */}
+          <AmbientBackground />
           {children}
           <ToastContainer />
         </ThemeProvider>
