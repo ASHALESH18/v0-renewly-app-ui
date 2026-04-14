@@ -745,3 +745,226 @@ button,
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ============================================ */
+/* CALM AMBIENT HERO BACKGROUND SYSTEM */
+/* Premium, architectural, slow cinematic motion */
+/* ============================================ */
+
+/* Base layer - matte obsidian/graphite foundation */
+.ambient-hero-base {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--background) 0%, var(--secondary) 100%);
+}
+
+.dark .ambient-hero-base {
+  background: linear-gradient(180deg, var(--obsidian) 0%, var(--graphite) 60%, var(--slate) 100%);
+}
+
+/* Soft ribbon elements - very slow drift */
+.ambient-hero-ribbon {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0;
+  animation: ribbon-drift 32s ease-in-out infinite;
+}
+
+.ambient-hero-ribbon--gold {
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(ellipse at center, rgba(199, 163, 106, 0.12) 0%, transparent 70%);
+  top: -10%;
+  right: -5%;
+}
+
+.dark .ambient-hero-ribbon--gold {
+  background: radial-gradient(ellipse at center, rgba(199, 163, 106, 0.08) 0%, transparent 70%);
+}
+
+.ambient-hero-ribbon--blue {
+  width: 500px;
+  height: 350px;
+  background: radial-gradient(ellipse at center, rgba(106, 122, 148, 0.1) 0%, transparent 70%);
+  bottom: 5%;
+  left: -8%;
+  animation-delay: -12s;
+}
+
+.dark .ambient-hero-ribbon--blue {
+  background: radial-gradient(ellipse at center, rgba(106, 122, 148, 0.06) 0%, transparent 70%);
+}
+
+.ambient-hero-ribbon--soft {
+  width: 450px;
+  height: 300px;
+  background: radial-gradient(ellipse at center, rgba(188, 194, 204, 0.08) 0%, transparent 70%);
+  top: 40%;
+  right: -10%;
+  animation-delay: -20s;
+  animation-duration: 40s;
+}
+
+.dark .ambient-hero-ribbon--soft {
+  background: radial-gradient(ellipse at center, rgba(188, 194, 204, 0.04) 0%, transparent 70%);
+}
+
+/* Soft glow accents - breathing effect */
+.ambient-hero-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0;
+  animation: glow-breathe 20s ease-in-out infinite;
+}
+
+.ambient-hero-glow--top {
+  width: 400px;
+  height: 250px;
+  background: radial-gradient(ellipse at center, rgba(199, 163, 106, 0.1) 0%, transparent 70%);
+  top: 5%;
+  left: 20%;
+}
+
+.dark .ambient-hero-glow--top {
+  background: radial-gradient(ellipse at center, rgba(199, 163, 106, 0.06) 0%, transparent 70%);
+}
+
+.ambient-hero-glow--bottom {
+  width: 350px;
+  height: 200px;
+  background: radial-gradient(ellipse at center, rgba(46, 94, 82, 0.08) 0%, transparent 70%);
+  bottom: 15%;
+  right: 25%;
+  animation-delay: -8s;
+}
+
+.dark .ambient-hero-glow--bottom {
+  background: radial-gradient(ellipse at center, rgba(46, 94, 82, 0.05) 0%, transparent 70%);
+}
+
+/* Central focus halo - subtle product spotlight */
+.ambient-hero-focus {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(199, 163, 106, 0.06) 0%, rgba(199, 163, 106, 0.02) 40%, transparent 70%);
+  filter: blur(60px);
+  animation: focus-pulse 16s ease-in-out infinite;
+}
+
+.dark .ambient-hero-focus {
+  background: radial-gradient(ellipse at center, rgba(199, 163, 106, 0.04) 0%, rgba(199, 163, 106, 0.015) 40%, transparent 70%);
+}
+
+/* Faint architectural grid */
+.ambient-hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(199, 163, 106, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(199, 163, 106, 0.03) 1px, transparent 1px);
+  background-size: 80px 80px;
+  opacity: 0.4;
+}
+
+.dark .ambient-hero-grid {
+  background-image: 
+    linear-gradient(rgba(199, 163, 106, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(199, 163, 106, 0.02) 1px, transparent 1px);
+  opacity: 0.3;
+}
+
+/* Soft vignette - cinematic framing */
+.ambient-hero-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 75% 65% at 50% 50%, transparent 0%, var(--hero-vignette) 100%);
+  pointer-events: none;
+}
+
+/* Optional subtle horizontal line accent */
+.ambient-hero-line {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(199, 163, 106, 0.08) 30%, rgba(199, 163, 106, 0.12) 50%, rgba(199, 163, 106, 0.08) 70%, transparent 100%);
+  opacity: 0;
+  animation: line-fade 18s ease-in-out infinite;
+}
+
+.dark .ambient-hero-line {
+  background: linear-gradient(90deg, transparent 0%, rgba(199, 163, 106, 0.05) 30%, rgba(199, 163, 106, 0.08) 50%, rgba(199, 163, 106, 0.05) 70%, transparent 100%);
+}
+
+/* Calm ambient animations - very slow, smooth, low opacity */
+@keyframes ribbon-drift {
+  0%, 100% {
+    opacity: 0.5;
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    opacity: 0.7;
+    transform: translate(15px, 10px) scale(1.02);
+  }
+  50% {
+    opacity: 0.6;
+    transform: translate(-10px, 20px) scale(1.01);
+  }
+  75% {
+    opacity: 0.55;
+    transform: translate(5px, -5px) scale(1.015);
+  }
+}
+
+@keyframes glow-breathe {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes focus-pulse {
+  0%, 100% {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(1.03);
+  }
+}
+
+@keyframes line-fade {
+  0%, 100% {
+    opacity: 0;
+  }
+  30%, 70% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Reduced motion: disable ambient animations */
+@media (prefers-reduced-motion: reduce) {
+  .ambient-hero-ribbon,
+  .ambient-hero-glow,
+  .ambient-hero-focus,
+  .ambient-hero-line {
+    animation: none;
+    opacity: 0.4;
+  }
+}
