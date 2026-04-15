@@ -746,33 +746,34 @@ button,
   }
 }
 
+
 /* ============================================ */
 /* GLOBAL AMBIENT BACKGROUND SYSTEM */
-/* Matte premium, calm, visible, slow silk flow */
+/* Calm, matte, premium silk-flow background */
 /* ============================================ */
 
 .ambient-base {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(1100px 700px at 18% 10%, rgba(154, 112, 53, 0.08) 0%, transparent 58%),
-    radial-gradient(900px 620px at 84% 88%, rgba(74, 115, 96, 0.07) 0%, transparent 54%),
-    linear-gradient(180deg, #fbf7f0 0%, #f3eadb 42%, #e8dbc8 78%, #dfd0bc 100%);
+    radial-gradient(1200px 720px at 18% 12%, rgba(154, 112, 53, 0.08) 0%, transparent 58%),
+    radial-gradient(960px 640px at 84% 86%, rgba(74, 115, 96, 0.06) 0%, transparent 54%),
+    linear-gradient(180deg, #fbf7f0 0%, #f3eadb 42%, #e8dbc8 76%, #dfd0bc 100%);
 }
 
 .dark .ambient-base {
   background:
-    radial-gradient(1250px 760px at 18% 8%, rgba(199, 163, 106, 0.09) 0%, transparent 58%),
-    radial-gradient(980px 680px at 84% 90%, rgba(46, 94, 82, 0.08) 0%, transparent 54%),
+    radial-gradient(1280px 760px at 16% 8%, rgba(199, 163, 106, 0.08) 0%, transparent 58%),
+    radial-gradient(980px 680px at 82% 88%, rgba(46, 94, 82, 0.08) 0%, transparent 52%),
     radial-gradient(760px 420px at 50% 42%, rgba(255, 255, 255, 0.025) 0%, transparent 68%),
-    linear-gradient(180deg, #06080b 0%, #090c11 28%, #0c1016 58%, #090c11 82%, #06080b 100%);
+    linear-gradient(180deg, #06080b 0%, #090c11 28%, #0c1016 56%, #090c11 82%, #06080b 100%);
 }
 
-.ambient-ribbons-svg {
+.ambient-silk-svg {
   position: absolute;
-  inset: -8%;
-  width: 116%;
-  height: 116%;
+  inset: -10%;
+  width: 120%;
+  height: 120%;
   pointer-events: none;
   overflow: visible;
 }
@@ -783,15 +784,15 @@ button,
 }
 
 .ambient-wave--gold {
-  animation: ambient-wave-a 34s ease-in-out infinite;
+  animation: ambient-wave-gold 38s ease-in-out infinite;
 }
 
 .ambient-wave--emerald {
-  animation: ambient-wave-b 40s ease-in-out infinite;
+  animation: ambient-wave-emerald 46s ease-in-out infinite;
 }
 
 .ambient-wave--platinum {
-  animation: ambient-wave-c 28s ease-in-out infinite;
+  animation: ambient-wave-platinum 32s ease-in-out infinite;
 }
 
 .ambient-path {
@@ -801,110 +802,109 @@ button,
 }
 
 .ambient-path--gold-soft {
-  opacity: 0.34;
-}
-
-.dark .ambient-path--gold-soft {
-  opacity: 0.5;
-}
-
-.ambient-path--gold-core {
   opacity: 0.2;
 }
 
-.dark .ambient-path--gold-core {
+.dark .ambient-path--gold-soft {
   opacity: 0.34;
 }
 
-.ambient-path--emerald-soft {
-  opacity: 0.22;
-}
-
-.dark .ambient-path--emerald-soft {
-  opacity: 0.34;
-}
-
-.ambient-path--emerald-core {
-  opacity: 0.14;
-}
-
-.dark .ambient-path--emerald-core {
-  opacity: 0.24;
-}
-
-.ambient-path--platinum-soft {
-  opacity: 0.16;
-}
-
-.dark .ambient-path--platinum-soft {
-  opacity: 0.26;
-}
-
-.ambient-path--platinum-core {
+.ambient-path--gold-core {
   opacity: 0.1;
 }
 
-.dark .ambient-path--platinum-core {
+.dark .ambient-path--gold-core {
+  opacity: 0.22;
+}
+
+.ambient-path--emerald-soft {
+  opacity: 0.14;
+}
+
+.dark .ambient-path--emerald-soft {
+  opacity: 0.24;
+}
+
+.ambient-path--emerald-core {
+  opacity: 0.08;
+}
+
+.dark .ambient-path--emerald-core {
+  opacity: 0.16;
+}
+
+.ambient-path--platinum-soft {
+  opacity: 0.12;
+}
+
+.dark .ambient-path--platinum-soft {
   opacity: 0.18;
+}
+
+.ambient-path--platinum-core {
+  opacity: 0.06;
+}
+
+.dark .ambient-path--platinum-core {
+  opacity: 0.12;
 }
 
 .ambient-glow {
   position: absolute;
   border-radius: 9999px;
-  filter: blur(100px);
-  will-change: transform, opacity;
+  filter: blur(110px);
   pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.ambient-glow--top {
+  top: 6%;
+  left: 50%;
+  width: 70rem;
+  height: 20rem;
+  transform: translateX(-50%);
+  opacity: 0.42;
+  background: radial-gradient(ellipse at center, rgba(154, 112, 53, 0.12) 0%, rgba(154, 112, 53, 0.04) 50%, transparent 78%);
+}
+
+.dark .ambient-glow--top {
+  opacity: 0.56;
+  background: radial-gradient(ellipse at center, rgba(199, 163, 106, 0.14) 0%, rgba(199, 163, 106, 0.05) 50%, transparent 78%);
 }
 
 .ambient-glow--center {
-  top: 16%;
+  top: 28%;
   left: 50%;
-  width: 66rem;
-  height: 38rem;
+  width: 58rem;
+  height: 34rem;
   transform: translateX(-50%);
-  opacity: 0.5;
-  background:
-    radial-gradient(ellipse at center,
-      rgba(154, 112, 53, 0.1) 0%,
-      rgba(154, 112, 53, 0.04) 40%,
-      transparent 74%);
+  opacity: 0.3;
+  background: radial-gradient(ellipse at center, rgba(154, 112, 53, 0.08) 0%, rgba(154, 112, 53, 0.03) 46%, transparent 78%);
 }
 
 .dark .ambient-glow--center {
-  opacity: 0.7;
-  background:
-    radial-gradient(ellipse at center,
-      rgba(199, 163, 106, 0.12) 0%,
-      rgba(199, 163, 106, 0.05) 40%,
-      transparent 74%);
+  opacity: 0.42;
+  background: radial-gradient(ellipse at center, rgba(199, 163, 106, 0.09) 0%, rgba(199, 163, 106, 0.035) 46%, transparent 78%);
 }
 
-.ambient-glow--edge {
-  right: -7rem;
-  bottom: 1rem;
-  width: 34rem;
-  height: 24rem;
-  opacity: 0.36;
-  background:
-    radial-gradient(ellipse at center,
-      rgba(74, 115, 96, 0.08) 0%,
-      rgba(74, 115, 96, 0.03) 42%,
-      transparent 72%);
+.ambient-glow--bottom {
+  right: -8rem;
+  bottom: -2rem;
+  width: 30rem;
+  height: 22rem;
+  opacity: 0.28;
+  background: radial-gradient(ellipse at center, rgba(74, 115, 96, 0.08) 0%, rgba(74, 115, 96, 0.03) 44%, transparent 76%);
 }
 
-.dark .ambient-glow--edge {
-  opacity: 0.52;
-  background:
-    radial-gradient(ellipse at center,
-      rgba(46, 94, 82, 0.1) 0%,
-      rgba(46, 94, 82, 0.04) 42%,
-      transparent 72%);
+.dark .ambient-glow--bottom {
+  opacity: 0.4;
+  background: radial-gradient(ellipse at center, rgba(46, 94, 82, 0.11) 0%, rgba(46, 94, 82, 0.04) 44%, transparent 76%);
 }
 
 .ambient-texture {
   position: absolute;
   inset: 0;
-  opacity: 0.14;
+  opacity: 0.12;
   background-image:
     linear-gradient(rgba(154, 112, 53, 0.018) 1px, transparent 1px),
     linear-gradient(90deg, rgba(154, 112, 53, 0.018) 1px, transparent 1px);
@@ -912,56 +912,48 @@ button,
 }
 
 .dark .ambient-texture {
-  opacity: 0.1;
+  opacity: 0.08;
   background-image:
-    linear-gradient(rgba(199, 163, 106, 0.014) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(199, 163, 106, 0.014) 1px, transparent 1px);
+    linear-gradient(rgba(199, 163, 106, 0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(199, 163, 106, 0.012) 1px, transparent 1px);
 }
 
 .ambient-vignette {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(ellipse 90% 78% at 50% 46%,
-      transparent 0%,
-      transparent 56%,
-      rgba(0, 0, 0, 0.1) 100%);
+  background: radial-gradient(ellipse 90% 78% at 50% 44%, transparent 0%, transparent 60%, rgba(87, 63, 38, 0.07) 100%);
 }
 
 .dark .ambient-vignette {
-  background:
-    radial-gradient(ellipse 90% 78% at 50% 46%,
-      transparent 0%,
-      transparent 52%,
-      rgba(4, 6, 10, 0.34) 100%);
+  background: radial-gradient(ellipse 90% 78% at 50% 44%, transparent 0%, transparent 54%, rgba(4, 6, 10, 0.34) 100%);
 }
 
-@keyframes ambient-wave-a {
+@keyframes ambient-wave-gold {
 
   0%,
   100% {
-    transform: translate3d(0, 0, 0) rotate(-6deg) scale(1);
+    transform: translate3d(0, 0, 0) rotate(-5deg) scale(1);
   }
 
   50% {
-    transform: translate3d(5vw, 1.5vh, 0) rotate(-4deg) scale(1.015);
+    transform: translate3d(5vw, 1.6vh, 0) rotate(-3deg) scale(1.015);
   }
 }
 
-@keyframes ambient-wave-b {
+@keyframes ambient-wave-emerald {
 
   0%,
   100% {
-    transform: translate3d(0, 0, 0) rotate(5deg) scale(1);
+    transform: translate3d(0, 0, 0) rotate(4deg) scale(1);
   }
 
   50% {
-    transform: translate3d(-6vw, -1.8vh, 0) rotate(7deg) scale(1.018);
+    transform: translate3d(-6vw, -2vh, 0) rotate(6deg) scale(1.02);
   }
 }
 
-@keyframes ambient-wave-c {
+@keyframes ambient-wave-platinum {
 
   0%,
   100% {
@@ -973,64 +965,87 @@ button,
   }
 }
 
+@keyframes ambient-breathe-top {
+
+  0%,
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 0.42;
+  }
+
+  50% {
+    transform: translateX(-50%) scale(1.025);
+    opacity: 0.5;
+  }
+}
+
 @keyframes ambient-breathe-center {
 
   0%,
   100% {
     transform: translateX(-50%) scale(1);
-    opacity: 0.7;
+    opacity: 0.3;
   }
 
   50% {
     transform: translateX(-50%) scale(1.03);
-    opacity: 0.8;
+    opacity: 0.38;
   }
 }
 
-@keyframes ambient-breathe-edge {
+@keyframes ambient-breathe-bottom {
 
   0%,
   100% {
     transform: scale(1);
-    opacity: 0.5;
+    opacity: 0.28;
   }
 
   50% {
-    transform: scale(1.03);
-    opacity: 0.58;
+    transform: scale(1.035);
+    opacity: 0.34;
   }
+}
+
+.animate-ambient-breathe-top {
+  animation: ambient-breathe-top 22s ease-in-out infinite;
 }
 
 .animate-ambient-breathe-center {
   animation: ambient-breathe-center 20s ease-in-out infinite;
 }
 
-.animate-ambient-breathe-edge {
-  animation: ambient-breathe-edge 24s ease-in-out infinite;
+.animate-ambient-breathe-bottom {
+  animation: ambient-breathe-bottom 24s ease-in-out infinite;
 }
 
 @media (max-width: 768px) {
-  .ambient-ribbons-svg {
-    inset: -12%;
-    width: 124%;
-    height: 124%;
+  .ambient-silk-svg {
+    inset: -16%;
+    width: 132%;
+    height: 132%;
+  }
+
+  .ambient-glow--top {
+    width: 44rem;
+    height: 16rem;
+    top: 8%;
   }
 
   .ambient-glow--center {
-    width: 42rem;
-    height: 28rem;
-    top: 20%;
+    width: 34rem;
+    height: 24rem;
+    top: 30%;
   }
 
-  .ambient-glow--edge {
-    width: 24rem;
+  .ambient-glow--bottom {
+    width: 22rem;
     height: 18rem;
     right: -5rem;
-    bottom: 0;
   }
 
   .ambient-texture {
-    background-size: 92px 92px;
+    background-size: 96px 96px;
   }
 }
 
