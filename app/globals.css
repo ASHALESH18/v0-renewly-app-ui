@@ -746,34 +746,44 @@ button,
   }
 }
 
-
-/* ============================================ */
 /* GLOBAL AMBIENT BACKGROUND SYSTEM */
-/* Calm, matte, premium silk-flow background */
+/* Subtle matte premium dust-flow system */
 /* ============================================ */
 
 .ambient-base {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(1200px 720px at 18% 12%, rgba(154, 112, 53, 0.08) 0%, transparent 58%),
-    radial-gradient(960px 640px at 84% 86%, rgba(74, 115, 96, 0.06) 0%, transparent 54%),
-    linear-gradient(180deg, #fbf7f0 0%, #f3eadb 42%, #e8dbc8 76%, #dfd0bc 100%);
+    radial-gradient(1200px 780px at 18% 10%, rgba(154, 112, 53, 0.07) 0%, transparent 56%),
+    radial-gradient(980px 720px at 82% 88%, rgba(74, 115, 96, 0.06) 0%, transparent 54%),
+    linear-gradient(180deg, #fbf7f0 0%, #f2eadd 42%, #e8dbc8 78%, #dfd0bc 100%);
 }
 
 .dark .ambient-base {
   background:
-    radial-gradient(1280px 760px at 16% 8%, rgba(199, 163, 106, 0.08) 0%, transparent 58%),
-    radial-gradient(980px 680px at 82% 88%, rgba(46, 94, 82, 0.08) 0%, transparent 52%),
-    radial-gradient(760px 420px at 50% 42%, rgba(255, 255, 255, 0.025) 0%, transparent 68%),
-    linear-gradient(180deg, #06080b 0%, #090c11 28%, #0c1016 56%, #090c11 82%, #06080b 100%);
+    radial-gradient(1200px 780px at 18% 8%, rgba(199, 163, 106, 0.08) 0%, transparent 56%),
+    radial-gradient(980px 720px at 82% 90%, rgba(46, 94, 82, 0.07) 0%, transparent 54%),
+    radial-gradient(760px 420px at 50% 42%, rgba(255, 255, 255, 0.018) 0%, transparent 68%),
+    linear-gradient(180deg, #05070a 0%, #080b10 28%, #0b0f15 58%, #080b10 82%, #05070a 100%);
 }
 
-.ambient-silk-svg {
+.ambient-soft-wash {
   position: absolute;
-  inset: -10%;
-  width: 120%;
-  height: 120%;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 253, 249, 0.02), rgba(255, 253, 249, 0) 28%, rgba(255, 253, 249, 0.02) 100%);
+}
+
+.dark .ambient-soft-wash {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0) 28%, rgba(255, 255, 255, 0.012) 100%);
+}
+
+.ambient-dust-svg {
+  position: absolute;
+  inset: -6%;
+  width: 112%;
+  height: 112%;
   pointer-events: none;
   overflow: visible;
 }
@@ -784,135 +794,127 @@ button,
 }
 
 .ambient-wave--gold {
-  animation: ambient-wave-gold 38s ease-in-out infinite;
+  animation: ambient-wave-gold 34s ease-in-out infinite;
 }
 
 .ambient-wave--emerald {
-  animation: ambient-wave-emerald 46s ease-in-out infinite;
+  animation: ambient-wave-emerald 40s ease-in-out infinite;
 }
 
 .ambient-wave--platinum {
-  animation: ambient-wave-platinum 32s ease-in-out infinite;
+  animation: ambient-wave-platinum 30s ease-in-out infinite;
 }
 
-.ambient-path {
+.ambient-dust-path {
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.ambient-path--gold-soft {
-  opacity: 0.2;
+.ambient-dust-soft {
+  opacity: 0.28;
 }
 
-.dark .ambient-path--gold-soft {
-  opacity: 0.34;
+.dark .ambient-dust-soft {
+  opacity: 0.42;
 }
 
-.ambient-path--gold-core {
-  opacity: 0.1;
-}
-
-.dark .ambient-path--gold-core {
-  opacity: 0.22;
-}
-
-.ambient-path--emerald-soft {
+.ambient-dust-core {
   opacity: 0.14;
 }
 
-.dark .ambient-path--emerald-soft {
+.dark .ambient-dust-core {
   opacity: 0.24;
 }
 
-.ambient-path--emerald-core {
-  opacity: 0.08;
+.ambient-particles {
+  opacity: 0.3;
 }
 
-.dark .ambient-path--emerald-core {
-  opacity: 0.16;
+.dark .ambient-particles {
+  opacity: 0.44;
 }
 
-.ambient-path--platinum-soft {
-  opacity: 0.12;
+.ambient-particles circle {
+  will-change: transform, opacity;
 }
 
-.dark .ambient-path--platinum-soft {
-  opacity: 0.18;
+.ambient-particles--gold {
+  animation: ambient-particles-drift-a 28s linear infinite;
 }
 
-.ambient-path--platinum-core {
-  opacity: 0.06;
+.ambient-particles--emerald {
+  animation: ambient-particles-drift-b 34s linear infinite;
 }
 
-.dark .ambient-path--platinum-core {
-  opacity: 0.12;
+.ambient-particles--platinum {
+  animation: ambient-particles-drift-c 26s linear infinite;
 }
 
 .ambient-glow {
   position: absolute;
   border-radius: 9999px;
   filter: blur(110px);
-  pointer-events: none;
   will-change: transform, opacity;
+  pointer-events: none;
 }
 
 .ambient-glow--top {
-  top: 6%;
+  top: -4rem;
   left: 50%;
-  width: 70rem;
-  height: 20rem;
+  width: 54rem;
+  height: 14rem;
   transform: translateX(-50%);
-  opacity: 0.42;
-  background: radial-gradient(ellipse at center, rgba(154, 112, 53, 0.12) 0%, rgba(154, 112, 53, 0.04) 50%, transparent 78%);
+  opacity: 0.28;
+  background: radial-gradient(ellipse at center, rgba(154, 112, 53, 0.14) 0%, rgba(154, 112, 53, 0.04) 44%, transparent 74%);
 }
 
 .dark .ambient-glow--top {
-  opacity: 0.56;
-  background: radial-gradient(ellipse at center, rgba(199, 163, 106, 0.14) 0%, rgba(199, 163, 106, 0.05) 50%, transparent 78%);
+  opacity: 0.38;
+  background: radial-gradient(ellipse at center, rgba(199, 163, 106, 0.16) 0%, rgba(199, 163, 106, 0.05) 44%, transparent 74%);
 }
 
 .ambient-glow--center {
-  top: 28%;
+  top: 18%;
   left: 50%;
   width: 58rem;
-  height: 34rem;
+  height: 32rem;
   transform: translateX(-50%);
-  opacity: 0.3;
-  background: radial-gradient(ellipse at center, rgba(154, 112, 53, 0.08) 0%, rgba(154, 112, 53, 0.03) 46%, transparent 78%);
+  opacity: 0.34;
+  background: radial-gradient(ellipse at center, rgba(154, 112, 53, 0.08) 0%, rgba(154, 112, 53, 0.03) 38%, transparent 72%);
 }
 
 .dark .ambient-glow--center {
-  opacity: 0.42;
-  background: radial-gradient(ellipse at center, rgba(199, 163, 106, 0.09) 0%, rgba(199, 163, 106, 0.035) 46%, transparent 78%);
+  opacity: 0.48;
+  background: radial-gradient(ellipse at center, rgba(199, 163, 106, 0.1) 0%, rgba(199, 163, 106, 0.035) 38%, transparent 72%);
 }
 
 .ambient-glow--bottom {
-  right: -8rem;
-  bottom: -2rem;
+  right: -5rem;
+  bottom: 0;
   width: 30rem;
-  height: 22rem;
-  opacity: 0.28;
-  background: radial-gradient(ellipse at center, rgba(74, 115, 96, 0.08) 0%, rgba(74, 115, 96, 0.03) 44%, transparent 76%);
+  height: 20rem;
+  opacity: 0.22;
+  background: radial-gradient(ellipse at center, rgba(74, 115, 96, 0.08) 0%, rgba(74, 115, 96, 0.03) 40%, transparent 72%);
 }
 
 .dark .ambient-glow--bottom {
-  opacity: 0.4;
-  background: radial-gradient(ellipse at center, rgba(46, 94, 82, 0.11) 0%, rgba(46, 94, 82, 0.04) 44%, transparent 76%);
+  opacity: 0.34;
+  background: radial-gradient(ellipse at center, rgba(46, 94, 82, 0.1) 0%, rgba(46, 94, 82, 0.04) 40%, transparent 72%);
 }
 
 .ambient-texture {
   position: absolute;
   inset: 0;
-  opacity: 0.12;
+  opacity: 0.08;
   background-image:
-    linear-gradient(rgba(154, 112, 53, 0.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(154, 112, 53, 0.018) 1px, transparent 1px);
-  background-size: 120px 120px;
+    linear-gradient(rgba(154, 112, 53, 0.014) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(154, 112, 53, 0.014) 1px, transparent 1px);
+  background-size: 132px 132px;
 }
 
 .dark .ambient-texture {
-  opacity: 0.08;
+  opacity: 0.06;
   background-image:
     linear-gradient(rgba(199, 163, 106, 0.012) 1px, transparent 1px),
     linear-gradient(90deg, rgba(199, 163, 106, 0.012) 1px, transparent 1px);
@@ -922,11 +924,11 @@ button,
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse 90% 78% at 50% 44%, transparent 0%, transparent 60%, rgba(87, 63, 38, 0.07) 100%);
+  background: radial-gradient(ellipse 92% 80% at 50% 46%, transparent 0%, transparent 58%, rgba(0, 0, 0, 0.08) 100%);
 }
 
 .dark .ambient-vignette {
-  background: radial-gradient(ellipse 90% 78% at 50% 44%, transparent 0%, transparent 54%, rgba(4, 6, 10, 0.34) 100%);
+  background: radial-gradient(ellipse 92% 80% at 50% 46%, transparent 0%, transparent 54%, rgba(4, 6, 10, 0.34) 100%);
 }
 
 @keyframes ambient-wave-gold {
@@ -937,7 +939,7 @@ button,
   }
 
   50% {
-    transform: translate3d(5vw, 1.6vh, 0) rotate(-3deg) scale(1.015);
+    transform: translate3d(4vw, 1.2vh, 0) rotate(-3deg) scale(1.01);
   }
 }
 
@@ -949,7 +951,7 @@ button,
   }
 
   50% {
-    transform: translate3d(-6vw, -2vh, 0) rotate(6deg) scale(1.02);
+    transform: translate3d(-5vw, -1.6vh, 0) rotate(6deg) scale(1.012);
   }
 }
 
@@ -961,7 +963,49 @@ button,
   }
 
   50% {
-    transform: translate3d(4vw, -1vh, 0) rotate(0deg) scale(1.012);
+    transform: translate3d(3vw, -0.8vh, 0) rotate(0deg) scale(1.008);
+  }
+}
+
+@keyframes ambient-particles-drift-a {
+
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.28;
+  }
+
+  50% {
+    transform: translate3d(2vw, -1vh, 0);
+    opacity: 0.42;
+  }
+}
+
+@keyframes ambient-particles-drift-b {
+
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.22;
+  }
+
+  50% {
+    transform: translate3d(-2vw, 1vh, 0);
+    opacity: 0.34;
+  }
+}
+
+@keyframes ambient-particles-drift-c {
+
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.16;
+  }
+
+  50% {
+    transform: translate3d(1.5vw, -0.6vh, 0);
+    opacity: 0.24;
   }
 }
 
@@ -970,12 +1014,12 @@ button,
   0%,
   100% {
     transform: translateX(-50%) scale(1);
-    opacity: 0.42;
+    opacity: 0.34;
   }
 
   50% {
-    transform: translateX(-50%) scale(1.025);
-    opacity: 0.5;
+    transform: translateX(-50%) scale(1.02);
+    opacity: 0.42;
   }
 }
 
@@ -984,12 +1028,12 @@ button,
   0%,
   100% {
     transform: translateX(-50%) scale(1);
-    opacity: 0.3;
+    opacity: 0.44;
   }
 
   50% {
-    transform: translateX(-50%) scale(1.03);
-    opacity: 0.38;
+    transform: translateX(-50%) scale(1.025);
+    opacity: 0.54;
   }
 }
 
@@ -998,50 +1042,50 @@ button,
   0%,
   100% {
     transform: scale(1);
-    opacity: 0.28;
+    opacity: 0.24;
   }
 
   50% {
-    transform: scale(1.035);
-    opacity: 0.34;
+    transform: scale(1.03);
+    opacity: 0.32;
   }
 }
 
 .animate-ambient-breathe-top {
-  animation: ambient-breathe-top 22s ease-in-out infinite;
+  animation: ambient-breathe-top 20s ease-in-out infinite;
 }
 
 .animate-ambient-breathe-center {
-  animation: ambient-breathe-center 20s ease-in-out infinite;
+  animation: ambient-breathe-center 24s ease-in-out infinite;
 }
 
 .animate-ambient-breathe-bottom {
-  animation: ambient-breathe-bottom 24s ease-in-out infinite;
+  animation: ambient-breathe-bottom 28s ease-in-out infinite;
 }
 
 @media (max-width: 768px) {
-  .ambient-silk-svg {
-    inset: -16%;
-    width: 132%;
-    height: 132%;
+  .ambient-dust-svg {
+    inset: -10%;
+    width: 120%;
+    height: 120%;
   }
 
   .ambient-glow--top {
-    width: 44rem;
-    height: 16rem;
-    top: 8%;
+    width: 34rem;
+    height: 10rem;
+    top: -3rem;
   }
 
   .ambient-glow--center {
-    width: 34rem;
+    width: 36rem;
     height: 24rem;
-    top: 30%;
+    top: 22%;
   }
 
   .ambient-glow--bottom {
-    width: 22rem;
-    height: 18rem;
-    right: -5rem;
+    width: 20rem;
+    height: 16rem;
+    right: -4rem;
   }
 
   .ambient-texture {
@@ -1052,6 +1096,7 @@ button,
 @media (prefers-reduced-motion: reduce) {
 
   .ambient-wave,
+  .ambient-particles,
   .ambient-glow {
     animation: none !important;
     transform: none !important;

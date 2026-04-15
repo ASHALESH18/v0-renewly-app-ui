@@ -134,55 +134,47 @@ export function DashboardScreen({
             transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="rounded-[32px] overflow-hidden relative"
           >
-            {/* Subtle local wash so the global ambient system shows through cleanly */}
+            {/* Local matte wash - supports the global ambient background */}
             <div className="absolute inset-0">
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,253,249,0.72),rgba(248,241,231,0.56))] dark:bg-[linear-gradient(180deg,rgba(19,22,28,0.82),rgba(10,12,17,0.76))]" />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,253,249,0.68),rgba(248,241,231,0.48))] dark:bg-[linear-gradient(180deg,rgba(19,22,28,0.76),rgba(10,12,17,0.7))]" />
 
-              <motion.div
-                className="absolute -top-24 right-6 w-72 h-72 rounded-full blur-[96px]"
-                style={{ background: 'radial-gradient(circle, rgba(199, 163, 106, 0.16) 0%, transparent 72%)' }}
-                animate={{ opacity: [0.3, 0.45, 0.3], scale: [1, 1.04, 1] }}
-                transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+              <div
+                className="absolute -top-20 right-6 w-64 h-64 rounded-full blur-[110px]"
+                style={{ background: 'radial-gradient(circle, rgba(199, 163, 106, 0.1) 0%, transparent 72%)' }}
               />
 
-              <motion.div
-                className="absolute -bottom-20 left-4 w-64 h-64 rounded-full blur-[100px]"
-                style={{ background: 'radial-gradient(circle, rgba(46, 94, 82, 0.12) 0%, transparent 74%)' }}
-                animate={{ opacity: [0.18, 0.3, 0.18], scale: [1, 1.03, 1] }}
-                transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+              <div
+                className="absolute -bottom-16 left-4 w-56 h-56 rounded-full blur-[120px]"
+                style={{ background: 'radial-gradient(circle, rgba(46, 94, 82, 0.08) 0%, transparent 74%)' }}
               />
 
-              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
+              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/16 to-transparent" />
             </div>
 
             <div className="relative glass-premium border border-gold/10 p-8 md:p-10 shadow-card">
-              {/* DRAMATIC: Glowing eyebrow badge */}
+              {/* Command Center eyebrow */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
                 className="flex items-center gap-2 mb-8"
               >
-                <div className="relative">
-                  {/* Glow behind badge */}
-                  <div className="absolute inset-0 rounded-full bg-gold/20 blur-md" />
-                  <div className="relative flex items-center gap-2.5 px-4 py-2 rounded-full bg-gold/10 border border-gold/25 backdrop-blur-sm">
-                    <motion.div
-                      className="relative w-2.5 h-2.5"
-                      animate={{ scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      <span className="absolute inset-0 rounded-full bg-gold" />
-                      <span className="absolute inset-0 rounded-full bg-gold blur-sm" />
-                    </motion.div>
-                    <span className="text-xs font-semibold text-gold tracking-wider uppercase">Financial Command Center</span>
-                  </div>
+                <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-gold/8 border border-gold/20 backdrop-blur-sm">
+                  <motion.div
+                    className="relative w-2.5 h-2.5"
+                    animate={{ scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <span className="absolute inset-0 rounded-full bg-gold" />
+                    <span className="absolute inset-0 rounded-full bg-gold blur-sm" />
+                  </motion.div>
+                  <span className="text-xs font-semibold text-gold tracking-wider uppercase">
+                    Financial Command Center
+                  </span>
                 </div>
               </motion.div>
 
-              {/* DRAMATIC: Premium metrics grid with floating cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-10">
-                {/* Monthly Spend - Primary metric with glow */}
                 <motion.div
                   initial={{ opacity: 0, y: 30, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -190,10 +182,9 @@ export function DashboardScreen({
                   whileHover={{ y: -4, transition: { duration: 0.2 } }}
                   className="relative p-6 rounded-2xl bg-card/40 backdrop-blur-xl border border-gold/15 group"
                 >
-                  {/* Ambient glow on hover */}
                   <motion.div
                     className="absolute -inset-2 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                    style={{ background: 'radial-gradient(circle at center, rgba(199, 163, 106, 0.15) 0%, transparent 70%)' }}
+                    style={{ background: 'radial-gradient(circle at center, rgba(199, 163, 106, 0.08) 0%, transparent 70%)' }}
                   />
                   <div className="relative">
                     <p className="text-sm text-muted-foreground mb-3 font-medium">Monthly Spend</p>
@@ -210,7 +201,6 @@ export function DashboardScreen({
                   </div>
                 </motion.div>
 
-                {/* Annual Projected */}
                 <motion.div
                   initial={{ opacity: 0, y: 30, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -220,7 +210,7 @@ export function DashboardScreen({
                 >
                   <motion.div
                     className="absolute -inset-2 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                    style={{ background: 'radial-gradient(circle at center, rgba(188, 194, 204, 0.08) 0%, transparent 70%)' }}
+                    style={{ background: 'radial-gradient(circle at center, rgba(188, 194, 204, 0.04) 0%, transparent 70%)' }}
                   />
                   <div className="relative">
                     <p className="text-sm text-muted-foreground mb-3 font-medium">Annual Projected</p>
@@ -232,7 +222,6 @@ export function DashboardScreen({
                   </div>
                 </motion.div>
 
-                {/* Potential Savings - with emerald glow */}
                 <motion.div
                   initial={{ opacity: 0, y: 30, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -240,10 +229,9 @@ export function DashboardScreen({
                   whileHover={{ y: -4, transition: { duration: 0.2 } }}
                   className="relative p-6 rounded-2xl bg-gradient-to-br from-emerald/8 to-emerald/3 backdrop-blur-xl border border-emerald/20 group"
                 >
-                  {/* Emerald glow effect */}
                   <motion.div
                     className="absolute -inset-2 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                    style={{ background: 'radial-gradient(circle at center, rgba(46, 94, 82, 0.2) 0%, transparent 70%)' }}
+                    style={{ background: 'radial-gradient(circle at center, rgba(46, 94, 82, 0.1) 0%, transparent 70%)' }}
                   />
                   <div className="relative">
                     <p className="text-sm text-muted-foreground mb-3 font-medium">Potential Savings</p>
@@ -257,7 +245,6 @@ export function DashboardScreen({
                 </motion.div>
               </div>
 
-              {/* Health score section */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -266,8 +253,7 @@ export function DashboardScreen({
               >
                 <div className="flex items-center gap-4">
                   <div className="relative w-16 h-16">
-                    {/* Glow effect behind ring */}
-                    <div className="absolute inset-0 rounded-full bg-gold/20 blur-lg animate-glow-pulse" />
+                    <div className="absolute inset-0 rounded-full bg-gold/10 blur-md opacity-70" />
                     <svg className="relative w-full h-full transform -rotate-90">
                       <circle
                         cx="32"
