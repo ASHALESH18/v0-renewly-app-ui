@@ -101,7 +101,7 @@ export function LeakReportScreen({
 
   if (!mounted) {
     return (
-      <PageTransition className="min-h-screen">
+      <PageTransition className="min-h-screen bg-transparent">
         <Header
           title="Leak Report"
           subtitle="Loading..."
@@ -151,6 +151,8 @@ export function LeakReportScreen({
     topCategory: topCategoryName,
     savingsPotential: metrics.savingsPotential,
     upcomingRenewalsCount: upcoming.length,
+    preferredCurrency,
+    preferredLanguage,
   })
 
   const handleShare = async () => {
@@ -195,7 +197,7 @@ export function LeakReportScreen({
   }
 
   return (
-    <PageTransition className="min-h-screen">
+    <PageTransition className="min-h-screen bg-transparent">
       <Header
         title="Leak Report"
         subtitle="Your financial health snapshot"
@@ -211,36 +213,27 @@ export function LeakReportScreen({
           transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="relative rounded-[28px] overflow-hidden"
         >
-          {/* Cinematic ambient background */}
           <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-card via-card to-secondary/30 dark:from-graphite dark:via-obsidian dark:to-slate/20" />
-            
-            {/* Animated glow orbs */}
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,253,249,0.76),rgba(248,241,231,0.58))] dark:bg-[linear-gradient(180deg,rgba(19,22,28,0.84),rgba(10,12,17,0.78))]" />
+
             <motion.div
-              className="absolute -top-32 -right-32 w-96 h-96 rounded-full blur-[100px]"
-              style={{ background: 'radial-gradient(circle, rgba(199, 163, 106, 0.15) 0%, transparent 70%)' }}
-              animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
-              transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute -top-24 right-0 w-72 h-72 rounded-full blur-[96px]"
+              style={{ background: 'radial-gradient(circle, rgba(199, 163, 106, 0.14) 0%, transparent 72%)' }}
+              animate={{ opacity: [0.28, 0.42, 0.28], scale: [1, 1.04, 1] }}
+              transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
             />
+
             <motion.div
-              className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full blur-[80px]"
-              style={{ background: 'radial-gradient(circle, rgba(46, 94, 82, 0.12) 0%, transparent 70%)' }}
-              animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.5, 0.3] }}
-              transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+              className="absolute -bottom-20 -left-8 w-56 h-56 rounded-full blur-[96px]"
+              style={{ background: 'radial-gradient(circle, rgba(46, 94, 82, 0.1) 0%, transparent 74%)' }}
+              animate={{ opacity: [0.16, 0.28, 0.16], scale: [1, 1.03, 1] }}
+              transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
             />
-            
-            {/* Subtle grid */}
-            <div 
-              className="absolute inset-0 opacity-[0.02]"
-              style={{
-                backgroundImage: 'linear-gradient(rgba(199, 163, 106, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(199, 163, 106, 0.5) 1px, transparent 1px)',
-                backgroundSize: '40px 40px'
-              }}
-            />
+
+            <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
           </div>
 
-          {/* Premium glass surface */}
-          <div className="relative glass-premium border border-gold/10 p-8 md:p-12">
+          <div className="relative glass-premium border border-gold/10 p-8 md:p-12 shadow-card">
 
             <div className="relative z-10">
               {/* Header */}
@@ -667,11 +660,13 @@ function generateObservations(data: {
   topCategory: string
   savingsPotential: number
   upcomingRenewalsCount: number
+  preferredCurrency: string
+  preferredLanguage: string
 }): string[] {
   const observations: string[] = []
 
   if (data.leakScore < 50) {
-    observations.push(`Your subscription health shows significant optimization opportunities. You could potentially recover ${formatMoney(data.savingsPotential, preferredCurrency, preferredLanguage)} each month by reviewing flagged services.`)
+    observations.push(`Your subscription health shows significant optimization opportunities. You could potentially recover ${formatMoney(data.savingsPotential, data.preferredCurrency, data.preferredLanguage)} each month by reviewing flagged services.`)
   } else if (data.leakScore < 75) {
     observations.push(`There are opportunities to improve your subscription efficiency. Consider reviewing unused services to reduce your monthly spend.`)
   } else {
@@ -679,7 +674,7 @@ function generateObservations(data: {
   }
 
   if (data.unusedCount > 0) {
-    observations.push(`You have ${data.unusedCount} unused subscription${data.unusedCount > 1 ? 's' : ''} consuming ${formatMoney(data.savingsPotential, preferredCurrency, preferredLanguage)} monthly. These are prime candidates for cancellation.`)
+    observations.push(`You have ${data.unusedCount} unused subscription${data.unusedCount > 1 ? 's' : ''} consuming ${formatMoney(data.savingsPotential, data.preferredCurrency, data.preferredLanguage)} monthly. These are prime candidates for cancellation.`)
   }
 
   if (data.topCategory && data.activeCount > 0) {

@@ -148,12 +148,12 @@ export function SettingsScreen() {
   // Avatar URL - use persisted URL if available, otherwise generate
   const avatarUrl = useMemo(() => {
     if (!userProfile) return null
-    
+
     // Prefer persisted avatar URL from database
     if (userProfile.avatarUrl) {
       return userProfile.avatarUrl
     }
-    
+
     // Fall back to generated avatar
     const seed = userProfile.avatarSeed || userProfile.email || 'default'
     return generateAvatar({ seed, size: 128 })
@@ -313,7 +313,7 @@ export function SettingsScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-transparent pb-24">
       {/* Header */}
       <div className="px-4 pt-8 pb-6 lg:px-6">
         <motion.div
@@ -541,10 +541,10 @@ export function SettingsScreen() {
           onSave={(data) => {
             if (userProfile) {
               // Update store with new profile data including avatar
-              setUserProfile({ 
-                ...userProfile, 
+              setUserProfile({
+                ...userProfile,
                 name: data.name,
-                avatarUrl: data.avatarUrl, 
+                avatarUrl: data.avatarUrl,
                 timeZone: data.timezone,
               })
             }
@@ -887,9 +887,9 @@ function SettingsItem({
       )}
     >
       <div className={cn(
-        "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all", 
-        disabled 
-          ? "bg-muted/30" 
+        "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all",
+        disabled
+          ? "bg-muted/30"
           : "bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/10 group-hover:border-gold/20"
       )}>
         <Icon className="w-5 h-5 text-gold" />
@@ -978,7 +978,7 @@ const COMMON_TIMEZONES = [
 const AVATAR_STYLES = [
   'thumbs',
   'shapes',
-  'initials', 
+  'initials',
   'bottts',
   'identicon',
   'rings',
@@ -993,17 +993,17 @@ function generateAvatarUrl(baseSeed: string, variation: number = 0): string {
   // Combine seed with variation number to create unique avatars
   const uniqueSeed = `${baseSeed}-v${variation}-${Date.now()}`
   const encodedSeed = encodeURIComponent(uniqueSeed)
-  
+
   // Cycle through different styles based on variation
   const styleIndex = variation % AVATAR_STYLES.length
   const style = AVATAR_STYLES[styleIndex]
-  
+
   // DiceBear v7 API with Renewly gold accent
   if (style === 'initials') {
     // Use UI Avatars for initials style - cleaner look
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(baseSeed)}&background=c7a36a&color=0a0d12&size=128&bold=true&format=svg`
   }
-  
+
   // DiceBear styles with gold background
   return `https://api.dicebear.com/7.x/${style}/svg?seed=${encodedSeed}&backgroundColor=c7a36a&size=128`
 }
@@ -1039,15 +1039,15 @@ function ProfileForm({
   const handleRegenerateAvatar = () => {
     setIsRegenerating(true)
     setAvatarError(false)
-    
+
     // Increment variation to get a genuinely new avatar
     const newVariation = avatarVariation + 1
     const seed = name || userProfile?.email || 'user'
     const newUrl = generateAvatarUrl(seed, newVariation)
-    
+
     setAvatarVariation(newVariation)
     setAvatarUrl(newUrl)
-    
+
     // Brief delay for visual feedback
     setTimeout(() => setIsRegenerating(false), 400)
   }
