@@ -214,29 +214,23 @@ export function LeakReportScreen({
           className="relative rounded-[28px] overflow-hidden"
         >
           <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,253,249,0.76),rgba(248,241,231,0.58))] dark:bg-[linear-gradient(180deg,rgba(19,22,28,0.84),rgba(10,12,17,0.78))]" />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,253,249,0.7),rgba(248,241,231,0.5))] dark:bg-[linear-gradient(180deg,rgba(19,22,28,0.78),rgba(10,12,17,0.72))]" />
 
-            <motion.div
-              className="absolute -top-24 right-0 w-72 h-72 rounded-full blur-[96px]"
-              style={{ background: 'radial-gradient(circle, rgba(199, 163, 106, 0.14) 0%, transparent 72%)' }}
-              animate={{ opacity: [0.28, 0.42, 0.28], scale: [1, 1.04, 1] }}
-              transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+            <div
+              className="absolute -top-20 right-0 w-64 h-64 rounded-full blur-[110px]"
+              style={{ background: 'radial-gradient(circle, rgba(199, 163, 106, 0.1) 0%, transparent 72%)' }}
             />
 
-            <motion.div
-              className="absolute -bottom-20 -left-8 w-56 h-56 rounded-full blur-[96px]"
-              style={{ background: 'radial-gradient(circle, rgba(46, 94, 82, 0.1) 0%, transparent 74%)' }}
-              animate={{ opacity: [0.16, 0.28, 0.16], scale: [1, 1.03, 1] }}
-              transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+            <div
+              className="absolute -bottom-16 -left-6 w-52 h-52 rounded-full blur-[110px]"
+              style={{ background: 'radial-gradient(circle, rgba(46, 94, 82, 0.08) 0%, transparent 74%)' }}
             />
 
-            <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
+            <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/16 to-transparent" />
           </div>
 
           <div className="relative glass-premium border border-gold/10 p-8 md:p-12 shadow-card">
-
             <div className="relative z-10">
-              {/* Header */}
               <div className="flex items-start justify-between mb-12">
                 <div>
                   <motion.p
@@ -251,7 +245,8 @@ export function LeakReportScreen({
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 }}
-                    className={cn('flex items-center gap-2 px-4 py-2 rounded-full font-semibold',
+                    className={cn(
+                      'flex items-center gap-2 px-4 py-2 rounded-full font-semibold',
                       statusConfig.bgColor,
                       statusConfig.textColor,
                       statusConfig.borderColor,
@@ -264,7 +259,6 @@ export function LeakReportScreen({
                   </motion.div>
                 </div>
 
-                {/* Action buttons */}
                 <div className="flex items-center gap-2">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
@@ -285,7 +279,6 @@ export function LeakReportScreen({
                 </div>
               </div>
 
-              {/* Oversized score display */}
               <div className="mb-8">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.5 }}
@@ -297,12 +290,13 @@ export function LeakReportScreen({
                     <div className="text-8xl md:text-9xl font-black text-gold mb-2 leading-none">
                       <AnimatedLeakScore />
                     </div>
-                    <p className="text-sm font-medium text-platinum uppercase tracking-wider">out of 100</p>
+                    <p className="text-sm font-medium text-platinum uppercase tracking-wider">
+                      out of 100
+                    </p>
                   </div>
                 </motion.div>
               </div>
 
-              {/* Key metrics grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <MetricCard
                   label="Monthly Recurring"
