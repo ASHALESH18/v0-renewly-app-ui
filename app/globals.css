@@ -747,376 +747,350 @@ button,
 }
 
 /* ============================================ */
-/* PREMIUM AMBIENT BACKGROUND SYSTEM */
-/* Flowing silk ribbons - visible, calm, matte, luxurious */
+/* GLOBAL AMBIENT BACKGROUND SYSTEM */
+/* Matte premium, calm, visible, slow silk flow */
 /* ============================================ */
 
-/* LAYER 1: Deep Base Surface */
 .ambient-base {
   position: absolute;
   inset: 0;
-  /* Light mode: warm pearl with gentle graphite depth */
-  background: 
-    radial-gradient(ellipse 140% 100% at 25% 15%, rgba(199, 163, 106, 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 120% 80% at 75% 85%, rgba(46, 94, 82, 0.04) 0%, transparent 55%),
-    linear-gradient(180deg, #FAF5ED 0%, #F0E8DB 40%, #E8DFD0 70%, #E0D5C5 100%);
+  background:
+    radial-gradient(1200px 720px at 20% 8%, rgba(154, 112, 53, 0.08) 0%, transparent 60%),
+    radial-gradient(1000px 680px at 82% 92%, rgba(74, 115, 96, 0.08) 0%, transparent 56%),
+    linear-gradient(180deg, #FBF7F0 0%, #F4ECDD 42%, #EBDDCA 78%, #E3D4C0 100%);
 }
 
 .dark .ambient-base {
-  /* Dark mode: rich obsidian/graphite with subtle tonal variation - NOT flat black */
-  background: 
-    radial-gradient(ellipse 150% 100% at 20% 10%, rgba(199, 163, 106, 0.05) 0%, transparent 55%),
-    radial-gradient(ellipse 130% 90% at 80% 90%, rgba(46, 94, 82, 0.03) 0%, transparent 50%),
-    radial-gradient(ellipse 100% 60% at 50% 50%, rgba(20, 24, 32, 1) 0%, transparent 80%),
-    linear-gradient(180deg, #0A0A0D 0%, #0E1015 25%, #12161E 50%, #0E1015 75%, #0A0A0D 100%);
+  background:
+    radial-gradient(1400px 860px at 16% 6%, rgba(199, 163, 106, 0.08) 0%, transparent 58%),
+    radial-gradient(1200px 760px at 84% 92%, rgba(46, 94, 82, 0.08) 0%, transparent 54%),
+    radial-gradient(900px 520px at 50% 42%, rgba(255, 255, 255, 0.02) 0%, transparent 68%),
+    linear-gradient(180deg, #07090C 0%, #0A0D12 28%, #0D1118 58%, #0A0D12 82%, #07090C 100%);
 }
 
-/* LAYER 2: Flowing Ribbon Bands */
 .ambient-ribbon {
   position: absolute;
-  border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
-  filter: blur(120px);
+  left: -20vw;
+  width: 140vw;
+  border-radius: 9999px;
+  filter: blur(42px);
   will-change: transform, opacity;
-}
-
-/* Primary Gold Ribbon - widest, most visible, soft champagne glow */
-.ambient-ribbon--gold-primary {
-  width: 1200px;
-  height: 500px;
-  top: 0%;
-  left: -15%;
-  background: linear-gradient(
-    140deg,
-    rgba(199, 163, 106, 0.18) 0%,
-    rgba(199, 163, 106, 0.12) 30%,
-    rgba(180, 150, 100, 0.1) 60%,
-    rgba(160, 130, 90, 0.06) 100%
-  );
-  opacity: 0.85;
-}
-
-.dark .ambient-ribbon--gold-primary {
-  background: linear-gradient(
-    140deg,
-    rgba(199, 163, 106, 0.22) 0%,
-    rgba(199, 163, 106, 0.14) 30%,
-    rgba(180, 150, 100, 0.1) 60%,
-    rgba(160, 130, 90, 0.05) 100%
-  );
-  opacity: 0.9;
-}
-
-/* Amber Ribbon - warm matte diagonal band */
-.ambient-ribbon--amber {
-  width: 1000px;
-  height: 400px;
-  top: 30%;
-  right: -10%;
-  background: linear-gradient(
-    -50deg,
-    rgba(160, 120, 70, 0.14) 0%,
-    rgba(140, 100, 60, 0.1) 40%,
-    rgba(120, 85, 50, 0.06) 100%
-  );
-  opacity: 0.75;
-  transform: rotate(-12deg);
-}
-
-.dark .ambient-ribbon--amber {
-  background: linear-gradient(
-    -50deg,
-    rgba(160, 120, 70, 0.18) 0%,
-    rgba(140, 100, 60, 0.12) 40%,
-    rgba(120, 85, 50, 0.06) 100%
-  );
-  opacity: 0.8;
-}
-
-/* Graphite-Green Ribbon - muted emerald cool contrast */
-.ambient-ribbon--blue {
-  width: 1100px;
-  height: 450px;
-  bottom: 5%;
-  left: 5%;
-  background: linear-gradient(
-    50deg,
-    rgba(46, 94, 82, 0.12) 0%,
-    rgba(60, 90, 85, 0.08) 40%,
-    rgba(80, 100, 95, 0.05) 100%
-  );
-  opacity: 0.7;
-}
-
-.dark .ambient-ribbon--blue {
-  background: linear-gradient(
-    50deg,
-    rgba(46, 94, 82, 0.15) 0%,
-    rgba(60, 90, 85, 0.1) 40%,
-    rgba(80, 100, 95, 0.05) 100%
-  );
-  opacity: 0.75;
-}
-
-/* Soft Platinum Haze - subtle top accent */
-.ambient-ribbon--gold-soft {
-  width: 900px;
-  height: 300px;
-  top: -8%;
-  right: 15%;
-  background: linear-gradient(
-    95deg,
-    transparent 0%,
-    rgba(229, 228, 226, 0.06) 20%,
-    rgba(199, 163, 106, 0.1) 50%,
-    rgba(229, 228, 226, 0.06) 80%,
-    transparent 100%
-  );
-  opacity: 0.6;
-}
-
-.dark .ambient-ribbon--gold-soft {
-  background: linear-gradient(
-    95deg,
-    transparent 0%,
-    rgba(229, 228, 226, 0.04) 20%,
-    rgba(199, 163, 106, 0.12) 50%,
-    rgba(229, 228, 226, 0.04) 80%,
-    transparent 100%
-  );
-  opacity: 0.7;
-}
-
-/* LAYER 3: Depth Glows - softer, lower contrast */
-.ambient-glow {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(140px);
-  will-change: transform, opacity;
-}
-
-/* Central warm glow - soft champagne haze behind content */
-.ambient-glow--center {
-  width: 1000px;
-  height: 700px;
-  top: 25%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: radial-gradient(
-    ellipse at center,
-    rgba(199, 163, 106, 0.08) 0%,
-    rgba(199, 163, 106, 0.04) 50%,
-    transparent 80%
-  );
-  opacity: 0.7;
-}
-
-.dark .ambient-glow--center {
-  background: radial-gradient(
-    ellipse at center,
-    rgba(199, 163, 106, 0.1) 0%,
-    rgba(199, 163, 106, 0.05) 50%,
-    transparent 80%
-  );
-  opacity: 0.8;
-}
-
-/* Lower muted glow - graphite-green for depth */
-.ambient-glow--lower {
-  width: 800px;
-  height: 500px;
-  bottom: 0%;
-  right: 5%;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(46, 94, 82, 0.06) 0%,
-    rgba(46, 94, 82, 0.03) 50%,
-    transparent 80%
-  );
-  opacity: 0.6;
-}
-
-.dark .ambient-glow--lower {
-  background: radial-gradient(
-    ellipse at center,
-    rgba(46, 94, 82, 0.08) 0%,
-    rgba(46, 94, 82, 0.04) 50%,
-    transparent 80%
-  );
-  opacity: 0.7;
-}
-
-/* LAYER 4: Fine Texture - very subtle */
-.ambient-texture {
-  position: absolute;
-  inset: 0;
-  background-image: 
-    linear-gradient(rgba(199, 163, 106, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(199, 163, 106, 0.015) 1px, transparent 1px);
-  background-size: 80px 80px;
-  opacity: 0.2;
-}
-
-.dark .ambient-texture {
-  background-image: 
-    linear-gradient(rgba(199, 163, 106, 0.01) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(199, 163, 106, 0.01) 1px, transparent 1px);
-  opacity: 0.15;
-}
-
-/* LAYER 5: Vignette - soft, premium edge darkening */
-.ambient-vignette {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    ellipse 85% 75% at 50% 50%,
-    transparent 0%,
-    transparent 60%,
-    rgba(87, 63, 38, 0.05) 100%
-  );
   pointer-events: none;
 }
 
+.ambient-ribbon--gold {
+  top: 14%;
+  height: 16rem;
+  opacity: 0.68;
+  background:
+    linear-gradient(90deg,
+      transparent 0%,
+      rgba(154, 112, 53, 0) 10%,
+      rgba(154, 112, 53, 0.04) 22%,
+      rgba(154, 112, 53, 0.10) 36%,
+      rgba(183, 146, 86, 0.16) 50%,
+      rgba(154, 112, 53, 0.10) 64%,
+      rgba(154, 112, 53, 0.04) 78%,
+      rgba(154, 112, 53, 0) 90%,
+      transparent 100%);
+}
+
+.dark .ambient-ribbon--gold {
+  opacity: 0.82;
+  background:
+    linear-gradient(90deg,
+      transparent 0%,
+      rgba(199, 163, 106, 0) 10%,
+      rgba(199, 163, 106, 0.05) 22%,
+      rgba(199, 163, 106, 0.14) 36%,
+      rgba(212, 184, 122, 0.24) 50%,
+      rgba(199, 163, 106, 0.14) 64%,
+      rgba(199, 163, 106, 0.05) 78%,
+      rgba(199, 163, 106, 0) 90%,
+      transparent 100%);
+}
+
+.ambient-ribbon--emerald {
+  top: 48%;
+  height: 15rem;
+  opacity: 0.56;
+  background:
+    linear-gradient(90deg,
+      transparent 0%,
+      rgba(74, 115, 96, 0) 12%,
+      rgba(74, 115, 96, 0.04) 24%,
+      rgba(74, 115, 96, 0.08) 38%,
+      rgba(96, 126, 114, 0.12) 50%,
+      rgba(74, 115, 96, 0.08) 62%,
+      rgba(74, 115, 96, 0.04) 76%,
+      rgba(74, 115, 96, 0) 88%,
+      transparent 100%);
+}
+
+.dark .ambient-ribbon--emerald {
+  opacity: 0.70;
+  background:
+    linear-gradient(90deg,
+      transparent 0%,
+      rgba(46, 94, 82, 0) 12%,
+      rgba(46, 94, 82, 0.04) 24%,
+      rgba(46, 94, 82, 0.10) 38%,
+      rgba(72, 110, 100, 0.16) 50%,
+      rgba(46, 94, 82, 0.10) 62%,
+      rgba(46, 94, 82, 0.04) 76%,
+      rgba(46, 94, 82, 0) 88%,
+      transparent 100%);
+}
+
+.ambient-ribbon--platinum {
+  top: 72%;
+  height: 12rem;
+  opacity: 0.44;
+  background:
+    linear-gradient(90deg,
+      transparent 0%,
+      rgba(74, 69, 64, 0) 10%,
+      rgba(74, 69, 64, 0.03) 24%,
+      rgba(74, 69, 64, 0.06) 38%,
+      rgba(154, 112, 53, 0.09) 52%,
+      rgba(74, 69, 64, 0.05) 66%,
+      rgba(74, 69, 64, 0.02) 80%,
+      rgba(74, 69, 64, 0) 92%,
+      transparent 100%);
+}
+
+.dark .ambient-ribbon--platinum {
+  opacity: 0.58;
+  background:
+    linear-gradient(90deg,
+      transparent 0%,
+      rgba(188, 194, 204, 0) 10%,
+      rgba(188, 194, 204, 0.02) 24%,
+      rgba(188, 194, 204, 0.06) 38%,
+      rgba(199, 163, 106, 0.09) 52%,
+      rgba(188, 194, 204, 0.05) 66%,
+      rgba(188, 194, 204, 0.02) 80%,
+      rgba(188, 194, 204, 0) 92%,
+      transparent 100%);
+}
+
+.ambient-glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(100px);
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+.ambient-glow--center {
+  top: 18%;
+  left: 50%;
+  width: 68rem;
+  height: 40rem;
+  transform: translateX(-50%);
+  opacity: 0.55;
+  background:
+    radial-gradient(ellipse at center,
+      rgba(154, 112, 53, 0.10) 0%,
+      rgba(154, 112, 53, 0.04) 38%,
+      transparent 72%);
+}
+
+.dark .ambient-glow--center {
+  opacity: 0.72;
+  background:
+    radial-gradient(ellipse at center,
+      rgba(199, 163, 106, 0.12) 0%,
+      rgba(199, 163, 106, 0.05) 38%,
+      transparent 72%);
+}
+
+.ambient-glow--edge {
+  right: -8rem;
+  bottom: 2rem;
+  width: 38rem;
+  height: 28rem;
+  opacity: 0.42;
+  background:
+    radial-gradient(ellipse at center,
+      rgba(74, 115, 96, 0.10) 0%,
+      rgba(74, 115, 96, 0.04) 40%,
+      transparent 72%);
+}
+
+.dark .ambient-glow--edge {
+  opacity: 0.56;
+  background:
+    radial-gradient(ellipse at center,
+      rgba(46, 94, 82, 0.12) 0%,
+      rgba(46, 94, 82, 0.05) 40%,
+      transparent 72%);
+}
+
+.ambient-texture {
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+  background-image:
+    linear-gradient(rgba(154, 112, 53, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(154, 112, 53, 0.02) 1px, transparent 1px);
+  background-size: 112px 112px;
+}
+
+.dark .ambient-texture {
+  opacity: 0.12;
+  background-image:
+    linear-gradient(rgba(199, 163, 106, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(199, 163, 106, 0.015) 1px, transparent 1px);
+}
+
+.ambient-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 88% 76% at 50% 46%,
+      transparent 0%,
+      transparent 56%,
+      rgba(0, 0, 0, 0.10) 100%);
+}
+
 .dark .ambient-vignette {
-  background: radial-gradient(
-    ellipse 85% 75% at 50% 50%,
-    transparent 0%,
-    transparent 50%,
-    rgba(10, 10, 13, 0.35) 100%
-  );
+  background:
+    radial-gradient(ellipse 88% 76% at 50% 46%,
+      transparent 0%,
+      transparent 52%,
+      rgba(4, 6, 10, 0.34) 100%);
 }
 
-/* ============================================ */
-/* FLOWING RIBBON ANIMATIONS */
-/* Slow, smooth, river-like motion */
-/* ============================================ */
+@keyframes ambient-flow-gold {
 
-/* Primary gold ribbon - slow horizontal drift */
-@keyframes ribbon-flow-1 {
-  0%, 100% {
-    transform: translateX(0) translateY(0) scale(1);
-    opacity: 0.85;
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-7deg) scale(1);
   }
-  25% {
-    transform: translateX(60px) translateY(20px) scale(1.01);
-    opacity: 0.9;
-  }
+
   50% {
-    transform: translateX(100px) translateY(10px) scale(1.005);
-    opacity: 0.88;
-  }
-  75% {
-    transform: translateX(40px) translateY(-15px) scale(1.008);
-    opacity: 0.85;
+    transform: translate3d(8vw, 2vh, 0) rotate(-5deg) scale(1.02);
   }
 }
 
-/* Amber ribbon - diagonal drift */
-@keyframes ribbon-flow-2 {
-  0%, 100% {
-    transform: rotate(-12deg) translateX(0) translateY(0);
-    opacity: 0.75;
+@keyframes ambient-flow-emerald {
+
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(5deg) scale(1);
   }
-  33% {
-    transform: rotate(-10deg) translateX(-40px) translateY(25px);
-    opacity: 0.8;
-  }
-  66% {
-    transform: rotate(-14deg) translateX(30px) translateY(-20px);
-    opacity: 0.78;
+
+  50% {
+    transform: translate3d(-7vw, -2vh, 0) rotate(7deg) scale(1.018);
   }
 }
 
-/* Graphite-green ribbon - horizontal counter-drift */
-@keyframes ribbon-flow-3 {
-  0%, 100% {
-    transform: translateX(0) translateY(0) scale(1);
-    opacity: 0.7;
+@keyframes ambient-flow-platinum {
+
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-3deg) scale(1);
   }
-  30% {
-    transform: translateX(-60px) translateY(-25px) scale(1.005);
-    opacity: 0.75;
+
+  50% {
+    transform: translate3d(6vw, -1.5vh, 0) rotate(-1deg) scale(1.015);
   }
-  60% {
-    transform: translateX(-25px) translateY(15px) scale(1.01);
+}
+
+@keyframes ambient-breathe-center {
+
+  0%,
+  100% {
+    transform: translateX(-50%) scale(1);
     opacity: 0.72;
   }
-}
 
-/* Soft platinum ribbon - gentle vertical wave */
-@keyframes ribbon-flow-4 {
-  0%, 100% {
-    transform: translateY(0) scaleX(1);
-    opacity: 0.6;
-  }
   50% {
-    transform: translateY(20px) scaleX(1.03);
-    opacity: 0.7;
+    transform: translateX(-50%) scale(1.035);
+    opacity: 0.82;
   }
 }
 
-/* Glow breathing - slow, subtle */
-@keyframes glow-breathe-slow {
-  0%, 100% {
-    transform: translateX(-50%) scale(1);
-    opacity: 0.7;
-  }
-  50% {
-    transform: translateX(-50%) scale(1.03);
-    opacity: 0.8;
-  }
-}
+@keyframes ambient-breathe-edge {
 
-@keyframes glow-breathe-slow-delayed {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
-    opacity: 0.6;
+    opacity: 0.54;
   }
+
   50% {
-    transform: scale(1.02);
-    opacity: 0.7;
+    transform: scale(1.03);
+    opacity: 0.62;
   }
 }
 
-/* Animation classes */
-.animate-ribbon-flow-1 {
-  animation: ribbon-flow-1 32s ease-in-out infinite;
+.animate-ambient-flow-gold {
+  animation: ambient-flow-gold 34s ease-in-out infinite;
 }
 
-.animate-ribbon-flow-2 {
-  animation: ribbon-flow-2 28s ease-in-out infinite;
-  animation-delay: -8s;
+.animate-ambient-flow-emerald {
+  animation: ambient-flow-emerald 40s ease-in-out infinite;
 }
 
-.animate-ribbon-flow-3 {
-  animation: ribbon-flow-3 36s ease-in-out infinite;
-  animation-delay: -16s;
+.animate-ambient-flow-platinum {
+  animation: ambient-flow-platinum 28s ease-in-out infinite;
 }
 
-.animate-ribbon-flow-4 {
-  animation: ribbon-flow-4 24s ease-in-out infinite;
-  animation-delay: -4s;
+.animate-ambient-breathe-center {
+  animation: ambient-breathe-center 20s ease-in-out infinite;
 }
 
-.animate-glow-breathe-slow {
-  animation: glow-breathe-slow 20s ease-in-out infinite;
+.animate-ambient-breathe-edge {
+  animation: ambient-breathe-edge 24s ease-in-out infinite;
 }
 
-.animate-glow-breathe-slow-delayed {
-  animation: glow-breathe-slow-delayed 18s ease-in-out infinite;
-  animation-delay: -6s;
+@media (max-width: 768px) {
+  .ambient-ribbon {
+    left: -30vw;
+    width: 160vw;
+    filter: blur(32px);
+  }
+
+  .ambient-ribbon--gold {
+    top: 18%;
+    height: 12rem;
+  }
+
+  .ambient-ribbon--emerald {
+    top: 52%;
+    height: 11rem;
+  }
+
+  .ambient-ribbon--platinum {
+    top: 76%;
+    height: 9rem;
+  }
+
+  .ambient-glow--center {
+    width: 42rem;
+    height: 30rem;
+    top: 22%;
+  }
+
+  .ambient-glow--edge {
+    width: 24rem;
+    height: 20rem;
+    right: -6rem;
+    bottom: 0;
+  }
+
+  .ambient-texture {
+    background-size: 88px 88px;
+  }
 }
 
-/* Reduced motion: static, visible ribbons */
 @media (prefers-reduced-motion: reduce) {
+
   .ambient-ribbon,
   .ambient-glow {
     animation: none !important;
   }
-  
-  .ambient-ribbon--gold-primary { opacity: 0.8; }
-  .ambient-ribbon--amber { opacity: 0.7; }
-  .ambient-ribbon--blue { opacity: 0.65; }
-  .ambient-ribbon--gold-soft { opacity: 0.55; }
-  .ambient-glow--center { opacity: 0.65; }
-  .ambient-glow--lower { opacity: 0.55; }
 }

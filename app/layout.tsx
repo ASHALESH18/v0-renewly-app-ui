@@ -9,23 +9,23 @@ import { AmbientBackground } from '@/components/ambient-background'
 import './globals.css'
 import { PreferencesBridge } from '@/components/preferences-bridge'
 
-
 const inter = Inter({
-  subsets: ["latin"],
+  subsets: ['latin'],
   variable: '--font-inter',
-  display: 'swap'
-});
+  display: 'swap',
+})
 
 const playfair = Playfair_Display({
-  subsets: ["latin"],
+  subsets: ['latin'],
   variable: '--font-playfair',
-  display: 'swap'
-});
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.renewly.in'),
   title: 'Renewly - Own Every Renewal | Subscription Management',
-  description: 'Track, understand, and reduce every recurring payment with elegance. Premium subscription intelligence for the discerning individual. Manage your subscriptions effortlessly.',
+  description:
+    'Track, understand, and reduce every recurring payment with elegance. Premium subscription intelligence for the discerning individual. Manage your subscriptions effortlessly.',
   keywords: [
     'subscription tracking',
     'recurring payments',
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     'money management',
     'subscription cancellation',
     'budget tracking',
-    'expense management'
+    'expense management',
   ],
   authors: [{ name: 'Renewly' }],
   creator: 'Renewly',
@@ -113,7 +113,6 @@ export const viewport: Viewport = {
   userScalable: true,
 }
 
-
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -134,7 +133,7 @@ export default async function RootLayout({
       '@type': 'Offer',
       price: '0',
       priceCurrency: 'INR',
-      description: 'Freemium subscription management service'
+      description: 'Freemium subscription management service',
     },
     aggregateRating: {
       '@type': 'AggregateRating',
@@ -202,7 +201,9 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
         />
       </head>
-      <body className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-background min-h-screen`}>
+      <body
+        className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-background min-h-screen overflow-x-hidden`}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
@@ -211,12 +212,12 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <PreferencesBridge />
-          {/* Global ambient background - flowing silk ribbons */}
-          <AmbientBackground />
-          {/* Foreground content container - sits above ambient background */}
-          <div className="relative z-10">
-            {children}
-            <ToastContainer />
+          <div className="relative isolate min-h-screen overflow-x-hidden">
+            <AmbientBackground />
+            <div className="relative z-10">
+              {children}
+              <ToastContainer />
+            </div>
           </div>
         </ThemeProvider>
         <Analytics />
