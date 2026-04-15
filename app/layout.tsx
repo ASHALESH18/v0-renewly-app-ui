@@ -213,8 +213,11 @@ export default async function RootLayout({
           <PreferencesBridge />
           {/* Global ambient background - flowing silk ribbons */}
           <AmbientBackground />
-          {children}
-          <ToastContainer />
+          {/* Foreground content container - sits above ambient background */}
+          <div className="relative z-10">
+            {children}
+            <ToastContainer />
+          </div>
         </ThemeProvider>
         <Analytics />
       </body>

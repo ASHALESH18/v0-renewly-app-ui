@@ -16,7 +16,7 @@ export const metadata: Metadata = generatePageMetadata(
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen text-foreground bg-background">
+    <main className="min-h-screen text-foreground bg-transparent">
       <LandingHeader />
       <Hero />
       <Features />
