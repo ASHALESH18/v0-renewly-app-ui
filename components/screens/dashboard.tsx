@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   CreditCard,
   Calendar,
@@ -17,8 +17,6 @@ import { MetricCard } from '@/components/metric-card'
 import { SubscriptionCard, SubscriptionCardCompact } from '@/components/subscription-card'
 import { FilterChips, SegmentedControl } from '@/components/filter-chips'
 import { PageTransition, StaggerList, staggerItem, springs } from '@/components/motion'
-import { AmbientBackground } from '@/components/premium/ambient-background'
-import { PremiumSurface } from '@/components/premium/premium-surface'
 import useStore from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { useCountUp } from '@/lib/hooks/use-count-up'
@@ -50,13 +48,10 @@ export function DashboardScreen({
 
   // Get data from store
   const subscriptions = useStore((state) => state.subscriptions)
-  const addToast = useStore((state) => state.addToast)
   const notificationSettings = useStore((state) => state.notificationSettings)
   const preferredLanguage = notificationSettings.language || 'en'
   const preferredCurrency = notificationSettings.currencyCode || 'INR'
   const currencySymbol = getCurrencySymbol(preferredCurrency, preferredLanguage)
-  const isHydratingUserData = useStore((state) => state.isHydratingUserData)
-  const hasHydratedFromCloud = useStore((state) => state.hasHydratedFromCloud)
 
 
   // Memoize metrics calculation to prevent infinite loops
@@ -117,7 +112,7 @@ export function DashboardScreen({
   }
 
   return (
-    <PageTransition className="min-h-screen">
+    <PageTransition className="min-h-screen bg-transparent">
       <Header
         showProfile
         onSearchClick={() => setShowSearch(true)}
@@ -139,85 +134,28 @@ export function DashboardScreen({
             transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="rounded-[32px] overflow-hidden relative"
           >
-            {/* DRAMATIC: Full cinematic ambient background */}
+            {/* Subtle local wash so the global ambient system shows through cleanly */}
             <div className="absolute inset-0">
-              <div className="absolute inset-0 bg-gradient-to-br from-card via-card to-secondary/60 dark:from-graphite dark:via-obsidian dark:to-slate/40" />
-              
-              {/* DRAMATIC: Large animated gold orb - much bigger and more visible */}
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,253,249,0.72),rgba(248,241,231,0.56))] dark:bg-[linear-gradient(180deg,rgba(19,22,28,0.82),rgba(10,12,17,0.76))]" />
+
               <motion.div
-                className="absolute -top-48 -right-48 w-[500px] h-[500px] rounded-full"
-                style={{ 
-                  background: 'radial-gradient(circle, rgba(199, 163, 106, 0.35) 0%, rgba(199, 163, 106, 0.1) 40%, transparent 70%)',
-                  filter: 'blur(80px)'
-                }}
-                animate={{ 
-                  scale: [1, 1.3, 1],
-                  x: [0, 30, 0],
-                  y: [0, 20, 0],
-                  opacity: [0.3, 0.7, 0.3]
-                }}
-                transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute -top-24 right-6 w-72 h-72 rounded-full blur-[96px]"
+                style={{ background: 'radial-gradient(circle, rgba(199, 163, 106, 0.16) 0%, transparent 72%)' }}
+                animate={{ opacity: [0.3, 0.45, 0.3], scale: [1, 1.04, 1] }}
+                transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
               />
-              
-              {/* DRAMATIC: Emerald orb - bottom left */}
+
               <motion.div
-                className="absolute -bottom-36 -left-36 w-[400px] h-[400px] rounded-full"
-                style={{ 
-                  background: 'radial-gradient(circle, rgba(46, 94, 82, 0.3) 0%, rgba(46, 94, 82, 0.08) 45%, transparent 70%)',
-                  filter: 'blur(100px)'
-                }}
-                animate={{ 
-                  scale: [1, 1.2, 1],
-                  x: [0, -20, 0],
-                  y: [0, -30, 0],
-                  opacity: [0.25, 0.5, 0.25]
-                }}
-                transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+                className="absolute -bottom-20 left-4 w-64 h-64 rounded-full blur-[100px]"
+                style={{ background: 'radial-gradient(circle, rgba(46, 94, 82, 0.12) 0%, transparent 74%)' }}
+                animate={{ opacity: [0.18, 0.3, 0.18], scale: [1, 1.03, 1] }}
+                transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
               />
-              
-              {/* DRAMATIC: Center spotlight pulse */}
-              <motion.div
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px]"
-                style={{ 
-                  background: 'radial-gradient(ellipse at center, rgba(199, 163, 106, 0.12) 0%, transparent 60%)'
-                }}
-                animate={{ 
-                  scale: [1, 1.1, 1],
-                  opacity: [0.3, 0.6, 0.3]
-                }}
-                transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-              />
-              
-              {/* DRAMATIC: Light sweep across hero */}
-              <motion.div
-                className="absolute inset-0"
-                style={{
-                  background: 'linear-gradient(115deg, transparent 0%, rgba(199, 163, 106, 0.06) 25%, rgba(199, 163, 106, 0.12) 50%, rgba(199, 163, 106, 0.06) 75%, transparent 100%)',
-                  transform: 'skewX(-15deg)'
-                }}
-                animate={{ x: ['-150%', '150%'] }}
-                transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', repeatDelay: 5 }}
-              />
-              
-              {/* Grid pattern - more visible */}
-              <div 
-                className="absolute inset-0 opacity-[0.03]"
-                style={{
-                  backgroundImage: 'linear-gradient(rgba(199, 163, 106, 0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(199, 163, 106, 0.6) 1px, transparent 1px)',
-                  backgroundSize: '50px 50px'
-                }}
-              />
-              
-              {/* Top highlight line - animated */}
-              <motion.div 
-                className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent"
-                animate={{ opacity: [0.3, 0.6, 0.3] }}
-                transition={{ duration: 3, repeat: Infinity }}
-              />
+
+              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
             </div>
-            
-            {/* DRAMATIC: Premium glass surface with depth */}
-            <div className="relative surface-cinematic p-8 md:p-10">
+
+            <div className="relative glass-premium border border-gold/10 p-8 md:p-10 shadow-card">
               {/* DRAMATIC: Glowing eyebrow badge */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
@@ -271,7 +209,7 @@ export function DashboardScreen({
                     </div>
                   </div>
                 </motion.div>
-                
+
                 {/* Annual Projected */}
                 <motion.div
                   initial={{ opacity: 0, y: 30, scale: 0.95 }}
@@ -293,7 +231,7 @@ export function DashboardScreen({
                     <p className="mt-4 text-sm text-muted-foreground">Based on current spend</p>
                   </div>
                 </motion.div>
-                
+
                 {/* Potential Savings - with emerald glow */}
                 <motion.div
                   initial={{ opacity: 0, y: 30, scale: 0.95 }}
@@ -439,7 +377,7 @@ export function DashboardScreen({
         >
           {/* Gradient background */}
           <div className="absolute inset-0 bg-gradient-to-br from-gold/8 via-card to-emerald/5 dark:from-gold/10 dark:via-graphite dark:to-emerald/5" />
-          
+
           {/* Animated light sweep */}
           <motion.div
             className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
@@ -447,7 +385,7 @@ export function DashboardScreen({
             whileHover={{ x: '100%' }}
             transition={{ duration: 0.8 }}
           />
-          
+
           {/* Content */}
           <div className="relative border border-gold/15 rounded-2xl p-5">
             <div className="flex items-start justify-between gap-4">
