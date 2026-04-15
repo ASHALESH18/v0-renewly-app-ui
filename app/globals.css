@@ -755,123 +755,97 @@ button,
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(1200px 720px at 20% 8%, rgba(154, 112, 53, 0.08) 0%, transparent 60%),
-    radial-gradient(1000px 680px at 82% 92%, rgba(74, 115, 96, 0.08) 0%, transparent 56%),
-    linear-gradient(180deg, #FBF7F0 0%, #F4ECDD 42%, #EBDDCA 78%, #E3D4C0 100%);
+    radial-gradient(1100px 700px at 18% 10%, rgba(154, 112, 53, 0.08) 0%, transparent 58%),
+    radial-gradient(900px 620px at 84% 88%, rgba(74, 115, 96, 0.07) 0%, transparent 54%),
+    linear-gradient(180deg, #fbf7f0 0%, #f3eadb 42%, #e8dbc8 78%, #dfd0bc 100%);
 }
 
 .dark .ambient-base {
   background:
-    radial-gradient(1400px 860px at 16% 6%, rgba(199, 163, 106, 0.08) 0%, transparent 58%),
-    radial-gradient(1200px 760px at 84% 92%, rgba(46, 94, 82, 0.08) 0%, transparent 54%),
-    radial-gradient(900px 520px at 50% 42%, rgba(255, 255, 255, 0.02) 0%, transparent 68%),
-    linear-gradient(180deg, #07090C 0%, #0A0D12 28%, #0D1118 58%, #0A0D12 82%, #07090C 100%);
+    radial-gradient(1250px 760px at 18% 8%, rgba(199, 163, 106, 0.09) 0%, transparent 58%),
+    radial-gradient(980px 680px at 84% 90%, rgba(46, 94, 82, 0.08) 0%, transparent 54%),
+    radial-gradient(760px 420px at 50% 42%, rgba(255, 255, 255, 0.025) 0%, transparent 68%),
+    linear-gradient(180deg, #06080b 0%, #090c11 28%, #0c1016 58%, #090c11 82%, #06080b 100%);
 }
 
-.ambient-ribbon {
+.ambient-ribbons-svg {
   position: absolute;
-  left: -20vw;
-  width: 140vw;
-  border-radius: 9999px;
-  filter: blur(42px);
-  will-change: transform, opacity;
+  inset: -8%;
+  width: 116%;
+  height: 116%;
   pointer-events: none;
+  overflow: visible;
 }
 
-.ambient-ribbon--gold {
-  top: 14%;
-  height: 16rem;
-  opacity: 0.68;
-  background:
-    linear-gradient(90deg,
-      transparent 0%,
-      rgba(154, 112, 53, 0) 10%,
-      rgba(154, 112, 53, 0.04) 22%,
-      rgba(154, 112, 53, 0.10) 36%,
-      rgba(183, 146, 86, 0.16) 50%,
-      rgba(154, 112, 53, 0.10) 64%,
-      rgba(154, 112, 53, 0.04) 78%,
-      rgba(154, 112, 53, 0) 90%,
-      transparent 100%);
+.ambient-wave {
+  transform-origin: center;
+  will-change: transform, opacity;
 }
 
-.dark .ambient-ribbon--gold {
-  opacity: 0.82;
-  background:
-    linear-gradient(90deg,
-      transparent 0%,
-      rgba(199, 163, 106, 0) 10%,
-      rgba(199, 163, 106, 0.05) 22%,
-      rgba(199, 163, 106, 0.14) 36%,
-      rgba(212, 184, 122, 0.24) 50%,
-      rgba(199, 163, 106, 0.14) 64%,
-      rgba(199, 163, 106, 0.05) 78%,
-      rgba(199, 163, 106, 0) 90%,
-      transparent 100%);
+.ambient-wave--gold {
+  animation: ambient-wave-a 34s ease-in-out infinite;
 }
 
-.ambient-ribbon--emerald {
-  top: 48%;
-  height: 15rem;
-  opacity: 0.56;
-  background:
-    linear-gradient(90deg,
-      transparent 0%,
-      rgba(74, 115, 96, 0) 12%,
-      rgba(74, 115, 96, 0.04) 24%,
-      rgba(74, 115, 96, 0.08) 38%,
-      rgba(96, 126, 114, 0.12) 50%,
-      rgba(74, 115, 96, 0.08) 62%,
-      rgba(74, 115, 96, 0.04) 76%,
-      rgba(74, 115, 96, 0) 88%,
-      transparent 100%);
+.ambient-wave--emerald {
+  animation: ambient-wave-b 40s ease-in-out infinite;
 }
 
-.dark .ambient-ribbon--emerald {
-  opacity: 0.70;
-  background:
-    linear-gradient(90deg,
-      transparent 0%,
-      rgba(46, 94, 82, 0) 12%,
-      rgba(46, 94, 82, 0.04) 24%,
-      rgba(46, 94, 82, 0.10) 38%,
-      rgba(72, 110, 100, 0.16) 50%,
-      rgba(46, 94, 82, 0.10) 62%,
-      rgba(46, 94, 82, 0.04) 76%,
-      rgba(46, 94, 82, 0) 88%,
-      transparent 100%);
+.ambient-wave--platinum {
+  animation: ambient-wave-c 28s ease-in-out infinite;
 }
 
-.ambient-ribbon--platinum {
-  top: 72%;
-  height: 12rem;
-  opacity: 0.44;
-  background:
-    linear-gradient(90deg,
-      transparent 0%,
-      rgba(74, 69, 64, 0) 10%,
-      rgba(74, 69, 64, 0.03) 24%,
-      rgba(74, 69, 64, 0.06) 38%,
-      rgba(154, 112, 53, 0.09) 52%,
-      rgba(74, 69, 64, 0.05) 66%,
-      rgba(74, 69, 64, 0.02) 80%,
-      rgba(74, 69, 64, 0) 92%,
-      transparent 100%);
+.ambient-path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.dark .ambient-ribbon--platinum {
-  opacity: 0.58;
-  background:
-    linear-gradient(90deg,
-      transparent 0%,
-      rgba(188, 194, 204, 0) 10%,
-      rgba(188, 194, 204, 0.02) 24%,
-      rgba(188, 194, 204, 0.06) 38%,
-      rgba(199, 163, 106, 0.09) 52%,
-      rgba(188, 194, 204, 0.05) 66%,
-      rgba(188, 194, 204, 0.02) 80%,
-      rgba(188, 194, 204, 0) 92%,
-      transparent 100%);
+.ambient-path--gold-soft {
+  opacity: 0.34;
+}
+
+.dark .ambient-path--gold-soft {
+  opacity: 0.5;
+}
+
+.ambient-path--gold-core {
+  opacity: 0.2;
+}
+
+.dark .ambient-path--gold-core {
+  opacity: 0.34;
+}
+
+.ambient-path--emerald-soft {
+  opacity: 0.22;
+}
+
+.dark .ambient-path--emerald-soft {
+  opacity: 0.34;
+}
+
+.ambient-path--emerald-core {
+  opacity: 0.14;
+}
+
+.dark .ambient-path--emerald-core {
+  opacity: 0.24;
+}
+
+.ambient-path--platinum-soft {
+  opacity: 0.16;
+}
+
+.dark .ambient-path--platinum-soft {
+  opacity: 0.26;
+}
+
+.ambient-path--platinum-core {
+  opacity: 0.1;
+}
+
+.dark .ambient-path--platinum-core {
+  opacity: 0.18;
 }
 
 .ambient-glow {
@@ -883,65 +857,65 @@ button,
 }
 
 .ambient-glow--center {
-  top: 18%;
+  top: 16%;
   left: 50%;
-  width: 68rem;
-  height: 40rem;
+  width: 66rem;
+  height: 38rem;
   transform: translateX(-50%);
-  opacity: 0.55;
+  opacity: 0.5;
   background:
     radial-gradient(ellipse at center,
-      rgba(154, 112, 53, 0.10) 0%,
-      rgba(154, 112, 53, 0.04) 38%,
-      transparent 72%);
+      rgba(154, 112, 53, 0.1) 0%,
+      rgba(154, 112, 53, 0.04) 40%,
+      transparent 74%);
 }
 
 .dark .ambient-glow--center {
-  opacity: 0.72;
+  opacity: 0.7;
   background:
     radial-gradient(ellipse at center,
       rgba(199, 163, 106, 0.12) 0%,
-      rgba(199, 163, 106, 0.05) 38%,
-      transparent 72%);
+      rgba(199, 163, 106, 0.05) 40%,
+      transparent 74%);
 }
 
 .ambient-glow--edge {
-  right: -8rem;
-  bottom: 2rem;
-  width: 38rem;
-  height: 28rem;
-  opacity: 0.42;
+  right: -7rem;
+  bottom: 1rem;
+  width: 34rem;
+  height: 24rem;
+  opacity: 0.36;
   background:
     radial-gradient(ellipse at center,
-      rgba(74, 115, 96, 0.10) 0%,
-      rgba(74, 115, 96, 0.04) 40%,
+      rgba(74, 115, 96, 0.08) 0%,
+      rgba(74, 115, 96, 0.03) 42%,
       transparent 72%);
 }
 
 .dark .ambient-glow--edge {
-  opacity: 0.56;
+  opacity: 0.52;
   background:
     radial-gradient(ellipse at center,
-      rgba(46, 94, 82, 0.12) 0%,
-      rgba(46, 94, 82, 0.05) 40%,
+      rgba(46, 94, 82, 0.1) 0%,
+      rgba(46, 94, 82, 0.04) 42%,
       transparent 72%);
 }
 
 .ambient-texture {
   position: absolute;
   inset: 0;
-  opacity: 0.18;
+  opacity: 0.14;
   background-image:
-    linear-gradient(rgba(154, 112, 53, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(154, 112, 53, 0.02) 1px, transparent 1px);
-  background-size: 112px 112px;
+    linear-gradient(rgba(154, 112, 53, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(154, 112, 53, 0.018) 1px, transparent 1px);
+  background-size: 120px 120px;
 }
 
 .dark .ambient-texture {
-  opacity: 0.12;
+  opacity: 0.1;
   background-image:
-    linear-gradient(rgba(199, 163, 106, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(199, 163, 106, 0.015) 1px, transparent 1px);
+    linear-gradient(rgba(199, 163, 106, 0.014) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(199, 163, 106, 0.014) 1px, transparent 1px);
 }
 
 .ambient-vignette {
@@ -949,33 +923,33 @@ button,
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 88% 76% at 50% 46%,
+    radial-gradient(ellipse 90% 78% at 50% 46%,
       transparent 0%,
       transparent 56%,
-      rgba(0, 0, 0, 0.10) 100%);
+      rgba(0, 0, 0, 0.1) 100%);
 }
 
 .dark .ambient-vignette {
   background:
-    radial-gradient(ellipse 88% 76% at 50% 46%,
+    radial-gradient(ellipse 90% 78% at 50% 46%,
       transparent 0%,
       transparent 52%,
       rgba(4, 6, 10, 0.34) 100%);
 }
 
-@keyframes ambient-flow-gold {
+@keyframes ambient-wave-a {
 
   0%,
   100% {
-    transform: translate3d(0, 0, 0) rotate(-7deg) scale(1);
+    transform: translate3d(0, 0, 0) rotate(-6deg) scale(1);
   }
 
   50% {
-    transform: translate3d(8vw, 2vh, 0) rotate(-5deg) scale(1.02);
+    transform: translate3d(5vw, 1.5vh, 0) rotate(-4deg) scale(1.015);
   }
 }
 
-@keyframes ambient-flow-emerald {
+@keyframes ambient-wave-b {
 
   0%,
   100% {
@@ -983,19 +957,19 @@ button,
   }
 
   50% {
-    transform: translate3d(-7vw, -2vh, 0) rotate(7deg) scale(1.018);
+    transform: translate3d(-6vw, -1.8vh, 0) rotate(7deg) scale(1.018);
   }
 }
 
-@keyframes ambient-flow-platinum {
+@keyframes ambient-wave-c {
 
   0%,
   100% {
-    transform: translate3d(0, 0, 0) rotate(-3deg) scale(1);
+    transform: translate3d(0, 0, 0) rotate(-2deg) scale(1);
   }
 
   50% {
-    transform: translate3d(6vw, -1.5vh, 0) rotate(-1deg) scale(1.015);
+    transform: translate3d(4vw, -1vh, 0) rotate(0deg) scale(1.012);
   }
 }
 
@@ -1004,12 +978,12 @@ button,
   0%,
   100% {
     transform: translateX(-50%) scale(1);
-    opacity: 0.72;
+    opacity: 0.7;
   }
 
   50% {
-    transform: translateX(-50%) scale(1.035);
-    opacity: 0.82;
+    transform: translateX(-50%) scale(1.03);
+    opacity: 0.8;
   }
 }
 
@@ -1018,25 +992,13 @@ button,
   0%,
   100% {
     transform: scale(1);
-    opacity: 0.54;
+    opacity: 0.5;
   }
 
   50% {
     transform: scale(1.03);
-    opacity: 0.62;
+    opacity: 0.58;
   }
-}
-
-.animate-ambient-flow-gold {
-  animation: ambient-flow-gold 34s ease-in-out infinite;
-}
-
-.animate-ambient-flow-emerald {
-  animation: ambient-flow-emerald 40s ease-in-out infinite;
-}
-
-.animate-ambient-flow-platinum {
-  animation: ambient-flow-platinum 28s ease-in-out infinite;
 }
 
 .animate-ambient-breathe-center {
@@ -1048,49 +1010,35 @@ button,
 }
 
 @media (max-width: 768px) {
-  .ambient-ribbon {
-    left: -30vw;
-    width: 160vw;
-    filter: blur(32px);
-  }
-
-  .ambient-ribbon--gold {
-    top: 18%;
-    height: 12rem;
-  }
-
-  .ambient-ribbon--emerald {
-    top: 52%;
-    height: 11rem;
-  }
-
-  .ambient-ribbon--platinum {
-    top: 76%;
-    height: 9rem;
+  .ambient-ribbons-svg {
+    inset: -12%;
+    width: 124%;
+    height: 124%;
   }
 
   .ambient-glow--center {
     width: 42rem;
-    height: 30rem;
-    top: 22%;
+    height: 28rem;
+    top: 20%;
   }
 
   .ambient-glow--edge {
     width: 24rem;
-    height: 20rem;
-    right: -6rem;
+    height: 18rem;
+    right: -5rem;
     bottom: 0;
   }
 
   .ambient-texture {
-    background-size: 88px 88px;
+    background-size: 92px 92px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
 
-  .ambient-ribbon,
+  .ambient-wave,
   .ambient-glow {
     animation: none !important;
+    transform: none !important;
   }
 }
