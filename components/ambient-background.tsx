@@ -1,35 +1,35 @@
 export function AmbientBackground() {
-  const streams = [
-    'lux-ambient-stream lux-ambient-stream--a',
-    'lux-ambient-stream lux-ambient-stream--b',
-    'lux-ambient-stream lux-ambient-stream--c',
-    'lux-ambient-stream lux-ambient-stream--d',
-    'lux-ambient-stream lux-ambient-stream--e',
-    'lux-ambient-stream lux-ambient-stream--f',
-    'lux-ambient-stream lux-ambient-stream--g',
-    'lux-ambient-stream lux-ambient-stream--h',
+  const bands = [
+    'lf-band lf-band--1',
+    'lf-band lf-band--2',
+    'lf-band lf-band--3',
+    'lf-band lf-band--4',
+    'lf-band lf-band--5',
+    'lf-band lf-band--6',
+    'lf-band lf-band--7',
   ]
 
   return (
-    <div aria-hidden="true" className="lux-ambient-root">
-      <div className="lux-ambient-base" />
-      <div className="lux-ambient-grid" />
-      <div className="lux-ambient-specks lux-ambient-specks--far" />
-      <div className="lux-ambient-specks lux-ambient-specks--near" />
-      <div className="lux-ambient-center-glow" />
-      <div className="lux-ambient-edge-glow lux-ambient-edge-glow--top" />
-      <div className="lux-ambient-edge-glow lux-ambient-edge-glow--bottom" />
+    <div aria-hidden="true" className="lf-root">
+      <div className="lf-base" />
+      <div className="lf-grid" />
+      <div className="lf-specks lf-specks--far" />
+      <div className="lf-specks lf-specks--near" />
 
-      {streams.map((stream) => (
-        <div key={stream} className={stream}>
-          <div className="lux-ambient-stream__shadow" />
-          <div className="lux-ambient-stream__core" />
-          <div className="lux-ambient-stream__dust" />
-          <div className="lux-ambient-stream__sparkles" />
+      <div className="lf-glow lf-glow--top" />
+      <div className="lf-glow lf-glow--center" />
+      <div className="lf-glow lf-glow--bottom" />
+
+      {bands.map((band) => (
+        <div key={band} className={band}>
+          <div className="lf-band__shadow" />
+          <div className="lf-band__line" />
+          <div className="lf-band__dust" />
+          <div className="lf-band__spark" />
         </div>
       ))}
 
-      <div className="lux-ambient-vignette" />
+      <div className="lf-vignette" />
     </div>
   )
 }
