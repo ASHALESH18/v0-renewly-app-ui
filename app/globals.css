@@ -1578,27 +1578,473 @@ button,
   }
 }
 
-export function AmbientBackground() {
+/* ==========================================================================
+   LUXURY PARTICLE WAVE BACKGROUND
+   ========================================================================== */
 
-  const streams=[ 'lux-ambient-stream lux-ambient-stream--a',
-  'lux-ambient-stream lux-ambient-stream--b',
-  'lux-ambient-stream lux-ambient-stream--c',
-  'lux-ambient-stream lux-ambient-stream--d',
-  'lux-ambient-stream lux-ambient-stream--e',
-  'lux-ambient-stream lux-ambient-stream--f',
-  'lux-ambient-stream lux-ambient-stream--g',
-  'lux-ambient-stream lux-ambient-stream--h',
-  ] return (<div aria-hidden="true" className="lux-ambient-root" > <div className="lux-ambient-base" /> <div className="lux-ambient-grid" /> <div className="lux-ambient-specks lux-ambient-specks--far" /> <div className="lux-ambient-specks lux-ambient-specks--near" /> <div className="lux-ambient-center-glow" /> <div className="lux-ambient-edge-glow lux-ambient-edge-glow--top" /> <div className="lux-ambient-edge-glow lux-ambient-edge-glow--bottom" /> {
-      streams.map((stream)=> (<div key= {
-            stream
-          }
+:root {
+  --lux-ambient-bg-0: 248, 244, 236;
+  --lux-ambient-bg-1: 242, 235, 224;
+  --lux-ambient-bg-2: 233, 223, 209;
 
-          className= {
-            stream
-          }
+  --lux-ambient-gold: 166, 132, 82;
+  --lux-ambient-gold-soft: 197, 172, 129;
+  --lux-ambient-gold-deep: 138, 108, 65;
 
-          > <div className="lux-ambient-stream__shadow" /> <div className="lux-ambient-stream__core" /> <div className="lux-ambient-stream__dust" /> <div className="lux-ambient-stream__sparkles" /> </div>))
-    }
+  --lux-ambient-shadow: 182, 167, 145;
+  --lux-ambient-shadow-soft: 214, 204, 188;
+  --lux-ambient-cool: 160, 164, 171;
 
-    <div className="lux-ambient-vignette" /> </div>)
+  --lux-ambient-grid: 171, 142, 92;
+}
+
+.dark {
+  --lux-ambient-bg-0: 7, 10, 16;
+  --lux-ambient-bg-1: 10, 14, 22;
+  --lux-ambient-bg-2: 14, 19, 29;
+
+  --lux-ambient-gold: 199, 163, 106;
+  --lux-ambient-gold-soft: 159, 132, 89;
+  --lux-ambient-gold-deep: 120, 95, 58;
+
+  --lux-ambient-shadow: 28, 36, 52;
+  --lux-ambient-shadow-soft: 18, 24, 36;
+  --lux-ambient-cool: 41, 72, 92;
+
+  --lux-ambient-grid: 199, 163, 106;
+}
+
+.lux-ambient-root {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+}
+
+.lux-ambient-base,
+.lux-ambient-grid,
+.lux-ambient-specks,
+.lux-ambient-center-glow,
+.lux-ambient-edge-glow,
+.lux-ambient-vignette,
+.lux-ambient-stream,
+.lux-ambient-stream__shadow,
+.lux-ambient-stream__core,
+.lux-ambient-stream__dust,
+.lux-ambient-stream__sparkles {
+  position: absolute;
+}
+
+.lux-ambient-base {
+  inset: 0;
+  background:
+    radial-gradient(120% 82% at 50% -12%, rgba(var(--lux-ambient-gold), 0.14) 0%, transparent 46%),
+    radial-gradient(120% 88% at 50% 110%, rgba(var(--lux-ambient-shadow), 0.14) 0%, transparent 52%),
+    linear-gradient(180deg,
+      rgb(var(--lux-ambient-bg-1)) 0%,
+      rgb(var(--lux-ambient-bg-0)) 45%,
+      rgb(var(--lux-ambient-bg-2)) 100%);
+}
+
+.dark .lux-ambient-base {
+  background:
+    radial-gradient(120% 80% at 50% -12%, rgba(var(--lux-ambient-gold), 0.08) 0%, transparent 46%),
+    radial-gradient(120% 92% at 50% 112%, rgba(var(--lux-ambient-cool), 0.12) 0%, transparent 56%),
+    linear-gradient(180deg,
+      rgb(var(--lux-ambient-bg-0)) 0%,
+      rgb(var(--lux-ambient-bg-1)) 48%,
+      rgb(var(--lux-ambient-bg-2)) 100%);
+}
+
+.lux-ambient-grid {
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(var(--lux-ambient-grid), 0.038) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--lux-ambient-grid), 0.038) 1px, transparent 1px);
+  background-size: 150px 150px;
+  opacity: 0.1;
+}
+
+.dark .lux-ambient-grid {
+  opacity: 0.04;
+}
+
+.lux-ambient-specks {
+  inset: -10%;
+  animation: lux-ambient-field-drift 150s linear infinite;
+}
+
+.lux-ambient-specks--far {
+  background-image:
+    radial-gradient(circle, rgba(var(--lux-ambient-gold), 0.12) 0 0.9px, transparent 1.6px),
+    radial-gradient(circle, rgba(var(--lux-ambient-shadow), 0.08) 0 0.8px, transparent 1.4px);
+  background-size: 240px 240px, 320px 320px;
+  background-position: 0 0, 100px 70px;
+  opacity: 0.34;
+}
+
+.dark .lux-ambient-specks--far {
+  background-image:
+    radial-gradient(circle, rgba(var(--lux-ambient-gold), 0.1) 0 0.9px, transparent 1.6px),
+    radial-gradient(circle, rgba(var(--lux-ambient-cool), 0.08) 0 0.8px, transparent 1.4px);
+  opacity: 0.18;
+}
+
+.lux-ambient-specks--near {
+  background-image:
+    radial-gradient(circle, rgba(var(--lux-ambient-gold-soft), 0.16) 0 1.2px, transparent 2.2px),
+    radial-gradient(circle, rgba(var(--lux-ambient-gold), 0.12) 0 1px, transparent 2px);
+  background-size: 180px 180px, 260px 260px;
+  background-position: 20px 40px, 110px 90px;
+  opacity: 0.24;
+  animation-duration: 110s;
+}
+
+.dark .lux-ambient-specks--near {
+  opacity: 0.12;
+}
+
+.lux-ambient-center-glow {
+  left: 18%;
+  right: 18%;
+  top: 18%;
+  bottom: 18%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center,
+      rgba(var(--lux-ambient-gold), 0.12) 0%,
+      rgba(var(--lux-ambient-gold-soft), 0.05) 28%,
+      transparent 68%);
+  filter: blur(88px);
+  opacity: 0.75;
+  animation: lux-ambient-breathe 24s ease-in-out infinite;
+}
+
+.dark .lux-ambient-center-glow {
+  background: radial-gradient(ellipse at center,
+      rgba(var(--lux-ambient-gold), 0.08) 0%,
+      rgba(var(--lux-ambient-cool), 0.04) 34%,
+      transparent 70%);
+  opacity: 0.7;
+}
+
+.lux-ambient-edge-glow {
+  border-radius: 999px;
+  filter: blur(92px);
+  opacity: 0.48;
+}
+
+.lux-ambient-edge-glow--top {
+  top: -8%;
+  left: 8%;
+  width: 84%;
+  height: 20%;
+  background: radial-gradient(ellipse at center,
+      rgba(var(--lux-ambient-gold), 0.13) 0%,
+      transparent 72%);
+}
+
+.lux-ambient-edge-glow--bottom {
+  bottom: -10%;
+  right: 10%;
+  width: 76%;
+  height: 22%;
+  background: radial-gradient(ellipse at center,
+      rgba(var(--lux-ambient-shadow), 0.16) 0%,
+      transparent 74%);
+}
+
+.dark .lux-ambient-edge-glow--top {
+  background: radial-gradient(ellipse at center,
+      rgba(var(--lux-ambient-gold), 0.08) 0%,
+      transparent 72%);
+}
+
+.dark .lux-ambient-edge-glow--bottom {
+  background: radial-gradient(ellipse at center,
+      rgba(var(--lux-ambient-cool), 0.13) 0%,
+      transparent 74%);
+}
+
+.lux-ambient-vignette {
+  inset: 0;
+  background: radial-gradient(ellipse at center,
+      transparent 44%,
+      rgba(108, 88, 56, 0.12) 100%);
+}
+
+.dark .lux-ambient-vignette {
+  background: radial-gradient(ellipse at center,
+      transparent 38%,
+      rgba(0, 0, 0, 0.46) 100%);
+}
+
+.lux-ambient-stream {
+  left: -28vw;
+  width: 156vw;
+  border-radius: 999px;
+  transform-origin: center;
+  transform: translate3d(-8%, 0, 0) rotate(var(--lux-stream-rotate));
+  filter: blur(var(--lux-stream-blur));
+  opacity: var(--lux-stream-opacity);
+  animation: lux-ambient-stream-shift var(--lux-stream-duration) linear infinite;
+  will-change: transform;
+}
+
+.lux-ambient-stream--a {
+  top: 4vh;
+  height: 13vh;
+  --lux-stream-rotate: -6deg;
+  --lux-stream-opacity: 0.8;
+  --lux-stream-blur: 10px;
+  --lux-stream-duration: 56s;
+}
+
+.lux-ambient-stream--b {
+  top: 15vh;
+  height: 15vh;
+  --lux-stream-rotate: 4deg;
+  --lux-stream-opacity: 0.68;
+  --lux-stream-blur: 12px;
+  --lux-stream-duration: 64s;
+}
+
+.lux-ambient-stream--c {
+  top: 28vh;
+  height: 16vh;
+  --lux-stream-rotate: -5deg;
+  --lux-stream-opacity: 0.78;
+  --lux-stream-blur: 11px;
+  --lux-stream-duration: 60s;
+}
+
+.lux-ambient-stream--d {
+  top: 42vh;
+  height: 18vh;
+  --lux-stream-rotate: 5deg;
+  --lux-stream-opacity: 0.7;
+  --lux-stream-blur: 13px;
+  --lux-stream-duration: 72s;
+}
+
+.lux-ambient-stream--e {
+  top: 56vh;
+  height: 16vh;
+  --lux-stream-rotate: -4deg;
+  --lux-stream-opacity: 0.76;
+  --lux-stream-blur: 12px;
+  --lux-stream-duration: 66s;
+}
+
+.lux-ambient-stream--f {
+  top: 70vh;
+  height: 15vh;
+  --lux-stream-rotate: 4deg;
+  --lux-stream-opacity: 0.68;
+  --lux-stream-blur: 12px;
+  --lux-stream-duration: 74s;
+}
+
+.lux-ambient-stream--g {
+  top: 84vh;
+  height: 14vh;
+  --lux-stream-rotate: -3deg;
+  --lux-stream-opacity: 0.6;
+  --lux-stream-blur: 11px;
+  --lux-stream-duration: 70s;
+}
+
+.lux-ambient-stream--h {
+  top: 94vh;
+  height: 13vh;
+  --lux-stream-rotate: 3deg;
+  --lux-stream-opacity: 0.54;
+  --lux-stream-blur: 11px;
+  --lux-stream-duration: 78s;
+}
+
+.dark .lux-ambient-stream--a,
+.dark .lux-ambient-stream--c,
+.dark .lux-ambient-stream--e {
+  --lux-stream-opacity: 0.86;
+}
+
+.dark .lux-ambient-stream--b,
+.dark .lux-ambient-stream--d,
+.dark .lux-ambient-stream--f {
+  --lux-stream-opacity: 0.74;
+}
+
+.dark .lux-ambient-stream--g,
+.dark .lux-ambient-stream--h {
+  --lux-stream-opacity: 0.62;
+}
+
+.lux-ambient-stream__shadow,
+.lux-ambient-stream__core,
+.lux-ambient-stream__dust,
+.lux-ambient-stream__sparkles {
+  inset: 0;
+  border-radius: inherit;
+}
+
+.lux-ambient-stream__shadow {
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(var(--lux-ambient-shadow-soft), 0.02) 8%,
+      rgba(var(--lux-ambient-shadow), 0.12) 28%,
+      rgba(var(--lux-ambient-shadow), 0.2) 50%,
+      rgba(var(--lux-ambient-shadow), 0.12) 72%,
+      transparent 100%);
+  transform: scaleY(1.28);
+  opacity: 0.85;
+}
+
+.dark .lux-ambient-stream__shadow {
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(var(--lux-ambient-shadow-soft), 0.02) 8%,
+      rgba(var(--lux-ambient-shadow), 0.08) 28%,
+      rgba(var(--lux-ambient-shadow), 0.16) 50%,
+      rgba(var(--lux-ambient-shadow), 0.08) 72%,
+      transparent 100%);
+  opacity: 0.9;
+}
+
+.lux-ambient-stream__core {
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(var(--lux-ambient-gold-soft), 0) 10%,
+      rgba(var(--lux-ambient-gold-soft), 0.18) 28%,
+      rgba(var(--lux-ambient-gold), 0.3) 50%,
+      rgba(var(--lux-ambient-gold-soft), 0.18) 72%,
+      transparent 100%);
+}
+
+.dark .lux-ambient-stream__core {
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(var(--lux-ambient-gold-soft), 0) 10%,
+      rgba(var(--lux-ambient-gold-soft), 0.16) 28%,
+      rgba(var(--lux-ambient-gold), 0.26) 50%,
+      rgba(var(--lux-ambient-gold-soft), 0.16) 72%,
+      transparent 100%);
+}
+
+.lux-ambient-stream__dust {
+  inset: -10% 0;
+  background-image:
+    radial-gradient(circle, rgba(var(--lux-ambient-gold), 0.28) 0 1px, transparent 1.9px),
+    radial-gradient(circle, rgba(var(--lux-ambient-gold-soft), 0.18) 0 0.8px, transparent 1.5px),
+    radial-gradient(circle, rgba(var(--lux-ambient-shadow), 0.1) 0 0.9px, transparent 1.6px),
+    linear-gradient(90deg,
+      transparent 0%,
+      rgba(var(--lux-ambient-gold), 0.02) 18%,
+      rgba(var(--lux-ambient-gold), 0.1) 50%,
+      rgba(var(--lux-ambient-gold), 0.02) 82%,
+      transparent 100%);
+  background-size: 18px 18px, 30px 30px, 52px 52px, 100% 100%;
+  background-position: 0 0, 12px 8px, 26px 14px, 0 0;
+  opacity: 0.95;
+  animation: lux-ambient-dust-flow var(--lux-stream-duration) linear infinite;
+  mix-blend-mode: multiply;
+}
+
+.dark .lux-ambient-stream__dust {
+  background-image:
+    radial-gradient(circle, rgba(var(--lux-ambient-gold), 0.38) 0 1px, transparent 1.9px),
+    radial-gradient(circle, rgba(var(--lux-ambient-gold-soft), 0.22) 0 0.8px, transparent 1.5px),
+    radial-gradient(circle, rgba(var(--lux-ambient-cool), 0.12) 0 0.9px, transparent 1.6px),
+    linear-gradient(90deg,
+      transparent 0%,
+      rgba(var(--lux-ambient-gold), 0.02) 18%,
+      rgba(var(--lux-ambient-gold), 0.12) 50%,
+      rgba(var(--lux-ambient-gold), 0.02) 82%,
+      transparent 100%);
+  mix-blend-mode: screen;
+  opacity: 0.92;
+}
+
+.lux-ambient-stream__sparkles {
+  inset: -18% -3%;
+  background-image:
+    radial-gradient(circle, rgba(var(--lux-ambient-gold), 0.2) 0 2.7px, transparent 6px),
+    radial-gradient(circle, rgba(var(--lux-ambient-gold-soft), 0.12) 0 2px, transparent 5px);
+  background-size: 88px 88px, 140px 140px;
+  background-position: 0 0, 56px 32px;
+  filter: blur(1.3px);
+  opacity: 0.42;
+  animation: lux-ambient-sparkle-flow calc(var(--lux-stream-duration) * 1.08) linear infinite;
+  mix-blend-mode: multiply;
+}
+
+.dark .lux-ambient-stream__sparkles {
+  mix-blend-mode: screen;
+  opacity: 0.34;
+}
+
+@keyframes lux-ambient-stream-shift {
+  0% {
+    transform: translate3d(-8%, 0, 0) rotate(var(--lux-stream-rotate));
+  }
+
+  100% {
+    transform: translate3d(10%, 0, 0) rotate(var(--lux-stream-rotate));
+  }
+}
+
+@keyframes lux-ambient-dust-flow {
+  0% {
+    background-position: 0 0, 12px 8px, 26px 14px, 0 0;
+  }
+
+  100% {
+    background-position: 260px 0, 340px 18px, 420px 26px, 100% 0;
+  }
+}
+
+@keyframes lux-ambient-sparkle-flow {
+  0% {
+    background-position: 0 0, 56px 32px;
+  }
+
+  100% {
+    background-position: 160px 0, 250px 24px;
+  }
+}
+
+@keyframes lux-ambient-field-drift {
+  0% {
+    transform: translate3d(-2%, 0, 0);
+  }
+
+  100% {
+    transform: translate3d(2%, 0, 0);
+  }
+}
+
+@keyframes lux-ambient-breathe {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.58;
+  }
+
+  50% {
+    transform: scale(1.04);
+    opacity: 0.8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .lux-ambient-specks,
+  .lux-ambient-center-glow,
+  .lux-ambient-stream,
+  .lux-ambient-stream__dust,
+  .lux-ambient-stream__sparkles {
+    animation: none !important;
+  }
 }
