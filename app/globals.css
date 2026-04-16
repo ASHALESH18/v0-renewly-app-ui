@@ -746,8 +746,8 @@ button,
   }
 }
 
-/* GLOBAL AMBIENT BACKGROUND SYSTEM */
-/* Whole-screen matte luxury dust-flow background */
+/* PREMIUM AMBIENT BACKGROUND SYSTEM */
+/* Matte whole-screen luxury flow */
 /* ============================================ */
 
 .ambient-base {
@@ -761,7 +761,7 @@ button,
 
 .dark .ambient-base {
   background:
-    radial-gradient(1200px 820px at 18% 8%, rgba(199, 163, 106, 0.1) 0%, transparent 58%),
+    radial-gradient(1200px 820px at 18% 8%, rgba(199, 163, 106, 0.10) 0%, transparent 58%),
     radial-gradient(980px 720px at 82% 88%, rgba(46, 94, 82, 0.08) 0%, transparent 56%),
     linear-gradient(180deg, #06080b 0%, #090c11 30%, #0b1016 64%, #06080b 100%);
 }
@@ -837,7 +837,7 @@ button,
 }
 
 .ambient-path--core {
-  opacity: 0.2;
+  opacity: 0.20;
 }
 
 .dark .ambient-path--core {
@@ -882,20 +882,12 @@ button,
   width: 58rem;
   height: 14rem;
   transform: translateX(-50%);
-  background:
-    radial-gradient(ellipse at center,
-      rgba(166, 130, 76, 0.14) 0%,
-      rgba(166, 130, 76, 0.05) 42%,
-      transparent 74%);
+  background: radial-gradient(ellipse at center, rgba(166, 130, 76, 0.14) 0%, rgba(166, 130, 76, 0.05) 42%, transparent 74%);
   opacity: 0.34;
 }
 
 .dark .ambient-glow--top {
-  background:
-    radial-gradient(ellipse at center,
-      rgba(199, 163, 106, 0.16) 0%,
-      rgba(199, 163, 106, 0.05) 42%,
-      transparent 74%);
+  background: radial-gradient(ellipse at center, rgba(199, 163, 106, 0.16) 0%, rgba(199, 163, 106, 0.05) 42%, transparent 74%);
   opacity: 0.44;
 }
 
@@ -905,20 +897,12 @@ button,
   width: 62rem;
   height: 26rem;
   transform: translateX(-50%);
-  background:
-    radial-gradient(ellipse at center,
-      rgba(155, 121, 72, 0.1) 0%,
-      rgba(155, 121, 72, 0.04) 42%,
-      transparent 74%);
+  background: radial-gradient(ellipse at center, rgba(155, 121, 72, 0.10) 0%, rgba(155, 121, 72, 0.04) 42%, transparent 74%);
   opacity: 0.28;
 }
 
 .dark .ambient-glow--mid {
-  background:
-    radial-gradient(ellipse at center,
-      rgba(199, 163, 106, 0.1) 0%,
-      rgba(199, 163, 106, 0.035) 42%,
-      transparent 74%);
+  background: radial-gradient(ellipse at center, rgba(199, 163, 106, 0.10) 0%, rgba(199, 163, 106, 0.035) 42%, transparent 74%);
   opacity: 0.38;
 }
 
@@ -927,20 +911,12 @@ button,
   left: -3rem;
   width: 28rem;
   height: 20rem;
-  background:
-    radial-gradient(ellipse at center,
-      rgba(87, 116, 106, 0.1) 0%,
-      rgba(87, 116, 106, 0.04) 42%,
-      transparent 74%);
+  background: radial-gradient(ellipse at center, rgba(87, 116, 106, 0.10) 0%, rgba(87, 116, 106, 0.04) 42%, transparent 74%);
   opacity: 0.22;
 }
 
 .dark .ambient-glow--bottom-left {
-  background:
-    radial-gradient(ellipse at center,
-      rgba(46, 94, 82, 0.1) 0%,
-      rgba(46, 94, 82, 0.04) 42%,
-      transparent 74%);
+  background: radial-gradient(ellipse at center, rgba(46, 94, 82, 0.10) 0%, rgba(46, 94, 82, 0.04) 42%, transparent 74%);
   opacity: 0.34;
 }
 
@@ -949,20 +925,12 @@ button,
   right: -4rem;
   width: 26rem;
   height: 18rem;
-  background:
-    radial-gradient(ellipse at center,
-      rgba(170, 143, 108, 0.08) 0%,
-      rgba(170, 143, 108, 0.03) 42%,
-      transparent 74%);
-  opacity: 0.2;
+  background: radial-gradient(ellipse at center, rgba(170, 143, 108, 0.08) 0%, rgba(170, 143, 108, 0.03) 42%, transparent 74%);
+  opacity: 0.20;
 }
 
 .dark .ambient-glow--bottom-right {
-  background:
-    radial-gradient(ellipse at center,
-      rgba(199, 163, 106, 0.08) 0%,
-      rgba(199, 163, 106, 0.025) 42%,
-      transparent 74%);
+  background: radial-gradient(ellipse at center, rgba(199, 163, 106, 0.08) 0%, rgba(199, 163, 106, 0.025) 42%, transparent 74%);
   opacity: 0.28;
 }
 
@@ -987,19 +955,11 @@ button,
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(ellipse 92% 82% at 50% 46%,
-      transparent 0%,
-      transparent 56%,
-      rgba(79, 61, 35, 0.08) 100%);
+  background: radial-gradient(ellipse 92% 82% at 50% 46%, transparent 0%, transparent 56%, rgba(79, 61, 35, 0.08) 100%);
 }
 
 .dark .ambient-vignette {
-  background:
-    radial-gradient(ellipse 92% 82% at 50% 46%,
-      transparent 0%,
-      transparent 54%,
-      rgba(4, 6, 10, 0.34) 100%);
+  background: radial-gradient(ellipse 92% 82% at 50% 46%, transparent 0%, transparent 54%, rgba(4, 6, 10, 0.34) 100%);
 }
 
 @keyframes ambient-flow-1 {
@@ -1060,14 +1020,14 @@ button,
 
   to {
     transform: translate3d(10vw, -0.6vh, 0);
-    opacity: 0.4;
+    opacity: 0.40;
   }
 }
 
 @keyframes ambient-specks-flow-2 {
   from {
     transform: translate3d(-10vw, 0, 0);
-    opacity: 0.2;
+    opacity: 0.20;
   }
 
   to {
@@ -1150,7 +1110,7 @@ button,
 
   50% {
     transform: scale(1.04);
-    opacity: 0.3;
+    opacity: 0.30;
   }
 }
 

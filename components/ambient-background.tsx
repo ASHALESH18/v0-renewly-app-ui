@@ -53,7 +53,7 @@ export function AmbientBackground() {
           <linearGradient id="bandPlatinumSoft" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="rgba(0,0,0,0)" />
             <stop offset="24%" stopColor="rgba(140,145,156,0.025)" />
-            <stop offset="50%" stopColor="rgba(140,145,156,0.1)" />
+            <stop offset="50%" stopColor="rgba(140,145,156,0.10)" />
             <stop offset="76%" stopColor="rgba(140,145,156,0.025)" />
             <stop offset="100%" stopColor="rgba(0,0,0,0)" />
           </linearGradient>
@@ -91,7 +91,6 @@ export function AmbientBackground() {
           </filter>
         </defs>
 
-        {/* top gold sweep */}
         <g className="ambient-band ambient-band--1">
           <path
             className="ambient-path ambient-path--soft"
@@ -119,7 +118,6 @@ export function AmbientBackground() {
           </g>
         </g>
 
-        {/* upper-mid matte sweep */}
         <g className="ambient-band ambient-band--2">
           <path
             className="ambient-path ambient-path--soft"
@@ -145,7 +143,6 @@ export function AmbientBackground() {
           </g>
         </g>
 
-        {/* middle green-gold drift */}
         <g className="ambient-band ambient-band--3">
           <path
             className="ambient-path ambient-path--soft"
@@ -172,7 +169,6 @@ export function AmbientBackground() {
           </g>
         </g>
 
-        {/* lower platinum strip */}
         <g className="ambient-band ambient-band--4">
           <path
             className="ambient-path ambient-path--soft"
@@ -198,7 +194,6 @@ export function AmbientBackground() {
           </g>
         </g>
 
-        {/* bottom gold accent */}
         <g className="ambient-band ambient-band--5">
           <path
             className="ambient-path ambient-path--soft"
@@ -218,9 +213,9 @@ export function AmbientBackground() {
             <circle cx="160" cy="1036" r="1.8" />
             <circle cx="360" cy="1080" r="2.1" />
             <circle cx="620" cy="1044" r="1.9" />
-            <circle cx="900" cy="1068" r="2" />
+            <circle cx="900" cy="1068" r="2.0" />
             <circle cx="1180" cy="1036" r="1.9" />
-            <circle cx="1490" cy="1082" r="2" />
+            <circle cx="1490" cy="1082" r="2.0" />
           </g>
         </g>
       </svg>
