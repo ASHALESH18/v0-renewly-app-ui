@@ -748,17 +748,16 @@ button,
 
 /* ==========================================================================
    LUXURY FLOW AMBIENT BACKGROUND
-   Replace everything from "PREMIUM AMBIENT BACKGROUND SYSTEM" to end of file
    ========================================================================== */
 
 :root {
   --lf-bg-0: 248, 244, 236;
   --lf-bg-1: 242, 235, 224;
-  --lf-bg-2: 232, 223, 210;
+  --lf-bg-2: 233, 223, 209;
 
   --lf-gold: 166, 132, 82;
-  --lf-gold-soft: 205, 181, 142;
-  --lf-sand: 188, 173, 150;
+  --lf-gold-soft: 203, 178, 136;
+  --lf-sand: 188, 172, 148;
   --lf-cool: 164, 168, 173;
   --lf-grid: 173, 145, 97;
 }
@@ -770,8 +769,8 @@ button,
 
   --lf-gold: 199, 163, 106;
   --lf-gold-soft: 159, 132, 89;
-  --lf-sand: 72, 63, 50;
-  --lf-cool: 40, 70, 90;
+  --lf-sand: 70, 60, 49;
+  --lf-cool: 38, 67, 88;
   --lf-grid: 199, 163, 106;
 }
 
@@ -789,19 +788,15 @@ button,
 .lf-specks,
 .lf-glow,
 .lf-vignette,
-.lf-band,
-.lf-band__shadow,
-.lf-band__line,
-.lf-band__dust,
-.lf-band__spark {
+.lf-stream {
   position: absolute;
 }
 
 .lf-base {
   inset: 0;
   background:
-    radial-gradient(120% 80% at 50% -10%, rgba(var(--lf-gold), 0.10) 0%, transparent 46%),
-    radial-gradient(120% 90% at 50% 110%, rgba(var(--lf-sand), 0.14) 0%, transparent 52%),
+    radial-gradient(120% 82% at 50% -10%, rgba(var(--lf-gold), 0.10) 0%, transparent 46%),
+    radial-gradient(120% 92% at 50% 110%, rgba(var(--lf-sand), 0.13) 0%, transparent 54%),
     linear-gradient(180deg,
       rgb(var(--lf-bg-1)) 0%,
       rgb(var(--lf-bg-0)) 46%,
@@ -810,8 +805,8 @@ button,
 
 .dark .lf-base {
   background:
-    radial-gradient(120% 80% at 50% -12%, rgba(var(--lf-gold), 0.08) 0%, transparent 46%),
-    radial-gradient(120% 92% at 50% 112%, rgba(var(--lf-cool), 0.10) 0%, transparent 54%),
+    radial-gradient(120% 82% at 50% -10%, rgba(var(--lf-gold), 0.08) 0%, transparent 46%),
+    radial-gradient(120% 92% at 50% 110%, rgba(var(--lf-cool), 0.10) 0%, transparent 54%),
     linear-gradient(180deg,
       rgb(var(--lf-bg-0)) 0%,
       rgb(var(--lf-bg-1)) 48%,
@@ -824,7 +819,7 @@ button,
     linear-gradient(rgba(var(--lf-grid), 0.028) 1px, transparent 1px),
     linear-gradient(90deg, rgba(var(--lf-grid), 0.028) 1px, transparent 1px);
   background-size: 152px 152px;
-  opacity: 0.12;
+  opacity: 0.10;
 }
 
 .dark .lf-grid {
@@ -842,7 +837,7 @@ button,
     radial-gradient(circle, rgba(var(--lf-sand), 0.08) 0 0.8px, transparent 1.4px);
   background-size: 260px 260px, 340px 340px;
   background-position: 0 0, 110px 70px;
-  opacity: 0.26;
+  opacity: 0.24;
 }
 
 .dark .lf-specks--far {
@@ -858,7 +853,7 @@ button,
     radial-gradient(circle, rgba(var(--lf-gold), 0.10) 0 1px, transparent 2px);
   background-size: 190px 190px, 270px 270px;
   background-position: 24px 44px, 118px 96px;
-  opacity: 0.16;
+  opacity: 0.14;
   animation-duration: 130s;
 }
 
@@ -880,7 +875,7 @@ button,
   background: radial-gradient(ellipse at center,
       rgba(var(--lf-gold), 0.10) 0%,
       transparent 72%);
-  opacity: 0.38;
+  opacity: 0.30;
 }
 
 .lf-glow--center {
@@ -892,7 +887,7 @@ button,
       rgba(var(--lf-gold), 0.08) 0%,
       rgba(var(--lf-gold-soft), 0.04) 34%,
       transparent 72%);
-  opacity: 0.42;
+  opacity: 0.34;
   animation-duration: 30s;
 }
 
@@ -904,7 +899,7 @@ button,
   background: radial-gradient(ellipse at center,
       rgba(var(--lf-sand), 0.12) 0%,
       transparent 74%);
-  opacity: 0.28;
+  opacity: 0.24;
   animation-duration: 32s;
 }
 
@@ -912,7 +907,7 @@ button,
   background: radial-gradient(ellipse at center,
       rgba(var(--lf-gold), 0.08) 0%,
       transparent 72%);
-  opacity: 0.26;
+  opacity: 0.22;
 }
 
 .dark .lf-glow--center {
@@ -920,14 +915,14 @@ button,
       rgba(var(--lf-gold), 0.07) 0%,
       rgba(var(--lf-cool), 0.04) 36%,
       transparent 72%);
-  opacity: 0.32;
+  opacity: 0.28;
 }
 
 .dark .lf-glow--bottom {
   background: radial-gradient(ellipse at center,
-      rgba(var(--lf-cool), 0.12) 0%,
+      rgba(var(--lf-cool), 0.10) 0%,
       transparent 74%);
-  opacity: 0.24;
+  opacity: 0.20;
 }
 
 .lf-vignette {
@@ -943,209 +938,191 @@ button,
       rgba(0, 0, 0, 0.44) 100%);
 }
 
-.lf-band {
+.lf-stream {
+  --lf-line-rgb: var(--lf-gold);
+  --lf-line-soft-rgb: var(--lf-gold-soft);
+  --lf-shadow-rgb: var(--lf-sand);
+  --lf-dust-rgb: var(--lf-gold);
+  --lf-spark-rgb: var(--lf-gold-soft);
+
   left: -28vw;
   width: 156vw;
   border-radius: 999px;
   transform-origin: center;
   transform: translate3d(-8%, 0, 0) rotate(var(--lf-rotate));
-  filter: blur(var(--lf-blur));
   opacity: var(--lf-opacity);
+  filter: blur(var(--lf-blur));
   animation: lf-band-drift var(--lf-duration) linear infinite;
   will-change: transform;
 }
 
-.lf-band--1 {
+.dark .lf-stream {
+  --lf-shadow-rgb: var(--lf-cool);
+}
+
+.lf-stream--cool {
+  --lf-line-rgb: var(--lf-cool);
+  --lf-line-soft-rgb: var(--lf-gold-soft);
+  --lf-shadow-rgb: var(--lf-cool);
+  --lf-dust-rgb: var(--lf-gold);
+  --lf-spark-rgb: var(--lf-gold-soft);
+}
+
+.lf-stream--1 {
   top: 6vh;
   height: 12vh;
   --lf-rotate: -6deg;
-  --lf-opacity: 0.74;
-  --lf-blur: 6px;
+  --lf-opacity: 0.72;
+  --lf-blur: 1px;
   --lf-duration: 54s;
 }
 
-.lf-band--2 {
+.lf-stream--2 {
   top: 20vh;
   height: 13vh;
   --lf-rotate: 4deg;
-  --lf-opacity: 0.62;
-  --lf-blur: 7px;
+  --lf-opacity: 0.58;
+  --lf-blur: 1.2px;
   --lf-duration: 60s;
 }
 
-.lf-band--3 {
+.lf-stream--3 {
   top: 34vh;
   height: 12vh;
   --lf-rotate: -4deg;
-  --lf-opacity: 0.66;
-  --lf-blur: 7px;
+  --lf-opacity: 0.64;
+  --lf-blur: 1px;
   --lf-duration: 58s;
 }
 
-.lf-band--4 {
+.lf-stream--4 {
   top: 48vh;
   height: 14vh;
   --lf-rotate: 5deg;
-  --lf-opacity: 0.62;
-  --lf-blur: 8px;
+  --lf-opacity: 0.58;
+  --lf-blur: 1.3px;
   --lf-duration: 68s;
 }
 
-.lf-band--5 {
+.lf-stream--5 {
   top: 62vh;
   height: 12vh;
   --lf-rotate: -4deg;
-  --lf-opacity: 0.58;
-  --lf-blur: 7px;
+  --lf-opacity: 0.56;
+  --lf-blur: 1px;
   --lf-duration: 62s;
 }
 
-.lf-band--6 {
+.lf-stream--6 {
   top: 78vh;
   height: 12vh;
   --lf-rotate: 3deg;
-  --lf-opacity: 0.54;
-  --lf-blur: 7px;
+  --lf-opacity: 0.50;
+  --lf-blur: 1.1px;
   --lf-duration: 72s;
 }
 
-.lf-band--7 {
+.lf-stream--7 {
   top: 92vh;
   height: 11vh;
   --lf-rotate: -2deg;
-  --lf-opacity: 0.44;
-  --lf-blur: 6px;
+  --lf-opacity: 0.42;
+  --lf-blur: 0.9px;
   --lf-duration: 76s;
 }
 
-.dark .lf-band--1,
-.dark .lf-band--3,
-.dark .lf-band--5 {
-  --lf-opacity: 0.58;
+.dark .lf-stream--1,
+.dark .lf-stream--3,
+.dark .lf-stream--5 {
+  --lf-opacity: 0.56;
 }
 
-.dark .lf-band--2,
-.dark .lf-band--4,
-.dark .lf-band--6 {
-  --lf-opacity: 0.52;
+.dark .lf-stream--2,
+.dark .lf-stream--4,
+.dark .lf-stream--6 {
+  --lf-opacity: 0.50;
 }
 
-.dark .lf-band--7 {
-  --lf-opacity: 0.40;
+.dark .lf-stream--7 {
+  --lf-opacity: 0.38;
 }
 
-.lf-band__shadow,
-.lf-band__line,
-.lf-band__dust,
-.lf-band__spark {
-  left: 0;
-  right: 0;
-  border-radius: inherit;
+.lf-stream__svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 
-.lf-band__shadow {
-  top: 34%;
-  bottom: 34%;
-  background: linear-gradient(90deg,
-      transparent 0%,
-      rgba(var(--lf-sand), 0.00) 10%,
-      rgba(var(--lf-sand), 0.10) 28%,
-      rgba(var(--lf-sand), 0.16) 50%,
-      rgba(var(--lf-sand), 0.10) 72%,
-      transparent 100%);
-  transform: scaleY(1.9);
-  opacity: 0.65;
+.lf-stream__shadow,
+.lf-stream__line-soft,
+.lf-stream__line,
+.lf-stream__dust,
+.lf-stream__spark {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.dark .lf-band__shadow {
-  background: linear-gradient(90deg,
-      transparent 0%,
-      rgba(var(--lf-cool), 0.00) 10%,
-      rgba(var(--lf-cool), 0.06) 28%,
-      rgba(var(--lf-cool), 0.10) 50%,
-      rgba(var(--lf-cool), 0.06) 72%,
-      transparent 100%);
-  opacity: 0.55;
+.lf-stream__shadow {
+  stroke: rgba(var(--lf-shadow-rgb), 0.10);
+  stroke-width: 16;
+  filter: blur(7px);
+  opacity: 0.52;
 }
 
-.lf-band__line {
-  top: 44%;
-  bottom: 44%;
-  background: linear-gradient(90deg,
-      transparent 0%,
-      rgba(var(--lf-gold-soft), 0.00) 10%,
-      rgba(var(--lf-gold-soft), 0.12) 30%,
-      rgba(var(--lf-gold), 0.20) 50%,
-      rgba(var(--lf-gold-soft), 0.12) 70%,
-      transparent 100%);
-  opacity: 0.85;
+.dark .lf-stream__shadow {
+  stroke: rgba(var(--lf-shadow-rgb), 0.12);
+  opacity: 0.46;
 }
 
-.dark .lf-band__line {
-  background: linear-gradient(90deg,
-      transparent 0%,
-      rgba(var(--lf-gold-soft), 0.00) 10%,
-      rgba(var(--lf-gold-soft), 0.10) 30%,
-      rgba(var(--lf-gold), 0.17) 50%,
-      rgba(var(--lf-gold-soft), 0.10) 70%,
-      transparent 100%);
-  opacity: 0.72;
+.lf-stream__line-soft {
+  stroke: rgba(var(--lf-line-soft-rgb), 0.10);
+  stroke-width: 6;
+  filter: blur(2px);
+  opacity: 0.52;
 }
 
-.lf-band__dust {
-  top: 24%;
-  bottom: 24%;
-  background-image:
-    radial-gradient(circle, rgba(var(--lf-gold), 0.18) 0 1px, transparent 1.7px),
-    radial-gradient(circle, rgba(var(--lf-gold-soft), 0.12) 0 0.8px, transparent 1.4px),
-    radial-gradient(circle, rgba(var(--lf-sand), 0.08) 0 0.9px, transparent 1.5px),
-    linear-gradient(90deg,
-      transparent 0%,
-      rgba(var(--lf-gold), 0.00) 12%,
-      rgba(var(--lf-gold), 0.04) 30%,
-      rgba(var(--lf-gold), 0.08) 50%,
-      rgba(var(--lf-gold), 0.04) 70%,
-      transparent 100%);
-  background-size: 16px 16px, 28px 28px, 46px 46px, 100% 100%;
-  background-position: 0 0, 12px 8px, 22px 14px, 0 0;
-  opacity: 0.78;
-  animation: lf-dust-drift var(--lf-duration) linear infinite;
-  mix-blend-mode: multiply;
+.dark .lf-stream__line-soft {
+  stroke: rgba(var(--lf-line-soft-rgb), 0.08);
+  opacity: 0.44;
 }
 
-.dark .lf-band__dust {
-  background-image:
-    radial-gradient(circle, rgba(var(--lf-gold), 0.22) 0 1px, transparent 1.7px),
-    radial-gradient(circle, rgba(var(--lf-gold-soft), 0.14) 0 0.8px, transparent 1.4px),
-    radial-gradient(circle, rgba(var(--lf-cool), 0.08) 0 0.9px, transparent 1.5px),
-    linear-gradient(90deg,
-      transparent 0%,
-      rgba(var(--lf-gold), 0.00) 12%,
-      rgba(var(--lf-gold), 0.05) 30%,
-      rgba(var(--lf-gold), 0.09) 50%,
-      rgba(var(--lf-gold), 0.05) 70%,
-      transparent 100%);
-  mix-blend-mode: screen;
-  opacity: 0.72;
+.lf-stream__line {
+  stroke: rgba(var(--lf-line-rgb), 0.20);
+  stroke-width: 2.2;
+  opacity: 0.90;
 }
 
-.lf-band__spark {
-  top: 14%;
-  bottom: 14%;
-  background-image:
-    radial-gradient(circle, rgba(var(--lf-gold), 0.12) 0 2.2px, transparent 5px),
-    radial-gradient(circle, rgba(var(--lf-gold-soft), 0.08) 0 1.8px, transparent 4px);
-  background-size: 84px 84px, 132px 132px;
-  background-position: 0 0, 52px 28px;
-  filter: blur(1px);
-  opacity: 0.18;
-  animation: lf-spark-drift calc(var(--lf-duration) * 1.12) linear infinite;
-  mix-blend-mode: multiply;
+.dark .lf-stream__line {
+  stroke: rgba(var(--lf-line-rgb), 0.17);
+  opacity: 0.82;
 }
 
-.dark .lf-band__spark {
-  mix-blend-mode: screen;
-  opacity: 0.16;
+.lf-stream__dust {
+  stroke: rgba(var(--lf-dust-rgb), 0.22);
+  stroke-width: 4.8;
+  stroke-dasharray: 0.1 16;
+  opacity: 0.70;
+  animation: lf-dash-drift var(--lf-duration) linear infinite;
+}
+
+.dark .lf-stream__dust {
+  stroke: rgba(var(--lf-dust-rgb), 0.20);
+  opacity: 0.62;
+}
+
+.lf-stream__spark {
+  stroke: rgba(var(--lf-spark-rgb), 0.10);
+  stroke-width: 8;
+  stroke-dasharray: 0.1 34;
+  filter: blur(1.5px);
+  opacity: 0.24;
+  animation: lf-dash-drift calc(var(--lf-duration) * 1.12) linear infinite reverse;
+}
+
+.dark .lf-stream__spark {
+  stroke: rgba(var(--lf-spark-rgb), 0.09);
+  opacity: 0.20;
 }
 
 @keyframes lf-band-drift {
@@ -1158,23 +1135,13 @@ button,
   }
 }
 
-@keyframes lf-dust-drift {
-  0% {
-    background-position: 0 0, 12px 8px, 22px 14px, 0 0;
+@keyframes lf-dash-drift {
+  from {
+    stroke-dashoffset: 0;
   }
 
-  100% {
-    background-position: 220px 0, 300px 16px, 380px 24px, 100% 0;
-  }
-}
-
-@keyframes lf-spark-drift {
-  0% {
-    background-position: 0 0, 52px 28px;
-  }
-
-  100% {
-    background-position: 140px 0, 220px 22px;
+  to {
+    stroke-dashoffset: -480;
   }
 }
 
@@ -1198,7 +1165,7 @@ button,
 
   50% {
     transform: scale(1.03);
-    opacity: 0.72;
+    opacity: 0.68;
   }
 }
 
@@ -1224,36 +1191,36 @@ button,
     width: 92%;
   }
 
-  .lf-band {
+  .lf-stream {
     width: 175vw;
     left: -38vw;
   }
 
-  .lf-band--1 {
+  .lf-stream--1 {
     top: 8vh;
   }
 
-  .lf-band--2 {
+  .lf-stream--2 {
     top: 22vh;
   }
 
-  .lf-band--3 {
+  .lf-stream--3 {
     top: 37vh;
   }
 
-  .lf-band--4 {
+  .lf-stream--4 {
     top: 52vh;
   }
 
-  .lf-band--5 {
+  .lf-stream--5 {
     top: 67vh;
   }
 
-  .lf-band--6 {
+  .lf-stream--6 {
     top: 82vh;
   }
 
-  .lf-band--7 {
+  .lf-stream--7 {
     top: 96vh;
   }
 }
@@ -1262,9 +1229,9 @@ button,
 
   .lf-specks,
   .lf-glow,
-  .lf-band,
-  .lf-band__dust,
-  .lf-band__spark {
+  .lf-stream,
+  .lf-stream__dust,
+  .lf-stream__spark {
     animation: none !important;
   }
 }
