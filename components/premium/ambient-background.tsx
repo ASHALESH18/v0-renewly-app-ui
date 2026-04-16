@@ -33,14 +33,14 @@ export function AmbientBackground({
   return (
     <div className={`relative overflow-hidden ${className}`}>
       {/* Base gradient layer */}
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: variant === 'hero' 
+          background: variant === 'hero'
             ? 'radial-gradient(ellipse 100% 70% at 50% 30%, rgba(199, 163, 106, 0.08) 0%, transparent 60%)'
             : variant === 'dashboard'
-            ? 'radial-gradient(ellipse 120% 80% at 50% 20%, rgba(199, 163, 106, 0.04) 0%, transparent 50%)'
-            : 'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(199, 163, 106, 0.03) 0%, transparent 50%)'
+              ? 'radial-gradient(ellipse 120% 80% at 50% 20%, rgba(199, 163, 106, 0.04) 0%, transparent 50%)'
+              : 'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(199, 163, 106, 0.03) 0%, transparent 50%)'
         }}
       />
 
@@ -175,3 +175,4 @@ export function AmbientBackground({
     </div>
   )
 }
+
