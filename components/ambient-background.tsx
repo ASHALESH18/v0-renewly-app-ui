@@ -1,30 +1,35 @@
 export function AmbientBackground() {
-  const bands = [
-    'ambient-band ambient-band--01',
-    'ambient-band ambient-band--02',
-    'ambient-band ambient-band--03',
-    'ambient-band ambient-band--04',
-    'ambient-band ambient-band--05',
-    'ambient-band ambient-band--06',
+  const streams = [
+    'lux-ambient-stream lux-ambient-stream--a',
+    'lux-ambient-stream lux-ambient-stream--b',
+    'lux-ambient-stream lux-ambient-stream--c',
+    'lux-ambient-stream lux-ambient-stream--d',
+    'lux-ambient-stream lux-ambient-stream--e',
+    'lux-ambient-stream lux-ambient-stream--f',
+    'lux-ambient-stream lux-ambient-stream--g',
+    'lux-ambient-stream lux-ambient-stream--h',
   ]
 
   return (
-    <div aria-hidden="true" className="ambient-root">
-      <div className="ambient-base" />
-      <div className="ambient-grid" />
-      <div className="ambient-specks" />
-      <div className="ambient-center-glow" />
-      <div className="ambient-lower-glow" />
+    <div aria-hidden="true" className="lux-ambient-root">
+      <div className="lux-ambient-base" />
+      <div className="lux-ambient-grid" />
+      <div className="lux-ambient-specks lux-ambient-specks--far" />
+      <div className="lux-ambient-specks lux-ambient-specks--near" />
+      <div className="lux-ambient-center-glow" />
+      <div className="lux-ambient-edge-glow lux-ambient-edge-glow--top" />
+      <div className="lux-ambient-edge-glow lux-ambient-edge-glow--bottom" />
 
-      {bands.map((className) => (
-        <div key={className} className={className}>
-          <div className="ambient-band__core" />
-          <div className="ambient-band__dust" />
-          <div className="ambient-band__bokeh" />
+      {streams.map((stream) => (
+        <div key={stream} className={stream}>
+          <div className="lux-ambient-stream__shadow" />
+          <div className="lux-ambient-stream__core" />
+          <div className="lux-ambient-stream__dust" />
+          <div className="lux-ambient-stream__sparkles" />
         </div>
       ))}
 
-      <div className="ambient-vignette" />
+      <div className="lux-ambient-vignette" />
     </div>
   )
 }
