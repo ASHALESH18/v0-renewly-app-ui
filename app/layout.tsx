@@ -5,26 +5,27 @@ import { Inter, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ToastContainer } from '@/components/toast-container'
 import { ThemeProvider } from '@/components/theme-provider'
+import { AmbientBackground } from '@/components/ambient-background'
 import './globals.css'
 import { PreferencesBridge } from '@/components/preferences-bridge'
 
-
 const inter = Inter({
-  subsets: ["latin"],
+  subsets: ['latin'],
   variable: '--font-inter',
-  display: 'swap'
-});
+  display: 'swap',
+})
 
 const playfair = Playfair_Display({
-  subsets: ["latin"],
+  subsets: ['latin'],
   variable: '--font-playfair',
-  display: 'swap'
-});
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.renewly.in'),
   title: 'Renewly - Own Every Renewal | Subscription Management',
-  description: 'Track, understand, and reduce every recurring payment with elegance. Premium subscription intelligence for the discerning individual. Manage your subscriptions effortlessly.',
+  description:
+    'Track, understand, and reduce every recurring payment with elegance. Premium subscription intelligence for the discerning individual. Manage your subscriptions effortlessly.',
   keywords: [
     'subscription tracking',
     'recurring payments',
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
     'money management',
     'subscription cancellation',
     'budget tracking',
-    'expense management'
+    'expense management',
   ],
   authors: [{ name: 'Renewly' }],
   creator: 'Renewly',
@@ -112,7 +113,6 @@ export const viewport: Viewport = {
   userScalable: true,
 }
 
-
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -133,7 +133,7 @@ export default async function RootLayout({
       '@type': 'Offer',
       price: '0',
       priceCurrency: 'INR',
-      description: 'Freemium subscription management service'
+      description: 'Freemium subscription management service',
     },
     aggregateRating: {
       '@type': 'AggregateRating',
@@ -201,7 +201,9 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
         />
       </head>
-      <body className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-background min-h-screen`}>
+      <body
+        className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-background min-h-screen overflow-x-hidden`}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
@@ -210,28 +212,13 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <PreferencesBridge />
-          {/* Global ambient background layer */}
-          <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
-            {/* Large ambient orb - top right */}
-            <div 
-              className="absolute -top-[20%] -right-[15%] w-[600px] h-[600px] rounded-full animate-orb-breathe"
-              style={{ 
-                background: 'radial-gradient(circle, rgba(199, 163, 106, 0.08) 0%, transparent 70%)',
-                filter: 'blur(100px)'
-              }}
-            />
-            {/* Secondary orb - bottom left */}
-            <div 
-              className="absolute -bottom-[15%] -left-[10%] w-[500px] h-[500px] rounded-full animate-orb-breathe"
-              style={{ 
-                background: 'radial-gradient(circle, rgba(46, 94, 82, 0.06) 0%, transparent 70%)',
-                filter: 'blur(120px)',
-                animationDelay: '4s'
-              }}
-            />
+          <div className="relative isolate min-h-screen overflow-x-hidden">
+            <AmbientBackground />
+            <div className="relative z-10">
+              {children}
+              <ToastContainer />
+            </div>
           </div>
-          {children}
-          <ToastContainer />
         </ThemeProvider>
         <Analytics />
       </body>

@@ -14,7 +14,7 @@ import type { Subscription } from '@/lib/types'
 // Premium loading skeleton for the app shell
 function AppShellSkeleton() {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-background">
+    <div className="min-h-screen overflow-x-hidden bg-transparent">
       {/* Desktop sidebar skeleton */}
       <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-[280px] flex-col bg-card border-r border-border z-40">
         {/* Logo skeleton */}
@@ -171,7 +171,7 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
   // Show error state if initialization failed
   if (initError) {
     return (
-      <div className="min-h-screen overflow-x-hidden bg-background flex items-center justify-center">
+      <div className="min-h-screen overflow-x-hidden bg-transparent flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -195,7 +195,7 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-transparent">
       {/* Desktop sidebar */}
       <SidebarNav activeTab={activeTab} />
 
