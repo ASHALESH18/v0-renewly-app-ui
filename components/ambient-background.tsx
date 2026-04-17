@@ -1,244 +1,203 @@
-'use client'
+import React from 'react'
 
-import React, { useMemo } from 'react'
+type Particle = { cx: number; cy: number; r: number; opacity?: number }
 
-// Generate random particles for the floating gold dust effect
-function generateParticles(count: number, seed: number = 1, yRange: [number, number] = [50, 950]): Array<{
-  cx: number
-  cy: number
-  r: number
-  delay: number
-  duration: number
-}> {
-  const particles = []
-  for (let i = 0; i < count; i++) {
-    const hash = (seed * 9301 + i * 49297) % 233280
-    
-    particles.push({
-      cx: (hash % 1800) - 100, // Spread across full width with overflow
-      cy: yRange[0] + ((hash * 7) % (yRange[1] - yRange[0])), // Distribute across y range
-      r: 0.6 + (hash % 100) / 40, // 0.6 to 3.1
-      delay: (i % 25) * 0.6,
-      duration: 14 + (hash % 16),
-    })
-  }
-  return particles
-}
+const goldDust: Particle[] = [
+  { cx: 180, cy: 255, r: 2.4 },
+  { cx: 260, cy: 238, r: 1.9, opacity: 0.8 },
+  { cx: 340, cy: 224, r: 2.2 },
+  { cx: 425, cy: 212, r: 1.8 },
+  { cx: 510, cy: 206, r: 2.8 },
+  { cx: 620, cy: 202, r: 1.7 },
+  { cx: 710, cy: 208, r: 2.5 },
+  { cx: 820, cy: 224, r: 1.8 },
+  { cx: 930, cy: 248, r: 2.4 },
+  { cx: 1040, cy: 272, r: 1.8 },
+  { cx: 1160, cy: 288, r: 2.5 },
+  { cx: 1280, cy: 290, r: 2.1 },
+  { cx: 1390, cy: 280, r: 1.7 },
+  { cx: 1460, cy: 262, r: 2.3 },
+]
 
-// Particle group component
-function DustParticleGroup({
+const emeraldDust: Particle[] = [
+  { cx: 120, cy: 585, r: 1.9 },
+  { cx: 230, cy: 565, r: 2.4 },
+  { cx: 345, cy: 548, r: 1.8 },
+  { cx: 470, cy: 538, r: 2.1 },
+  { cx: 610, cy: 534, r: 1.7 },
+  { cx: 760, cy: 538, r: 2.5 },
+  { cx: 905, cy: 555, r: 1.9 },
+  { cx: 1040, cy: 575, r: 2.4 },
+  { cx: 1170, cy: 592, r: 1.8 },
+  { cx: 1295, cy: 604, r: 2.2 },
+  { cx: 1410, cy: 610, r: 1.7 },
+]
+
+const platinumDust: Particle[] = [
+  { cx: 210, cy: 785, r: 1.6 },
+  { cx: 360, cy: 764, r: 2.1 },
+  { cx: 515, cy: 748, r: 1.8 },
+  { cx: 690, cy: 742, r: 1.5 },
+  { cx: 860, cy: 748, r: 2.1 },
+  { cx: 1040, cy: 764, r: 1.7 },
+  { cx: 1210, cy: 780, r: 1.9 },
+  { cx: 1385, cy: 792, r: 1.5 },
+]
+
+function DustParticles({
   particles,
-  baseColor,
-  animationClass,
+  className,
+  fill,
 }: {
-  particles: Array<{ cx: number; cy: number; r: number; delay: number; duration: number }>
-  baseColor: string
-  animationClass: string
+  particles: Particle[]
+  className: string
+  fill: string
 }) {
   return (
-    <g className={animationClass}>
-      {particles.map((p, i) => (
+    <g className={`ambient-particles ${className}`}>
+      {particles.map((particle, index) => (
         <circle
-          key={i}
-          cx={p.cx}
-          cy={p.cy}
-          r={p.r}
-          fill={baseColor}
-          style={{
-            animationDelay: `${p.delay}s`,
-            animationDuration: `${p.duration}s`,
-          }}
-        >
-          <animate
-            attributeName="opacity"
-            values="0.05;0.5;0.05"
-            dur={`${p.duration}s`}
-            begin={`${p.delay}s`}
-            repeatCount="indefinite"
-          />
-        </circle>
+          key={`${className}-${index}`}
+          cx={particle.cx}
+          cy={particle.cy}
+          r={particle.r}
+          fill={fill}
+          opacity={particle.opacity ?? 1}
+        />
       ))}
     </g>
   )
 }
 
 export function AmbientBackground() {
-  // Generate multiple layers of particles that span the entire viewport seamlessly
-  const particlesLayer1 = useMemo(() => generateParticles(60, 1, [0, 1000]), [])
-  const particlesLayer2 = useMemo(() => generateParticles(45, 2, [100, 900]), [])
-  const particlesLayer3 = useMemo(() => generateParticles(35, 3, [200, 800]), [])
-
   return (
-    <div 
-      className="fixed inset-0 z-0 pointer-events-none overflow-hidden"
-      aria-hidden="true"
-    >
-      {/* Base layer - deep obsidian (dark) / warm ivory (light) */}
+    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
       <div className="ambient-base" />
-      
-      {/* Soft ambient wash for seamless depth */}
       <div className="ambient-soft-wash" />
 
-      {/* Soft glowing areas - creates gentle warmth zones without hard edges */}
       <div className="ambient-glow ambient-glow--top animate-ambient-breathe-top" />
       <div className="ambient-glow ambient-glow--center animate-ambient-breathe-center" />
       <div className="ambient-glow ambient-glow--bottom animate-ambient-breathe-bottom" />
 
-      {/* Primary flowing gold dust wave SVG - seamless, merging dust */}
       <svg
         className="ambient-dust-svg"
         viewBox="0 0 1600 1000"
         preserveAspectRatio="xMidYMid slice"
       >
         <defs>
-          {/* Seamless flowing dust gradient - no hard edges */}
-          <linearGradient id="dustFlowPrimary" x1="0%" y1="0%" x2="100%" y2="0%">
+          <linearGradient id="ambientGoldSoft" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="rgba(199,163,106,0)" />
-            <stop offset="8%" stopColor="rgba(199,163,106,0.12)" />
-            <stop offset="35%" stopColor="rgba(212,184,122,0.4)" />
-            <stop offset="65%" stopColor="rgba(212,184,122,0.4)" />
-            <stop offset="92%" stopColor="rgba(199,163,106,0.12)" />
+            <stop offset="18%" stopColor="rgba(199,163,106,0.08)" />
+            <stop offset="50%" stopColor="rgba(212,184,122,0.45)" />
+            <stop offset="82%" stopColor="rgba(199,163,106,0.08)" />
             <stop offset="100%" stopColor="rgba(199,163,106,0)" />
           </linearGradient>
 
-          {/* Core glow gradient - brighter center */}
-          <linearGradient id="dustFlowCore" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="rgba(255,248,230,0)" />
-            <stop offset="20%" stopColor="rgba(229,212,184,0.2)" />
-            <stop offset="50%" stopColor="rgba(245,235,210,0.45)" />
-            <stop offset="80%" stopColor="rgba(229,212,184,0.2)" />
-            <stop offset="100%" stopColor="rgba(255,248,230,0)" />
+          <linearGradient id="ambientGoldCore" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0)" />
+            <stop offset="36%" stopColor="rgba(229,212,184,0.14)" />
+            <stop offset="50%" stopColor="rgba(229,212,184,0.32)" />
+            <stop offset="64%" stopColor="rgba(229,212,184,0.14)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
           </linearGradient>
 
-          {/* Secondary flowing dust - warmer tone */}
-          <linearGradient id="dustFlowSecondary" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="rgba(180,145,80,0)" />
-            <stop offset="12%" stopColor="rgba(180,145,80,0.08)" />
-            <stop offset="50%" stopColor="rgba(195,165,100,0.28)" />
-            <stop offset="88%" stopColor="rgba(180,145,80,0.08)" />
-            <stop offset="100%" stopColor="rgba(180,145,80,0)" />
+          <linearGradient id="ambientEmeraldSoft" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="rgba(46,94,82,0)" />
+            <stop offset="20%" stopColor="rgba(46,94,82,0.05)" />
+            <stop offset="50%" stopColor="rgba(88,126,112,0.24)" />
+            <stop offset="80%" stopColor="rgba(46,94,82,0.05)" />
+            <stop offset="100%" stopColor="rgba(46,94,82,0)" />
           </linearGradient>
 
-          {/* Tertiary flowing dust - subtle accent */}
-          <linearGradient id="dustFlowTertiary" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="rgba(199,163,106,0)" />
-            <stop offset="15%" stopColor="rgba(199,163,106,0.06)" />
-            <stop offset="50%" stopColor="rgba(212,184,122,0.2)" />
-            <stop offset="85%" stopColor="rgba(199,163,106,0.06)" />
-            <stop offset="100%" stopColor="rgba(199,163,106,0)" />
+          <linearGradient id="ambientEmeraldCore" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0)" />
+            <stop offset="36%" stopColor="rgba(120,158,145,0.08)" />
+            <stop offset="50%" stopColor="rgba(120,158,145,0.2)" />
+            <stop offset="64%" stopColor="rgba(120,158,145,0.08)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
           </linearGradient>
 
-          {/* Very soft blur for outer glow - creates seamless merging */}
-          <filter id="dustBlurSoft" x="-40%" y="-40%" width="180%" height="180%">
-            <feGaussianBlur stdDeviation="32" />
+          <linearGradient id="ambientPlatinumSoft" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="rgba(188,194,204,0)" />
+            <stop offset="24%" stopColor="rgba(188,194,204,0.03)" />
+            <stop offset="50%" stopColor="rgba(210,214,220,0.14)" />
+            <stop offset="76%" stopColor="rgba(188,194,204,0.03)" />
+            <stop offset="100%" stopColor="rgba(188,194,204,0)" />
+          </linearGradient>
+
+          <linearGradient id="ambientPlatinumCore" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0)" />
+            <stop offset="36%" stopColor="rgba(255,255,255,0.05)" />
+            <stop offset="50%" stopColor="rgba(255,255,255,0.12)" />
+            <stop offset="64%" stopColor="rgba(255,255,255,0.05)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          </linearGradient>
+
+          <filter id="ambientDustBlurXL" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="18" />
           </filter>
 
-          {/* Medium blur for intermediate layers */}
-          <filter id="dustBlurMedium" x="-25%" y="-25%" width="150%" height="150%">
-            <feGaussianBlur stdDeviation="16" />
-          </filter>
-
-          {/* Subtle blur for core paths */}
-          <filter id="dustBlurCore" x="-15%" y="-15%" width="130%" height="130%">
-            <feGaussianBlur stdDeviation="6" />
+          <filter id="ambientDustBlurLG" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="7" />
           </filter>
         </defs>
 
-        {/* LAYER 1: Upper flowing dust wave */}
         <g className="ambient-wave ambient-wave--gold">
           <path
             className="ambient-dust-path ambient-dust-soft"
-            d="M -300 180 
-               C 100 280, 300 120, 600 220 
-               S 900 320, 1100 200 
-               S 1400 280, 1900 160"
-            stroke="url(#dustFlowPrimary)"
-            strokeWidth="220"
-            filter="url(#dustBlurSoft)"
+            d="M -180 270 C 100 350, 355 140, 685 220 S 1265 418, 1780 258"
+            stroke="url(#ambientGoldSoft)"
+            strokeWidth="92"
+            filter="url(#ambientDustBlurXL)"
           />
           <path
             className="ambient-dust-path ambient-dust-core"
-            d="M -300 180 
-               C 100 280, 300 120, 600 220 
-               S 900 320, 1100 200 
-               S 1400 280, 1900 160"
-            stroke="url(#dustFlowCore)"
-            strokeWidth="50"
-            filter="url(#dustBlurCore)"
+            d="M -180 270 C 100 350, 355 140, 685 220 S 1265 418, 1780 258"
+            stroke="url(#ambientGoldCore)"
+            strokeWidth="26"
+            filter="url(#ambientDustBlurLG)"
           />
+          <DustParticles particles={goldDust} className="ambient-particles--gold" fill="rgba(229, 212, 184, 0.75)" />
         </g>
 
-        {/* LAYER 2: Middle flowing dust - fills the gap seamlessly */}
-        <g className="ambient-wave ambient-wave--warm">
+        <g className="ambient-wave ambient-wave--emerald">
           <path
             className="ambient-dust-path ambient-dust-soft"
-            d="M -200 420 
-               C 150 350, 400 500, 700 400 
-               S 1000 320, 1300 450 
-               S 1600 380, 1900 440"
-            stroke="url(#dustFlowSecondary)"
-            strokeWidth="200"
-            filter="url(#dustBlurSoft)"
+            d="M -220 560 C 90 482, 320 678, 642 588 S 1218 454, 1820 618"
+            stroke="url(#ambientEmeraldSoft)"
+            strokeWidth="84"
+            filter="url(#ambientDustBlurXL)"
           />
           <path
             className="ambient-dust-path ambient-dust-core"
-            d="M -200 420 
-               C 150 350, 400 500, 700 400 
-               S 1000 320, 1300 450 
-               S 1600 380, 1900 440"
-            stroke="url(#dustFlowCore)"
-            strokeWidth="35"
-            filter="url(#dustBlurMedium)"
+            d="M -220 560 C 90 482, 320 678, 642 588 S 1218 454, 1820 618"
+            stroke="url(#ambientEmeraldCore)"
+            strokeWidth="22"
+            filter="url(#ambientDustBlurLG)"
           />
+          <DustParticles particles={emeraldDust} className="ambient-particles--emerald" fill="rgba(163, 201, 189, 0.48)" />
         </g>
 
-        {/* LAYER 3: Lower flowing dust wave */}
-        <g className="ambient-wave ambient-wave--accent">
+        <g className="ambient-wave ambient-wave--platinum">
           <path
             className="ambient-dust-path ambient-dust-soft"
-            d="M -250 680 
-               C 100 600, 350 750, 650 650 
-               S 950 580, 1200 700 
-               S 1500 620, 1900 720"
-            stroke="url(#dustFlowTertiary)"
-            strokeWidth="180"
-            filter="url(#dustBlurSoft)"
+            d="M -160 782 C 185 706, 430 830, 770 762 S 1310 666, 1780 790"
+            stroke="url(#ambientPlatinumSoft)"
+            strokeWidth="62"
+            filter="url(#ambientDustBlurXL)"
           />
-        </g>
-
-        {/* LAYER 4: Connective dust - bridges the waves for seamless merging */}
-        <g className="ambient-wave ambient-wave--warm" style={{ opacity: 0.6 }}>
           <path
-            className="ambient-dust-path ambient-dust-soft"
-            d="M -100 300 
-               C 200 450, 500 280, 800 420 
-               S 1100 550, 1400 400 
-               S 1700 500, 1950 350"
-            stroke="url(#dustFlowTertiary)"
-            strokeWidth="160"
-            filter="url(#dustBlurSoft)"
+            className="ambient-dust-path ambient-dust-core"
+            d="M -160 782 C 185 706, 430 830, 770 762 S 1310 666, 1780 790"
+            stroke="url(#ambientPlatinumCore)"
+            strokeWidth="14"
+            filter="url(#ambientDustBlurLG)"
           />
+          <DustParticles particles={platinumDust} className="ambient-particles--platinum" fill="rgba(229, 233, 238, 0.34)" />
         </g>
-
-        {/* Floating gold dust particles - spread across entire viewport */}
-        <DustParticleGroup
-          particles={particlesLayer1}
-          baseColor="rgba(229, 212, 184, 0.8)"
-          animationClass="ambient-particles ambient-particles--gold"
-        />
-        <DustParticleGroup
-          particles={particlesLayer2}
-          baseColor="rgba(199, 163, 106, 0.7)"
-          animationClass="ambient-particles ambient-particles--warm"
-        />
-        <DustParticleGroup
-          particles={particlesLayer3}
-          baseColor="rgba(245, 235, 210, 0.6)"
-          animationClass="ambient-particles ambient-particles--accent"
-        />
       </svg>
 
-      {/* Vignette for cinematic depth - no texture grid */}
+      <div className="ambient-texture" />
       <div className="ambient-vignette" />
     </div>
   )
