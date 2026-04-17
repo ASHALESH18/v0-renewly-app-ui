@@ -57,7 +57,8 @@ function AnimatedNumber({
 
 export function LeakPreview() {
   const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: '-100px' })
+  // Use amount instead of margin for better scroll timing
+  const isInView = useInView(ref, { once: true, amount: 0.25 })
 
   return (
     <section ref={ref} className="py-24 lg:py-32 px-4 bg-secondary dark:bg-obsidian relative overflow-hidden">
@@ -68,9 +69,9 @@ export function LeakPreview() {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left side - Content */}
           <motion.div
-            initial={{ opacity: 0, x: -40 }}
+            initial={{ opacity: 0, x: -20 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
-            transition={springs.gentle}
+            transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
           >
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold/10 text-gold text-sm font-medium mb-6">
               <Sparkles className="w-4 h-4" />
@@ -95,9 +96,9 @@ export function LeakPreview() {
               ].map((item, i) => (
                 <motion.div
                   key={item.title}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={isInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ delay: 0.2 + i * 0.1, ...springs.gentle }}
+                  transition={{ delay: 0.3 + i * 0.1, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
                   className="flex items-start gap-3"
                 >
                   <div className="w-6 h-6 rounded-full bg-gold/20 flex items-center justify-center mt-0.5">
@@ -114,9 +115,9 @@ export function LeakPreview() {
 
           {/* Right side - Leak Report Card */}
           <motion.div
-            initial={{ opacity: 0, x: 40 }}
+            initial={{ opacity: 0, x: 20 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
-            transition={{ delay: 0.2, ...springs.gentle }}
+            transition={{ delay: 0.15, duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
             className="relative"
           >
             {/* The Leak Report Card */}

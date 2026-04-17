@@ -11,7 +11,8 @@ import { useFAQItems } from '@/lib/hooks/use-remote-data'
 export function FAQ() {
   const router = useRouter()
   const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: '-100px' })
+  // Use amount for better scroll timing
+  const isInView = useInView(ref, { once: true, amount: 0.2 })
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   
   const { faqItems, isLoading } = useFAQItems()
@@ -25,9 +26,9 @@ export function FAQ() {
       <div className="max-w-3xl mx-auto relative z-10">
         {/* Section header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={springs.gentle}
+          transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
           className="text-center mb-12"
         >
           <p className="text-gold text-sm font-medium tracking-wide uppercase mb-4">
@@ -42,7 +43,7 @@ export function FAQ() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
-          transition={{ delay: 0.2, ...springs.gentle }}
+          transition={{ delay: 0.15, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
           className="space-y-3"
         >
           {faqItems.map((item, index) => (
@@ -59,9 +60,9 @@ export function FAQ() {
 
         {/* Contact CTA */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.4, ...springs.gentle }}
+          transition={{ delay: 0.3, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
           className="mt-12 text-center"
         >
           <p className="text-platinum mb-4">
@@ -94,9 +95,9 @@ interface FAQItemProps {
 function FAQItem({ question, answer, isOpen, onToggle, index }: FAQItemProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05, ...springs.gentle }}
+      transition={{ delay: index * 0.06, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
       className="rounded-xl bg-card dark:bg-graphite border border-glass-border overflow-hidden"
     >
       <button
