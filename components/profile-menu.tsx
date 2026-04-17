@@ -133,10 +133,10 @@ export function ProfileMenu({ isOpen, onClose, onNavigate, avatarUrl }: ProfileM
       {isOpen && (
         <motion.div
           ref={menuRef}
-          initial={{ opacity: 0, y: -10, scale: 0.95 }}
+          initial={{ opacity: 0, y: -6, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -10, scale: 0.95 }}
-          transition={{ duration: 0.15 }}
+          exit={{ opacity: 0, y: -4, scale: 0.98 }}
+          transition={{ duration: 0.12, ease: [0.32, 0.72, 0, 1] }}
           className="absolute top-full right-0 mt-2 w-80 rounded-2xl glass-strong border border-glass-border shadow-luxury z-50"
         >
           {/* User info header */}

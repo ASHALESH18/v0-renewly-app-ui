@@ -103,7 +103,6 @@ export function CalendarScreen() {
   const [viewMode, setViewMode] = useState('month')
   const [currentDate, setCurrentDate] = useState(() => new Date())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
-  const [isMounted, setIsMounted] = useState(false)
 
   const { calendarEvents, isLoading, error } = useCalendarEvents()
 
@@ -111,10 +110,6 @@ export function CalendarScreen() {
     () => normalizeEvents(calendarEvents),
     [calendarEvents]
   )
-
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
 
   useEffect(() => {
     if (!events.length || selectedDate) return
@@ -128,7 +123,7 @@ export function CalendarScreen() {
     return events.find((event) => event.date === dateStr) ?? null
   }
 
-  if (!isMounted || isLoading) {
+  if (isLoading) {
     return <CalendarSkeleton />
   }
 
@@ -272,14 +267,6 @@ export function CalendarScreen() {
                       )}
                       type="button"
                     >
-                      {/* Glow effect on today */}
-                      {isToday && (
-                        <motion.div
-                          className="absolute -inset-1 rounded-2xl bg-gold/30 blur-md -z-10"
-                          animate={{ opacity: [0.4, 0.7, 0.4] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                        />
-                      )}
                       <span
                         className={cn(
                           'text-sm font-medium',
