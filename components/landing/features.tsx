@@ -12,6 +12,7 @@ import {
   CreditCard,
   TrendingDown,
   Globe,
+  ArrowRight
 } from 'lucide-react'
 import { springs, staggerContainer, staggerItem } from '../motion'
 
@@ -340,22 +341,60 @@ export function Features() {
             {/* Feature highlight cards */}
             <div className="space-y-4">
               {[
-                { icon: Zap, title: 'Instant Insights', desc: 'Real-time analysis of your spending patterns' },
-                { icon: Bell, title: 'Smart Notifications', desc: 'Know exactly when and what to expect' },
-                { icon: Shield, title: 'Privacy First', desc: 'Your data never leaves your device' },
-              ].map((item) => (
-                <div
+                { icon: Zap, title: 'Instant Insights', desc: 'Real-time analysis of your spending patterns', color: '#C7A36A' },
+                { icon: Bell, title: 'Smart Notifications', desc: 'Know exactly when and what to expect', color: '#2E5E52' },
+                { icon: Shield, title: 'Privacy First', desc: 'Your data never leaves your device', color: '#BCC2CC' },
+              ].map((item, i) => (
+                <motion.div
                   key={item.title}
-                  className="flex items-start gap-4 p-4 rounded-xl bg-secondary/30 dark:bg-slate/30 border border-glass-border"
+                  initial={{ opacity: 0, x: 20, filter: 'blur(3px)' }}
+                  animate={isInView ? { opacity: 1, x: 0, filter: 'blur(0px)' } : {}}
+                  transition={{ delay: 0.3 + i * 0.06, duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+                  whileHover={{ 
+                    x: -4, 
+                    transition: { duration: 0.15 } 
+                  }}
+                  className="group flex items-start gap-4 p-4 rounded-xl bg-secondary/30 dark:bg-slate/30 border border-glass-border transition-all duration-200 hover:bg-secondary/50 dark:hover:bg-slate/50 hover:border-gold/15 cursor-pointer"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
-                    <item.icon className="w-5 h-5 text-gold" />
-                  </div>
+                  <motion.div 
+                    className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0 relative"
+                    whileHover={{ scale: 1.1 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    {/* Glow on hover */}
+                    <motion.div
+                      className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      style={{ 
+                        background: `radial-gradient(circle, ${item.color}30 0%, transparent 70%)`,
+                        filter: 'blur(6px)'
+                      }}
+                    />
+                    <motion.div
+                      animate={{ rotate: [0, 5, -5, 0] }}
+                      transition={{ duration: 0.3 }}
+                      whileHover={{ scale: 1.1 }}
+                    >
+                      <item.icon className="w-5 h-5 text-gold relative z-10" />
+                    </motion.div>
+                  </motion.div>
                   <div>
-                    <p className="font-medium text-foreground">{item.title}</p>
+                    <motion.p 
+                      className="font-medium text-foreground group-hover:text-gold transition-colors duration-150"
+                    >
+                      {item.title}
+                    </motion.p>
                     <p className="text-sm text-platinum">{item.desc}</p>
                   </div>
-                </div>
+                  {/* Arrow indicator on hover */}
+                  <motion.div
+                    className="ml-auto self-center opacity-0 group-hover:opacity-100"
+                    initial={{ x: -8, opacity: 0 }}
+                    whileHover={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <ArrowRight className="w-4 h-4 text-gold" />
+                  </motion.div>
+                </motion.div>
               ))}
             </div>
           </div>
