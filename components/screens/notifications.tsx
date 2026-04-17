@@ -153,7 +153,7 @@ export function NotificationsScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent pb-24">
+    <div className="min-h-screen bg-background pb-24">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

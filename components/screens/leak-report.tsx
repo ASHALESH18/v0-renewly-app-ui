@@ -1,575 +1,629 @@
 'use client'
 
-import React, { useEffect, useMemo, useState } from 'react'
-import { motion } from 'framer-motion'
+import React, { useState, useEffect, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { formatMoney } from '@/lib/preferences-format'
 import {
-  AlertTriangle,
-  ArrowRight,
-  CalendarClock,
-  CheckCircle2,
-  Copy,
-  ShieldAlert,
-  Sparkles,
+  Share2,
+  Download,
   TrendingDown,
+  Sparkles,
+  ArrowRight,
+  Copy,
+  Check,
+  ChevronRight
 } from 'lucide-react'
 import { Header } from '@/components/header'
-import { PageTransition, springs } from '@/components/motion'
+import { PageTransition, springs, staggerItem, StaggerList } from '@/components/motion'
 import useStore from '@/lib/store'
-import { cn } from '@/lib/utils'
-import type { Subscription } from '@/lib/types'
-import { formatMoney } from '@/lib/preferences-format'
 import { useCountUp } from '@/lib/hooks/use-count-up'
-
-interface LeakReportScreenProps {
-  onNavigateTab?: (tab: string) => void
-  onProfileClick?: () => void
-}
+import { cn } from '@/lib/utils'
+import { getLeakStatusConfig, getLeakStatusLabel } from '@/lib/leak-status-config'
 
 export function LeakReportScreen({
   onNavigateTab,
-  onProfileClick,
-}: LeakReportScreenProps) {
+  onProfileClick
+}: {
+  onNavigateTab?: (tab: string) => void
+  onProfileClick?: () => void
+} = {}) {
   const [mounted, setMounted] = useState(false)
   const [copied, setCopied] = useState(false)
-
-  const subscriptions = useStore((state) => state.subscriptions)
-  const notificationSettings = useStore((state) => state.notificationSettings)
-
-  const preferredLanguage = notificationSettings.language || 'en'
-  const preferredCurrency = notificationSettings.currencyCode || 'INR'
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  const activeSubscriptions = useMemo(
-    () => subscriptions.filter((sub) => sub.status === 'active'),
-    [subscriptions]
-  )
+  // Get live data from store
+  const subscriptions = useStore((state) => state.subscriptions)
+  const notificationSettings = useStore((state) => state.notificationSettings)
+  const preferredLanguage = notificationSettings.language || 'en'
+  const preferredCurrency = notificationSettings.currencyCode || 'INR'
 
-  const unusedSubscriptions = useMemo(
-    () => subscriptions.filter((sub) => sub.status === 'unused'),
-    [subscriptions]
-  )
+  // Memoize metrics calculation to prevent infinite loop
+  const metrics = useMemo(() => {
+    const totalMonthly = subscriptions.reduce((sum, sub) => sum + (sub.price || sub.amount || 0), 0)
+    const totalYearly = totalMonthly * 12
+    const savingsPotential = subscriptions
+      .filter(sub => sub.status === 'unused')
+      .reduce((sum, sub) => sum + (sub.price || sub.amount || 0), 0)
 
-  const pausedSubscriptions = useMemo(
-    () => subscriptions.filter((sub) => sub.status === 'paused'),
-    [subscriptions]
-  )
-
-  const flaggedSubscriptions = useMemo(
-    () =>
-      subscriptions.filter(
-        (sub) => sub.status === 'unused' || sub.status === 'paused'
-      ),
-    [subscriptions]
-  )
-
-  const monthlySpend = useMemo(
-    () => activeSubscriptions.reduce((sum, sub) => sum + toMonthlyAmount(sub), 0),
-    [activeSubscriptions]
-  )
-
-  const yearlySpend = useMemo(() => monthlySpend * 12, [monthlySpend])
-
-  const savingsPotential = useMemo(
-    () => unusedSubscriptions.reduce((sum, sub) => sum + toMonthlyAmount(sub), 0),
-    [unusedSubscriptions]
-  )
-
-  const categorySpending = useMemo(() => {
-    const buckets: Record<string, number> = {}
-
-    activeSubscriptions.forEach((sub) => {
-      buckets[sub.category] = (buckets[sub.category] || 0) + toMonthlyAmount(sub)
-    })
-
-    return buckets
-  }, [activeSubscriptions])
-
-  const topCategoryEntry = useMemo(() => {
-    const entries = Object.entries(categorySpending)
-    if (!entries.length) return null
-    return entries.sort((a, b) => b[1] - a[1])[0]
-  }, [categorySpending])
-
-  const upcomingRenewals = useMemo(() => {
-    return subscriptions
-      .filter((sub) => {
-        if (!sub.renewalDate || sub.status !== 'active') return false
-        const days = getDaysUntil(sub.renewalDate)
-        return days > 0 && days <= 30
-      })
-      .sort((a, b) => {
-        const aTime = a.renewalDate
-          ? new Date(a.renewalDate).getTime()
-          : Number.MAX_SAFE_INTEGER
-        const bTime = b.renewalDate
-          ? new Date(b.renewalDate).getTime()
-          : Number.MAX_SAFE_INTEGER
-        return aTime - bTime
-      })
+    return {
+      totalMonthly: totalMonthly || 0,
+      totalYearly: totalYearly || 0,
+      savingsPotential: savingsPotential || 0
+    }
   }, [subscriptions])
 
-  const leakScore = useMemo(() => {
-    let score = 100
+  // Calculate leak data
+  const leakData = (() => {
+    const categories: Record<string, number> = {}
+    let mostExpensiveCategory = ''
+    let mostExpensiveAmount = 0
+    let overallScore = 100
 
-    score -= unusedSubscriptions.length * 18
-    score -= pausedSubscriptions.length * 7
+    subscriptions.forEach(sub => {
+      categories[sub.category] = (categories[sub.category] || 0) + (sub.price || 0)
+      if ((sub.price || 0) > mostExpensiveAmount) {
+        mostExpensiveAmount = sub.price || 0
+        mostExpensiveCategory = sub.category
+      }
+      if (sub.status === 'unused') overallScore -= 20
+      if (sub.status === 'paused') overallScore -= 5
+    })
 
-    if (topCategoryEntry && monthlySpend > 0) {
-      const [, topAmount] = topCategoryEntry
-      const ratio = topAmount / monthlySpend
-      if (ratio > 0.45) score -= 8
+    const unusedSubscriptions = subscriptions.filter(sub => sub.status === 'unused')
+
+    return {
+      overallScore: Math.max(0, overallScore),
+      categorySpending: Object.entries(categories).map(([category, amount]) => ({
+        category,
+        amount,
+        percentage: subscriptions.length > 0
+          ? (amount / subscriptions.reduce((sum, s) => sum + (s.price || 0), 0)) * 100
+          : 0,
+      })),
+      mostExpensiveCategory,
+      unusedSubscriptionsCount: unusedSubscriptions.length,
+      potentialSavings: unusedSubscriptions.reduce((sum, sub) => sum + (sub.price || 0), 0),
     }
+  })()
 
-    if (upcomingRenewals.length >= 4) score -= 4
-    if (activeSubscriptions.length >= 10) score -= 4
-
-    return clamp(Math.round(score), 0, 100)
-  }, [
-    unusedSubscriptions.length,
-    pausedSubscriptions.length,
-    topCategoryEntry,
-    monthlySpend,
-    upcomingRenewals.length,
-    activeSubscriptions.length,
-  ])
-
-  const scoreLabel =
-    leakScore >= 80
-      ? 'Stable'
-      : leakScore >= 60
-        ? 'Needs Review'
-        : 'High Leakage'
-
-  const scoreTone =
-    leakScore >= 80
-      ? 'text-emerald border-emerald/20 bg-emerald/10'
-      : leakScore >= 60
-        ? 'text-gold border-gold/20 bg-gold/10'
-        : 'text-crimson border-crimson/20 bg-crimson/10'
-
-  const observations = useMemo(
-    () =>
-      generateObservations({
-        leakScore,
-        unusedCount: unusedSubscriptions.length,
-        pausedCount: pausedSubscriptions.length,
-        activeCount: activeSubscriptions.length,
-        totalMonthly: monthlySpend,
-        totalYearly: yearlySpend,
-        topCategory: topCategoryEntry?.[0] || 'N/A',
-        savingsPotential,
-        upcomingRenewalsCount: upcomingRenewals.length,
-        preferredCurrency,
-        preferredLanguage,
-      }),
-    [
-      leakScore,
-      unusedSubscriptions.length,
-      pausedSubscriptions.length,
-      activeSubscriptions.length,
-      monthlySpend,
-      yearlySpend,
-      topCategoryEntry,
-      savingsPotential,
-      upcomingRenewals.length,
-      preferredCurrency,
-      preferredLanguage,
-    ]
-  )
-
-  const handleCopySummary = async () => {
-    const text = [
-      `Renewly Leak Report`,
-      `Leak Score: ${leakScore}/100`,
-      `Monthly Spend: ${formatMoney(monthlySpend, preferredCurrency, preferredLanguage)}`,
-      `Yearly Projected: ${formatMoney(yearlySpend, preferredCurrency, preferredLanguage)}`,
-      `Potential Savings: ${formatMoney(savingsPotential, preferredCurrency, preferredLanguage)}`,
-    ].join('\n')
-
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1800)
-    } catch {
-      setCopied(false)
-    }
-  }
+  // Calculate upcoming renewals
+  const upcoming = subscriptions
+    .filter(sub => {
+      const daysUntilRenewal = Math.ceil(
+        (new Date(sub.nextRenewalDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+      )
+      return daysUntilRenewal <= 30 && daysUntilRenewal > 0
+    })
+    .sort((a, b) => new Date(a.nextRenewalDate).getTime() - new Date(b.nextRenewalDate).getTime())
 
   if (!mounted) {
     return (
-      <PageTransition className="min-h-screen bg-transparent">
+      <PageTransition className="min-h-screen">
         <Header
           title="Leak Report"
-          subtitle="Loading your savings intelligence..."
+          subtitle="Loading..."
           showSearch={false}
           showNotifications={false}
-          onProfileClick={onProfileClick}
         />
+        <div className="px-4 lg:px-6 py-16 text-center">
+          <p className="text-muted-foreground">Analyzing your subscriptions...</p>
+        </div>
       </PageTransition>
     )
   }
 
+  // Calculate insights
+  const unusedSubs = subscriptions.filter(s => s.status === 'unused')
+  const pausedSubs = subscriptions.filter(s => s.status === 'paused')
+  const activeSubs = subscriptions.filter(s => s.status === 'active')
+
+  const categoryCounts = activeSubs.reduce((acc, sub) => {
+    acc[sub.category] = (acc[sub.category] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+
+  const topCategory = Object.entries(categoryCounts).sort(([, a], [, b]) => b - a)[0]
+  const topCategoryCount = topCategory?.[1] ?? 0
+  const topCategoryName = topCategory?.[0] ?? 'N/A'
+
+  const categorySpends = subscriptions.reduce((acc, sub) => {
+    if (sub.status === 'active') {
+      const monthlyAmount = sub.billingCycle === 'yearly' ? sub.amount / 12 : sub.amount
+      acc[sub.category] = (acc[sub.category] || 0) + monthlyAmount
+    }
+    return acc
+  }, {} as Record<string, number>)
+
+  const topSpendCategory = Object.entries(categorySpends).sort(([, a], [, b]) => b - a)[0]
+  const topSpendAmount = topSpendCategory?.[1] ?? 0
+
+  // Generate observations
+  const observations = generateObservations({
+    leakScore: leakData.overallScore,
+    unusedCount: unusedSubs.length,
+    pausedCount: pausedSubs.length,
+    activeCount: activeSubs.length,
+    totalMonthly: metrics.totalMonthly,
+    totalYearly: metrics.totalYearly,
+    topCategory: topCategoryName,
+    savingsPotential: metrics.savingsPotential,
+    upcomingRenewalsCount: upcoming.length,
+  })
+
+  const handleShare = async () => {
+    try {
+      const shareText = `Renewly Leak Report: My subscription leak score is ${leakData.overallScore}/100. Monthly spend: ₹${metrics.totalMonthly}. Annual projected: ₹${metrics.totalYearly}. Potential savings: ₹${metrics.savingsPotential}`
+
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Renewly Leak Report',
+          text: shareText,
+        })
+      } else {
+        handleCopy(shareText)
+      }
+    } catch (error) {
+      console.log('[v0] Share cancelled or failed')
+    }
+  }
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const scoreColor = leakData.overallScore >= 85
+    ? 'text-emerald'
+    : leakData.overallScore >= 70
+      ? 'text-emerald-200'
+      : leakData.overallScore >= 50
+        ? 'text-gold'
+        : leakData.overallScore >= 30
+          ? 'text-amber-400'
+          : 'text-crimson'
+
+  const scoreLabel = getLeakStatusLabel(leakData.overallScore)
+  const statusConfig = getLeakStatusConfig(leakData.overallScore)
+
+  const AnimatedLeakScore = () => {
+    const displayValue = useCountUp(leakData.overallScore, 2000, 0)
+    return <span>{Math.round(displayValue)}</span>
+  }
+
   return (
-    <PageTransition className="min-h-screen bg-transparent">
+    <PageTransition className="min-h-screen">
       <Header
         title="Leak Report"
-        subtitle="Your subscription risk and savings snapshot"
+        subtitle="Your financial health snapshot"
         showSearch={false}
         showNotifications={false}
-        onProfileClick={onProfileClick}
       />
 
-      <div className="space-y-6 px-4 pb-8 lg:px-6">
-        <motion.section
-          initial={{ opacity: 0, y: 24, filter: 'blur(10px)' }}
+      <div className="px-4 lg:px-6 space-y-8 pb-8">
+        {/* Premium Command Center Hero */}
+        <motion.div
+          initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
           transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="relative overflow-hidden rounded-[32px] border border-gold/10 glass-premium p-6 shadow-card md:p-8"
+          className="relative rounded-[28px] overflow-hidden"
         >
-          <div className="absolute inset-0 pointer-events-none">
-            <div
-              className="absolute -top-20 right-0 h-64 w-64 rounded-full blur-[120px]"
+          {/* Cinematic ambient background */}
+          <div className="absolute inset-0">
+            <div className="absolute inset-0 bg-gradient-to-br from-card via-card to-secondary/30 dark:from-graphite dark:via-obsidian dark:to-slate/20" />
+            
+            {/* Animated glow orbs */}
+            <motion.div
+              className="absolute -top-32 -right-32 w-96 h-96 rounded-full blur-[100px]"
+              style={{ background: 'radial-gradient(circle, rgba(199, 163, 106, 0.15) 0%, transparent 70%)' }}
+              animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
+              transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <motion.div
+              className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full blur-[80px]"
+              style={{ background: 'radial-gradient(circle, rgba(46, 94, 82, 0.12) 0%, transparent 70%)' }}
+              animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.5, 0.3] }}
+              transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+            />
+            
+            {/* Subtle grid */}
+            <div 
+              className="absolute inset-0 opacity-[0.02]"
               style={{
-                background:
-                  'radial-gradient(circle, rgba(199, 163, 106, 0.10) 0%, transparent 72%)',
+                backgroundImage: 'linear-gradient(rgba(199, 163, 106, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(199, 163, 106, 0.5) 1px, transparent 1px)',
+                backgroundSize: '40px 40px'
               }}
             />
-            <div
-              className="absolute -bottom-16 left-0 h-56 w-56 rounded-full blur-[120px]"
-              style={{
-                background:
-                  'radial-gradient(circle, rgba(46, 94, 82, 0.08) 0%, transparent 74%)',
-              }}
-            />
           </div>
 
-          <div className="relative z-10">
-            <div className="mb-6 flex items-start justify-between gap-4">
-              <div>
-                <p className="mb-2 text-sm font-medium uppercase tracking-[0.18em] text-gold">
-                  Your Leak Report
-                </p>
-                <div
-                  className={cn(
-                    'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium',
-                    scoreTone
-                  )}
-                >
-                  <span className="h-2 w-2 rounded-full bg-current opacity-80" />
-                  {scoreLabel}
-                </div>
-              </div>
+          {/* Premium glass surface */}
+          <div className="relative glass-premium border border-gold/10 p-8 md:p-12">
 
-              <button
-                onClick={handleCopySummary}
-                className="inline-flex items-center gap-2 rounded-xl border border-gold/15 bg-card/50 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-gold/30 hover:bg-card/70"
-              >
-                {copied ? <CheckCircle2 className="h-4 w-4 text-emerald" /> : <Copy className="h-4 w-4" />}
-                {copied ? 'Copied' : 'Copy'}
-              </button>
-            </div>
-
-            <div className="grid items-center gap-8 lg:grid-cols-[300px,1fr]">
-              <div className="flex flex-col items-center justify-center">
-                <div className="relative h-52 w-52">
-                  <svg className="h-full w-full -rotate-90 transform">
-                    <circle
-                      cx="104"
-                      cy="104"
-                      r="78"
-                      fill="none"
-                      stroke="rgba(199,163,106,0.12)"
-                      strokeWidth="10"
-                    />
-                    <motion.circle
-                      cx="104"
-                      cy="104"
-                      r="78"
-                      fill="none"
-                      stroke="#C7A36A"
-                      strokeWidth="10"
-                      strokeLinecap="round"
-                      strokeDasharray={`${2 * Math.PI * 78}`}
-                      initial={{ strokeDashoffset: 2 * Math.PI * 78 }}
-                      animate={{
-                        strokeDashoffset: 2 * Math.PI * 78 * (1 - leakScore / 100),
-                      }}
-                      transition={{ duration: 1.6, ease: 'easeOut' }}
-                    />
-                  </svg>
-
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="text-5xl font-bold text-gold">
-                      <AnimatedValue value={leakScore} />
-                    </div>
-                    <p className="mt-1 text-sm text-muted-foreground">Leak Score</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <StatCard
-                  title="Monthly Recurring"
-                  value={formatMoney(monthlySpend, preferredCurrency, preferredLanguage)}
-                />
-                <StatCard
-                  title="Yearly Projected"
-                  value={formatMoney(yearlySpend, preferredCurrency, preferredLanguage)}
-                />
-                <StatCard
-                  title="Active Subscriptions"
-                  value={String(activeSubscriptions.length)}
-                />
-                <StatCard
-                  title="Possible Savings"
-                  value={formatMoney(savingsPotential, preferredCurrency, preferredLanguage)}
-                  highlight
-                />
-              </div>
-            </div>
-          </div>
-        </motion.section>
-
-        <motion.section
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.12 }}
-          className="rounded-2xl border border-gold/15 bg-card/55 p-5 shadow-card backdrop-blur-xl"
-        >
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gold/12 text-gold">
-              <Sparkles className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="mb-1 flex items-center gap-2">
-                <p className="font-semibold text-foreground">AI Insight</p>
-                <span className="rounded-full bg-gold/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-gold">
-                  New
-                </span>
-              </div>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {observations[0]}
-              </p>
-            </div>
-          </div>
-        </motion.section>
-
-        <motion.section
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.18 }}
-          className="grid gap-4 lg:grid-cols-2"
-        >
-          <div className="rounded-2xl border border-border bg-card/50 p-5 backdrop-blur-xl">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-crimson/10 text-crimson">
-                <ShieldAlert className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="font-semibold text-foreground">Flagged Subscriptions</p>
-                <p className="text-sm text-muted-foreground">
-                  Unused or paused services worth reviewing
-                </p>
-              </div>
-            </div>
-
-            {flaggedSubscriptions.length === 0 ? (
-              <div className="rounded-xl border border-emerald/20 bg-emerald/5 p-4 text-sm text-emerald">
-                No risky subscriptions found right now.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {flaggedSubscriptions.slice(0, 5).map((sub) => (
-                  <div
-                    key={sub.id}
-                    className="flex items-center justify-between rounded-xl border border-border bg-background/40 p-4"
+            <div className="relative z-10">
+              {/* Header */}
+              <div className="flex items-start justify-between mb-12">
+                <div>
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-sm font-medium text-gold mb-2 uppercase tracking-wider"
                   >
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-foreground">{sub.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {sub.category} • {sub.status}
-                      </p>
+                    Your Leak Score
+                  </motion.p>
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className={cn('flex items-center gap-2 px-4 py-2 rounded-full font-semibold',
+                      statusConfig.bgColor,
+                      statusConfig.textColor,
+                      statusConfig.borderColor,
+                      'border',
+                      statusConfig.glowStrength,
+                      statusConfig.animationClass
+                    )}
+                  >
+                    {scoreLabel}
+                  </motion.div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex items-center gap-2">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleShare}
+                    className="w-10 h-10 rounded-xl bg-slate/40 hover:bg-slate/60 flex items-center justify-center text-platinum hover:text-ivory transition-colors backdrop-blur-sm border border-gold/10"
+                  >
+                    <Share2 className="w-5 h-5" />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleCopy(`Renewly Leak Report - Score: ${leakData.overallScore}/100`)}
+                    className="w-10 h-10 rounded-xl bg-slate/40 hover:bg-slate/60 flex items-center justify-center text-platinum hover:text-ivory transition-colors backdrop-blur-sm border border-gold/10"
+                  >
+                    {copied ? <Check className="w-5 h-5 text-emerald" /> : <Copy className="w-5 h-5" />}
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* Oversized score display */}
+              <div className="mb-8">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.4, ...springs.bouncy }}
+                  className="inline-block"
+                >
+                  <div className="text-center">
+                    <div className="text-8xl md:text-9xl font-black text-gold mb-2 leading-none">
+                      <AnimatedLeakScore />
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-gold">
-                        {formatMoney(
-                          toMonthlyAmount(sub),
-                          sub.currency || preferredCurrency,
-                          preferredLanguage
-                        )}
-                      </p>
-                      <p className="text-xs text-muted-foreground">monthly impact</p>
-                    </div>
+                    <p className="text-sm font-medium text-platinum uppercase tracking-wider">out of 100</p>
                   </div>
-                ))}
+                </motion.div>
               </div>
-            )}
-          </div>
 
-          <div className="rounded-2xl border border-border bg-card/50 p-5 backdrop-blur-xl">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald/10 text-emerald">
-                <CalendarClock className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="font-semibold text-foreground">Upcoming Renewals</p>
-                <p className="text-sm text-muted-foreground">
-                  Active charges due in the next 30 days
-                </p>
+              {/* Key metrics grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <MetricCard
+                  label="Monthly Recurring"
+                  value={`₹${metrics.totalMonthly.toLocaleString('en-IN')}`}
+                  icon="₹"
+                  delay={0.5}
+                />
+                <MetricCard
+                  label="Annual Projected"
+                  value={formatMoney(metrics.totalYearly, preferredCurrency, preferredLanguage)}
+                  icon="📊"
+                  delay={0.6}
+                />
+                <MetricCard
+                  label="Active Subscriptions"
+                  value={activeSubs.length.toString()}
+                  icon="✓"
+                  delay={0.7}
+                />
+                <MetricCard
+                  label="Potential Savings"
+                  value={formatMoney(metrics.savingsPotential, preferredCurrency, preferredLanguage)}
+                  icon="💰"
+                  highlight
+                  delay={0.8}
+                />
               </div>
             </div>
-
-            {upcomingRenewals.length === 0 ? (
-              <div className="rounded-xl border border-border bg-background/40 p-4 text-sm text-muted-foreground">
-                No upcoming renewals in the next 30 days.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {upcomingRenewals.slice(0, 5).map((sub) => {
-                  const days = getDaysUntil(sub.renewalDate || '')
-                  return (
-                    <div
-                      key={sub.id}
-                      className="flex items-center justify-between rounded-xl border border-border bg-background/40 p-4"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate font-medium text-foreground">{sub.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {days === 0 ? 'Due today' : `${days} day${days > 1 ? 's' : ''} left`}
-                        </p>
-                      </div>
-                      <p className="font-semibold text-foreground">
-                        {formatMoney(
-                          sub.amount,
-                          sub.currency || preferredCurrency,
-                          preferredLanguage
-                        )}
-                      </p>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
           </div>
-        </motion.section>
+        </motion.div>
 
-        <motion.section
-          initial={{ opacity: 0, y: 18 }}
+        {/* Spend overview section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.24 }}
-          className="rounded-2xl border border-border bg-card/50 p-5 backdrop-blur-xl"
+          transition={{ delay: 0.6, ...springs.gentle }}
         >
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gold/12 text-gold">
-              <AlertTriangle className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="font-semibold text-foreground">Observations</p>
-              <p className="text-sm text-muted-foreground">
-                What Renewly is noticing in your current stack
-              </p>
+          <h2 className="text-xl font-semibold text-foreground mb-4">Spend Overview</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <SpendCard
+              label="Active Services"
+              value={activeSubs.length}
+              icon="🎯"
+              color="emerald"
+            />
+            <SpendCard
+              label="Unused Services"
+              value={unusedSubs.length}
+              icon="⚠️"
+              color="crimson"
+            />
+            <SpendCard
+              label="Paused Services"
+              value={pausedSubs.length}
+              icon="⏸️"
+              color="gold"
+            />
+            <SpendCard
+              label="Upcoming Renewals"
+              value={upcoming.length}
+              icon="📅"
+              color="platinum"
+            />
+          </div>
+        </motion.div>
+
+        {/* Top spend category */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, ...springs.gentle }}
+        >
+          <h2 className="text-xl font-semibold text-foreground mb-4">Top Spend Category</h2>
+          <div className="rounded-2xl glass-strong p-6 border border-gold/20">
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-sm text-platinum mb-2">{topSpendCategory?.[0]}</p>
+                <p className="text-4xl font-bold text-gold">{formatMoney(Math.round(topSpendAmount), preferredCurrency, preferredLanguage)}</p>
+                <p className="text-xs text-muted-foreground mt-1">{topCategoryCount} subscriptions</p>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl">📊</p>
+                <p className="text-xs text-muted-foreground mt-2">{((topSpendAmount / metrics.totalMonthly) * 100).toFixed(0)}% of spend</p>
+              </div>
             </div>
           </div>
+        </motion.div>
 
-          <div className="space-y-3">
-            {observations.map((item, index) => (
+        {/* AI Observations */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8, ...springs.gentle }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="w-5 h-5 text-gold" />
+            <h2 className="text-xl font-semibold text-foreground">Observations</h2>
+          </div>
+
+          <StaggerList className="space-y-3">
+            {observations.map((observation, index) => (
               <motion.div
-                key={item}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + index * 0.05 }}
-                className="rounded-xl border border-border bg-background/35 p-4"
+                key={index}
+                variants={staggerItem}
+                initial="initial"
+                animate="animate"
+                custom={index}
+                className="flex items-start gap-4 p-4 rounded-xl bg-gold/5 border border-gold/20"
               >
-                <p className="text-sm leading-relaxed text-foreground">{item}</p>
+                <div className="w-8 h-8 rounded-full bg-gold/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <Sparkles className="w-4 h-4 text-gold" />
+                </div>
+                <p className="text-sm text-foreground leading-relaxed">{observation}</p>
               </motion.div>
             ))}
-          </div>
-        </motion.section>
+          </StaggerList>
+        </motion.div>
 
-        <motion.section
-          initial={{ opacity: 0, y: 18 }}
+        {/* Risky subscriptions */}
+        {unusedSubs.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9, ...springs.gentle }}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingDown className="w-5 h-5 text-crimson" />
+              <h2 className="text-xl font-semibold text-foreground">Flagged Subscriptions</h2>
+            </div>
+
+            <StaggerList className="space-y-3">
+              {unusedSubs.map((sub, index) => (
+                <motion.div
+                  key={sub.id}
+                  variants={staggerItem}
+                  initial="initial"
+                  animate="animate"
+                  custom={index}
+                  className="flex items-center gap-4 p-4 rounded-2xl glass-strong border border-crimson/20 hover:border-crimson/40 transition-colors cursor-pointer group"
+                >
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shrink-0"
+                    style={{ backgroundColor: sub.color }}
+                  >
+                    {sub.logo}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-foreground">{sub.name}</p>
+                    <p className="text-xs text-muted-foreground">Unused • {sub.category}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-crimson">₹{sub.amount.toLocaleString('en-IN')}</p>
+                    <p className="text-xs text-muted-foreground">per month</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </motion.div>
+              ))}
+            </StaggerList>
+          </motion.div>
+        )}
+
+        {/* Upcoming renewals */}
+        {upcoming.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0, ...springs.gentle }}
+          >
+            <h2 className="text-xl font-semibold text-foreground mb-4">Upcoming Renewals</h2>
+
+            <StaggerList className="space-y-3">
+              {upcoming.slice(0, 5).map((sub, index) => {
+                const daysUntil = Math.ceil((new Date(sub.renewalDate!).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+                return (
+                  <motion.div
+                    key={sub.id}
+                    variants={staggerItem}
+                    initial="initial"
+                    animate="animate"
+                    custom={index}
+                    className="flex items-center justify-between p-4 rounded-xl bg-secondary/50 border border-border hover:border-gold/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-sm"
+                        style={{ backgroundColor: sub.color }}
+                      >
+                        {sub.logo}
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">{sub.name}</p>
+                        <p className="text-xs text-muted-foreground">{daysUntil}d remaining</p>
+                      </div>
+                    </div>
+                    <span className="text-sm font-semibold text-gold">₹{sub.amount.toLocaleString('en-IN')}</span>
+                  </motion.div>
+                )
+              })}
+            </StaggerList>
+          </motion.div>
+        )}
+
+        {/* Suggested actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="rounded-2xl border border-border bg-card/50 p-5 backdrop-blur-xl"
+          transition={{ delay: 1.1, ...springs.gentle }}
         >
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald/10 text-emerald">
-              <TrendingDown className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="font-semibold text-foreground">Recommended Actions</p>
-              <p className="text-sm text-muted-foreground">
-                Quick next steps to improve your score
-              </p>
-            </div>
-          </div>
-
+          <h2 className="text-xl font-semibold text-foreground mb-4">Suggested Actions</h2>
           <div className="space-y-3">
+            {unusedSubs.length > 0 && (
+              <ActionCard
+                title="Review Unused Subscriptions"
+                description={`You have ${unusedSubs.length} unused service${unusedSubs.length > 1 ? 's' : ''} that could be cancelled`}
+                action="Review"
+              />
+            )}
+            {upcoming.length > 3 && (
+              <ActionCard
+                title="Cluster of Renewals"
+                description={`${upcoming.length} subscriptions renew in the next 30 days`}
+                action="View Calendar"
+              />
+            )}
+            {topCategoryCount > 2 && (
+              <ActionCard
+                title="Category Concentration"
+                description={`${topCategoryCount} ${topCategoryName} subscriptions might have overlaps`}
+                action="Optimize"
+              />
+            )}
             <ActionCard
-              title="Review unused subscriptions"
-              description={`You currently have ${unusedSubscriptions.length} unused subscription${unusedSubscriptions.length !== 1 ? 's' : ''}.`}
-              actionLabel="Open Dashboard"
-              onClick={() => onNavigateTab?.('dashboard')}
-            />
-            <ActionCard
-              title="Check renewal concentration"
-              description={`${upcomingRenewals.length} renewal${upcomingRenewals.length !== 1 ? 's' : ''} fall in the next 30 days.`}
-              actionLabel="Open Calendar"
-              onClick={() => onNavigateTab?.('calendar')}
-            />
-            <ActionCard
-              title="Audit biggest category"
-              description={
-                topCategoryEntry
-                  ? `${topCategoryEntry[0]} is your top spend category at ${formatMoney(
-                    topCategoryEntry[1],
-                    preferredCurrency,
-                    preferredLanguage
-                  )} per month.`
-                  : 'Add more subscriptions to unlock category analysis.'
-              }
-              actionLabel="View Analytics"
-              onClick={() => onNavigateTab?.('analytics')}
+              title="Enable Leak Alerts"
+              description="Get notified when new potential savings are detected"
+              action="Enable"
             />
           </div>
-        </motion.section>
+        </motion.div>
       </div>
     </PageTransition>
   )
 }
 
-function StatCard({
-  title,
+function MetricCard({
+  label,
   value,
+  icon,
   highlight = false,
+  delay = 0
 }: {
-  title: string
+  label: string
   value: string
+  icon: string
   highlight?: boolean
+  delay?: number
 }) {
   return (
     <motion.div
-      whileHover={{ y: -3 }}
-      transition={{ duration: 0.2 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, ...springs.gentle }}
       className={cn(
-        'rounded-2xl border p-5 backdrop-blur-xl',
+        'p-4 rounded-xl border transition-colors',
         highlight
-          ? 'border-emerald/20 bg-gradient-to-br from-emerald/8 to-emerald/3'
-          : 'border-border/50 bg-card/40'
+          ? 'bg-emerald/10 border-emerald/20'
+          : 'bg-slate/40 border-gold/10'
       )}
     >
-      <p className="mb-3 text-sm font-medium text-muted-foreground">{title}</p>
-      <p
-        className={cn(
-          'text-2xl font-bold tracking-tight md:text-3xl',
-          highlight ? 'text-emerald' : 'text-foreground'
-        )}
-      >
+      <div className="flex items-center justify-between mb-2">
+        <p className={cn(
+          'text-xs font-medium',
+          highlight ? 'text-emerald' : 'text-platinum'
+        )}>
+          {label}
+        </p>
+        <span className="text-lg">{icon}</span>
+      </div>
+      <p className="text-lg font-bold text-ivory">
         {value}
       </p>
+    </motion.div>
+  )
+}
+
+function SpendCard({
+  label,
+  value,
+  icon,
+  color
+}: {
+  label: string
+  value: number
+  icon: string
+  color: string
+}) {
+  const colorClasses = {
+    emerald: 'bg-emerald/10 border-emerald/20',
+    crimson: 'bg-crimson/10 border-crimson/20',
+    gold: 'bg-gold/10 border-gold/20',
+    platinum: 'bg-platinum/10 border-platinum/20'
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={springs.bouncy}
+      className={cn('p-4 rounded-xl border', colorClasses[color as keyof typeof colorClasses])}
+    >
+      <p className="text-sm text-muted-foreground mb-2">{label}</p>
+      <div className="flex items-end justify-between">
+        <p className="text-3xl font-bold text-foreground">{value}</p>
+        <span className="text-2xl">{icon}</span>
+      </div>
     </motion.div>
   )
 }
@@ -577,69 +631,30 @@ function StatCard({
 function ActionCard({
   title,
   description,
-  actionLabel,
-  onClick,
+  action
 }: {
   title: string
   description: string
-  actionLabel: string
-  onClick?: () => void
+  action: string
 }) {
   return (
-    <motion.button
-      whileHover={{ x: 3 }}
-      whileTap={{ scale: 0.99 }}
-      onClick={onClick}
-      className="group flex w-full items-center justify-between rounded-xl border border-border bg-background/35 p-4 text-left transition-colors hover:border-gold/25"
+    <motion.div
+      whileHover={{ x: 4 }}
+      className="flex items-start justify-between p-4 rounded-xl glass-strong border border-gold/20 hover:border-gold/40 transition-colors cursor-pointer group"
     >
       <div>
-        <p className="font-medium text-foreground">{title}</p>
-        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+        <p className="font-semibold text-foreground mb-1">{title}</p>
+        <p className="text-sm text-muted-foreground">{description}</p>
       </div>
-      <div className="ml-4 flex shrink-0 items-center gap-2 text-sm font-medium text-gold">
-        {actionLabel}
-        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-      </div>
-    </motion.button>
+      <motion.div
+        whileHover={{ x: 4 }}
+        className="flex items-center gap-2 text-gold shrink-0 group-hover:gap-3 transition-all"
+      >
+        <span className="text-sm font-medium">{action}</span>
+        <ArrowRight className="w-4 h-4" />
+      </motion.div>
+    </motion.div>
   )
-}
-
-function AnimatedValue({ value }: { value: number }) {
-  const displayValue = useCountUp(value, 1800, 0)
-  return <>{Math.round(displayValue)}</>
-}
-
-function toMonthlyAmount(subscription: Subscription) {
-  const amount = subscription.amount || 0
-
-  switch (subscription.billingCycle) {
-    case 'yearly':
-      return amount / 12
-    case 'quarterly':
-      return amount / 3
-    case 'weekly':
-      return amount * 4.345
-    case 'daily':
-      return amount * 30
-    default:
-      return amount
-  }
-}
-
-function getDaysUntil(dateStr: string) {
-  if (!dateStr) return 0
-
-  const date = new Date(dateStr)
-  const today = new Date()
-
-  today.setHours(0, 0, 0, 0)
-  date.setHours(0, 0, 0, 0)
-
-  return Math.ceil((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max)
 }
 
 function generateObservations(data: {
@@ -652,64 +667,37 @@ function generateObservations(data: {
   topCategory: string
   savingsPotential: number
   upcomingRenewalsCount: number
-  preferredCurrency: string
-  preferredLanguage: string
 }): string[] {
   const observations: string[] = []
 
   if (data.leakScore < 50) {
-    observations.push(
-      `Your subscription health shows significant optimization opportunities. You could potentially recover ${formatMoney(
-        data.savingsPotential,
-        data.preferredCurrency,
-        data.preferredLanguage
-      )} each month by reviewing flagged services.`
-    )
+    observations.push(`Your subscription health shows significant optimization opportunities. You could potentially recover ${formatMoney(data.savingsPotential, preferredCurrency, preferredLanguage)} each month by reviewing flagged services.`)
   } else if (data.leakScore < 75) {
-    observations.push(
-      'There are opportunities to improve your subscription efficiency. Consider reviewing unused services to reduce your monthly spend.'
-    )
+    observations.push(`There are opportunities to improve your subscription efficiency. Consider reviewing unused services to reduce your monthly spend.`)
   } else {
-    observations.push(
-      'Your subscriptions are well-optimized. Keep monitoring for new opportunities to save.'
-    )
+    observations.push(`Your subscriptions are well-optimized. Keep monitoring for new opportunities to save.`)
   }
 
   if (data.unusedCount > 0) {
-    observations.push(
-      `You have ${data.unusedCount} unused subscription${data.unusedCount > 1 ? 's' : ''} consuming ${formatMoney(
-        data.savingsPotential,
-        data.preferredCurrency,
-        data.preferredLanguage
-      )} monthly. These are prime candidates for cancellation.`
-    )
+    observations.push(`You have ${data.unusedCount} unused subscription${data.unusedCount > 1 ? 's' : ''} consuming ${formatMoney(data.savingsPotential, preferredCurrency, preferredLanguage)} monthly. These are prime candidates for cancellation.`)
   }
 
-  if (data.topCategory && data.topCategory !== 'N/A' && data.activeCount > 0) {
-    observations.push(
-      `${data.topCategory} subscriptions dominate your portfolio. Consider evaluating if all services in this category provide distinct value.`
-    )
+  if (data.topCategory && data.activeCount > 0) {
+    const categoryPct = ((data.topCategory.length / data.activeCount) * 100).toFixed(0)
+    observations.push(`${data.topCategory} subscriptions dominate your portfolio. Consider evaluating if all services in this category provide distinct value.`)
   }
 
   if (data.upcomingRenewalsCount > 3) {
-    observations.push(
-      `You have ${data.upcomingRenewalsCount} renewals coming in the next 30 days. Bundle these review sessions to make informed decisions about renewal strategy.`
-    )
+    observations.push(`You have ${data.upcomingRenewalsCount} renewals coming in the next 30 days. Bundle these review sessions to make informed decisions about renewal strategy.`)
   }
 
-  const annualVsMonthly =
-    data.totalMonthly > 0 ? data.totalYearly / (data.totalMonthly * 12) : 1
-
+  const annualVsMonthly = data.totalYearly / (data.totalMonthly * 12)
   if (annualVsMonthly > 1.15) {
-    observations.push(
-      'Your annual spend projection appears higher than monthly figures suggest. This indicates some subscriptions are billed annually, potentially offering better rates.'
-    )
+    observations.push(`Your annual spend projection appears higher than monthly figures suggest. This indicates some subscriptions are billed annually, potentially offering better rates.`)
   }
 
   if (data.pausedCount > 0) {
-    observations.push(
-      `You have ${data.pausedCount} paused service${data.pausedCount > 1 ? 's' : ''}. Consider cancelling these completely if you have not resumed them in 30 days.`
-    )
+    observations.push(`You have ${data.pausedCount} paused service${data.pausedCount > 1 ? 's' : ''}. Consider cancelling these completely if you haven't resumed them in 30 days.`)
   }
 
   return observations.slice(0, 5)
