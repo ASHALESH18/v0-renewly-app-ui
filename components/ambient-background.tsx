@@ -100,30 +100,30 @@ export function AmbientBackground() {
         preserveAspectRatio="xMidYMid slice"
       >
         <defs>
-          {/* Gold dust trail gradient - soft matte finish */}
+          {/* Gold dust trail gradient - visible matte finish */}
           <linearGradient id="goldDustTrail" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="rgba(199,163,106,0)" />
-            <stop offset="15%" stopColor="rgba(199,163,106,0.06)" />
-            <stop offset="50%" stopColor="rgba(212,184,122,0.35)" />
-            <stop offset="85%" stopColor="rgba(199,163,106,0.06)" />
+            <stop offset="10%" stopColor="rgba(199,163,106,0.15)" />
+            <stop offset="50%" stopColor="rgba(212,184,122,0.55)" />
+            <stop offset="90%" stopColor="rgba(199,163,106,0.15)" />
             <stop offset="100%" stopColor="rgba(199,163,106,0)" />
           </linearGradient>
 
           {/* Gold dust core - brighter inner trail */}
           <linearGradient id="goldDustCore" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="rgba(255,248,230,0)" />
-            <stop offset="30%" stopColor="rgba(229,212,184,0.12)" />
-            <stop offset="50%" stopColor="rgba(245,235,210,0.28)" />
-            <stop offset="70%" stopColor="rgba(229,212,184,0.12)" />
+            <stop offset="25%" stopColor="rgba(229,212,184,0.3)" />
+            <stop offset="50%" stopColor="rgba(245,235,210,0.55)" />
+            <stop offset="75%" stopColor="rgba(229,212,184,0.3)" />
             <stop offset="100%" stopColor="rgba(255,248,230,0)" />
           </linearGradient>
 
           {/* Secondary warm trail */}
           <linearGradient id="warmDustTrail" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="rgba(180,145,80,0)" />
-            <stop offset="20%" stopColor="rgba(180,145,80,0.04)" />
-            <stop offset="50%" stopColor="rgba(195,165,100,0.18)" />
-            <stop offset="80%" stopColor="rgba(180,145,80,0.04)" />
+            <stop offset="15%" stopColor="rgba(180,145,80,0.12)" />
+            <stop offset="50%" stopColor="rgba(195,165,100,0.4)" />
+            <stop offset="85%" stopColor="rgba(180,145,80,0.12)" />
             <stop offset="100%" stopColor="rgba(180,145,80,0)" />
           </linearGradient>
 
@@ -161,7 +161,7 @@ export function AmbientBackground() {
                Q 1000 380, 1200 280 
                T 1800 340"
             stroke="url(#goldDustTrail)"
-            strokeWidth="120"
+            strokeWidth="180"
             filter="url(#dustBlurSoft)"
           />
           
@@ -174,15 +174,15 @@ export function AmbientBackground() {
                Q 1000 380, 1200 280 
                T 1800 340"
             stroke="url(#goldDustCore)"
-            strokeWidth="24"
+            strokeWidth="40"
             filter="url(#dustBlurMedium)"
           />
 
           {/* Floating gold dust particles along the wave */}
           <DustParticleGroup
             particles={goldParticles}
-            baseColor="rgba(229, 212, 184, 0.7)"
-            glowColor="rgba(199, 163, 106, 0.4)"
+            baseColor="rgba(229, 212, 184, 0.9)"
+            glowColor="rgba(199, 163, 106, 0.6)"
             animationClass="ambient-particles ambient-particles--gold"
           />
         </g>
@@ -197,14 +197,14 @@ export function AmbientBackground() {
                Q 1100 520, 1400 640 
                T 1850 570"
             stroke="url(#warmDustTrail)"
-            strokeWidth="80"
+            strokeWidth="100"
             filter="url(#dustBlurSoft)"
           />
 
           <DustParticleGroup
             particles={goldSecondary}
-            baseColor="rgba(195, 165, 100, 0.5)"
-            glowColor="rgba(180, 145, 80, 0.3)"
+            baseColor="rgba(195, 165, 100, 0.8)"
+            glowColor="rgba(180, 145, 80, 0.5)"
             animationClass="ambient-particles ambient-particles--warm"
           />
         </g>
@@ -213,8 +213,8 @@ export function AmbientBackground() {
         <g className="ambient-wave ambient-wave--accent">
           <DustParticleGroup
             particles={goldAccent}
-            baseColor="rgba(245, 235, 210, 0.6)"
-            glowColor="rgba(229, 212, 184, 0.35)"
+            baseColor="rgba(245, 235, 210, 0.85)"
+            glowColor="rgba(229, 212, 184, 0.55)"
             animationClass="ambient-particles ambient-particles--accent"
           />
         </g>

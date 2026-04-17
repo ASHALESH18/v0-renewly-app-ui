@@ -836,28 +836,28 @@ button,
 }
 
 .ambient-dust-soft {
-  opacity: 0.22;
+  opacity: 0.45;
 }
 
 .dark .ambient-dust-soft {
-  opacity: 0.38;
+  opacity: 0.65;
 }
 
 .ambient-dust-core {
-  opacity: 0.12;
+  opacity: 0.35;
 }
 
 .dark .ambient-dust-core {
-  opacity: 0.22;
+  opacity: 0.5;
 }
 
 /* PARTICLE STYLING - Floating gold dust */
 .ambient-particles {
-  opacity: 0.25;
+  opacity: 0.5;
 }
 
 .dark .ambient-particles {
-  opacity: 0.45;
+  opacity: 0.7;
 }
 
 .ambient-particles circle {
@@ -893,19 +893,19 @@ button,
   width: 50rem;
   height: 16rem;
   transform: translateX(-50%);
-  opacity: 0.2;
+  opacity: 0.4;
   background: radial-gradient(ellipse at center, 
-    rgba(199, 163, 106, 0.12) 0%, 
-    rgba(199, 163, 106, 0.04) 40%, 
+    rgba(199, 163, 106, 0.25) 0%, 
+    rgba(199, 163, 106, 0.1) 40%, 
     transparent 70%
   );
 }
 
 .dark .ambient-glow--top {
-  opacity: 0.35;
+  opacity: 0.6;
   background: radial-gradient(ellipse at center, 
-    rgba(199, 163, 106, 0.18) 0%, 
-    rgba(199, 163, 106, 0.06) 40%, 
+    rgba(199, 163, 106, 0.35) 0%, 
+    rgba(199, 163, 106, 0.12) 40%, 
     transparent 70%
   );
 }
@@ -916,19 +916,19 @@ button,
   width: 60rem;
   height: 36rem;
   transform: translateX(-50%);
-  opacity: 0.25;
+  opacity: 0.45;
   background: radial-gradient(ellipse at center, 
-    rgba(199, 163, 106, 0.08) 0%, 
-    rgba(180, 145, 80, 0.03) 45%, 
+    rgba(199, 163, 106, 0.2) 0%, 
+    rgba(180, 145, 80, 0.08) 45%, 
     transparent 70%
   );
 }
 
 .dark .ambient-glow--center {
-  opacity: 0.4;
+  opacity: 0.65;
   background: radial-gradient(ellipse at center, 
-    rgba(199, 163, 106, 0.12) 0%, 
-    rgba(180, 145, 80, 0.04) 45%, 
+    rgba(199, 163, 106, 0.28) 0%, 
+    rgba(180, 145, 80, 0.1) 45%, 
     transparent 70%
   );
 }
@@ -938,19 +938,19 @@ button,
   bottom: -2rem;
   width: 36rem;
   height: 24rem;
-  opacity: 0.18;
+  opacity: 0.35;
   background: radial-gradient(ellipse at center, 
-    rgba(199, 163, 106, 0.1) 0%, 
-    rgba(180, 145, 80, 0.03) 45%, 
+    rgba(199, 163, 106, 0.22) 0%, 
+    rgba(180, 145, 80, 0.08) 45%, 
     transparent 70%
   );
 }
 
 .dark .ambient-glow--bottom {
-  opacity: 0.32;
+  opacity: 0.55;
   background: radial-gradient(ellipse at center, 
-    rgba(199, 163, 106, 0.14) 0%, 
-    rgba(180, 145, 80, 0.05) 45%, 
+    rgba(199, 163, 106, 0.3) 0%, 
+    rgba(180, 145, 80, 0.12) 45%, 
     transparent 70%
   );
 }
