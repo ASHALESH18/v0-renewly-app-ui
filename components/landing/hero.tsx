@@ -83,16 +83,16 @@ export function Hero() {
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] md:w-[900px] md:h-[600px]"
           style={{
             background:
-              'radial-gradient(ellipse at center, rgba(199, 163, 106, 0.1) 0%, rgba(199, 163, 106, 0.03) 40%, transparent 70%)',
+              'radial-gradient(ellipse at center, rgba(199, 163, 106, 0.07) 0%, rgba(199, 163, 106, 0.02) 42%, transparent 72%)',
             filter: 'blur(60px)',
           }}
           initial={{ opacity: 0, scale: 0.9 }}
           animate={
             isLoaded
               ? {
-                  opacity: prefersReducedMotion ? 0.6 : [0.5, 0.7, 0.5],
-                  scale: prefersReducedMotion ? 1 : [1, 1.03, 1],
-                }
+                opacity: prefersReducedMotion ? 0.45 : [0.32, 0.5, 0.32],
+                scale: prefersReducedMotion ? 1 : [1, 1.03, 1],
+              }
               : {}
           }
           transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
@@ -116,25 +116,22 @@ export function Hero() {
         initial="initial"
         animate={isLoaded ? 'animate' : 'initial'}
       >
-        {/* DRAMATIC: Premium eyebrow badge with glow */}
+        {/* Premium eyebrow badge */}
         <motion.div
           initial={{ opacity: 0, y: 24, filter: 'blur(10px)', scale: 0.9 }}
           animate={isLoaded ? { opacity: 1, y: 0, filter: 'blur(0px)', scale: 1 } : {}}
           transition={{ duration: 0.6, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="relative inline-flex items-center gap-3 px-5 py-2.5 rounded-full mb-10"
         >
-          {/* Glowing border effect */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-gold/20 via-gold/30 to-gold/20 animate-border-glow" />
-          <div className="absolute inset-[1px] rounded-full bg-card/80 backdrop-blur-sm" />
+          <div className="absolute inset-0 rounded-full border border-gold/20 bg-card/70 backdrop-blur-sm" />
 
-          {/* Content */}
           <div className="relative flex items-center gap-3">
             <motion.div
               className="relative w-2.5 h-2.5"
               animate={
                 prefersReducedMotion
                   ? {}
-                  : { scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] }
+                  : { scale: [1, 1.2, 1], opacity: [0.55, 0.8, 0.55] }
               }
               transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
             >
@@ -220,7 +217,7 @@ export function Hero() {
           >
             {/* Animated glow behind button */}
             <motion.div
-              className="absolute -inset-1 rounded-2xl gold-gradient opacity-50 blur-lg group-hover:opacity-80 transition-opacity"
+              className="absolute inset-0 rounded-2xl bg-gold/12 blur-md opacity-70 transition-opacity group-hover:opacity-90"
               animate={
                 prefersReducedMotion
                   ? {}
@@ -295,8 +292,8 @@ export function Hero() {
             {/* Premium device frame - adapts to theme with rich shading */}
             <motion.div
               className={`relative rounded-[40px] p-3 transition-colors duration-300 ${isDark
-                  ? 'bg-gradient-to-br from-[#1A1D24] via-[#0F1115] to-[#0A0C10] border border-[#2A2F38]'
-                  : 'bg-gradient-to-b from-[#E8E4DE] via-[#D8D4CE] to-[#C8C4BE] border border-[#B8B4AE]'
+                ? 'bg-gradient-to-br from-[#1A1D24] via-[#0F1115] to-[#0A0C10] border border-[#2A2F38]'
+                : 'bg-gradient-to-b from-[#E8E4DE] via-[#D8D4CE] to-[#C8C4BE] border border-[#B8B4AE]'
                 }`}
               style={{
                 boxShadow: isDark
@@ -340,8 +337,8 @@ export function Hero() {
               {/* Screen - theme-aware app interface with premium depth */}
               <div
                 className={`rounded-[32px] overflow-hidden aspect-[9/19.5] transition-colors duration-300 ${isDark
-                    ? 'bg-[#0A0C10] border border-[#1A1D24]'
-                    : 'bg-gradient-to-b from-[#FAF8F5] via-[#F5F3F0] to-[#F0EDE8] border border-[#DDD8D0]'
+                  ? 'bg-[#0A0C10] border border-[#1A1D24]'
+                  : 'bg-gradient-to-b from-[#FAF8F5] via-[#F5F3F0] to-[#F0EDE8] border border-[#DDD8D0]'
                   }`}
                 style={{
                   boxShadow: isDark
@@ -401,8 +398,8 @@ export function Hero() {
                     animate={isLoaded ? { opacity: 1, scale: 1, filter: 'blur(0px)' } : {}}
                     transition={{ delay: 2.2, duration: 0.7, ease: 'easeOut' }}
                     className={`rounded-2xl p-4 mb-4 relative overflow-hidden transition-colors duration-300 ${isDark
-                        ? 'bg-gradient-to-br from-[#1B2028] via-[#13161C] to-[#1B2028] border border-[#C7A36A]/25'
-                        : 'bg-gradient-to-br from-[#FFFDF9] via-[#FBF8F3] to-[#F8F5EF] border border-[#9A7035]/20'
+                      ? 'bg-gradient-to-br from-[#1B2028] via-[#13161C] to-[#1B2028] border border-[#C7A36A]/25'
+                      : 'bg-gradient-to-br from-[#FFFDF9] via-[#FBF8F3] to-[#F8F5EF] border border-[#9A7035]/20'
                       }`}
                     style={{
                       boxShadow: isDark
@@ -445,8 +442,8 @@ export function Hero() {
                           ease: 'easeOut',
                         }}
                         className={`flex items-center gap-3 p-3 rounded-xl relative overflow-hidden transition-colors duration-300 ${isDark
-                            ? 'bg-[#1B2028] border border-white/[0.08]'
-                            : 'bg-gradient-to-r from-[#FFFDF9] to-[#FBF9F5] border border-[#E8E2D8]'
+                          ? 'bg-[#1B2028] border border-white/[0.08]'
+                          : 'bg-gradient-to-r from-[#FFFDF9] to-[#FBF9F5] border border-[#E8E2D8]'
                           }`}
                         style={{
                           boxShadow: isDark
@@ -496,15 +493,15 @@ export function Hero() {
               className="absolute -inset-4 rounded-[48px] -z-10"
               style={{
                 background: isDark
-                  ? 'radial-gradient(ellipse at center, rgba(199, 163, 106, 0.15) 0%, transparent 70%)'
-                  : 'radial-gradient(ellipse at center, rgba(154, 112, 53, 0.12) 0%, transparent 70%)',
+                  ? 'radial-gradient(ellipse at center, rgba(199, 163, 106, 0.1) 0%, transparent 72%)'
+                  : 'radial-gradient(ellipse at center, rgba(154, 112, 53, 0.08) 0%, transparent 72%)',
               }}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={
                 isLoaded
                   ? {
-                    opacity: prefersReducedMotion ? 0.5 : [0.3, 0.6, 0.3],
-                    scale: prefersReducedMotion ? 1 : [1, 1.06, 1],
+                    opacity: prefersReducedMotion ? 0.35 : [0.18, 0.34, 0.18],
+                    scale: prefersReducedMotion ? 1 : [1, 1.03, 1],
                   }
                   : {}
               }
