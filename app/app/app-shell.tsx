@@ -11,80 +11,65 @@ import useStore from '@/lib/store'
 import { createClient } from '@/lib/supabase/client'
 import type { Subscription } from '@/lib/types'
 
-// Premium loading skeleton for the app shell
+// Lightweight loading skeleton - minimal animations for fast perceived load
 function AppShellSkeleton() {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-transparent">
-      {/* Desktop sidebar skeleton */}
+    <div className="min-h-screen overflow-x-hidden bg-background">
+      {/* Desktop sidebar skeleton - static, no animations */}
       <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-[280px] flex-col bg-card border-r border-border z-40">
-        {/* Logo skeleton */}
         <div className="p-6 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl gold-gradient animate-pulse" />
+            <div className="w-10 h-10 rounded-xl bg-muted/60" />
             <div className="space-y-2">
-              <div className="w-20 h-4 rounded bg-muted animate-pulse" />
-              <div className="w-32 h-3 rounded bg-muted/50 animate-pulse" />
+              <div className="w-20 h-4 rounded bg-muted/50" />
+              <div className="w-32 h-3 rounded bg-muted/30" />
             </div>
           </div>
         </div>
 
-        {/* Nav items skeleton */}
         <nav className="flex-1 p-4 space-y-2">
-          {[...Array(6)].map((_, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl"
-              style={{ animationDelay: `${i * 100}ms` }}
-            >
-              <div className="w-5 h-5 rounded bg-muted animate-pulse" />
-              <div className="w-24 h-4 rounded bg-muted animate-pulse" />
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-xl">
+              <div className="w-5 h-5 rounded bg-muted/40" />
+              <div className="w-20 h-4 rounded bg-muted/40" />
             </div>
           ))}
         </nav>
 
-        {/* Add button skeleton */}
         <div className="p-4 border-t border-border">
-          <div className="w-full h-12 rounded-xl bg-gold/20 animate-pulse" />
+          <div className="w-full h-12 rounded-xl bg-gold/15" />
         </div>
       </aside>
 
-      {/* Main content skeleton */}
+      {/* Main content skeleton - simple opacity pulse */}
       <main className="lg:ml-[280px] pb-24 lg:pb-0">
-        <div className="p-4 lg:p-6 space-y-6">
-          {/* Header skeleton */}
+        <div className="p-4 lg:p-6 space-y-6 animate-pulse">
           <div className="flex items-center justify-between">
             <div className="space-y-2">
-              <div className="w-32 h-6 rounded bg-muted animate-pulse" />
-              <div className="w-48 h-4 rounded bg-muted/50 animate-pulse" />
+              <div className="w-32 h-6 rounded bg-muted/50" />
+              <div className="w-48 h-4 rounded bg-muted/30" />
             </div>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-muted animate-pulse" />
-            </div>
+            <div className="w-10 h-10 rounded-full bg-muted/40" />
           </div>
 
-          {/* Content skeleton */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className="p-4 rounded-2xl glass animate-pulse"
-                style={{ animationDelay: `${i * 150}ms` }}
-              >
-                <div className="w-full h-24 rounded-xl bg-muted/30" />
+              <div key={i} className="p-4 rounded-2xl bg-card border border-border">
+                <div className="w-full h-24 rounded-xl bg-muted/20" />
               </div>
             ))}
           </div>
         </div>
       </main>
 
-      {/* Mobile bottom nav skeleton */}
+      {/* Mobile bottom nav skeleton - static */}
       <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
-        <div className="glass-strong mx-4 mb-4 rounded-2xl">
+        <div className="bg-card/95 border-t border-border mx-4 mb-4 rounded-2xl">
           <div className="flex items-center justify-around px-2 py-3">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="flex flex-col items-center gap-1 px-3 py-2">
-                <div className="w-5 h-5 rounded bg-muted animate-pulse" />
-                <div className="w-8 h-2 rounded bg-muted/50 animate-pulse" />
+                <div className="w-5 h-5 rounded bg-muted/40" />
+                <div className="w-8 h-2 rounded bg-muted/30" />
               </div>
             ))}
           </div>

@@ -1,15 +1,8 @@
 'use client'
 
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { ArrowRight, Play } from 'lucide-react'
-import {
-  springs,
-  staggerContainer,
-  staggerItem,
-  cinematicFadeInUp,
-  magneticButtonVariants,
-  useMotionPreferences,
-} from '../motion'
+import { magneticButtonVariants, useMotionPreferences } from '../motion'
 import { DemoModal } from '@/components/demo-modal'
 import { useRef, useState, useEffect } from 'react'
 import { SubscriptionIcon } from '@/lib/brand-icons'
@@ -33,7 +26,6 @@ export function Hero() {
   }, [])
 
   const isDark = mounted ? resolvedTheme === 'dark' : true
-  const [isLoaded, setIsLoaded] = useState(false)
   const { prefersReducedMotion, isMobile, shouldReduceAnimations } = useMotionPreferences()
 
   // Smart CTA handler - consistent with pricing/upgrade flow
@@ -43,21 +35,12 @@ export function Hero() {
     router.push(destination)
   }
 
+  // Scroll-linked parallax - disabled on mobile for 60fps performance
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['start start', 'end start'],
   })
-
-  // Multi-plane parallax for depth system - reduced values for smoother scrolling
-  const yFar = useTransform(scrollYProgress, [0, 1], [0, -15])
-  const yMid = useTransform(scrollYProgress, [0, 1], [0, -30])
-  const yNear = useTransform(scrollYProgress, [0, 1], [0, -50])
-
-  useEffect(() => {
-    // Trigger reveal sequence after mount - faster for premium responsiveness
-    const timer = setTimeout(() => setIsLoaded(true), 50)
-    return () => clearTimeout(timer)
-  }, [])
+  const yNear = useTransform(scrollYProgress, [0, 1], shouldReduceAnimations ? [0, 0] : [0, -25])
 
   return (
     <section
@@ -90,44 +73,36 @@ export function Hero() {
       </div>
 
       {/* ============================================ */}
-      {/* HERO CONTENT - Sequenced Reveal */}
+      {/* HERO CONTENT - Instant Render */}
       {/* ============================================ */}
-      <motion.div
-        className="relative z-10 max-w-4xl mx-auto text-center"
-        initial="initial"
-        animate={isLoaded ? 'animate' : 'initial'}
-      >
-        {/* Premium eyebrow badge */}
+      <div className="relative z-10 max-w-4xl mx-auto text-center">
+        {/* Premium eyebrow badge - no blur for performance */}
         <motion.div
-          initial={{ opacity: 0, y: 16, filter: 'blur(6px)', scale: 0.96 }}
-          animate={isLoaded ? { opacity: 1, y: 0, filter: 'blur(0px)', scale: 1 } : {}}
-          transition={{ duration: 0.5, delay: 0.08, ease: [0.25, 0.1, 0.25, 1] }}
+          initial={{ opacity: 0, y: 12, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
           className="relative inline-flex items-center gap-2.5 px-4 py-2 rounded-full mb-8"
         >
           <div className="absolute inset-0 rounded-full border border-gold/15 bg-card/60 backdrop-blur-sm" />
 
           <div className="relative flex items-center gap-2.5">
-            <div className="relative w-2 h-2">
-              <span className="absolute inset-0 rounded-full bg-gold" />
-              {!shouldReduceAnimations && (
-                <span className="absolute inset-0 rounded-full bg-gold/60 blur-[2px] animate-pulse" />
-              )}
-            </div>
+            {/* Static gold dot - no pulse animation */}
+            <div className="w-2 h-2 rounded-full bg-gold" />
             <span className="text-sm text-foreground/90 font-medium tracking-wide">
               Now available on iOS and Android
             </span>
           </div>
         </motion.div>
 
-        {/* Cinematic headline with staggered reveal */}
+        {/* Cinematic headline - optimized for instant render */}
         <motion.h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-semibold text-foreground tracking-[-0.02em] leading-[1.08]">
-          {/* First line - smooth entrance */}
+          {/* First line - smooth entrance, no blur */}
           <span className="block overflow-hidden">
             <motion.span
               className="block"
-              initial={{ opacity: 0, filter: 'blur(10px)', y: 28 }}
-              animate={isLoaded ? { opacity: 1, filter: 'blur(0px)', y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.05, ease: [0.25, 0.1, 0.25, 1] }}
             >
               Own every
             </motion.span>
@@ -137,12 +112,12 @@ export function Hero() {
           <span className="block overflow-hidden mt-2 relative">
             <motion.span
               className="relative inline-block"
-              initial={{ opacity: 0, filter: 'blur(10px)', y: 28 }}
-              animate={isLoaded ? { opacity: 1, filter: 'blur(0px)', y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.12, ease: [0.25, 0.1, 0.25, 1] }}
             >
-              {/* Subtle glow behind text */}
-              <span className="absolute inset-0 text-gold blur-xl opacity-35">
+              {/* Subtle glow behind text - static, no animation */}
+              <span className="absolute inset-0 text-gold blur-xl opacity-30 pointer-events-none">
                 renewal.
               </span>
 
@@ -151,32 +126,34 @@ export function Hero() {
                 renewal.
               </span>
 
-              {/* Refined light sweep */}
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"
-                initial={{ x: '-100%', opacity: 0 }}
-                animate={isLoaded ? { x: '250%', opacity: [0, 0.6, 0] } : {}}
-                transition={{ duration: 1.2, delay: 0.7, ease: 'easeInOut' }}
-              />
+              {/* Light sweep - only on desktop, single run */}
+              {!shouldReduceAnimations && (
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none"
+                  initial={{ x: '-100%', opacity: 0 }}
+                  animate={{ x: '250%', opacity: [0, 0.5, 0] }}
+                  transition={{ duration: 0.8, delay: 0.5, ease: 'easeOut' }}
+                />
+              )}
             </motion.span>
           </span>
         </motion.h1>
 
-        {/* Subheadline - refined reveal */}
+        {/* Subheadline - fast reveal, no blur */}
         <motion.p
-          initial={{ opacity: 0, y: 12, filter: 'blur(4px)' }}
-          animate={isLoaded ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-          transition={{ duration: 0.45, delay: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.18, ease: [0.25, 0.1, 0.25, 1] }}
           className="mt-5 text-lg md:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed"
         >
           Renewly helps you track, understand, and reduce every recurring payment with elegance.
         </motion.p>
 
-        {/* Premium CTA buttons - refined styling */}
+        {/* Premium CTA buttons - instant render */}
         <motion.div
-          initial={{ opacity: 0, y: 16, filter: 'blur(6px)' }}
-          animate={isLoaded ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-          transition={{ duration: 0.5, delay: 0.52, ease: [0.25, 0.1, 0.25, 1] }}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.24, ease: [0.25, 0.1, 0.25, 1] }}
           className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           {/* Primary CTA with subtle glow */}
@@ -220,11 +197,11 @@ export function Hero() {
         {/* HERO PRODUCT SCENE - Premium Device Reveal */}
         {/* ============================================ */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isLoaded ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.65, duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
           className="mt-20 relative"
-          style={{ y: prefersReducedMotion ? 0 : yNear }}
+          style={{ y: yNear }}
         >
           {/* Spotlight halo behind device - static for performance */}
           <div
@@ -269,13 +246,13 @@ export function Hero() {
               >
                 {/* App preview content */}
                 <div className="p-4 pt-10 h-full">
-                  {/* Status bar */}
+                  {/* Status bar - instant render */}
                   <motion.div
                     className={`flex items-center justify-between text-xs mb-6 ${isDark ? 'text-[#BCC2CC]' : 'text-[#6B7280]'
                       }`}
                     initial={{ opacity: 0 }}
-                    animate={isLoaded ? { opacity: 1 } : {}}
-                    transition={{ delay: 1.2, duration: 0.4 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4, duration: 0.3 }}
                   >
                     <span>9:41</span>
                     <div className="flex gap-1">
@@ -294,9 +271,9 @@ export function Hero() {
                   {/* Header */}
                   <motion.div
                     className="flex items-center justify-between mb-6"
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={isLoaded ? { opacity: 1, x: 0 } : {}}
-                    transition={{ delay: 1.5, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.45, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
                   >
                     <div>
                       <p className={`text-xs ${isDark ? 'text-[#BCC2CC]' : 'text-[#6B7280]'}`}>
@@ -313,11 +290,11 @@ export function Hero() {
                     </div>
                   </motion.div>
 
-                  {/* Total spend card - signature reveal anchor with premium depth */}
+                  {/* Total spend card - fast reveal */}
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={isLoaded ? { opacity: 1, scale: 1 } : {}}
-                    transition={{ delay: 1.8, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+                    initial={{ opacity: 0, scale: 0.97 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.5, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
                     className={`rounded-2xl p-4 mb-4 relative overflow-hidden transition-colors duration-300 ${isDark
                       ? 'bg-gradient-to-br from-[#1B2028] via-[#13161C] to-[#1B2028] border border-[#C7A36A]/25'
                       : 'bg-gradient-to-br from-[#FFFDF9] via-[#FBF8F3] to-[#F8F5EF] border border-[#9A7035]/20'
@@ -328,15 +305,7 @@ export function Hero() {
                         : '0 6px 20px -4px rgba(120, 90, 50, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
                     }}
                   >
-                    {/* Subtle shine effect - disabled on mobile for performance */}
-                    {!shouldReduceAnimations && (
-                      <motion.div
-                        className={`absolute inset-0 bg-gradient-to-r from-transparent to-transparent pointer-events-none ${isDark ? 'via-white/5' : 'via-gold/10'
-                          }`}
-                        animate={{ x: ['-100%', '100%'] }}
-                        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
-                      />
-                    )}
+
                     <p className={`text-xs mb-1 relative ${isDark ? 'text-[#9CA3AF]' : 'text-[#6B7280]'}`}>
                       Monthly recurring
                     </p>
@@ -357,11 +326,11 @@ export function Hero() {
                     ].map((sub, i) => (
                       <motion.div
                         key={sub.name}
-                        initial={{ opacity: 0, x: -16 }}
-                        animate={isLoaded ? { opacity: 1, x: 0 } : {}}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
                         transition={{
-                          delay: 2.0 + i * 0.12,
-                          duration: 0.45,
+                          delay: 0.55 + i * 0.08,
+                          duration: 0.3,
                           ease: [0.25, 0.1, 0.25, 1],
                         }}
                         className={`flex items-center gap-3 p-3 rounded-xl relative overflow-hidden transition-colors duration-300 ${isDark
@@ -374,20 +343,7 @@ export function Hero() {
                             : '0 2px 8px -2px rgba(120, 90, 50, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)',
                         }}
                       >
-                        {/* Card shimmer - disabled on mobile for performance */}
-                        {!shouldReduceAnimations && (
-                          <motion.div
-                            className={`absolute inset-0 bg-gradient-to-r from-transparent to-transparent pointer-events-none ${isDark ? 'via-gold/5' : 'via-gold/10'
-                              }`}
-                            animate={{ x: ['-100%', '100%'] }}
-                            transition={{
-                              duration: 3,
-                              repeat: Infinity,
-                              ease: 'easeInOut',
-                              delay: 3.5 + i * 0.3,
-                            }}
-                          />
-                        )}
+
 
                         {/* Real brand icon */}
                         <div className="relative shrink-0">
@@ -426,7 +382,7 @@ export function Hero() {
 
 
         </motion.div>
-      </motion.div>
+      </div>
 
       {/* Demo Modal */}
       <DemoModal

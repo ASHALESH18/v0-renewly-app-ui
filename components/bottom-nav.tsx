@@ -60,8 +60,8 @@ export function BottomNav({ activeTab }: BottomNavProps) {
         className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
       >
         <div className="relative mx-4 mb-4 rounded-2xl overflow-hidden">
-          {/* Premium glass background - refined */}
-          <div className="absolute inset-0 bg-card/96 dark:bg-graphite/97 backdrop-blur-2xl border border-border/60 dark:border-gold/10 rounded-2xl shadow-lg" />
+          {/* Glass background - reduced blur for mobile perf */}
+          <div className="absolute inset-0 bg-card/98 dark:bg-graphite/98 backdrop-blur-lg border border-border/60 dark:border-gold/10 rounded-2xl shadow-lg" />
           
           {/* Subtle top highlight */}
           <div 
@@ -77,18 +77,13 @@ export function BottomNav({ activeTab }: BottomNavProps) {
                 return (
                   <motion.button
                     key={item.id}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.92 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={openAddSubscriptionSheet}
                     className="relative -mt-8 cursor-pointer"
                     type="button"
                   >
-                    {/* Subtle glow effect */}
-                    <motion.div
-                      className="absolute -inset-2 rounded-full bg-gold/20 blur-xl"
-                      animate={{ scale: [1, 1.15, 1], opacity: [0.25, 0.45, 0.25] }}
-                      transition={{ duration: 3, repeat: Infinity }}
-                    />
+                    {/* Static glow - no animation for performance */}
+                    <div className="absolute -inset-2 rounded-full bg-gold/15 blur-lg" />
                     <div className="relative w-14 h-14 rounded-full gold-gradient flex items-center justify-center shadow-luxury">
                       <Icon className="w-6 h-6 text-obsidian" />
                     </div>
