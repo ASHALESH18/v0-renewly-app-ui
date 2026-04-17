@@ -124,28 +124,27 @@ export const fadeInSubtle: Variants = {
   exit: { opacity: 0, transition: { duration: 0.4 } },
 }
 
-// === CINEMATIC REVEALS - Premium Visual System ===
+// === CINEMATIC REVEALS - Performance Optimized ===
+// Removed blur filters for smooth 60fps on mobile Safari
 
 export const cinematicFadeInUp: Variants = {
-  initial: { opacity: 0, y: 24, filter: 'blur(8px)' },
+  initial: { opacity: 0, y: 16 },
   animate: {
     opacity: 1,
     y: 0,
-    filter: 'blur(0px)',
-    transition: { duration: 0.6, ease: easings.premium }
+    transition: { duration: 0.4, ease: easings.premium }
   },
-  exit: { opacity: 0, y: 16, filter: 'blur(4px)', transition: { duration: 0.3 } },
+  exit: { opacity: 0, y: 10, transition: { duration: 0.2 } },
 }
 
 export const cinematicScale: Variants = {
-  initial: { opacity: 0, scale: 0.94, filter: 'blur(6px)' },
+  initial: { opacity: 0, scale: 0.96 },
   animate: {
     opacity: 1,
     scale: 1,
-    filter: 'blur(0px)',
-    transition: { duration: 0.5, ease: easings.refined }
+    transition: { duration: 0.35, ease: easings.refined }
   },
-  exit: { opacity: 0, scale: 0.97, filter: 'blur(3px)', transition: { duration: 0.25 } },
+  exit: { opacity: 0, scale: 0.98, transition: { duration: 0.2 } },
 }
 
 // Premium card hover - refined lift and glow
@@ -162,25 +161,23 @@ export const premiumCardHover: Variants = {
   }
 }
 
-// Luxury entrance for hero elements - slower, more dramatic
+// Luxury entrance for hero elements - smooth, no blur
 export const luxuryReveal: Variants = {
-  initial: { opacity: 0, y: 32, filter: 'blur(10px)' },
+  initial: { opacity: 0, y: 20 },
   animate: {
     opacity: 1,
     y: 0,
-    filter: 'blur(0px)',
-    transition: { duration: 0.7, ease: easings.premium }
+    transition: { duration: 0.5, ease: easings.premium }
   },
 }
 
-// Dramatic scale entrance - for featured elements
+// Dramatic scale entrance - for featured elements, no blur
 export const dramaticScale: Variants = {
-  initial: { opacity: 0, scale: 0.88, filter: 'blur(12px)' },
+  initial: { opacity: 0, scale: 0.94 },
   animate: {
     opacity: 1,
     scale: 1,
-    filter: 'blur(0px)',
-    transition: { duration: 0.8, ease: easings.entrance }
+    transition: { duration: 0.5, ease: easings.entrance }
   },
 }
 
@@ -204,24 +201,21 @@ export const slideInUp: Variants = {
   exit: { y: '100%', opacity: 0, transition: { duration: 0.3 } },
 }
 
-// Luxury slide for sheets/modals - refined entrance
+// Luxury slide for sheets/modals - no blur for performance
 export const luxurySlideUp: Variants = {
   initial: {
     y: '100%',
     opacity: 0,
-    filter: 'blur(8px)',
   },
   animate: {
     y: 0,
     opacity: 1,
-    filter: 'blur(0px)',
-    transition: { duration: 0.45, ease: easings.premium },
+    transition: { duration: 0.35, ease: easings.premium },
   },
   exit: {
     y: '100%',
     opacity: 0,
-    filter: 'blur(6px)',
-    transition: { duration: 0.25, ease: easings.exit },
+    transition: { duration: 0.2, ease: easings.exit },
   },
 }
 
@@ -234,24 +228,22 @@ export const slideInPanel: Variants = {
 
 // === PAGE TRANSITION SYSTEM ===
 
-// Premium page transitions - refined entrance/exit
+// Premium page transitions - fast, no blur
 export const premiumPageTransition: Variants = {
-  initial: { opacity: 0, y: 12, filter: 'blur(4px)' },
+  initial: { opacity: 0, y: 8 },
   animate: {
     opacity: 1,
     y: 0,
-    filter: 'blur(0px)',
     transition: {
-      duration: 0.4,
+      duration: 0.3,
       ease: easings.premium,
     },
   },
   exit: {
     opacity: 0,
-    y: -8,
-    filter: 'blur(3px)',
+    y: -6,
     transition: {
-      duration: 0.25,
+      duration: 0.2,
       ease: easings.exit,
     },
   },
@@ -298,14 +290,13 @@ export const staggerItem: Variants = {
   },
 }
 
-// Premium stagger for cards with subtle blur
+// Premium stagger for cards - no blur
 export const luxuryStaggerItem: Variants = {
-  initial: { opacity: 0, y: 16, filter: 'blur(3px)' },
+  initial: { opacity: 0, y: 12 },
   animate: {
     opacity: 1,
     y: 0,
-    filter: 'blur(0px)',
-    transition: { duration: 0.5, ease: easings.premium }
+    transition: { duration: 0.35, ease: easings.premium }
   },
 }
 
@@ -412,14 +403,14 @@ export function PageTransition({ children, className }: PageTransitionProps) {
   )
 }
 
-// Premium page transition with blur
+// Cinematic page transition - fast, no blur for mobile performance
 export function CinematicPageTransition({ children, className }: PageTransitionProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12, filter: 'blur(6px)' }}
-      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-      exit={{ opacity: 0, y: -12, filter: 'blur(6px)' }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
       className={className}
     >
       {children}
@@ -471,18 +462,16 @@ export const backdropVariants: Variants = {
   exit: { opacity: 0 },
 }
 
-// Premium backdrop with blur
+// Backdrop variants - no animated blur filter
 export const premiumBackdropVariants: Variants = {
-  initial: { opacity: 0, filter: 'blur(0px)' },
+  initial: { opacity: 0 },
   animate: {
     opacity: 1,
-    filter: 'blur(4px)',
-    transition: { duration: 0.3 }
+    transition: { duration: 0.25 }
   },
   exit: {
     opacity: 0,
-    filter: 'blur(0px)',
-    transition: { duration: 0.2 }
+    transition: { duration: 0.15 }
   },
 }
 
@@ -497,16 +486,13 @@ export function SkeletonPulse({ className }: { className?: string }) {
   )
 }
 
-// Premium shimmer skeleton
+// Skeleton shimmer - simple opacity pulse, no expensive gradients
 export function PremiumSkeletonShimmer({ className }: { className?: string }) {
   return (
     <motion.div
-      className={cn('rounded-xl bg-gradient-to-r from-muted via-muted-foreground/10 to-muted', className)}
-      animate={{
-        backgroundPosition: ['0% 0%', '100% 0%', '0% 0%'],
-      }}
-      transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
-      style={{ backgroundSize: '200% 100%' }}
+      className={cn('rounded-xl bg-muted', className)}
+      animate={{ opacity: [0.5, 0.8, 0.5] }}
+      transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
     />
   )
 }

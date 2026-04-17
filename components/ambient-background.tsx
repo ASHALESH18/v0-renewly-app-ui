@@ -103,13 +103,33 @@ function useIsMobile(): boolean {
 export function AmbientBackground() {
   const isMobile = useIsMobile()
   
-  // Reduce particle count significantly on mobile for performance
-  const particleCount = isMobile ? { gold: 12, secondary: 8, accent: 5 } : { gold: 45, secondary: 30, accent: 20 }
+  // On mobile: minimal particles, no animations for 60fps scrolling
+  // On desktop: moderate particles with subtle animation
+  const particleCount = isMobile 
+    ? { gold: 8, secondary: 5, accent: 3 } 
+    : { gold: 25, secondary: 15, accent: 10 }
   
-  // Generate three layers of particles with different characteristics
+  // Generate particles - memoized to prevent re-renders
   const goldParticles = useMemo(() => generateParticles(particleCount.gold, 1), [particleCount.gold])
   const goldSecondary = useMemo(() => generateParticles(particleCount.secondary, 2), [particleCount.secondary])
   const goldAccent = useMemo(() => generateParticles(particleCount.accent, 3), [particleCount.accent])
+
+  // On mobile: render only static base layers, no SVG particles
+  if (isMobile) {
+    return (
+      <div 
+        className="fixed inset-0 z-0 pointer-events-none overflow-hidden"
+        aria-hidden="true"
+      >
+        {/* Static base layer only on mobile for max performance */}
+        <div className="ambient-base" />
+        <div className="ambient-soft-wash" />
+        {/* Single static glow - no animation */}
+        <div className="ambient-glow ambient-glow--center" />
+        <div className="ambient-vignette" />
+      </div>
+    )
+  }
 
   return (
     <div 
@@ -122,10 +142,10 @@ export function AmbientBackground() {
       {/* Soft ambient wash for depth */}
       <div className="ambient-soft-wash" />
 
-      {/* Soft glowing areas - creates gentle warmth zones (static on mobile) */}
-      <div className={`ambient-glow ambient-glow--top ${isMobile ? '' : 'animate-ambient-breathe-top'}`} />
-      <div className={`ambient-glow ambient-glow--center ${isMobile ? '' : 'animate-ambient-breathe-center'}`} />
-      <div className={`ambient-glow ambient-glow--bottom ${isMobile ? '' : 'animate-ambient-breathe-bottom'}`} />
+      {/* Soft glowing areas - only animate on desktop */}
+      <div className="ambient-glow ambient-glow--top animate-ambient-breathe-top" />
+      <div className="ambient-glow ambient-glow--center animate-ambient-breathe-center" />
+      <div className="ambient-glow ambient-glow--bottom animate-ambient-breathe-bottom" />
 
       {/* Primary flowing gold dust wave SVG */}
       <svg

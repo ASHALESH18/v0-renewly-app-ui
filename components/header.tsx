@@ -184,21 +184,17 @@ export function Header({
 
   return (
     <motion.header
-      initial={{ y: -30, opacity: 0, filter: 'blur(16px)' }}
-      animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
-      transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+      initial={{ y: -16, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
       className={cn(
         'sticky top-0 z-30 px-4 py-5 lg:px-6',
-        !transparent && 'glass-premium border-b border-gold/10 shadow-[0_4px_24px_-4px_rgba(199,163,106,0.08)]',
+        !transparent && 'bg-card/98 backdrop-blur-lg border-b border-gold/10 shadow-[0_4px_24px_-4px_rgba(199,163,106,0.06)]',
         className
       )}
     >
-      {/* Subtle top highlight */}
-      <motion.div 
-        className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/25 to-transparent"
-        animate={{ opacity: [0.3, 0.5, 0.3] }}
-        transition={{ duration: 4, repeat: Infinity }}
-      />
+      {/* Static top highlight - no animation */}
+      <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1 min-w-0">
           {title ? (
@@ -243,11 +239,11 @@ export function Header({
               <AnimatePresence>
                 {isNotificationsOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: 12, scale: 0.95, filter: 'blur(8px)' }}
-                    animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-                    exit={{ opacity: 0, y: 8, scale: 0.98, filter: 'blur(4px)' }}
-                    transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-                    className="absolute right-0 top-14 z-50 w-[360px] max-w-[calc(100vw-2rem)] rounded-2xl border border-gold/10 bg-card/98 backdrop-blur-2xl shadow-depth-lg overflow-hidden"
+                    initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                    transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+                    className="absolute right-0 top-14 z-50 w-[360px] max-w-[calc(100vw-2rem)] rounded-2xl border border-gold/10 bg-card/99 backdrop-blur-lg shadow-lg overflow-hidden"
                   >
                     {/* Top gradient accent */}
                     <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
