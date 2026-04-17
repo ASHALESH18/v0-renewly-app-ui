@@ -116,184 +116,184 @@ export function DashboardScreen({
       <div className="px-4 lg:px-6 space-y-6 pb-8">
         {/* Command Center Hero - instant render */}
         <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
-            className="rounded-2xl overflow-hidden relative"
-          >
-            {/* Subtle background treatment */}
-            <div className="absolute inset-0">
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,254,250,0.75),rgba(248,244,236,0.60))] dark:bg-[linear-gradient(180deg,rgba(17,20,24,0.80),rgba(8,9,12,0.75))]" />
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+          className="rounded-2xl overflow-hidden relative"
+        >
+          {/* Subtle background treatment */}
+          <div className="absolute inset-0">
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,254,250,0.75),rgba(248,244,236,0.60))] dark:bg-[linear-gradient(180deg,rgba(17,20,24,0.80),rgba(8,9,12,0.75))]" />
 
-              <div
-                className="absolute -top-16 right-4 w-48 h-48 rounded-full blur-[80px]"
-                style={{ background: 'radial-gradient(circle, rgba(176, 132, 64, 0.06) 0%, transparent 70%)' }}
-              />
+            <div
+              className="absolute -top-16 right-4 w-48 h-48 rounded-full blur-[80px]"
+              style={{ background: 'radial-gradient(circle, rgba(176, 132, 64, 0.06) 0%, transparent 70%)' }}
+            />
 
-              <div
-                className="absolute -bottom-12 left-4 w-40 h-40 rounded-full blur-[90px]"
-                style={{ background: 'radial-gradient(circle, rgba(61, 107, 88, 0.05) 0%, transparent 70%)' }}
-              />
+            <div
+              className="absolute -bottom-12 left-4 w-40 h-40 rounded-full blur-[90px]"
+              style={{ background: 'radial-gradient(circle, rgba(61, 107, 88, 0.05) 0%, transparent 70%)' }}
+            />
 
-              <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-gold/12 to-transparent" />
-            </div>
+            <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-gold/12 to-transparent" />
+          </div>
 
-            <div className="relative glass-premium border border-gold/8 p-6 md:p-8 shadow-md">
-              {/* Command Center eyebrow */}
+          <div className="relative glass-premium border border-gold/8 p-6 md:p-8 shadow-md">
+            {/* Command Center eyebrow */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="flex items-center gap-2 mb-6"
+            >
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold/6 border border-gold/15 backdrop-blur-sm">
+                <div className="relative w-2 h-2">
+                  <span className="absolute inset-0 rounded-full bg-gold" />
+                </div>
+                <span className="text-[10px] font-semibold text-gold tracking-wider uppercase">
+                  Financial Command Center
+                </span>
+              </div>
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5 mb-8">
               <motion.div
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="flex items-center gap-2 mb-6"
+                transition={{ delay: 0.15, duration: 0.4 }}
+                whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                className="relative p-5 rounded-xl bg-card/50 backdrop-blur-xl border border-gold/12 group"
               >
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold/6 border border-gold/15 backdrop-blur-sm">
-                  <div className="relative w-2 h-2">
-                    <span className="absolute inset-0 rounded-full bg-gold" />
+                <motion.div
+                  className="absolute -inset-1 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: 'radial-gradient(circle at center, rgba(176, 132, 64, 0.05) 0%, transparent 70%)' }}
+                />
+                <div className="relative">
+                  <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">Monthly Spend</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl md:text-4xl font-semibold text-gold tracking-tight">
+                      {currencySymbol}
+                      <AnimatedNumber value={Math.round(metrics.totalMonthly)} language={preferredLanguage} />
+                    </span>
                   </div>
-                  <span className="text-[10px] font-semibold text-gold tracking-wider uppercase">
-                    Financial Command Center
-                  </span>
+                  <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald/8 border border-emerald/15 text-emerald text-xs">
+                    <TrendingDown className="w-3.5 h-3.5" />
+                    <span className="font-medium">12% vs last month</span>
+                  </div>
                 </div>
               </motion.div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5 mb-8">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15, duration: 0.4 }}
-                  whileHover={{ y: -3, transition: { duration: 0.2 } }}
-                  className="relative p-5 rounded-xl bg-card/50 backdrop-blur-xl border border-gold/12 group"
-                >
-                  <motion.div
-                    className="absolute -inset-1 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    style={{ background: 'radial-gradient(circle at center, rgba(176, 132, 64, 0.05) 0%, transparent 70%)' }}
-                  />
-                  <div className="relative">
-                    <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">Monthly Spend</p>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl md:text-4xl font-semibold text-gold tracking-tight">
-                        {currencySymbol}
-                        <AnimatedNumber value={Math.round(metrics.totalMonthly)} language={preferredLanguage} />
-                      </span>
-                    </div>
-                    <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald/8 border border-emerald/15 text-emerald text-xs">
-                      <TrendingDown className="w-3.5 h-3.5" />
-                      <span className="font-medium">12% vs last month</span>
-                    </div>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.22, duration: 0.4 }}
-                  whileHover={{ y: -3, transition: { duration: 0.2 } }}
-                  className="relative p-5 rounded-xl bg-card/50 backdrop-blur-xl border border-border/50 group"
-                >
-                  <motion.div
-                    className="absolute -inset-1 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    style={{ background: 'radial-gradient(circle at center, rgba(168, 174, 184, 0.03) 0%, transparent 70%)' }}
-                  />
-                  <div className="relative">
-                    <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">Annual Projected</p>
-                    <p className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight">
-                      {currencySymbol}
-                      <AnimatedNumber value={Math.round(metrics.totalYearly)} language={preferredLanguage} />
-                    </p>
-                    <p className="mt-3 text-xs text-muted-foreground">Based on current spend</p>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.29, duration: 0.4 }}
-                  whileHover={{ y: -3, transition: { duration: 0.2 } }}
-                  className="relative p-5 rounded-xl bg-gradient-to-br from-emerald/6 to-emerald/2 backdrop-blur-xl border border-emerald/15 group"
-                >
-                  <motion.div
-                    className="absolute -inset-1 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    style={{ background: 'radial-gradient(circle at center, rgba(61, 107, 88, 0.06) 0%, transparent 70%)' }}
-                  />
-                  <div className="relative">
-                    <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">Potential Savings</p>
-                    <p className="text-2xl md:text-3xl font-semibold text-emerald tracking-tight">
-                      {currencySymbol}
-                      <AnimatedNumber value={Math.round(metrics.savingsPotential)} language={preferredLanguage} />
-                      <span className="text-sm text-muted-foreground ml-1">/mo</span>
-                    </p>
-                    <p className="mt-3 text-xs text-emerald font-medium">Review unused subscriptions</p>
-                  </div>
-                </motion.div>
-              </div>
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="flex items-center justify-between pt-6 border-t border-glass-border"
+                transition={{ delay: 0.22, duration: 0.4 }}
+                whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                className="relative p-5 rounded-xl bg-card/50 backdrop-blur-xl border border-border/50 group"
               >
-                <div className="flex items-center gap-4">
-                  <div className="relative w-16 h-16">
-                    <div className="absolute inset-0 rounded-full bg-gold/10 blur-md opacity-70" />
-                    <svg className="relative w-full h-full transform -rotate-90">
-                      <circle
-                        cx="32"
-                        cy="32"
-                        r="28"
-                        fill="none"
-                        stroke="rgba(199,163,106,0.1)"
-                        strokeWidth="4"
-                      />
-                      <motion.circle
-                        cx="32"
-                        cy="32"
-                        r="28"
-                        fill="none"
-                        stroke="url(#healthGradient)"
-                        strokeWidth="4"
-                        strokeDasharray={`${2 * Math.PI * 28}`}
-                        initial={{ strokeDashoffset: 2 * Math.PI * 28 }}
-                        animate={{
-                          strokeDashoffset: 2 * Math.PI * 28 * (1 - metrics.leakScore / 100)
-                        }}
-                        transition={{ delay: 0.7, duration: 1.8, ease: 'easeOut' }}
-                        strokeLinecap="round"
-                      />
-                      <defs>
-                        <linearGradient id="healthGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor="#C7A36A" />
-                          <stop offset="100%" stopColor="#2E5E52" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-base font-bold text-foreground">
-                      {metrics.leakScore}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Subscription Health Score</p>
-                    <p className="text-base font-semibold text-foreground">
-                      {metrics.leakScore > 70
-                        ? 'Needs Attention'
-                        : metrics.leakScore > 40
-                          ? 'Some Optimization Possible'
-                          : 'Well Optimized'}
-                    </p>
-                  </div>
+                <motion.div
+                  className="absolute -inset-1 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: 'radial-gradient(circle at center, rgba(168, 174, 184, 0.03) 0%, transparent 70%)' }}
+                />
+                <div className="relative">
+                  <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">Annual Projected</p>
+                  <p className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight">
+                    {currencySymbol}
+                    <AnimatedNumber value={Math.round(metrics.totalYearly)} language={preferredLanguage} />
+                  </p>
+                  <p className="mt-3 text-xs text-muted-foreground">Based on current spend</p>
                 </div>
-                <motion.button
-                  whileHover={{ scale: 1.02, x: 2 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-gold/10 text-gold text-sm font-medium border border-gold/20 hover:bg-gold/15 transition-colors cursor-pointer"
-                >
-                  View Report
-                  <ArrowUpRight className="w-4 h-4" />
-                </motion.button>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.29, duration: 0.4 }}
+                whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                className="relative p-5 rounded-xl bg-gradient-to-br from-emerald/6 to-emerald/2 backdrop-blur-xl border border-emerald/15 group"
+              >
+                <motion.div
+                  className="absolute -inset-1 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: 'radial-gradient(circle at center, rgba(61, 107, 88, 0.06) 0%, transparent 70%)' }}
+                />
+                <div className="relative">
+                  <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">Potential Savings</p>
+                  <p className="text-2xl md:text-3xl font-semibold text-emerald tracking-tight">
+                    {currencySymbol}
+                    <AnimatedNumber value={Math.round(metrics.savingsPotential)} language={preferredLanguage} />
+                    <span className="text-sm text-muted-foreground ml-1">/mo</span>
+                  </p>
+                  <p className="mt-3 text-xs text-emerald font-medium">Review unused subscriptions</p>
+                </div>
               </motion.div>
             </div>
-          </motion.div>
-        )}
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="flex items-center justify-between pt-6 border-t border-glass-border"
+            >
+              <div className="flex items-center gap-4">
+                <div className="relative w-16 h-16">
+                  <div className="absolute inset-0 rounded-full bg-gold/10 blur-md opacity-70" />
+                  <svg className="relative w-full h-full transform -rotate-90">
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      fill="none"
+                      stroke="rgba(199,163,106,0.1)"
+                      strokeWidth="4"
+                    />
+                    <motion.circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      fill="none"
+                      stroke="url(#healthGradient)"
+                      strokeWidth="4"
+                      strokeDasharray={`${2 * Math.PI * 28}`}
+                      initial={{ strokeDashoffset: 2 * Math.PI * 28 }}
+                      animate={{
+                        strokeDashoffset: 2 * Math.PI * 28 * (1 - metrics.leakScore / 100)
+                      }}
+                      transition={{ delay: 0.7, duration: 1.8, ease: 'easeOut' }}
+                      strokeLinecap="round"
+                    />
+                    <defs>
+                      <linearGradient id="healthGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#C7A36A" />
+                        <stop offset="100%" stopColor="#2E5E52" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <span className="absolute inset-0 flex items-center justify-center text-base font-bold text-foreground">
+                    {metrics.leakScore}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Subscription Health Score</p>
+                  <p className="text-base font-semibold text-foreground">
+                    {metrics.leakScore > 70
+                      ? 'Needs Attention'
+                      : metrics.leakScore > 40
+                        ? 'Some Optimization Possible'
+                        : 'Well Optimized'}
+                  </p>
+                </div>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.02, x: 2 }}
+                whileTap={{ scale: 0.98 }}
+                className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-gold/10 text-gold text-sm font-medium border border-gold/20 hover:bg-gold/15 transition-colors cursor-pointer"
+              >
+                View Report
+                <ArrowUpRight className="w-4 h-4" />
+              </motion.button>
+            </motion.div>
+          </div>
+        </motion.div>
+
 
         {/* Metrics grid */}
         <StaggerList className="grid grid-cols-2 gap-4">
@@ -408,6 +408,7 @@ export function DashboardScreen({
           {displayedSubscriptions.map((subscription, index) => (
             viewMode === 'cards' ? (
               <SubscriptionCard
+                key={subscription.id}
                 subscription={subscription}
                 index={index}
                 onClick={() => onSubscriptionSelect?.(subscription)}
