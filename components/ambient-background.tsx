@@ -1,88 +1,204 @@
-type Stream = {
-  id: string
-  className: string
-  accent?: 'gold' | 'cool'
-  d: string
-}
+import React from 'react'
 
-const streams: Stream[] = [
-  {
-    id: 's1',
-    className: 'lf-stream--1',
-    accent: 'gold',
-    d: 'M -120 132 C 90 56, 250 206, 470 128 S 900 42, 1180 126 S 1500 210, 1760 120',
-  },
-  {
-    id: 's2',
-    className: 'lf-stream--2',
-    accent: 'cool',
-    d: 'M -140 118 C 120 176, 290 36, 520 118 S 930 196, 1180 112 S 1480 30, 1760 126',
-  },
-  {
-    id: 's3',
-    className: 'lf-stream--3',
-    accent: 'gold',
-    d: 'M -100 124 C 140 60, 320 188, 560 122 S 980 52, 1230 128 S 1520 206, 1760 118',
-  },
-  {
-    id: 's4',
-    className: 'lf-stream--4',
-    accent: 'cool',
-    d: 'M -120 114 C 110 188, 330 38, 560 120 S 980 192, 1230 112 S 1510 42, 1760 124',
-  },
-  {
-    id: 's5',
-    className: 'lf-stream--5',
-    accent: 'gold',
-    d: 'M -110 126 C 130 72, 340 188, 590 128 S 1020 58, 1270 122 S 1520 194, 1760 118',
-  },
-  {
-    id: 's6',
-    className: 'lf-stream--6',
-    accent: 'cool',
-    d: 'M -150 116 C 80 182, 280 54, 520 116 S 950 188, 1210 118 S 1510 46, 1760 126',
-  },
-  {
-    id: 's7',
-    className: 'lf-stream--7',
-    accent: 'gold',
-    d: 'M -120 122 C 120 76, 320 176, 560 124 S 980 66, 1240 120 S 1520 182, 1760 120',
-  },
+type Particle = { cx: number; cy: number; r: number; opacity?: number }
+
+const goldDust: Particle[] = [
+  { cx: 180, cy: 255, r: 2.4 },
+  { cx: 260, cy: 238, r: 1.9, opacity: 0.8 },
+  { cx: 340, cy: 224, r: 2.2 },
+  { cx: 425, cy: 212, r: 1.8 },
+  { cx: 510, cy: 206, r: 2.8 },
+  { cx: 620, cy: 202, r: 1.7 },
+  { cx: 710, cy: 208, r: 2.5 },
+  { cx: 820, cy: 224, r: 1.8 },
+  { cx: 930, cy: 248, r: 2.4 },
+  { cx: 1040, cy: 272, r: 1.8 },
+  { cx: 1160, cy: 288, r: 2.5 },
+  { cx: 1280, cy: 290, r: 2.1 },
+  { cx: 1390, cy: 280, r: 1.7 },
+  { cx: 1460, cy: 262, r: 2.3 },
 ]
+
+const emeraldDust: Particle[] = [
+  { cx: 120, cy: 585, r: 1.9 },
+  { cx: 230, cy: 565, r: 2.4 },
+  { cx: 345, cy: 548, r: 1.8 },
+  { cx: 470, cy: 538, r: 2.1 },
+  { cx: 610, cy: 534, r: 1.7 },
+  { cx: 760, cy: 538, r: 2.5 },
+  { cx: 905, cy: 555, r: 1.9 },
+  { cx: 1040, cy: 575, r: 2.4 },
+  { cx: 1170, cy: 592, r: 1.8 },
+  { cx: 1295, cy: 604, r: 2.2 },
+  { cx: 1410, cy: 610, r: 1.7 },
+]
+
+const platinumDust: Particle[] = [
+  { cx: 210, cy: 785, r: 1.6 },
+  { cx: 360, cy: 764, r: 2.1 },
+  { cx: 515, cy: 748, r: 1.8 },
+  { cx: 690, cy: 742, r: 1.5 },
+  { cx: 860, cy: 748, r: 2.1 },
+  { cx: 1040, cy: 764, r: 1.7 },
+  { cx: 1210, cy: 780, r: 1.9 },
+  { cx: 1385, cy: 792, r: 1.5 },
+]
+
+function DustParticles({
+  particles,
+  className,
+  fill,
+}: {
+  particles: Particle[]
+  className: string
+  fill: string
+}) {
+  return (
+    <g className={`ambient-particles ${className}`}>
+      {particles.map((particle, index) => (
+        <circle
+          key={`${className}-${index}`}
+          cx={particle.cx}
+          cy={particle.cy}
+          r={particle.r}
+          fill={fill}
+          opacity={particle.opacity ?? 1}
+        />
+      ))}
+    </g>
+  )
+}
 
 export function AmbientBackground() {
   return (
-    <div aria-hidden="true" className="lf-root">
-      <div className="lf-base" />
-      <div className="lf-grid" />
-      <div className="lf-specks lf-specks--far" />
-      <div className="lf-specks lf-specks--near" />
+    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
+      <div className="ambient-base" />
+      <div className="ambient-soft-wash" />
 
-      <div className="lf-glow lf-glow--top" />
-      <div className="lf-glow lf-glow--center" />
-      <div className="lf-glow lf-glow--bottom" />
+      <div className="ambient-glow ambient-glow--top animate-ambient-breathe-top" />
+      <div className="ambient-glow ambient-glow--center animate-ambient-breathe-center" />
+      <div className="ambient-glow ambient-glow--bottom animate-ambient-breathe-bottom" />
 
-      {streams.map((stream) => (
-        <div
-          key={stream.id}
-          className={`lf-stream ${stream.className} ${stream.accent === 'cool' ? 'lf-stream--cool' : ''
-            }`}
-        >
-          <svg
-            className="lf-stream__svg"
-            viewBox="0 0 1600 240"
-            preserveAspectRatio="none"
-          >
-            <path d={stream.d} className="lf-stream__shadow" />
-            <path d={stream.d} className="lf-stream__line-soft" />
-            <path d={stream.d} className="lf-stream__line" />
-            <path d={stream.d} className="lf-stream__dust" />
-            <path d={stream.d} className="lf-stream__spark" />
-          </svg>
-        </div>
-      ))}
+      <svg
+        className="ambient-dust-svg"
+        viewBox="0 0 1600 1000"
+        preserveAspectRatio="xMidYMid slice"
+      >
+        <defs>
+          <linearGradient id="ambientGoldSoft" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="rgba(199,163,106,0)" />
+            <stop offset="18%" stopColor="rgba(199,163,106,0.08)" />
+            <stop offset="50%" stopColor="rgba(212,184,122,0.45)" />
+            <stop offset="82%" stopColor="rgba(199,163,106,0.08)" />
+            <stop offset="100%" stopColor="rgba(199,163,106,0)" />
+          </linearGradient>
 
-      <div className="lf-vignette" />
+          <linearGradient id="ambientGoldCore" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0)" />
+            <stop offset="36%" stopColor="rgba(229,212,184,0.14)" />
+            <stop offset="50%" stopColor="rgba(229,212,184,0.32)" />
+            <stop offset="64%" stopColor="rgba(229,212,184,0.14)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          </linearGradient>
+
+          <linearGradient id="ambientEmeraldSoft" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="rgba(46,94,82,0)" />
+            <stop offset="20%" stopColor="rgba(46,94,82,0.05)" />
+            <stop offset="50%" stopColor="rgba(88,126,112,0.24)" />
+            <stop offset="80%" stopColor="rgba(46,94,82,0.05)" />
+            <stop offset="100%" stopColor="rgba(46,94,82,0)" />
+          </linearGradient>
+
+          <linearGradient id="ambientEmeraldCore" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0)" />
+            <stop offset="36%" stopColor="rgba(120,158,145,0.08)" />
+            <stop offset="50%" stopColor="rgba(120,158,145,0.2)" />
+            <stop offset="64%" stopColor="rgba(120,158,145,0.08)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          </linearGradient>
+
+          <linearGradient id="ambientPlatinumSoft" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="rgba(188,194,204,0)" />
+            <stop offset="24%" stopColor="rgba(188,194,204,0.03)" />
+            <stop offset="50%" stopColor="rgba(210,214,220,0.14)" />
+            <stop offset="76%" stopColor="rgba(188,194,204,0.03)" />
+            <stop offset="100%" stopColor="rgba(188,194,204,0)" />
+          </linearGradient>
+
+          <linearGradient id="ambientPlatinumCore" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0)" />
+            <stop offset="36%" stopColor="rgba(255,255,255,0.05)" />
+            <stop offset="50%" stopColor="rgba(255,255,255,0.12)" />
+            <stop offset="64%" stopColor="rgba(255,255,255,0.05)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          </linearGradient>
+
+          <filter id="ambientDustBlurXL" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="18" />
+          </filter>
+
+          <filter id="ambientDustBlurLG" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="7" />
+          </filter>
+        </defs>
+
+        <g className="ambient-wave ambient-wave--gold">
+          <path
+            className="ambient-dust-path ambient-dust-soft"
+            d="M -180 270 C 100 350, 355 140, 685 220 S 1265 418, 1780 258"
+            stroke="url(#ambientGoldSoft)"
+            strokeWidth="92"
+            filter="url(#ambientDustBlurXL)"
+          />
+          <path
+            className="ambient-dust-path ambient-dust-core"
+            d="M -180 270 C 100 350, 355 140, 685 220 S 1265 418, 1780 258"
+            stroke="url(#ambientGoldCore)"
+            strokeWidth="26"
+            filter="url(#ambientDustBlurLG)"
+          />
+          <DustParticles particles={goldDust} className="ambient-particles--gold" fill="rgba(229, 212, 184, 0.75)" />
+        </g>
+
+        <g className="ambient-wave ambient-wave--emerald">
+          <path
+            className="ambient-dust-path ambient-dust-soft"
+            d="M -220 560 C 90 482, 320 678, 642 588 S 1218 454, 1820 618"
+            stroke="url(#ambientEmeraldSoft)"
+            strokeWidth="84"
+            filter="url(#ambientDustBlurXL)"
+          />
+          <path
+            className="ambient-dust-path ambient-dust-core"
+            d="M -220 560 C 90 482, 320 678, 642 588 S 1218 454, 1820 618"
+            stroke="url(#ambientEmeraldCore)"
+            strokeWidth="22"
+            filter="url(#ambientDustBlurLG)"
+          />
+          <DustParticles particles={emeraldDust} className="ambient-particles--emerald" fill="rgba(163, 201, 189, 0.48)" />
+        </g>
+
+        <g className="ambient-wave ambient-wave--platinum">
+          <path
+            className="ambient-dust-path ambient-dust-soft"
+            d="M -160 782 C 185 706, 430 830, 770 762 S 1310 666, 1780 790"
+            stroke="url(#ambientPlatinumSoft)"
+            strokeWidth="62"
+            filter="url(#ambientDustBlurXL)"
+          />
+          <path
+            className="ambient-dust-path ambient-dust-core"
+            d="M -160 782 C 185 706, 430 830, 770 762 S 1310 666, 1780 790"
+            stroke="url(#ambientPlatinumCore)"
+            strokeWidth="14"
+            filter="url(#ambientDustBlurLG)"
+          />
+          <DustParticles particles={platinumDust} className="ambient-particles--platinum" fill="rgba(229, 233, 238, 0.34)" />
+        </g>
+      </svg>
+
+      <div className="ambient-texture" />
+      <div className="ambient-vignette" />
     </div>
   )
 }
