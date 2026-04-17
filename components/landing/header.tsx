@@ -51,16 +51,16 @@ export function LandingHeader() {
 
   return (
     <motion.header
-      initial={{ opacity: 0, y: -20, filter: 'blur(10px)' }}
+      initial={{ opacity: 0, y: -16, filter: 'blur(6px)' }}
       animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-      transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
-      className="fixed top-0 left-0 right-0 z-50 px-4 py-4"
+      transition={{ duration: 0.5, delay: 0.05, ease: [0.25, 0.1, 0.25, 1] }}
+      className="fixed top-0 left-0 right-0 z-50 px-4 py-3"
     >
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between px-4 py-2 rounded-2xl glass-premium border border-gold/10">
+        <div className="flex items-center justify-between px-5 py-2.5 rounded-2xl glass-strong border border-gold/8 shadow-sm">
           <RenewlyLogo size="lg" />
 
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-0.5">
             {[
               { href: '/#features', id: 'features', label: 'Features' },
               { href: '/#pricing', id: 'pricing', label: 'Pricing' },
@@ -70,39 +70,39 @@ export function LandingHeader() {
                 key={item.id}
                 href={item.href}
                 onClick={(e) => handleAnchorClick(e, item.id)}
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
-                className="relative px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer rounded-lg hover:bg-gold/5"
+                className="relative px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer rounded-lg hover:bg-gold/[0.04]"
               >
                 {item.label}
               </motion.a>
             ))}
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             {loading ? (
-              <div className="w-32 h-10 rounded-lg bg-graphite/50 animate-pulse" />
+              <div className="w-28 h-9 rounded-lg bg-muted/40 animate-pulse" />
             ) : user ? (
               <>
                 <Link href="/app/dashboard">
                   <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gold text-obsidian font-medium text-sm cursor-pointer"
+                    whileHover={{ scale: 1.015 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl gold-gradient text-obsidian font-semibold text-sm cursor-pointer shadow-sm"
                   >
                     Dashboard
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </motion.button>
                 </Link>
 
                 <motion.button
-                  whileHover={{ scale: isSigningOut ? 1 : 1.02 }}
-                  whileTap={{ scale: isSigningOut ? 1 : 0.98 }}
+                  whileHover={{ scale: isSigningOut ? 1 : 1.01 }}
+                  whileTap={{ scale: isSigningOut ? 1 : 0.97 }}
                   onClick={handleLogout}
                   disabled={isSigningOut}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gold/25 bg-card/70 text-foreground font-medium text-sm transition-colors hover:border-gold/45 hover:text-gold disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-border bg-card/60 text-muted-foreground font-medium text-sm transition-colors hover:border-gold/30 hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-3.5 h-3.5" />
                   {isSigningOut ? 'Signing out...' : 'Logout'}
                 </motion.button>
               </>
@@ -110,9 +110,9 @@ export function LandingHeader() {
               <>
                 <Link href="/auth/sign-in">
                   <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   >
                     Sign in
                   </motion.button>
@@ -120,12 +120,12 @@ export function LandingHeader() {
 
                 <Link href="/auth/sign-up">
                   <motion.button
-                    whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(199, 163, 106, 0.2)' }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gold text-obsidian font-medium text-sm cursor-pointer"
+                    whileHover={{ scale: 1.015 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl gold-gradient text-obsidian font-semibold text-sm cursor-pointer shadow-sm"
                   >
                     Get started
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </motion.button>
                 </Link>
               </>

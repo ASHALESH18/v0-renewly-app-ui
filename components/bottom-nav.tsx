@@ -54,24 +54,19 @@ export function BottomNav({ activeTab }: BottomNavProps) {
   return (
     <>
       <motion.nav
-        initial={{ y: 100, opacity: 0 }}
+        initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+        transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
         className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
       >
-        <div className="relative mx-4 mb-4 rounded-3xl overflow-hidden">
-          {/* DRAMATIC: Premium glass background with depth */}
-          <div className="absolute inset-0 bg-card/95 dark:bg-graphite/98 backdrop-blur-3xl border border-gold/15 rounded-3xl shadow-[0_-12px_48px_-8px_rgba(199,163,106,0.15),0_-4px_16px_-4px_rgba(0,0,0,0.1)]" />
+        <div className="relative mx-4 mb-4 rounded-2xl overflow-hidden">
+          {/* Premium glass background - refined */}
+          <div className="absolute inset-0 bg-card/96 dark:bg-graphite/97 backdrop-blur-2xl border border-border/60 dark:border-gold/10 rounded-2xl shadow-lg" />
           
-          {/* DRAMATIC: Animated top highlight line */}
-          <motion.div 
-            className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent"
-            animate={{ opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 3, repeat: Infinity }}
+          {/* Subtle top highlight */}
+          <div 
+            className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/25 to-transparent"
           />
-          
-          {/* Subtle inner glow */}
-          <div className="absolute inset-x-4 top-1 h-8 bg-gradient-to-b from-gold/5 to-transparent rounded-t-3xl pointer-events-none" />
           
           <div className="relative flex items-center justify-around px-2 py-3">
             {primaryNavItems.map((item) => {
@@ -82,25 +77,20 @@ export function BottomNav({ activeTab }: BottomNavProps) {
                 return (
                   <motion.button
                     key={item.id}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.92 }}
                     onClick={openAddSubscriptionSheet}
-                    className="relative -mt-10 cursor-pointer"
+                    className="relative -mt-8 cursor-pointer"
                     type="button"
                   >
-                    {/* DRAMATIC: Multi-layer glow effect */}
+                    {/* Subtle glow effect */}
                     <motion.div
-                      className="absolute -inset-3 rounded-full bg-gold/30 blur-2xl"
-                      animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
-                      transition={{ duration: 2.5, repeat: Infinity }}
+                      className="absolute -inset-2 rounded-full bg-gold/20 blur-xl"
+                      animate={{ scale: [1, 1.15, 1], opacity: [0.25, 0.45, 0.25] }}
+                      transition={{ duration: 3, repeat: Infinity }}
                     />
-                    <motion.div
-                      className="absolute -inset-1 rounded-full bg-gold/50 blur-lg"
-                      animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-                    />
-                    <div className="relative w-18 h-18 rounded-full gold-gradient flex items-center justify-center shadow-[0_12px_32px_-4px_rgba(199,163,106,0.6),0_4px_12px_-2px_rgba(199,163,106,0.4)]">
-                      <Icon className="w-8 h-8 text-obsidian" />
+                    <div className="relative w-14 h-14 rounded-full gold-gradient flex items-center justify-center shadow-luxury">
+                      <Icon className="w-6 h-6 text-obsidian" />
                     </div>
                   </motion.button>
                 )
@@ -331,18 +321,18 @@ export function SidebarNav({ activeTab }: SidebarNavProps) {
         x: 0,
         width: sidebarWidth,
       }}
-      transition={springs.gentle}
+      transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="hidden lg:flex fixed left-0 top-0 bottom-0 flex-col border-r border-sidebar-border bg-[linear-gradient(180deg,rgba(251,246,239,0.98)_0%,rgba(242,231,217,0.98)_100%)] dark:bg-[linear-gradient(180deg,rgba(14,18,24,0.98)_0%,rgba(10,13,18,0.98)_100%)] backdrop-blur-xl shadow-[14px_0_48px_rgba(87,63,38,0.08)] dark:shadow-[14px_0_48px_rgba(0,0,0,0.24)] z-40"
+      className="hidden lg:flex fixed left-0 top-0 bottom-0 flex-col border-r border-sidebar-border bg-[linear-gradient(180deg,rgba(252,249,243,0.98)_0%,rgba(248,244,236,0.98)_100%)] dark:bg-[linear-gradient(180deg,rgba(13,15,19,0.98)_0%,rgba(8,9,12,0.98)_100%)] backdrop-blur-xl shadow-[8px_0_24px_rgba(120,90,50,0.04)] dark:shadow-[8px_0_32px_rgba(0,0,0,0.20)] z-40"
     >
-      <div className="p-3 border-b border-gold/10">
+      <div className="p-3 border-b border-border/50">
         <Link href="/" className="block cursor-pointer">
           <motion.div
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
+            whileHover={{ scale: 1.005 }}
+            whileTap={{ scale: 0.995 }}
             className={cn(
-              'group flex items-center gap-1.5 rounded-xl border border-gold/16 bg-[linear-gradient(180deg,rgba(255,255,255,0.76),rgba(241,230,216,0.52))] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(199,163,106,0.05))] px-2.5 py-2.5 shadow-[0_8px_20px_rgba(87,63,38,0.06)] dark:shadow-[0_8px_20px_rgba(0,0,0,0.15)] transition-all duration-200 hover:border-gold/30',
+              'group flex items-center gap-1.5 rounded-xl border border-gold/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.6),rgba(248,244,236,0.4))] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(212,176,112,0.04))] px-2.5 py-2.5 shadow-sm transition-all duration-200 hover:border-gold/20',
               !shouldExpand && 'justify-center px-2'
             )}
           >

@@ -71,31 +71,31 @@ export function Hero() {
   return (
     <section
       ref={ref}
-      className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-20 lg:py-32"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-24 lg:py-36"
     >
       {/* ============================================ */}
       {/* HERO AMBIENT ENHANCEMENT */}
       {/* Blends with global AmbientBackground */}
       {/* ============================================ */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        {/* Central focus glow - enhances the hero area */}
+        {/* Central focus glow - subtle warmth at center */}
         <motion.div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] md:w-[900px] md:h-[600px]"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] md:w-[800px] md:h-[500px]"
           style={{
             background:
-              'radial-gradient(ellipse at center, rgba(199, 163, 106, 0.07) 0%, rgba(199, 163, 106, 0.02) 42%, transparent 72%)',
-            filter: 'blur(60px)',
+              'radial-gradient(ellipse at center, rgba(176, 132, 64, 0.05) 0%, rgba(176, 132, 64, 0.015) 45%, transparent 70%)',
+            filter: 'blur(50px)',
           }}
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={
             isLoaded
               ? {
-                opacity: prefersReducedMotion ? 0.45 : [0.32, 0.5, 0.32],
-                scale: prefersReducedMotion ? 1 : [1, 1.03, 1],
+                opacity: prefersReducedMotion ? 0.4 : [0.28, 0.42, 0.28],
+                scale: prefersReducedMotion ? 1 : [1, 1.02, 1],
               }
               : {}
           }
-          transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
         />
 
         {/* Soft vignette - cinematic framing */}
@@ -103,7 +103,7 @@ export function Hero() {
           className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse 80% 70% at 50% 45%, transparent 0%, var(--hero-vignette) 100%)',
+              'radial-gradient(ellipse 85% 75% at 50% 45%, transparent 0%, var(--hero-vignette) 100%)',
           }}
         />
       </div>
@@ -118,56 +118,56 @@ export function Hero() {
       >
         {/* Premium eyebrow badge */}
         <motion.div
-          initial={{ opacity: 0, y: 24, filter: 'blur(10px)', scale: 0.9 }}
+          initial={{ opacity: 0, y: 16, filter: 'blur(6px)', scale: 0.96 }}
           animate={isLoaded ? { opacity: 1, y: 0, filter: 'blur(0px)', scale: 1 } : {}}
-          transition={{ duration: 0.6, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="relative inline-flex items-center gap-3 px-5 py-2.5 rounded-full mb-10"
+          transition={{ duration: 0.5, delay: 0.08, ease: [0.25, 0.1, 0.25, 1] }}
+          className="relative inline-flex items-center gap-2.5 px-4 py-2 rounded-full mb-8"
         >
-          <div className="absolute inset-0 rounded-full border border-gold/20 bg-card/70 backdrop-blur-sm" />
+          <div className="absolute inset-0 rounded-full border border-gold/15 bg-card/60 backdrop-blur-sm" />
 
-          <div className="relative flex items-center gap-3">
+          <div className="relative flex items-center gap-2.5">
             <motion.div
-              className="relative w-2.5 h-2.5"
+              className="relative w-2 h-2"
               animate={
                 prefersReducedMotion
                   ? {}
-                  : { scale: [1, 1.2, 1], opacity: [0.55, 0.8, 0.55] }
+                  : { scale: [1, 1.15, 1], opacity: [0.6, 0.9, 0.6] }
               }
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
             >
               <span className="absolute inset-0 rounded-full bg-gold" />
-              <span className="absolute inset-0 rounded-full bg-gold blur-sm" />
+              <span className="absolute inset-0 rounded-full bg-gold/60 blur-[2px]" />
             </motion.div>
-            <span className="text-sm text-foreground font-medium tracking-wide">
+            <span className="text-sm text-foreground/90 font-medium tracking-wide">
               Now available on iOS and Android
             </span>
           </div>
         </motion.div>
 
-        {/* DRAMATIC: Cinematic headline with staggered reveal */}
-        <motion.h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-foreground tracking-tight leading-[1.05]">
-          {/* First line - dramatic scale entrance */}
+        {/* Cinematic headline with staggered reveal */}
+        <motion.h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-semibold text-foreground tracking-[-0.02em] leading-[1.08]">
+          {/* First line - smooth entrance */}
           <span className="block overflow-hidden">
             <motion.span
               className="block"
-              initial={{ opacity: 0, filter: 'blur(16px)', y: 40, scale: 0.95 }}
-              animate={isLoaded ? { opacity: 1, filter: 'blur(0px)', y: 0, scale: 1 } : {}}
-              transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+              initial={{ opacity: 0, filter: 'blur(10px)', y: 28 }}
+              animate={isLoaded ? { opacity: 1, filter: 'blur(0px)', y: 0 } : {}}
+              transition={{ duration: 0.6, delay: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
             >
               Own every
             </motion.span>
           </span>
 
-          {/* DRAMATIC: Emphasis word with glow effect */}
-          <span className="block overflow-hidden mt-3 relative">
+          {/* Emphasis word with subtle glow */}
+          <span className="block overflow-hidden mt-2 relative">
             <motion.span
               className="relative inline-block"
-              initial={{ opacity: 0, filter: 'blur(16px)', y: 40, scale: 0.95 }}
-              animate={isLoaded ? { opacity: 1, filter: 'blur(0px)', y: 0, scale: 1 } : {}}
-              transition={{ duration: 0.8, delay: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+              initial={{ opacity: 0, filter: 'blur(10px)', y: 28 }}
+              animate={isLoaded ? { opacity: 1, filter: 'blur(0px)', y: 0 } : {}}
+              transition={{ duration: 0.6, delay: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
             >
-              {/* Glow behind text */}
-              <span className="absolute inset-0 text-gold blur-2xl opacity-50">
+              {/* Subtle glow behind text */}
+              <span className="absolute inset-0 text-gold blur-xl opacity-35">
                 renewal.
               </span>
 
@@ -176,36 +176,35 @@ export function Hero() {
                 renewal.
               </span>
 
-              {/* Animated light sweep */}
+              {/* Refined light sweep */}
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none"
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"
                 initial={{ x: '-100%', opacity: 0 }}
-                animate={isLoaded ? { x: '300%', opacity: [0, 0.8, 0] } : {}}
-                transition={{ duration: 1.5, delay: 0.8, ease: 'easeInOut' }}
+                animate={isLoaded ? { x: '250%', opacity: [0, 0.6, 0] } : {}}
+                transition={{ duration: 1.2, delay: 0.7, ease: 'easeInOut' }}
               />
             </motion.span>
           </span>
         </motion.h1>
 
-        {/* Subheadline - reveals third */}
+        {/* Subheadline - refined reveal */}
         <motion.p
-          initial={{ opacity: 0, y: 16, filter: 'blur(6px)' }}
+          initial={{ opacity: 0, y: 12, filter: 'blur(4px)' }}
           animate={isLoaded ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-          transition={{ duration: 0.5, delay: 0.45, ease: 'easeOut' }}
-          className="mt-6 text-lg md:text-xl text-platinum max-w-2xl mx-auto leading-relaxed"
+          transition={{ duration: 0.45, delay: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+          className="mt-5 text-lg md:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed"
         >
-          Renewly helps you track, understand, and reduce every recurring payment with
-          elegance.
+          Renewly helps you track, understand, and reduce every recurring payment with elegance.
         </motion.p>
 
-        {/* DRAMATIC: Premium CTA buttons with glow effects */}
+        {/* Premium CTA buttons - refined styling */}
         <motion.div
-          initial={{ opacity: 0, y: 24, filter: 'blur(10px)' }}
+          initial={{ opacity: 0, y: 16, filter: 'blur(6px)' }}
           animate={isLoaded ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-          transition={{ duration: 0.6, delay: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-5"
+          transition={{ duration: 0.5, delay: 0.52, ease: [0.25, 0.1, 0.25, 1] }}
+          className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          {/* Primary CTA with dramatic glow */}
+          {/* Primary CTA with subtle glow */}
           <motion.button
             onClick={handleGetStarted}
             disabled={isNavigating}
@@ -215,25 +214,25 @@ export function Hero() {
             whileTap="tap"
             className="relative w-full sm:w-auto group cursor-pointer disabled:opacity-70"
           >
-            {/* Animated glow behind button */}
+            {/* Subtle glow behind button */}
             <motion.div
-              className="absolute inset-0 rounded-2xl bg-gold/12 blur-md opacity-70 transition-opacity group-hover:opacity-90"
+              className="absolute inset-0 rounded-xl bg-gold/10 blur-lg opacity-60 transition-opacity group-hover:opacity-80"
               animate={
                 prefersReducedMotion
                   ? {}
                   : {
-                    scale: [1, 1.05, 1],
-                    opacity: [0.4, 0.6, 0.4],
+                    scale: [1, 1.03, 1],
+                    opacity: [0.35, 0.5, 0.35],
                   }
               }
-              transition={{ duration: 2, repeat: Infinity }}
+              transition={{ duration: 2.5, repeat: Infinity }}
             />
 
-            <div className="relative px-10 py-5 rounded-2xl gold-gradient text-obsidian font-bold text-lg shadow-luxury flex items-center justify-center gap-3">
+            <div className="relative px-8 py-4 rounded-xl gold-gradient text-obsidian font-semibold text-base shadow-luxury flex items-center justify-center gap-2.5">
               {isNavigating ? 'Loading...' : 'Start for free'}
               {!isNavigating && (
-                <motion.div initial={{ x: 0 }} whileHover={{ x: 6 }} transition={springs.gentle}>
-                  <ArrowRight className="w-5 h-5" />
+                <motion.div initial={{ x: 0 }} whileHover={{ x: 4 }} transition={{ duration: 0.2 }}>
+                  <ArrowRight className="w-4 h-4" />
                 </motion.div>
               )}
             </div>
@@ -246,13 +245,13 @@ export function Hero() {
             initial="initial"
             whileHover="hover"
             whileTap="tap"
-            className="relative w-full sm:w-auto px-10 py-5 rounded-2xl bg-card/50 backdrop-blur-xl border border-gold/20 text-foreground font-semibold text-lg flex items-center justify-center gap-3 cursor-pointer hover:border-gold/40 hover:bg-card/70 transition-all group"
+            className="relative w-full sm:w-auto px-8 py-4 rounded-xl bg-card/40 backdrop-blur-xl border border-gold/15 text-foreground font-medium text-base flex items-center justify-center gap-2.5 cursor-pointer hover:border-gold/30 hover:bg-card/60 transition-all group"
           >
             <motion.div
-              animate={prefersReducedMotion ? {} : { scale: [1, 1.1, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
+              animate={prefersReducedMotion ? {} : { scale: [1, 1.08, 1] }}
+              transition={{ duration: 2.5, repeat: Infinity }}
             >
-              <Play className="w-5 h-5 text-gold" />
+              <Play className="w-4 h-4 text-gold" />
             </motion.div>
             Watch demo
           </motion.button>

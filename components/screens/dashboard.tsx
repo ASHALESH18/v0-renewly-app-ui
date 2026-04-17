@@ -126,121 +126,121 @@ export function DashboardScreen({
       />
 
       <div className="px-4 lg:px-6 space-y-6 pb-8">
-        {/* DRAMATIC: Cinematic Command Center Hero */}
+        {/* Command Center Hero - refined */}
         {mounted && (
           <motion.div
-            initial={{ opacity: 0, y: 40, filter: 'blur(16px)', scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)', scale: 1 }}
-            transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="rounded-[32px] overflow-hidden relative"
+            initial={{ opacity: 0, y: 24, filter: 'blur(8px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+            className="rounded-2xl overflow-hidden relative"
           >
-            {/* Local matte wash - supports the global ambient background */}
+            {/* Subtle background treatment */}
             <div className="absolute inset-0">
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,253,249,0.68),rgba(248,241,231,0.48))] dark:bg-[linear-gradient(180deg,rgba(19,22,28,0.76),rgba(10,12,17,0.7))]" />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,254,250,0.75),rgba(248,244,236,0.60))] dark:bg-[linear-gradient(180deg,rgba(17,20,24,0.80),rgba(8,9,12,0.75))]" />
 
               <div
-                className="absolute -top-20 right-6 w-64 h-64 rounded-full blur-[110px]"
-                style={{ background: 'radial-gradient(circle, rgba(199, 163, 106, 0.1) 0%, transparent 72%)' }}
+                className="absolute -top-16 right-4 w-48 h-48 rounded-full blur-[80px]"
+                style={{ background: 'radial-gradient(circle, rgba(176, 132, 64, 0.06) 0%, transparent 70%)' }}
               />
 
               <div
-                className="absolute -bottom-16 left-4 w-56 h-56 rounded-full blur-[120px]"
-                style={{ background: 'radial-gradient(circle, rgba(46, 94, 82, 0.08) 0%, transparent 74%)' }}
+                className="absolute -bottom-12 left-4 w-40 h-40 rounded-full blur-[90px]"
+                style={{ background: 'radial-gradient(circle, rgba(61, 107, 88, 0.05) 0%, transparent 70%)' }}
               />
 
-              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/16 to-transparent" />
+              <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-gold/12 to-transparent" />
             </div>
 
-            <div className="relative glass-premium border border-gold/10 p-8 md:p-10 shadow-card">
+            <div className="relative glass-premium border border-gold/8 p-6 md:p-8 shadow-md">
               {/* Command Center eyebrow */}
               <motion.div
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="flex items-center gap-2 mb-8"
+                transition={{ delay: 0.1 }}
+                className="flex items-center gap-2 mb-6"
               >
-                <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-gold/8 border border-gold/20 backdrop-blur-sm">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold/6 border border-gold/15 backdrop-blur-sm">
                   <motion.div
-                    className="relative w-2.5 h-2.5"
-                    animate={{ scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] }}
-                    transition={{ duration: 2, repeat: Infinity }}
+                    className="relative w-2 h-2"
+                    animate={{ scale: [1, 1.25, 1], opacity: [0.65, 0.95, 0.65] }}
+                    transition={{ duration: 2.5, repeat: Infinity }}
                   >
                     <span className="absolute inset-0 rounded-full bg-gold" />
-                    <span className="absolute inset-0 rounded-full bg-gold blur-sm" />
+                    <span className="absolute inset-0 rounded-full bg-gold/50 blur-[2px]" />
                   </motion.div>
-                  <span className="text-xs font-semibold text-gold tracking-wider uppercase">
+                  <span className="text-[10px] font-semibold text-gold tracking-wider uppercase">
                     Financial Command Center
                   </span>
                 </div>
               </motion.div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-10">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5 mb-8">
                 <motion.div
-                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ delay: 0.25, duration: 0.6 }}
-                  whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                  className="relative p-6 rounded-2xl bg-card/40 backdrop-blur-xl border border-gold/15 group"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15, duration: 0.4 }}
+                  whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                  className="relative p-5 rounded-xl bg-card/50 backdrop-blur-xl border border-gold/12 group"
                 >
                   <motion.div
-                    className="absolute -inset-2 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                    style={{ background: 'radial-gradient(circle at center, rgba(199, 163, 106, 0.08) 0%, transparent 70%)' }}
+                    className="absolute -inset-1 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{ background: 'radial-gradient(circle at center, rgba(176, 132, 64, 0.05) 0%, transparent 70%)' }}
                   />
                   <div className="relative">
-                    <p className="text-sm text-muted-foreground mb-3 font-medium">Monthly Spend</p>
+                    <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">Monthly Spend</p>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-4xl md:text-5xl font-bold text-gold tracking-tight">
+                      <span className="text-3xl md:text-4xl font-semibold text-gold tracking-tight">
                         {currencySymbol}
                         <AnimatedNumber value={Math.round(metrics.totalMonthly)} language={preferredLanguage} />
                       </span>
                     </div>
-                    <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald/10 border border-emerald/20 text-emerald text-sm">
-                      <TrendingDown className="w-4 h-4" />
+                    <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald/8 border border-emerald/15 text-emerald text-xs">
+                      <TrendingDown className="w-3.5 h-3.5" />
                       <span className="font-medium">12% vs last month</span>
                     </div>
                   </div>
                 </motion.div>
 
                 <motion.div
-                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ delay: 0.35, duration: 0.6 }}
-                  whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                  className="relative p-6 rounded-2xl bg-card/40 backdrop-blur-xl border border-border/50 group"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.22, duration: 0.4 }}
+                  whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                  className="relative p-5 rounded-xl bg-card/50 backdrop-blur-xl border border-border/50 group"
                 >
                   <motion.div
-                    className="absolute -inset-2 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                    style={{ background: 'radial-gradient(circle at center, rgba(188, 194, 204, 0.04) 0%, transparent 70%)' }}
+                    className="absolute -inset-1 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{ background: 'radial-gradient(circle at center, rgba(168, 174, 184, 0.03) 0%, transparent 70%)' }}
                   />
                   <div className="relative">
-                    <p className="text-sm text-muted-foreground mb-3 font-medium">Annual Projected</p>
-                    <p className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">
+                    <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">Annual Projected</p>
+                    <p className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight">
                       {currencySymbol}
                       <AnimatedNumber value={Math.round(metrics.totalYearly)} language={preferredLanguage} />
                     </p>
-                    <p className="mt-4 text-sm text-muted-foreground">Based on current spend</p>
+                    <p className="mt-3 text-xs text-muted-foreground">Based on current spend</p>
                   </div>
                 </motion.div>
 
                 <motion.div
-                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ delay: 0.45, duration: 0.6 }}
-                  whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                  className="relative p-6 rounded-2xl bg-gradient-to-br from-emerald/8 to-emerald/3 backdrop-blur-xl border border-emerald/20 group"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.29, duration: 0.4 }}
+                  whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                  className="relative p-5 rounded-xl bg-gradient-to-br from-emerald/6 to-emerald/2 backdrop-blur-xl border border-emerald/15 group"
                 >
                   <motion.div
-                    className="absolute -inset-2 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                    style={{ background: 'radial-gradient(circle at center, rgba(46, 94, 82, 0.1) 0%, transparent 70%)' }}
+                    className="absolute -inset-1 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{ background: 'radial-gradient(circle at center, rgba(61, 107, 88, 0.06) 0%, transparent 70%)' }}
                   />
                   <div className="relative">
-                    <p className="text-sm text-muted-foreground mb-3 font-medium">Potential Savings</p>
-                    <p className="text-3xl md:text-4xl font-bold text-emerald tracking-tight">
+                    <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">Potential Savings</p>
+                    <p className="text-2xl md:text-3xl font-semibold text-emerald tracking-tight">
                       {currencySymbol}
                       <AnimatedNumber value={Math.round(metrics.savingsPotential)} language={preferredLanguage} />
-                      <span className="text-lg text-muted-foreground ml-1">/mo</span>
+                      <span className="text-sm text-muted-foreground ml-1">/mo</span>
                     </p>
-                    <p className="mt-4 text-sm text-emerald font-medium">Review unused subscriptions</p>
+                    <p className="mt-3 text-xs text-emerald font-medium">Review unused subscriptions</p>
                   </div>
                 </motion.div>
               </div>

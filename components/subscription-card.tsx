@@ -48,58 +48,35 @@ export function SubscriptionCard({
       <motion.div
         variants={cardLift}
         whileHover={{ 
-          y: -8, 
-          boxShadow: '0 32px 64px -16px rgba(199, 163, 106, 0.25), 0 0 0 1px rgba(199, 163, 106, 0.15), 0 0 60px -20px rgba(199, 163, 106, 0.15)' 
+          y: -5, 
         }}
-        className="relative overflow-hidden rounded-3xl bg-card/90 backdrop-blur-xl border border-border p-6 shadow-card transition-all duration-400"
+        className="relative overflow-hidden rounded-2xl bg-card/95 backdrop-blur-xl border border-border/70 p-5 shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:border-gold/12"
       >
-        {/* DRAMATIC: Colored accent line at top - thicker and animated */}
+        {/* Colored accent line at top - refined */}
         <motion.div
-          className="absolute top-0 left-0 right-0 h-1"
+          className="absolute top-0 left-0 right-0 h-0.5"
           style={{ 
-            background: `linear-gradient(90deg, ${subscription.color || '#C7A36A'} 0%, ${subscription.color || '#C7A36A'}60 50%, transparent 100%)` 
+            background: `linear-gradient(90deg, ${subscription.color || '#B08440'} 0%, ${subscription.color || '#B08440'}50 60%, transparent 100%)` 
           }}
           initial={{ scaleX: 0, originX: 0 }}
           whileHover={{ scaleX: 1 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.35 }}
         />
 
-        {/* DRAMATIC: Ambient glow on hover - more visible */}
+        {/* Subtle ambient glow on hover */}
         <motion.div
-          className="absolute -inset-4 rounded-3xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          className="absolute -inset-2 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           style={{ 
-            background: `radial-gradient(circle at top left, ${subscription.color || '#C7A36A'}20 0%, transparent 50%)` 
-          }}
-        />
-        
-        {/* DRAMATIC: Secondary glow at bottom */}
-        <motion.div
-          className="absolute -inset-4 rounded-3xl pointer-events-none opacity-0 group-hover:opacity-60 transition-opacity duration-700"
-          style={{ 
-            background: `radial-gradient(circle at bottom right, ${subscription.color || '#C7A36A'}10 0%, transparent 50%)` 
+            background: `radial-gradient(circle at top left, ${subscription.color || '#B08440'}10 0%, transparent 50%)` 
           }}
         />
 
-        {/* DRAMATIC: Shimmer effect - slower and more visible */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent"
-          initial={{ x: '-100%' }}
-          whileHover={{ x: '200%' }}
-          transition={{ duration: 1.2, ease: 'easeInOut' }}
-          style={{ pointerEvents: 'none' }}
-        />
-
-        <div className="relative z-10 flex items-start gap-5">
-          {/* DRAMATIC: Icon with animated glow effect */}
+        <div className="relative z-10 flex items-start gap-4">
+          {/* Icon with subtle glow */}
           <div className="relative">
-            {/* Multi-layer glow */}
-            <motion.div
-              className="absolute -inset-2 rounded-2xl blur-lg opacity-0 group-hover:opacity-70 transition-opacity duration-500"
-              style={{ backgroundColor: subscription.color || '#C7A36A' }}
-            />
             <motion.div
               className="absolute -inset-1 rounded-xl blur-md opacity-0 group-hover:opacity-40 transition-opacity duration-300"
-              style={{ backgroundColor: subscription.color || '#C7A36A' }}
+              style={{ backgroundColor: subscription.color || '#B08440' }}
             />
             <div className="relative">
               <SubscriptionIcon

@@ -74,114 +74,142 @@ button,
 }
 
 /* === RENEWLY DESIGN SYSTEM === */
-/* Light Mode - Pearl Paper & Brushed Platinum (High Contrast) */
+/* Light Mode - Warm Ivory & Champagne Gold (Premium High Contrast) */
 :root {
-  --background: #F5EFE5;
-  --foreground: #1A1510;
-  --card: #FFFDF9;
-  --card-foreground: #1A1510;
-  --popover: #FFFDF9;
-  --popover-foreground: #1A1510;
+  --background: #F8F4EC;
+  --foreground: #171411;
+  --card: #FFFEFA;
+  --card-foreground: #171411;
+  --popover: #FFFEFA;
+  --popover-foreground: #171411;
 
-  --primary: #9A7035;
+  --primary: #8C6830;
   --primary-foreground: #FFFFFF;
 
-  --secondary: #EDE4D5;
-  --secondary-foreground: #1A1510;
+  --secondary: #F0E8D8;
+  --secondary-foreground: #171411;
 
-  --muted: #E8DFD0;
-  --muted-foreground: #5A5048;
+  --muted: #EBE3D4;
+  --muted-foreground: #5C544A;
 
-  --accent: #4A7360;
+  --accent: #3D6B58;
   --accent-foreground: #FFFFFF;
 
-  --destructive: #8A4A53;
+  --destructive: #7D434B;
   --destructive-foreground: #FFFFFF;
 
-  --border: #D5C9B8;
-  --input: #F0E8DB;
-  --ring: #9A7035;
+  --border: #DED4C4;
+  --input: #F5EFDF;
+  --ring: #8C6830;
 
-  --chart-1: #9A7035;
-  --chart-2: #4A7360;
-  --chart-3: #6A7A94;
-  --chart-4: #B8954A;
-  --chart-5: #1A1510;
+  --chart-1: #8C6830;
+  --chart-2: #3D6B58;
+  --chart-3: #5A6A80;
+  --chart-4: #A68538;
+  --chart-5: #171411;
 
   --radius: 1rem;
 
-  --sidebar: #FAF5ED;
-  --sidebar-foreground: #1A1510;
-  --sidebar-primary: #9A7035;
+  --sidebar: #FCF9F3;
+  --sidebar-foreground: #171411;
+  --sidebar-primary: #8C6830;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #EBE0D0;
-  --sidebar-accent-foreground: #1A1510;
-  --sidebar-border: #D8CCB8;
-  --sidebar-ring: #9A7035;
+  --sidebar-accent: #F0E6D5;
+  --sidebar-accent-foreground: #171411;
+  --sidebar-border: #E0D6C6;
+  --sidebar-ring: #8C6830;
 
-  /* Renewly custom tokens - Ivory Reserve (High Contrast) */
-  --obsidian: #FAF5ED;
-  --graphite: #FFFDF9;
-  --slate: #E5D9C8;
-  --ivory: #1A1510;
-  --platinum: #4A4540;
-  --gold: #9A7035;
-  --muted-gold: #7A5A30;
-  --emerald: #4A7360;
-  --crimson: #8A4A53;
-  --glass: rgba(255, 255, 255, 0.85);
-  --glass-border: rgba(154, 112, 53, 0.18);
-  --hero-vignette: rgba(154, 112, 53, 0.12);
+  /* Renewly custom tokens - Ivory Reserve (Premium High Contrast) */
+  --obsidian: #FCF9F3;
+  --graphite: #FFFEFA;
+  --slate: #E8DFD0;
+  --ivory: #171411;
+  --platinum: #4A453C;
+  --gold: #B08440;
+  --muted-gold: #8A6A35;
+  --emerald: #3D6B58;
+  --crimson: #7D434B;
+  --glass: rgba(255, 255, 255, 0.88);
+  --glass-border: rgba(176, 132, 64, 0.14);
+  --hero-vignette: rgba(176, 132, 64, 0.08);
+  
+  /* Premium surface hierarchy */
+  --surface-base: #F8F4EC;
+  --surface-elevated: #FFFEFA;
+  --surface-floating: rgba(255, 254, 250, 0.95);
+  --surface-modal: #FFFFFF;
+  
+  /* Premium shadows */
+  --shadow-xs: 0 1px 2px rgba(120, 90, 50, 0.04);
+  --shadow-sm: 0 2px 8px -2px rgba(120, 90, 50, 0.06), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 8px 24px -8px rgba(120, 90, 50, 0.10), 0 2px 6px -2px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 16px 48px -12px rgba(120, 90, 50, 0.14), 0 4px 12px -4px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 24px 64px -16px rgba(120, 90, 50, 0.18), 0 8px 20px -6px rgba(0, 0, 0, 0.05);
+  --shadow-glow: 0 0 40px -8px rgba(176, 132, 64, 0.15);
 }
 
-/* Dark Mode - Hero Mode (Obsidian Reserve) */
+/* Dark Mode - Deep Obsidian Reserve (Premium Cinema) */
 .dark {
-  --background: #0A0A0D;
-  --foreground: #F4EFE7;
-  --card: #13161C;
-  --card-foreground: #F4EFE7;
-  --popover: #13161C;
-  --popover-foreground: #F4EFE7;
-  --primary: #C7A36A;
-  --primary-foreground: #0A0A0D;
-  --secondary: #1B2028;
-  --secondary-foreground: #F4EFE7;
-  --muted: #1B2028;
-  --muted-foreground: #BCC2CC;
-  --accent: #2E5E52;
-  --accent-foreground: #F4EFE7;
-  --destructive: #7A3940;
-  --destructive-foreground: #F4EFE7;
-  --border: rgba(255, 255, 255, 0.08);
-  --input: #1B2028;
-  --ring: #C7A36A;
-  --chart-1: #C7A36A;
-  --chart-2: #2E5E52;
-  --chart-3: #7A3940;
-  --chart-4: #BCC2CC;
-  --chart-5: #F4EFE7;
-  --sidebar: #13161C;
-  --sidebar-foreground: #F4EFE7;
-  --sidebar-primary: #C7A36A;
-  --sidebar-primary-foreground: #0A0A0D;
-  --sidebar-accent: #1B2028;
-  --sidebar-accent-foreground: #F4EFE7;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #C7A36A;
-  --hero-vignette: rgba(10, 10, 13, 0.5);
+  --background: #08090C;
+  --foreground: #F6F2EA;
+  --card: #111418;
+  --card-foreground: #F6F2EA;
+  --popover: #111418;
+  --popover-foreground: #F6F2EA;
+  --primary: #D4B070;
+  --primary-foreground: #08090C;
+  --secondary: #181C22;
+  --secondary-foreground: #F6F2EA;
+  --muted: #181C22;
+  --muted-foreground: #A8AEB8;
+  --accent: #2A5548;
+  --accent-foreground: #F6F2EA;
+  --destructive: #6E353C;
+  --destructive-foreground: #F6F2EA;
+  --border: rgba(255, 255, 255, 0.07);
+  --input: #181C22;
+  --ring: #D4B070;
+  --chart-1: #D4B070;
+  --chart-2: #2A5548;
+  --chart-3: #6E353C;
+  --chart-4: #A8AEB8;
+  --chart-5: #F6F2EA;
+  --sidebar: #0D0F13;
+  --sidebar-foreground: #F6F2EA;
+  --sidebar-primary: #D4B070;
+  --sidebar-primary-foreground: #08090C;
+  --sidebar-accent: #181C22;
+  --sidebar-accent-foreground: #F6F2EA;
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-ring: #D4B070;
+  --hero-vignette: rgba(8, 9, 12, 0.6);
 
-  /* Custom Renewly tokens */
-  --obsidian: #0A0A0D;
-  --graphite: #13161C;
-  --slate: #1B2028;
-  --ivory: #F4EFE7;
-  --platinum: #BCC2CC;
-  --gold: #C7A36A;
-  --muted-gold: #8B7D6B;
-  --emerald: #2E5E52;
-  --crimson: #7A3940;
-  --glass: rgba(255, 255, 255, 0.06);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  /* Custom Renewly tokens - Deep Obsidian */
+  --obsidian: #08090C;
+  --graphite: #111418;
+  --slate: #181C22;
+  --ivory: #F6F2EA;
+  --platinum: #A8AEB8;
+  --gold: #D4B070;
+  --muted-gold: #9A8560;
+  --emerald: #2A5548;
+  --crimson: #6E353C;
+  --glass: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  
+  /* Premium surface hierarchy */
+  --surface-base: #08090C;
+  --surface-elevated: #111418;
+  --surface-floating: rgba(17, 20, 24, 0.96);
+  --surface-modal: #15181E;
+  
+  /* Premium shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 2px 8px -2px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 8px 24px -8px rgba(0, 0, 0, 0.5), 0 2px 6px -2px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 16px 48px -12px rgba(0, 0, 0, 0.6), 0 4px 12px -4px rgba(0, 0, 0, 0.25);
+  --shadow-xl: 0 24px 64px -16px rgba(0, 0, 0, 0.7), 0 8px 20px -6px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 50px -10px rgba(212, 176, 112, 0.12);
 }
 
 @theme inline {
@@ -279,187 +307,356 @@ button,
   }
 }
 
-/* Premium glass effect utilities */
+/* === PREMIUM GLASS EFFECT SYSTEM === */
+
+/* Base glass - subtle frosted effect */
 .glass {
   background: var(--glass);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
   border: 1px solid var(--glass-border);
 }
 
+/* Strong glass - navigation, headers */
 .glass-strong {
-  background: rgba(255, 253, 249, 0.88);
-  backdrop-filter: blur(32px) saturate(200%);
-  -webkit-backdrop-filter: blur(32px) saturate(200%);
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 8px 32px -8px rgba(87, 63, 38, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  background: rgba(255, 254, 250, 0.92);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(176, 132, 64, 0.10);
+  box-shadow: 
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.02) inset,
+    0 4px 16px -4px rgba(120, 90, 50, 0.06);
 }
 
 .dark .glass-strong {
-  background: rgba(19, 22, 28, 0.92);
-  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  background: rgba(17, 20, 24, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 4px 20px -4px rgba(0, 0, 0, 0.4);
 }
 
-/* Premium frosted glass with depth */
+/* Premium frosted glass - hero sections, featured cards */
 .glass-premium {
-  background: rgba(255, 253, 249, 0.75);
+  background: rgba(255, 254, 250, 0.80);
   backdrop-filter: blur(40px) saturate(180%);
   -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid rgba(199, 163, 106, 0.12);
-  box-shadow: 0 24px 48px -12px rgba(87, 63, 38, 0.1),
-    0 0 0 1px rgba(255, 255, 255, 0.5) inset,
-    0 -1px 0 rgba(0, 0, 0, 0.02) inset;
+  border: 1px solid rgba(176, 132, 64, 0.10);
+  box-shadow: 
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.015) inset,
+    0 20px 50px -15px rgba(120, 90, 50, 0.10);
 }
 
 .dark .glass-premium {
-  background: rgba(19, 22, 28, 0.88);
-  border: 1px solid rgba(199, 163, 106, 0.1);
-  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.35),
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  background: rgba(17, 20, 24, 0.90);
+  border: 1px solid rgba(212, 176, 112, 0.08);
+  box-shadow: 
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 20px 60px -15px rgba(0, 0, 0, 0.45);
 }
 
-/* DRAMATIC AMBIENT SURFACE - Full cinematic treatment */
+/* Subtle glass - minimal, light frosting */
+.glass-subtle {
+  background: rgba(255, 254, 250, 0.60);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid rgba(176, 132, 64, 0.06);
+}
+
+.dark .glass-subtle {
+  background: rgba(17, 20, 24, 0.70);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* === CINEMATIC SURFACE TREATMENT === */
+
+/* Full cinematic treatment - for hero sections and featured areas */
 .surface-cinematic {
   position: relative;
-  background: linear-gradient(180deg, rgba(255, 253, 249, 0.95) 0%, rgba(245, 239, 229, 0.98) 100%);
+  background: linear-gradient(180deg, rgba(255, 254, 250, 0.96) 0%, rgba(248, 244, 236, 0.98) 100%);
   backdrop-filter: blur(60px) saturate(200%);
   -webkit-backdrop-filter: blur(60px) saturate(200%);
-  border: 1px solid rgba(199, 163, 106, 0.15);
+  border: 1px solid rgba(176, 132, 64, 0.12);
   box-shadow:
-    0 50px 100px -20px rgba(87, 63, 38, 0.15),
-    0 30px 60px -15px rgba(87, 63, 38, 0.1),
-    0 0 0 1px rgba(255, 255, 255, 0.6) inset,
-    0 2px 0 rgba(255, 255, 255, 0.8) inset;
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 40px 80px -20px rgba(120, 90, 50, 0.12),
+    0 20px 40px -10px rgba(120, 90, 50, 0.08);
 }
 
 .dark .surface-cinematic {
-  background: linear-gradient(180deg, rgba(19, 22, 28, 0.97) 0%, rgba(10, 10, 13, 0.99) 100%);
-  border: 1px solid rgba(199, 163, 106, 0.12);
+  background: linear-gradient(180deg, rgba(17, 20, 24, 0.97) 0%, rgba(8, 9, 12, 0.99) 100%);
+  border: 1px solid rgba(212, 176, 112, 0.10);
   box-shadow:
-    0 50px 100px -20px rgba(0, 0, 0, 0.6),
-    0 30px 60px -15px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
-    0 1px 0 rgba(199, 163, 106, 0.1) inset;
+    0 1px 0 rgba(212, 176, 112, 0.06) inset,
+    0 40px 80px -20px rgba(0, 0, 0, 0.5),
+    0 20px 40px -10px rgba(0, 0, 0, 0.35);
 }
 
-/* Floating card with dramatic depth */
+/* Spotlight effect for featured content */
+.surface-spotlight {
+  position: relative;
+}
+
+.surface-spotlight::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(176, 132, 64, 0.08) 0%, transparent 70%);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.dark .surface-spotlight::before {
+  background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(212, 176, 112, 0.06) 0%, transparent 70%);
+}
+
+/* === FLOATING CARD SYSTEM === */
+
+/* Floating card with refined depth and lift */
 .card-floating {
-  background: rgba(255, 253, 249, 0.92);
-  backdrop-filter: blur(32px);
-  border: 1px solid rgba(199, 163, 106, 0.1);
+  background: rgba(255, 254, 250, 0.94);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(176, 132, 64, 0.08);
   box-shadow:
-    0 32px 64px -16px rgba(87, 63, 38, 0.12),
-    0 16px 32px -8px rgba(87, 63, 38, 0.08),
-    0 0 0 1px rgba(255, 255, 255, 0.4) inset;
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    0 1px 0 rgba(255, 255, 255, 0.5) inset,
+    0 16px 40px -12px rgba(120, 90, 50, 0.10),
+    0 6px 16px -6px rgba(120, 90, 50, 0.06);
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .card-floating:hover {
-  transform: translateY(-8px);
+  transform: translateY(-6px);
   box-shadow:
-    0 48px 80px -20px rgba(199, 163, 106, 0.2),
-    0 24px 48px -12px rgba(87, 63, 38, 0.12),
-    0 0 0 1px rgba(199, 163, 106, 0.2) inset,
-    0 0 60px -20px rgba(199, 163, 106, 0.15);
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 32px 60px -16px rgba(176, 132, 64, 0.14),
+    0 12px 28px -8px rgba(120, 90, 50, 0.10),
+    var(--shadow-glow);
 }
 
 .dark .card-floating {
-  background: rgba(19, 22, 28, 0.95);
-  border: 1px solid rgba(199, 163, 106, 0.08);
+  background: rgba(17, 20, 24, 0.96);
+  border: 1px solid rgba(212, 176, 112, 0.06);
   box-shadow:
-    0 32px 64px -16px rgba(0, 0, 0, 0.4),
-    0 16px 32px -8px rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+    0 1px 0 rgba(255, 255, 255, 0.02) inset,
+    0 16px 40px -12px rgba(0, 0, 0, 0.35),
+    0 6px 16px -6px rgba(0, 0, 0, 0.25);
 }
 
 .dark .card-floating:hover {
   box-shadow:
-    0 48px 80px -20px rgba(0, 0, 0, 0.5),
-    0 24px 48px -12px rgba(0, 0, 0, 0.35),
-    0 0 0 1px rgba(199, 163, 106, 0.15) inset,
-    0 0 80px -30px rgba(199, 163, 106, 0.1);
+    0 1px 0 rgba(212, 176, 112, 0.05) inset,
+    0 32px 60px -16px rgba(0, 0, 0, 0.5),
+    0 12px 28px -8px rgba(0, 0, 0, 0.3),
+    var(--shadow-glow);
 }
 
-/* Premium shadow utilities */
+/* Interactive card - subtle hover lift */
+.card-interactive {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card-interactive:hover {
+  transform: translateY(-3px);
+}
+
+.card-interactive:active {
+  transform: translateY(-1px);
+}
+
+/* === PREMIUM SHADOW SYSTEM === */
+
+/* Luxury shadow - for primary CTAs and featured elements */
 .shadow-luxury {
-  box-shadow: 0 20px 50px -12px rgba(87, 63, 38, 0.12),
-    0 8px 16px -8px rgba(87, 63, 38, 0.08),
-    0 0 0 1px var(--glass-border);
+  box-shadow: 
+    0 1px 0 rgba(255, 255, 255, 0.15) inset,
+    0 16px 40px -8px rgba(176, 132, 64, 0.20),
+    0 6px 16px -4px rgba(176, 132, 64, 0.12);
 }
 
+/* Card shadow - standard card depth */
 .shadow-card {
-  box-shadow: 0 12px 32px -8px rgba(87, 63, 38, 0.08),
-    0 4px 12px -4px rgba(87, 63, 38, 0.04),
-    0 0 0 1px var(--glass-border);
+  box-shadow: var(--shadow-md);
 }
 
+/* Elevated shadow - modals, dropdowns */
 .shadow-elevated {
-  box-shadow: 0 32px 64px -16px rgba(87, 63, 38, 0.15),
-    0 16px 32px -8px rgba(87, 63, 38, 0.08),
-    0 0 0 1px rgba(199, 163, 106, 0.08);
+  box-shadow: var(--shadow-lg);
 }
 
+/* Deep shadow - hero elements */
 .shadow-depth-lg {
-  box-shadow: 0 40px 80px -20px rgba(87, 63, 38, 0.18),
-    0 20px 40px -10px rgba(87, 63, 38, 0.1),
-    0 0 0 1px rgba(199, 163, 106, 0.1);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Glow shadow - accent elements */
+.shadow-glow-gold {
+  box-shadow: var(--shadow-glow);
 }
 
 .dark .shadow-luxury {
-  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.5),
-    0 8px 16px -8px rgba(0, 0, 0, 0.3),
-    0 0 0 1px var(--glass-border);
+  box-shadow: 
+    0 1px 0 rgba(212, 176, 112, 0.10) inset,
+    0 16px 40px -8px rgba(0, 0, 0, 0.45),
+    0 6px 16px -4px rgba(0, 0, 0, 0.30),
+    0 0 30px -8px rgba(212, 176, 112, 0.08);
 }
 
-.dark .shadow-card {
-  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.35),
-    0 4px 12px -4px rgba(0, 0, 0, 0.2),
-    0 0 0 1px var(--glass-border);
+/* Ring focus states */
+.ring-gold {
+  box-shadow: 0 0 0 2px var(--gold);
 }
 
-.dark .shadow-elevated {
-  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.6),
-    0 16px 32px -8px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(199, 163, 106, 0.06);
+.ring-gold-soft {
+  box-shadow: 0 0 0 3px rgba(176, 132, 64, 0.20);
 }
 
-.dark .shadow-depth-lg {
-  box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.7),
-    0 20px 40px -10px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(199, 163, 106, 0.08);
+.dark .ring-gold-soft {
+  box-shadow: 0 0 0 3px rgba(212, 176, 112, 0.15);
 }
 
-/* Gold gradient accent */
+/* === GOLD ACCENT SYSTEM === */
+
+/* Primary gold gradient - buttons, CTAs */
 .gold-gradient {
-  background: linear-gradient(135deg, #C7A36A 0%, #D4B87A 50%, #C7A36A 100%);
+  background: linear-gradient(135deg, #C9A85C 0%, #DFC078 45%, #C9A85C 100%);
 }
 
-/* Premium text gradient */
+/* Subtle gold gradient - hover states */
+.gold-gradient-subtle {
+  background: linear-gradient(135deg, rgba(201, 168, 92, 0.15) 0%, rgba(223, 192, 120, 0.10) 100%);
+}
+
+/* Premium text gradient - hero headings */
 .text-gold-gradient {
-  background: linear-gradient(135deg, #C7A36A 0%, #E5D4B8 50%, #C7A36A 100%);
+  background: linear-gradient(135deg, #C9A85C 0%, #E8D4A0 50%, #C9A85C 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Premium typography - refined letter spacing for luxury feel */
-.text-luxury {
-  letter-spacing: 0.02em;
+/* Muted gold text gradient - subtle emphasis */
+.text-gold-gradient-muted {
+  background: linear-gradient(135deg, #B8986A 0%, #D4C4A0 50%, #B8986A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Emerald accent gradient */
+.emerald-gradient {
+  background: linear-gradient(135deg, #3D6B58 0%, #4A7D68 50%, #3D6B58 100%);
+}
+
+.dark .gold-gradient {
+  background: linear-gradient(135deg, #D4B070 0%, #E8C890 45%, #D4B070 100%);
+}
+
+/* === PREMIUM TYPOGRAPHY SYSTEM === */
+
+/* Display headings - large hero titles */
+.text-display {
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+}
+
+/* Section headings */
+.text-headline {
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
   font-feature-settings: 'kern' 1, 'liga' 1;
 }
 
+/* Card titles and subheadings */
+.text-title {
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+/* Body text - optimized for reading */
+.text-body {
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.6;
+}
+
+/* Small labels and captions */
+.text-label {
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+}
+
+/* Premium uppercase tracking */
 .text-luxury-wide {
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  font-weight: 500;
+  font-feature-settings: 'kern' 1, 'liga' 1;
+}
+
+/* Luxury body text */
+.text-luxury {
+  letter-spacing: 0.015em;
   font-feature-settings: 'kern' 1, 'liga' 1;
 }
 
 /* Premium heading styles */
 .heading-premium {
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+}
+
+/* Numeric tabular figures for data */
+.text-numeric {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* === PREMIUM SURFACE SYSTEM === */
+
+/* Base surface - page background level */
+.surface-base {
+  background: var(--surface-base);
+}
+
+/* Elevated surface - cards, panels */
+.surface-elevated {
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Floating surface - dropdowns, popovers */
+.surface-floating {
+  background: var(--surface-floating);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Modal surface - dialogs, sheets */
+.surface-modal {
+  background: var(--surface-modal);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Interactive surface states */
+.surface-interactive {
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.surface-interactive:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.surface-interactive:active {
+  transform: scale(0.995);
 }
 
 /* DRAMATIC AMBIENT ANIMATIONS */
@@ -746,65 +943,89 @@ button,
   }
 }
 
+/* ============================================ */
 /* GLOBAL AMBIENT BACKGROUND SYSTEM */
-/* Subtle matte premium dust-flow system */
+/* Premium floating gold dust effect */
+/* Theme-aware: obsidian (dark) / ivory (light) */
 /* ============================================ */
 
+/* BASE LAYER - Deep foundation with matte finish */
 .ambient-base {
   position: absolute;
   inset: 0;
+  /* Light mode: Warm ivory/champagne base */
   background:
-    radial-gradient(1200px 780px at 18% 10%, rgba(154, 112, 53, 0.07) 0%, transparent 56%),
-    radial-gradient(980px 720px at 82% 88%, rgba(74, 115, 96, 0.06) 0%, transparent 54%),
-    linear-gradient(180deg, #fbf7f0 0%, #f2eadd 42%, #e8dbc8 78%, #dfd0bc 100%);
+    radial-gradient(ellipse 140% 100% at 20% 0%, rgba(199, 163, 106, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse 120% 80% at 80% 100%, rgba(180, 145, 80, 0.04) 0%, transparent 45%),
+    linear-gradient(180deg, 
+      #faf6ef 0%, 
+      #f5efe4 25%, 
+      #f0e8d9 50%, 
+      #ebe0ce 75%, 
+      #e6d9c3 100%
+    );
 }
 
 .dark .ambient-base {
+  /* Dark mode: Deep obsidian/navy with subtle warmth */
   background:
-    radial-gradient(1200px 780px at 18% 8%, rgba(199, 163, 106, 0.08) 0%, transparent 56%),
-    radial-gradient(980px 720px at 82% 90%, rgba(46, 94, 82, 0.07) 0%, transparent 54%),
-    radial-gradient(760px 420px at 50% 42%, rgba(255, 255, 255, 0.018) 0%, transparent 68%),
-    linear-gradient(180deg, #05070a 0%, #080b10 28%, #0b0f15 58%, #080b10 82%, #05070a 100%);
+    radial-gradient(ellipse 160% 120% at 15% 5%, rgba(199, 163, 106, 0.07) 0%, transparent 45%),
+    radial-gradient(ellipse 140% 100% at 85% 95%, rgba(199, 163, 106, 0.04) 0%, transparent 40%),
+    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(20, 25, 35, 0.5) 0%, transparent 70%),
+    linear-gradient(180deg, 
+      #05080c 0%, 
+      #080c12 20%, 
+      #0a0f18 40%, 
+      #0c1220 60%, 
+      #0a0f18 80%, 
+      #05080c 100%
+    );
 }
 
+/* Soft ambient wash for additional depth */
 .ambient-soft-wash {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(255, 253, 249, 0.02), rgba(255, 253, 249, 0) 28%, rgba(255, 253, 249, 0.02) 100%);
+    radial-gradient(ellipse 100% 60% at 50% 30%, rgba(199, 163, 106, 0.03) 0%, transparent 60%);
 }
 
 .dark .ambient-soft-wash {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0) 28%, rgba(255, 255, 255, 0.012) 100%);
+    radial-gradient(ellipse 100% 60% at 50% 30%, rgba(199, 163, 106, 0.025) 0%, transparent 55%);
 }
 
+/* SVG container for dust waves */
 .ambient-dust-svg {
   position: absolute;
-  inset: -6%;
-  width: 112%;
-  height: 112%;
+  inset: -8%;
+  width: 116%;
+  height: 116%;
   pointer-events: none;
   overflow: visible;
 }
 
+/* WAVE ANIMATIONS - Slow, calming motion */
 .ambient-wave {
   transform-origin: center;
   will-change: transform, opacity;
 }
 
 .ambient-wave--gold {
-  animation: ambient-wave-gold 34s ease-in-out infinite;
+  animation: ambient-wave-gold 40s ease-in-out infinite;
 }
 
-.ambient-wave--emerald {
-  animation: ambient-wave-emerald 40s ease-in-out infinite;
+.ambient-wave--warm {
+  animation: ambient-wave-warm 48s ease-in-out infinite;
+  animation-delay: -12s;
 }
 
-.ambient-wave--platinum {
-  animation: ambient-wave-platinum 30s ease-in-out infinite;
+.ambient-wave--accent {
+  animation: ambient-wave-accent 36s ease-in-out infinite;
+  animation-delay: -20s;
 }
 
+/* DUST PATH STYLING */
 .ambient-dust-path {
   fill: none;
   stroke-linecap: round;
@@ -812,27 +1033,28 @@ button,
 }
 
 .ambient-dust-soft {
-  opacity: 0.28;
+  opacity: 0.22;
 }
 
 .dark .ambient-dust-soft {
-  opacity: 0.42;
+  opacity: 0.38;
 }
 
 .ambient-dust-core {
-  opacity: 0.14;
+  opacity: 0.12;
 }
 
 .dark .ambient-dust-core {
-  opacity: 0.24;
+  opacity: 0.22;
 }
 
+/* PARTICLE STYLING - Floating gold dust */
 .ambient-particles {
-  opacity: 0.3;
+  opacity: 0.25;
 }
 
 .dark .ambient-particles {
-  opacity: 0.44;
+  opacity: 0.45;
 }
 
 .ambient-particles circle {
@@ -840,265 +1062,317 @@ button,
 }
 
 .ambient-particles--gold {
-  animation: ambient-particles-drift-a 28s linear infinite;
+  animation: ambient-particles-drift-gold 32s ease-in-out infinite;
 }
 
-.ambient-particles--emerald {
-  animation: ambient-particles-drift-b 34s linear infinite;
+.ambient-particles--warm {
+  animation: ambient-particles-drift-warm 38s ease-in-out infinite;
+  animation-delay: -8s;
 }
 
-.ambient-particles--platinum {
-  animation: ambient-particles-drift-c 26s linear infinite;
+.ambient-particles--accent {
+  animation: ambient-particles-drift-accent 28s ease-in-out infinite;
+  animation-delay: -16s;
 }
 
+/* GLOW AREAS - Soft warmth zones */
 .ambient-glow {
   position: absolute;
   border-radius: 9999px;
-  filter: blur(110px);
+  filter: blur(100px);
   will-change: transform, opacity;
   pointer-events: none;
 }
 
 .ambient-glow--top {
-  top: -4rem;
+  top: -6rem;
   left: 50%;
-  width: 54rem;
-  height: 14rem;
+  width: 50rem;
+  height: 16rem;
   transform: translateX(-50%);
-  opacity: 0.28;
-  background: radial-gradient(ellipse at center, rgba(154, 112, 53, 0.14) 0%, rgba(154, 112, 53, 0.04) 44%, transparent 74%);
+  opacity: 0.2;
+  background: radial-gradient(ellipse at center, 
+    rgba(199, 163, 106, 0.12) 0%, 
+    rgba(199, 163, 106, 0.04) 40%, 
+    transparent 70%
+  );
 }
 
 .dark .ambient-glow--top {
-  opacity: 0.38;
-  background: radial-gradient(ellipse at center, rgba(199, 163, 106, 0.16) 0%, rgba(199, 163, 106, 0.05) 44%, transparent 74%);
+  opacity: 0.35;
+  background: radial-gradient(ellipse at center, 
+    rgba(199, 163, 106, 0.18) 0%, 
+    rgba(199, 163, 106, 0.06) 40%, 
+    transparent 70%
+  );
 }
 
 .ambient-glow--center {
-  top: 18%;
+  top: 20%;
   left: 50%;
-  width: 58rem;
-  height: 32rem;
+  width: 60rem;
+  height: 36rem;
   transform: translateX(-50%);
-  opacity: 0.34;
-  background: radial-gradient(ellipse at center, rgba(154, 112, 53, 0.08) 0%, rgba(154, 112, 53, 0.03) 38%, transparent 72%);
+  opacity: 0.25;
+  background: radial-gradient(ellipse at center, 
+    rgba(199, 163, 106, 0.08) 0%, 
+    rgba(180, 145, 80, 0.03) 45%, 
+    transparent 70%
+  );
 }
 
 .dark .ambient-glow--center {
-  opacity: 0.48;
-  background: radial-gradient(ellipse at center, rgba(199, 163, 106, 0.1) 0%, rgba(199, 163, 106, 0.035) 38%, transparent 72%);
+  opacity: 0.4;
+  background: radial-gradient(ellipse at center, 
+    rgba(199, 163, 106, 0.12) 0%, 
+    rgba(180, 145, 80, 0.04) 45%, 
+    transparent 70%
+  );
 }
 
 .ambient-glow--bottom {
-  right: -5rem;
-  bottom: 0;
-  width: 30rem;
-  height: 20rem;
-  opacity: 0.22;
-  background: radial-gradient(ellipse at center, rgba(74, 115, 96, 0.08) 0%, rgba(74, 115, 96, 0.03) 40%, transparent 72%);
+  right: -4rem;
+  bottom: -2rem;
+  width: 36rem;
+  height: 24rem;
+  opacity: 0.18;
+  background: radial-gradient(ellipse at center, 
+    rgba(199, 163, 106, 0.1) 0%, 
+    rgba(180, 145, 80, 0.03) 45%, 
+    transparent 70%
+  );
 }
 
 .dark .ambient-glow--bottom {
-  opacity: 0.34;
-  background: radial-gradient(ellipse at center, rgba(46, 94, 82, 0.1) 0%, rgba(46, 94, 82, 0.04) 40%, transparent 72%);
+  opacity: 0.32;
+  background: radial-gradient(ellipse at center, 
+    rgba(199, 163, 106, 0.14) 0%, 
+    rgba(180, 145, 80, 0.05) 45%, 
+    transparent 70%
+  );
 }
 
+/* TEXTURE - Subtle grain for matte finish */
 .ambient-texture {
   position: absolute;
   inset: 0;
-  opacity: 0.08;
+  opacity: 0.04;
   background-image:
-    linear-gradient(rgba(154, 112, 53, 0.014) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(154, 112, 53, 0.014) 1px, transparent 1px);
-  background-size: 132px 132px;
+    radial-gradient(circle at 20% 30%, rgba(199, 163, 106, 0.015) 1px, transparent 1px),
+    radial-gradient(circle at 80% 70%, rgba(199, 163, 106, 0.01) 1px, transparent 1px);
+  background-size: 80px 80px, 120px 120px;
 }
 
 .dark .ambient-texture {
-  opacity: 0.06;
+  opacity: 0.03;
   background-image:
-    linear-gradient(rgba(199, 163, 106, 0.012) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(199, 163, 106, 0.012) 1px, transparent 1px);
+    radial-gradient(circle at 20% 30%, rgba(199, 163, 106, 0.02) 1px, transparent 1px),
+    radial-gradient(circle at 80% 70%, rgba(199, 163, 106, 0.015) 1px, transparent 1px);
 }
 
+/* VIGNETTE - Cinematic depth framing */
 .ambient-vignette {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse 92% 80% at 50% 46%, transparent 0%, transparent 58%, rgba(0, 0, 0, 0.08) 100%);
+  background: radial-gradient(ellipse 90% 85% at 50% 50%, 
+    transparent 0%, 
+    transparent 55%, 
+    rgba(0, 0, 0, 0.05) 100%
+  );
 }
 
 .dark .ambient-vignette {
-  background: radial-gradient(ellipse 92% 80% at 50% 46%, transparent 0%, transparent 54%, rgba(4, 6, 10, 0.34) 100%);
+  background: radial-gradient(ellipse 90% 85% at 50% 50%, 
+    transparent 0%, 
+    transparent 50%, 
+    rgba(5, 8, 12, 0.4) 100%
+  );
 }
+
+/* ============================================ */
+/* KEYFRAME ANIMATIONS */
+/* Slow, calming, luxurious floating motion */
+/* ============================================ */
 
 @keyframes ambient-wave-gold {
-
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) rotate(-5deg) scale(1);
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate(-3deg) scale(1);
+    opacity: 1;
   }
-
+  25% {
+    transform: translate3d(2vw, 0.8vh, 0) rotate(-2deg) scale(1.005);
+  }
   50% {
-    transform: translate3d(4vw, 1.2vh, 0) rotate(-3deg) scale(1.01);
+    transform: translate3d(4vw, 1.5vh, 0) rotate(-1deg) scale(1.01);
+    opacity: 0.95;
+  }
+  75% {
+    transform: translate3d(2vw, 0.5vh, 0) rotate(-2deg) scale(1.005);
   }
 }
 
-@keyframes ambient-wave-emerald {
-
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) rotate(4deg) scale(1);
+@keyframes ambient-wave-warm {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate(2deg) scale(1);
+    opacity: 1;
   }
-
-  50% {
-    transform: translate3d(-5vw, -1.6vh, 0) rotate(6deg) scale(1.012);
+  33% {
+    transform: translate3d(-3vw, -1vh, 0) rotate(3deg) scale(1.008);
   }
-}
-
-@keyframes ambient-wave-platinum {
-
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) rotate(-2deg) scale(1);
-  }
-
-  50% {
-    transform: translate3d(3vw, -0.8vh, 0) rotate(0deg) scale(1.008);
+  66% {
+    transform: translate3d(-1vw, 0.5vh, 0) rotate(1deg) scale(1.004);
+    opacity: 0.92;
   }
 }
 
-@keyframes ambient-particles-drift-a {
+@keyframes ambient-wave-accent {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate3d(1.5vw, -0.8vh, 0) scale(1.006);
+    opacity: 1;
+  }
+}
 
-  0%,
-  100% {
+@keyframes ambient-particles-drift-gold {
+  0%, 100% {
     transform: translate3d(0, 0, 0);
-    opacity: 0.28;
+    opacity: 0.25;
   }
-
+  25% {
+    transform: translate3d(1vw, -0.5vh, 0);
+    opacity: 0.35;
+  }
   50% {
     transform: translate3d(2vw, -1vh, 0);
-    opacity: 0.42;
+    opacity: 0.45;
+  }
+  75% {
+    transform: translate3d(1vw, -0.5vh, 0);
+    opacity: 0.35;
   }
 }
 
-@keyframes ambient-particles-drift-b {
-
-  0%,
-  100% {
+@keyframes ambient-particles-drift-warm {
+  0%, 100% {
     transform: translate3d(0, 0, 0);
-    opacity: 0.22;
+    opacity: 0.2;
   }
-
   50% {
-    transform: translate3d(-2vw, 1vh, 0);
-    opacity: 0.34;
+    transform: translate3d(-1.5vw, 0.8vh, 0);
+    opacity: 0.35;
   }
 }
 
-@keyframes ambient-particles-drift-c {
-
-  0%,
-  100% {
+@keyframes ambient-particles-drift-accent {
+  0%, 100% {
     transform: translate3d(0, 0, 0);
-    opacity: 0.16;
+    opacity: 0.15;
   }
-
-  50% {
-    transform: translate3d(1.5vw, -0.6vh, 0);
-    opacity: 0.24;
+  33% {
+    transform: translate3d(0.8vw, -0.4vh, 0);
+    opacity: 0.3;
+  }
+  66% {
+    transform: translate3d(-0.5vw, 0.3vh, 0);
+    opacity: 0.25;
   }
 }
 
 @keyframes ambient-breathe-top {
-
-  0%,
-  100% {
+  0%, 100% {
     transform: translateX(-50%) scale(1);
-    opacity: 0.34;
+    opacity: 0.2;
   }
-
   50% {
-    transform: translateX(-50%) scale(1.02);
-    opacity: 0.42;
+    transform: translateX(-50%) scale(1.03);
+    opacity: 0.3;
   }
 }
 
 @keyframes ambient-breathe-center {
-
-  0%,
-  100% {
+  0%, 100% {
     transform: translateX(-50%) scale(1);
-    opacity: 0.44;
+    opacity: 0.25;
   }
-
   50% {
-    transform: translateX(-50%) scale(1.025);
-    opacity: 0.54;
+    transform: translateX(-50%) scale(1.04);
+    opacity: 0.38;
   }
 }
 
 @keyframes ambient-breathe-bottom {
-
-  0%,
-  100% {
+  0%, 100% {
     transform: scale(1);
-    opacity: 0.24;
+    opacity: 0.18;
   }
-
   50% {
-    transform: scale(1.03);
-    opacity: 0.32;
+    transform: scale(1.05);
+    opacity: 0.28;
   }
 }
 
 .animate-ambient-breathe-top {
-  animation: ambient-breathe-top 20s ease-in-out infinite;
+  animation: ambient-breathe-top 24s ease-in-out infinite;
 }
 
 .animate-ambient-breathe-center {
-  animation: ambient-breathe-center 24s ease-in-out infinite;
+  animation: ambient-breathe-center 28s ease-in-out infinite;
+  animation-delay: -6s;
 }
 
 .animate-ambient-breathe-bottom {
-  animation: ambient-breathe-bottom 28s ease-in-out infinite;
+  animation: ambient-breathe-bottom 32s ease-in-out infinite;
+  animation-delay: -14s;
 }
 
+/* MOBILE ADJUSTMENTS */
 @media (max-width: 768px) {
   .ambient-dust-svg {
-    inset: -10%;
-    width: 120%;
-    height: 120%;
+    inset: -12%;
+    width: 124%;
+    height: 124%;
   }
 
   .ambient-glow--top {
-    width: 34rem;
-    height: 10rem;
-    top: -3rem;
+    width: 32rem;
+    height: 12rem;
+    top: -4rem;
   }
 
   .ambient-glow--center {
-    width: 36rem;
-    height: 24rem;
-    top: 22%;
+    width: 38rem;
+    height: 26rem;
+    top: 18%;
   }
 
   .ambient-glow--bottom {
-    width: 20rem;
-    height: 16rem;
-    right: -4rem;
-  }
-
-  .ambient-texture {
-    background-size: 96px 96px;
+    width: 24rem;
+    height: 18rem;
+    right: -3rem;
   }
 }
 
+/* REDUCED MOTION - Respect user preferences */
 @media (prefers-reduced-motion: reduce) {
-
   .ambient-wave,
   .ambient-particles,
   .ambient-glow {
     animation: none !important;
+  }
+  
+  .ambient-wave {
     transform: none !important;
+  }
+  
+  .ambient-particles {
+    opacity: 0.3;
+  }
+  
+  .dark .ambient-particles {
+    opacity: 0.4;
   }
 }
