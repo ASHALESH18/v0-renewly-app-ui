@@ -1,14 +1,10 @@
 'use client'
 
-import { motion } from 'framer-motion'
-
 interface GlowOrbProps {
   color?: 'gold' | 'platinum' | 'emerald' | 'crimson'
   size?: 'sm' | 'md' | 'lg' | 'xl'
   position?: { top?: string; left?: string; right?: string; bottom?: string }
   blur?: number
-  animate?: boolean
-  delay?: number
   className?: string
 }
 
@@ -26,39 +22,30 @@ const sizeMap = {
   xl: 800,
 }
 
+/**
+ * Static glow orb - no animation for 60fps performance
+ */
 export function GlowOrb({
   color = 'gold',
   size = 'md',
   position = { top: '50%', left: '50%' },
   blur = 100,
-  animate = true,
-  delay = 0,
   className = '',
 }: GlowOrbProps) {
   const orbSize = sizeMap[size]
   const orbColor = colorMap[color]
 
   return (
-    <motion.div
+    <div
       className={`absolute pointer-events-none rounded-full ${className}`}
       style={{
         width: orbSize,
         height: orbSize,
         filter: `blur(${blur}px)`,
         background: `radial-gradient(circle, ${orbColor} 0%, transparent 70%)`,
+        opacity: 0.5,
         ...position,
         transform: 'translate(-50%, -50%)',
-      }}
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={animate ? {
-        opacity: [0.4, 0.7, 0.4],
-        scale: [1, 1.15, 1],
-      } : { opacity: 0.5, scale: 1 }}
-      transition={{
-        duration: 12 + delay,
-        repeat: animate ? Infinity : 0,
-        ease: 'easeInOut',
-        delay,
       }}
     />
   )
@@ -72,9 +59,9 @@ export function FloatingGlows({ variant = 'section' }: FloatingGlowsProps) {
   if (variant === 'hero') {
     return (
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <GlowOrb color="gold" size="xl" position={{ top: '20%', left: '15%' }} delay={0} />
-        <GlowOrb color="platinum" size="lg" position={{ top: '60%', right: '10%' }} delay={3} />
-        <GlowOrb color="emerald" size="md" position={{ bottom: '20%', left: '40%' }} delay={6} />
+        <GlowOrb color="gold" size="xl" position={{ top: '20%', left: '15%' }} />
+        <GlowOrb color="platinum" size="lg" position={{ top: '60%', right: '10%' }} />
+        <GlowOrb color="emerald" size="md" position={{ bottom: '20%', left: '40%' }} />
       </div>
     )
   }
@@ -82,16 +69,16 @@ export function FloatingGlows({ variant = 'section' }: FloatingGlowsProps) {
   if (variant === 'dashboard') {
     return (
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <GlowOrb color="gold" size="lg" position={{ top: '10%', right: '20%' }} blur={120} delay={0} />
-        <GlowOrb color="platinum" size="md" position={{ bottom: '30%', left: '10%' }} blur={80} delay={4} />
+        <GlowOrb color="gold" size="lg" position={{ top: '10%', right: '20%' }} blur={120} />
+        <GlowOrb color="platinum" size="md" position={{ bottom: '30%', left: '10%' }} blur={80} />
       </div>
     )
   }
 
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      <GlowOrb color="gold" size="md" position={{ top: '30%', left: '20%' }} blur={80} delay={0} />
-      <GlowOrb color="platinum" size="sm" position={{ bottom: '40%', right: '20%' }} blur={60} delay={2} />
+      <GlowOrb color="gold" size="md" position={{ top: '30%', left: '20%' }} blur={80} />
+      <GlowOrb color="platinum" size="sm" position={{ bottom: '40%', right: '20%' }} blur={60} />
     </div>
   )
 }

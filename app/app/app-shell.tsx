@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { usePathname, useRouter } from 'next/navigation'
 import { BottomNav, SidebarNav } from '@/components/bottom-nav'
 import { AddSubscriptionSheet } from '@/components/screens/add-subscription'
@@ -184,13 +184,11 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
       {/* Desktop sidebar */}
       <SidebarNav activeTab={activeTab} />
 
-      {/* Main content area with page transitions - sidebar sets --sidebar-width CSS var */}
-      <main className="pb-24 lg:pb-0 min-h-screen w-full overflow-x-hidden lg:ml-[var(--sidebar-width,280px)] lg:w-[calc(100%-var(--sidebar-width,280px))] lg:max-w-[calc(100vw-var(--sidebar-width,280px))] lg:transition-[margin-left,width,max-width] lg:duration-200">
-        <AnimatePresence mode="wait">
-          <CinematicPageTransition key={pathname}>
-            {children}
-          </CinematicPageTransition>
-        </AnimatePresence>
+      {/* Main content area - instant render, no blocking transitions */}
+      <main className="pb-24 lg:pb-0 min-h-screen w-full overflow-x-hidden lg:ml-[var(--sidebar-width,280px)] lg:w-[calc(100%-var(--sidebar-width,280px))] lg:max-w-[calc(100vw-var(--sidebar-width,280px))]">
+        <CinematicPageTransition key={pathname}>
+          {children}
+        </CinematicPageTransition>
       </main>
 
       {/* Mobile bottom navigation */}

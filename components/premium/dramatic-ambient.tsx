@@ -1,7 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
-
 interface DramaticAmbientProps {
   variant?: 'hero' | 'section' | 'card'
   intensity?: 'subtle' | 'medium' | 'high'
@@ -9,6 +7,10 @@ interface DramaticAmbientProps {
   showOrbs?: boolean
 }
 
+/**
+ * Performance-optimized ambient background
+ * No animations - static orbs and gradients for 60fps scrolling
+ */
 export function DramaticAmbient({ 
   variant = 'section', 
   intensity = 'medium',
@@ -28,66 +30,37 @@ export function DramaticAmbient({
       {/* Primary atmospheric gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-secondary/20" />
       
-      {/* Dramatic orb effects */}
+      {/* Static orb effects - no animation for performance */}
       {showOrbs && (
         <>
           {/* Large gold orb - top right */}
-          <motion.div
+          <div
             className="absolute -top-[20%] -right-[10%] w-[600px] h-[600px] rounded-full"
             style={{
               background: `radial-gradient(circle, rgba(199, 163, 106, ${opacity.orb}) 0%, rgba(199, 163, 106, ${opacity.orb * 0.3}) 40%, transparent 70%)`,
-              filter: 'blur(80px)'
-            }}
-            animate={{
-              scale: [1, 1.2, 1],
-              x: [0, 30, 0],
-              y: [0, 20, 0],
-              opacity: [opacity.orb, opacity.orb * 1.5, opacity.orb]
-            }}
-            transition={{
-              duration: 10,
-              repeat: Infinity,
-              ease: 'easeInOut'
+              filter: 'blur(80px)',
+              opacity: opacity.orb,
             }}
           />
           
           {/* Emerald orb - bottom left */}
-          <motion.div
+          <div
             className="absolute -bottom-[15%] -left-[10%] w-[500px] h-[500px] rounded-full"
             style={{
               background: `radial-gradient(circle, rgba(46, 94, 82, ${opacity.orb * 0.8}) 0%, rgba(46, 94, 82, ${opacity.orb * 0.2}) 40%, transparent 70%)`,
-              filter: 'blur(100px)'
-            }}
-            animate={{
-              scale: [1, 1.15, 1],
-              x: [0, -20, 0],
-              y: [0, -30, 0],
-              opacity: [opacity.orb * 0.6, opacity.orb, opacity.orb * 0.6]
-            }}
-            transition={{
-              duration: 12,
-              repeat: Infinity,
-              ease: 'easeInOut',
-              delay: 2
+              filter: 'blur(100px)',
+              opacity: opacity.orb * 0.6,
             }}
           />
           
-          {/* Tertiary accent orb - center */}
+          {/* Tertiary accent orb - center (hero only) */}
           {variant === 'hero' && (
-            <motion.div
+            <div
               className="absolute top-[40%] left-[50%] w-[800px] h-[800px] -translate-x-1/2 -translate-y-1/2"
               style={{
                 background: `radial-gradient(ellipse at center, rgba(199, 163, 106, ${opacity.orb * 0.5}) 0%, transparent 60%)`,
-                filter: 'blur(120px)'
-              }}
-              animate={{
-                scale: [1, 1.1, 1],
-                opacity: [0.3, 0.5, 0.3]
-              }}
-              transition={{
-                duration: 8,
-                repeat: Infinity,
-                ease: 'easeInOut'
+                filter: 'blur(120px)',
+                opacity: 0.4,
               }}
             />
           )}
@@ -109,23 +82,6 @@ export function DramaticAmbient({
         />
       )}
       
-      {/* Spotlight effect for hero */}
-      {variant === 'hero' && (
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-gold/5 to-transparent"
-          style={{ width: '200%', left: '-100%' }}
-          animate={{
-            x: ['0%', '100%']
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: 'linear',
-            repeatDelay: 4
-          }}
-        />
-      )}
-      
       {/* Top edge highlight */}
       <div className="absolute top-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
       
@@ -140,7 +96,7 @@ export function DramaticAmbient({
   )
 }
 
-// Standalone orb component for manual placement
+// Standalone static orb component - no animation for performance
 export function GlowOrb({ 
   color = 'gold', 
   size = 400, 
@@ -159,22 +115,14 @@ export function GlowOrb({
   }
 
   return (
-    <motion.div
+    <div
       className={`absolute rounded-full pointer-events-none ${className}`}
       style={{
         width: size,
         height: size,
         background: `radial-gradient(circle, ${colors[color]} 0%, transparent 70%)`,
-        filter: `blur(${blur}px)`
-      }}
-      animate={{
-        scale: [1, 1.15, 1],
-        opacity: [0.4, 0.7, 0.4]
-      }}
-      transition={{
-        duration: 8,
-        repeat: Infinity,
-        ease: 'easeInOut'
+        filter: `blur(${blur}px)`,
+        opacity: 0.5,
       }}
     />
   )

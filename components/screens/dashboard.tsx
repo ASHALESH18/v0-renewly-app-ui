@@ -44,7 +44,6 @@ export function DashboardScreen({
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [viewMode, setViewMode] = useState('cards')
-  const [mounted, setMounted] = useState(false)
 
   // Get data from store
   const subscriptions = useStore((state) => state.subscriptions)
@@ -71,11 +70,6 @@ export function DashboardScreen({
   const upcoming = useMemo(() => {
     return getUpcomingRenewals(subscriptions, 30)
   }, [subscriptions])
-
-  // Prevent hydration mismatch - only render dynamic content after mount AND store is ready
-  React.useEffect(() => {
-    setMounted(true)
-  }, [])
 
   // Build filter chips dynamically from subscriptions
   const categories = [...new Set(subscriptions.map(s => s.category))]
@@ -105,12 +99,6 @@ export function DashboardScreen({
     sub.category.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  // Early return: Don't render any content until store is hydrated
-  // This prevents blank page states and ensures all data is available
-  if (!mounted) {
-    return null
-  }
-
   return (
     <PageTransition className="min-h-screen bg-transparent">
       <Header
@@ -126,9 +114,8 @@ export function DashboardScreen({
       />
 
       <div className="px-4 lg:px-6 space-y-6 pb-8">
-        {/* Command Center Hero - fast render */}
-        {mounted && (
-          <motion.div
+        {/* Command Center Hero - instant render */}
+        <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
@@ -160,14 +147,9 @@ export function DashboardScreen({
                 className="flex items-center gap-2 mb-6"
               >
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold/6 border border-gold/15 backdrop-blur-sm">
-                  <motion.div
-                    className="relative w-2 h-2"
-                    animate={{ scale: [1, 1.25, 1], opacity: [0.65, 0.95, 0.65] }}
-                    transition={{ duration: 2.5, repeat: Infinity }}
-                  >
+                  <div className="relative w-2 h-2">
                     <span className="absolute inset-0 rounded-full bg-gold" />
-                    <span className="absolute inset-0 rounded-full bg-gold/50 blur-[2px]" />
-                  </motion.div>
+                  </div>
                   <span className="text-[10px] font-semibold text-gold tracking-wider uppercase">
                     Financial Command Center
                   </span>
@@ -376,15 +358,8 @@ export function DashboardScreen({
           <div className="relative border border-gold/15 rounded-2xl p-5">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-4">
-                <div className="relative">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gold/20 to-gold/10 flex items-center justify-center border border-gold/20">
-                    <Zap className="w-6 h-6 text-gold" />
-                  </div>
-                  <motion.div
-                    className="absolute -inset-1 rounded-xl bg-gold/20 blur-md -z-10"
-                    animate={{ opacity: [0.3, 0.6, 0.3] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gold/20 to-gold/10 flex items-center justify-center border border-gold/20">
+                  <Zap className="w-6 h-6 text-gold" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">

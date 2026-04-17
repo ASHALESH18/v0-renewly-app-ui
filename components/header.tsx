@@ -423,13 +423,9 @@ function HeaderButton({ children, onClick, badge }: HeaderButtonProps) {
       <div className="absolute inset-0 rounded-2xl bg-gold/10 blur-lg opacity-0 group-hover:opacity-60 transition-opacity -z-10" />
       {children}
       {badge !== undefined && badge > 0 && (
-        <motion.span 
-          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-crimson text-[10px] font-bold text-ivory flex items-center justify-center shadow-[0_4px_8px_-2px_rgba(122,57,64,0.5)]"
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
+        <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-crimson text-[10px] font-bold text-ivory flex items-center justify-center shadow-[0_4px_8px_-2px_rgba(122,57,64,0.5)]">
           {badge > 9 ? '9+' : badge}
-        </motion.span>
+        </span>
       )}
     </motion.button>
   )
