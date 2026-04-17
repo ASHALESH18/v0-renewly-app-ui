@@ -1,10 +1,59 @@
 'use client'
 
-import { motion, useInView } from 'framer-motion'
-import { useRef } from 'react'
+import { motion, useInView, useSpring, useTransform } from 'framer-motion'
+import { useRef, useEffect, useState } from 'react'
 import { AlertTriangle, TrendingDown, Sparkles } from 'lucide-react'
 import { springs, ProgressRing } from '../motion'
 import { getLeakStatusConfig } from '@/lib/leak-status-config'
+
+// Animated number counter component
+function AnimatedNumber({ 
+  value, 
+  prefix = '', 
+  suffix = '',
+  isInView,
+  delay = 0,
+  duration = 1.2,
+  className = ''
+}: { 
+  value: number
+  prefix?: string
+  suffix?: string
+  isInView: boolean
+  delay?: number
+  duration?: number
+  className?: string
+}) {
+  const [hasAnimated, setHasAnimated] = useState(false)
+  const springValue = useSpring(0, { 
+    stiffness: 50, 
+    damping: 20,
+    duration: duration
+  })
+  const displayValue = useTransform(springValue, (v) => Math.round(v))
+  const [display, setDisplay] = useState(0)
+
+  useEffect(() => {
+    if (isInView && !hasAnimated) {
+      const timeout = setTimeout(() => {
+        springValue.set(value)
+        setHasAnimated(true)
+      }, delay * 1000)
+      return () => clearTimeout(timeout)
+    }
+  }, [isInView, value, delay, springValue, hasAnimated])
+
+  useEffect(() => {
+    const unsubscribe = displayValue.on('change', (v) => setDisplay(v))
+    return () => unsubscribe()
+  }, [displayValue])
+
+  return (
+    <span className={className}>
+      {prefix}{display.toLocaleString('en-IN')}{suffix}
+    </span>
+  )
+}
 
 export function LeakPreview() {
   const ref = useRef(null)
@@ -96,14 +145,19 @@ export function LeakPreview() {
                 <div className="relative">
                   <ProgressRing progress={72} size={160} strokeWidth={10} />
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <motion.span 
+                    <motion.div 
                       className="text-4xl font-semibold text-gold"
                       initial={{ opacity: 0, scale: 0.5 }}
                       animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                      transition={{ delay: 0.5, ...springs.bouncy }}
+                      transition={{ delay: 0.3, ...springs.bouncy }}
                     >
-                      72
-                    </motion.span>
+                      <AnimatedNumber 
+                        value={72} 
+                        isInView={isInView} 
+                        delay={0.4}
+                        duration={1}
+                      />
+                    </motion.div>
                     <span className="text-sm text-platinum">Leak Score</span>
                   </div>
                 </div>
@@ -113,19 +167,47 @@ export function LeakPreview() {
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="p-4 rounded-xl bg-muted dark:bg-obsidian/50 border border-glass-border">
                   <p className="text-xs text-platinum mb-1">Monthly Recurring</p>
-                  <p className="text-xl font-semibold text-foreground">₹7,644</p>
+                  <p className="text-xl font-semibold text-foreground">
+                    <AnimatedNumber 
+                      value={7644} 
+                      prefix="₹"
+                      isInView={isInView} 
+                      delay={0.5}
+                    />
+                  </p>
                 </div>
                 <div className="p-4 rounded-xl bg-muted dark:bg-obsidian/50 border border-glass-border">
                   <p className="text-xs text-platinum mb-1">Yearly Projected</p>
-                  <p className="text-xl font-semibold text-foreground">₹91,728</p>
+                  <p className="text-xl font-semibold text-foreground">
+                    <AnimatedNumber 
+                      value={91728} 
+                      prefix="₹"
+                      isInView={isInView} 
+                      delay={0.6}
+                    />
+                  </p>
                 </div>
                 <div className="p-4 rounded-xl bg-muted dark:bg-obsidian/50 border border-glass-border">
                   <p className="text-xs text-platinum mb-1">Active Subscriptions</p>
-                  <p className="text-xl font-semibold text-foreground">9</p>
+                  <p className="text-xl font-semibold text-foreground">
+                    <AnimatedNumber 
+                      value={9} 
+                      isInView={isInView} 
+                      delay={0.7}
+                      duration={0.8}
+                    />
+                  </p>
                 </div>
                 <div className="p-4 rounded-xl bg-emerald/10 border border-emerald/20">
                   <p className="text-xs text-emerald mb-1">Possible Savings</p>
-                  <p className="text-xl font-semibold text-emerald">₹2,398</p>
+                  <p className="text-xl font-semibold text-emerald">
+                    <AnimatedNumber 
+                      value={2398} 
+                      prefix="₹"
+                      isInView={isInView} 
+                      delay={0.8}
+                    />
+                  </p>
                 </div>
               </div>
 
