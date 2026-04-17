@@ -3,7 +3,7 @@
 import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
 import { Check, X, Sparkles } from 'lucide-react'
-import { springs, staggerContainer, staggerItem, premiumCardHover, badgeEntrance } from '../motion'
+import { springs, staggerContainer, staggerItem, premiumCardHover, badgeEntrance, useMotionPreferences } from '../motion'
 import { getAllPlans } from '@/lib/plans'
 import Link from 'next/link'
 import { useAuth } from '@/lib/hooks/use-auth'
@@ -14,6 +14,7 @@ export function Pricing() {
   // Use amount for better scroll timing - triggers when 20% of section is visible
   const isInView = useInView(ref, { once: true, amount: 0.2 })
   const { isAuthenticated } = useAuth()
+  const { shouldReduceAnimations } = useMotionPreferences()
 
   const plans = getAllPlans()
 
@@ -79,66 +80,33 @@ export function Pricing() {
                     : 'bg-secondary/50 dark:bg-slate/50 border border-glass-border'
                 }`}
               >
-                {/* Premium glow overlay on hover for Pro and Family */}
-                {(isPro || isFamily) && (
-                  <motion.div
-                    className="absolute -inset-1 bg-gradient-to-r from-gold/20 via-transparent to-gold/20 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity -z-10"
-                    animate={{ 
-                      backgroundPosition: ['0% 0%', '100% 0%', '0% 0%']
-                    }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                  />
+                {/* Premium glow overlay on hover for Pro and Family - static on mobile */}
+                {(isPro || isFamily) && !shouldReduceAnimations && (
+                  <div className="absolute -inset-1 bg-gradient-to-r from-gold/20 via-transparent to-gold/20 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity -z-10" />
                 )}
 
                 {/* Gold accent for Pro */}
                 {isPro && <div className="absolute top-0 left-0 right-0 h-1 gold-gradient" />}
                 
-                {/* Gold accent for Family - signature animation */}
+                {/* Gold accent for Family - static on mobile */}
                 {isFamily && (
-                  <motion.div 
-                    className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-gold to-transparent"
-                    animate={{ 
-                      opacity: [0.5, 1, 0.5],
-                      backgroundPosition: ['0% 0%', '100% 0%', '0% 0%']
-                    }}
-                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                  />
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-gold to-transparent opacity-75" />
                 )}
                 
-                {/* Popular badge */}
+                {/* Popular badge - static sparkle on mobile */}
                 {plan.badge === 'popular' && (
-                  <motion.div 
-                    variants={badgeEntrance}
-                    initial="initial"
-                    animate="animate"
-                    className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold/20 text-gold text-xs font-medium"
-                  >
-                    <motion.div
-                      animate={{ rotate: [0, 360] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                    >
-                      <Sparkles className="w-3 h-3" />
-                    </motion.div>
+                  <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold/20 text-gold text-xs font-medium">
+                    <Sparkles className="w-3 h-3" />
                     Most Popular
-                  </motion.div>
+                  </div>
                 )}
 
-                {/* Family Plan badge */}
+                {/* Family Plan badge - static on mobile */}
                 {isFamily && (
-                  <motion.div 
-                    variants={badgeEntrance}
-                    initial="initial"
-                    animate="animate"
-                    className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold/20 text-gold text-xs font-medium"
-                  >
-                    <motion.span
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      👥
-                    </motion.span>
+                  <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold/20 text-gold text-xs font-medium">
+                    <span>👥</span>
                     Families
-                  </motion.div>
+                  </div>
                 )}
 
                 <p className={`text-sm mb-2 ${isPro || isFamily ? 'text-gold' : 'text-platinum'}`}>
@@ -266,28 +234,14 @@ export function Pricing() {
                   ))}
                 </div>
 
-                {/* Decorative glow for Pro */}
+                {/* Decorative glow for Pro - static for performance */}
                 {isPro && (
-                  <motion.div 
-                    className="absolute -bottom-20 -right-20 w-40 h-40 rounded-full bg-gold/10 blur-2xl"
-                    animate={{ 
-                      opacity: [0.4, 0.8, 0.4],
-                      scale: [1, 1.1, 1]
-                    }}
-                    transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                  />
+                  <div className="absolute -bottom-20 -right-20 w-40 h-40 rounded-full bg-gold/10 blur-2xl opacity-60" />
                 )}
 
-                {/* Decorative glow for Family */}
+                {/* Decorative glow for Family - static for performance */}
                 {isFamily && (
-                  <motion.div 
-                    className="absolute -bottom-20 -right-20 w-40 h-40 rounded-full bg-gold/15 blur-2xl"
-                    animate={{ 
-                      opacity: [0.3, 0.7, 0.3],
-                      scale: [1, 1.15, 1]
-                    }}
-                    transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-                  />
+                  <div className="absolute -bottom-20 -right-20 w-40 h-40 rounded-full bg-gold/15 blur-2xl opacity-50" />
                 )}
               </motion.div>
             )

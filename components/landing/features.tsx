@@ -14,7 +14,7 @@ import {
   Globe,
   ArrowRight
 } from 'lucide-react'
-import { springs, staggerContainer, staggerItem } from '../motion'
+import { springs, staggerContainer, staggerItem, useMotionPreferences } from '../motion'
 
 const features = [
   {
@@ -60,6 +60,7 @@ export function Features() {
   // Reduced margin so animations trigger when section is more visible
   const isInView = useInView(ref, { once: true, amount: 0.2 })
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const { shouldReduceAnimations } = useMotionPreferences()
 
   return (
     <section
@@ -142,43 +143,40 @@ export function Features() {
               key={feature.title}
               variants={staggerItem}
               custom={index}
-              onMouseEnter={() => setHoveredIndex(index)}
-              onMouseLeave={() => setHoveredIndex(null)}
+              onMouseEnter={() => !shouldReduceAnimations && setHoveredIndex(index)}
+              onMouseLeave={() => !shouldReduceAnimations && setHoveredIndex(null)}
               initial={{ opacity: 0, y: 16 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.15 + index * 0.08, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
               className="group relative"
             >
-              <motion.div
-                whileHover={{ 
-                  y: -6,
-                }}
-                transition={{ duration: 0.25, ease: 'easeOut' }}
-                className="relative h-full p-6 lg:p-7 rounded-2xl bg-card/90 backdrop-blur-xl border border-border/60 overflow-hidden shadow-sm transition-shadow duration-300 group-hover:shadow-md group-hover:border-gold/15"
+              <div
+                className="relative h-full p-6 lg:p-7 rounded-2xl bg-card/90 backdrop-blur-xl border border-border/60 overflow-hidden shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:border-gold/15 group-hover:-translate-y-1"
               >
-                {/* Subtle hover glow */}
-                <motion.div
-                  className="absolute -inset-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-400"
-                  style={{
-                    background: `radial-gradient(circle at top left, ${feature.color}12 0%, transparent 50%)`
-                  }}
-                />
+                {/* Subtle hover glow - disabled on mobile */}
+                {!shouldReduceAnimations && (
+                  <div
+                    className="absolute -inset-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-400"
+                    style={{
+                      background: `radial-gradient(circle at top left, ${feature.color}12 0%, transparent 50%)`
+                    }}
+                  />
+                )}
                 
-                {/* Top accent line - refined */}
-                <motion.div
-                  className="absolute top-0 left-0 right-0 h-0.5"
+                {/* Top accent line */}
+                <div
+                  className="absolute top-0 left-0 right-0 h-0.5 scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300"
                   style={{ backgroundColor: feature.color }}
-                  initial={{ scaleX: 0, originX: 0 }}
-                  whileHover={{ scaleX: 1 }}
-                  transition={{ duration: 0.35 }}
                 />
                 
                 {/* Icon with subtle glow */}
                 <div className="relative mb-5">
-                  <motion.div
-                    className="absolute -inset-2 rounded-xl blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-400"
-                    style={{ backgroundColor: `${feature.color}30` }}
-                  />
+                  {!shouldReduceAnimations && (
+                    <div
+                      className="absolute -inset-2 rounded-xl blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-400"
+                      style={{ backgroundColor: `${feature.color}30` }}
+                    />
+                  )}
                   <div 
                     className="relative w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105"
                     style={{ backgroundColor: `${feature.color}12` }}
@@ -193,7 +191,7 @@ export function Features() {
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   {feature.description}
                 </p>
-              </motion.div>
+              </div>
             </motion.div>
           ))}
         </motion.div>

@@ -33,9 +33,8 @@ export function Hero() {
   }, [])
 
   const isDark = mounted ? resolvedTheme === 'dark' : true
-  const [isMobile, setIsMobile] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
-  const { prefersReducedMotion } = useMotionPreferences()
+  const { prefersReducedMotion, isMobile, shouldReduceAnimations } = useMotionPreferences()
 
   // Smart CTA handler - consistent with pricing/upgrade flow
   const handleGetStarted = () => {
@@ -55,17 +54,9 @@ export function Hero() {
   const yNear = useTransform(scrollYProgress, [0, 1], [0, -50])
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-
     // Trigger reveal sequence after mount - faster for premium responsiveness
     const timer = setTimeout(() => setIsLoaded(true), 50)
-
-    return () => {
-      window.removeEventListener('resize', checkMobile)
-      clearTimeout(timer)
-    }
+    return () => clearTimeout(timer)
   }, [])
 
   return (
@@ -116,18 +107,12 @@ export function Hero() {
           <div className="absolute inset-0 rounded-full border border-gold/15 bg-card/60 backdrop-blur-sm" />
 
           <div className="relative flex items-center gap-2.5">
-            <motion.div
-              className="relative w-2 h-2"
-              animate={
-                prefersReducedMotion
-                  ? {}
-                  : { scale: [1, 1.15, 1], opacity: [0.6, 0.9, 0.6] }
-              }
-              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-            >
+            <div className="relative w-2 h-2">
               <span className="absolute inset-0 rounded-full bg-gold" />
-              <span className="absolute inset-0 rounded-full bg-gold/60 blur-[2px]" />
-            </motion.div>
+              {!shouldReduceAnimations && (
+                <span className="absolute inset-0 rounded-full bg-gold/60 blur-[2px] animate-pulse" />
+              )}
+            </div>
             <span className="text-sm text-foreground/90 font-medium tracking-wide">
               Now available on iOS and Android
             </span>
@@ -200,23 +185,12 @@ export function Hero() {
             disabled={isNavigating}
             variants={magneticButtonVariants}
             initial="initial"
-            whileHover="hover"
-            whileTap="tap"
+            whileHover={shouldReduceAnimations ? undefined : "hover"}
+            whileTap={shouldReduceAnimations ? undefined : "tap"}
             className="relative w-full sm:w-auto group cursor-pointer disabled:opacity-70"
           >
-            {/* Subtle glow behind button */}
-            <motion.div
-              className="absolute inset-0 rounded-xl bg-gold/10 blur-lg opacity-60 transition-opacity group-hover:opacity-80"
-              animate={
-                prefersReducedMotion
-                  ? {}
-                  : {
-                    scale: [1, 1.03, 1],
-                    opacity: [0.35, 0.5, 0.35],
-                  }
-              }
-              transition={{ duration: 2.5, repeat: Infinity }}
-            />
+            {/* Subtle glow behind button - static on mobile */}
+            <div className="absolute inset-0 rounded-xl bg-gold/10 blur-lg opacity-50 group-hover:opacity-70 transition-opacity" />
 
             <div className="relative px-8 py-4 rounded-xl gold-gradient text-obsidian font-semibold text-base shadow-luxury flex items-center justify-center gap-2.5">
               {isNavigating ? 'Loading...' : 'Start for free'}
@@ -233,16 +207,11 @@ export function Hero() {
             onClick={() => setIsDemoOpen(true)}
             variants={magneticButtonVariants}
             initial="initial"
-            whileHover="hover"
-            whileTap="tap"
+            whileHover={shouldReduceAnimations ? undefined : "hover"}
+            whileTap={shouldReduceAnimations ? undefined : "tap"}
             className="relative w-full sm:w-auto px-8 py-4 rounded-xl bg-card/40 backdrop-blur-xl border border-gold/15 text-foreground font-medium text-base flex items-center justify-center gap-2.5 cursor-pointer hover:border-gold/30 hover:bg-card/60 transition-all group"
           >
-            <motion.div
-              animate={prefersReducedMotion ? {} : { scale: [1, 1.08, 1] }}
-              transition={{ duration: 2.5, repeat: Infinity }}
-            >
-              <Play className="w-4 h-4 text-gold" />
-            </motion.div>
+            <Play className="w-4 h-4 text-gold" />
             Watch demo
           </motion.button>
         </motion.div>
@@ -359,13 +328,15 @@ export function Hero() {
                         : '0 6px 20px -4px rgba(120, 90, 50, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
                     }}
                   >
-                    {/* Subtle shine effect */}
-                    <motion.div
-                      className={`absolute inset-0 bg-gradient-to-r from-transparent to-transparent pointer-events-none ${isDark ? 'via-white/5' : 'via-gold/10'
-                        }`}
-                      animate={prefersReducedMotion ? {} : { x: ['-100%', '100%'] }}
-                      transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
-                    />
+                    {/* Subtle shine effect - disabled on mobile for performance */}
+                    {!shouldReduceAnimations && (
+                      <motion.div
+                        className={`absolute inset-0 bg-gradient-to-r from-transparent to-transparent pointer-events-none ${isDark ? 'via-white/5' : 'via-gold/10'
+                          }`}
+                        animate={{ x: ['-100%', '100%'] }}
+                        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
+                      />
+                    )}
                     <p className={`text-xs mb-1 relative ${isDark ? 'text-[#9CA3AF]' : 'text-[#6B7280]'}`}>
                       Monthly recurring
                     </p>
@@ -403,18 +374,20 @@ export function Hero() {
                             : '0 2px 8px -2px rgba(120, 90, 50, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)',
                         }}
                       >
-                        {/* Card shimmer */}
-                        <motion.div
-                          className={`absolute inset-0 bg-gradient-to-r from-transparent to-transparent pointer-events-none ${isDark ? 'via-gold/5' : 'via-gold/10'
-                            }`}
-                          animate={prefersReducedMotion ? {} : { x: ['-100%', '100%'] }}
-                          transition={{
-                            duration: 3,
-                            repeat: Infinity,
-                            ease: 'easeInOut',
-                            delay: 3.5 + i * 0.3,
-                          }}
-                        />
+                        {/* Card shimmer - disabled on mobile for performance */}
+                        {!shouldReduceAnimations && (
+                          <motion.div
+                            className={`absolute inset-0 bg-gradient-to-r from-transparent to-transparent pointer-events-none ${isDark ? 'via-gold/5' : 'via-gold/10'
+                              }`}
+                            animate={{ x: ['-100%', '100%'] }}
+                            transition={{
+                              duration: 3,
+                              repeat: Infinity,
+                              ease: 'easeInOut',
+                              delay: 3.5 + i * 0.3,
+                            }}
+                          />
+                        )}
 
                         {/* Real brand icon */}
                         <div className="relative shrink-0">

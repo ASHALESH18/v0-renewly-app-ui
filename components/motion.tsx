@@ -51,13 +51,43 @@ function useReducedMotionSafe(): boolean {
   return reduced
 }
 
+// Mobile detection hook for performance optimizations
+function useIsMobile(): boolean {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    // Debounced resize handler
+    let timeoutId: NodeJS.Timeout
+    const handleResize = () => {
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(checkMobile, 150)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      clearTimeout(timeoutId)
+    }
+  }, [])
+
+  return isMobile
+}
+
 // Utility hook — use this everywhere instead of React's experimental useReducedMotion
 export function useMotionPreferences() {
   const prefersReducedMotion = useReducedMotionSafe()
+  const isMobile = useIsMobile()
+  // On mobile or reduced motion, disable heavy animations
+  const shouldReduceAnimations = prefersReducedMotion || isMobile
+  
   return {
     prefersReducedMotion,
+    isMobile,
+    shouldReduceAnimations,
     maybeVariants: (fullVariant: Variants, reducedVariant: Variants = fadeIn) =>
-      prefersReducedMotion ? reducedVariant : fullVariant,
+      shouldReduceAnimations ? reducedVariant : fullVariant,
   }
 }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo } from 'react'
+import React, { useMemo, useEffect, useState } from 'react'
 
 // Generate random particles for the floating gold dust effect
 function generateParticles(count: number, seed: number = 1): Array<{
@@ -32,17 +32,19 @@ function generateParticles(count: number, seed: number = 1): Array<{
   return particles
 }
 
-// Particle group for the dust effect
+// Particle group for the dust effect - optimized for mobile
 function DustParticleGroup({
   particles,
   baseColor,
   glowColor,
   animationClass,
+  disableAnimation = false,
 }: {
   particles: Array<{ cx: number; cy: number; r: number; delay: number; duration: number; drift: number }>
   baseColor: string
   glowColor: string
   animationClass: string
+  disableAnimation?: boolean
 }) {
   return (
     <g className={animationClass}>
@@ -53,29 +55,61 @@ function DustParticleGroup({
           cy={p.cy}
           r={p.r}
           fill={baseColor}
-          style={{
+          opacity={disableAnimation ? 0.35 : undefined}
+          style={disableAnimation ? undefined : {
             animationDelay: `${p.delay}s`,
             animationDuration: `${p.duration}s`,
           }}
         >
-          <animate
-            attributeName="opacity"
-            values="0.1;0.6;0.1"
-            dur={`${p.duration}s`}
-            begin={`${p.delay}s`}
-            repeatCount="indefinite"
-          />
+          {!disableAnimation && (
+            <animate
+              attributeName="opacity"
+              values="0.1;0.6;0.1"
+              dur={`${p.duration}s`}
+              begin={`${p.delay}s`}
+              repeatCount="indefinite"
+            />
+          )}
         </circle>
       ))}
     </g>
   )
 }
 
+// Mobile detection hook
+function useIsMobile(): boolean {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    // Debounced resize handler
+    let timeoutId: NodeJS.Timeout
+    const handleResize = () => {
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(checkMobile, 150)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      clearTimeout(timeoutId)
+    }
+  }, [])
+
+  return isMobile
+}
+
 export function AmbientBackground() {
+  const isMobile = useIsMobile()
+  
+  // Reduce particle count significantly on mobile for performance
+  const particleCount = isMobile ? { gold: 12, secondary: 8, accent: 5 } : { gold: 45, secondary: 30, accent: 20 }
+  
   // Generate three layers of particles with different characteristics
-  const goldParticles = useMemo(() => generateParticles(45, 1), [])
-  const goldSecondary = useMemo(() => generateParticles(30, 2), [])
-  const goldAccent = useMemo(() => generateParticles(20, 3), [])
+  const goldParticles = useMemo(() => generateParticles(particleCount.gold, 1), [particleCount.gold])
+  const goldSecondary = useMemo(() => generateParticles(particleCount.secondary, 2), [particleCount.secondary])
+  const goldAccent = useMemo(() => generateParticles(particleCount.accent, 3), [particleCount.accent])
 
   return (
     <div 
@@ -88,10 +122,10 @@ export function AmbientBackground() {
       {/* Soft ambient wash for depth */}
       <div className="ambient-soft-wash" />
 
-      {/* Soft glowing areas - creates gentle warmth zones */}
-      <div className="ambient-glow ambient-glow--top animate-ambient-breathe-top" />
-      <div className="ambient-glow ambient-glow--center animate-ambient-breathe-center" />
-      <div className="ambient-glow ambient-glow--bottom animate-ambient-breathe-bottom" />
+      {/* Soft glowing areas - creates gentle warmth zones (static on mobile) */}
+      <div className={`ambient-glow ambient-glow--top ${isMobile ? '' : 'animate-ambient-breathe-top'}`} />
+      <div className={`ambient-glow ambient-glow--center ${isMobile ? '' : 'animate-ambient-breathe-center'}`} />
+      <div className={`ambient-glow ambient-glow--bottom ${isMobile ? '' : 'animate-ambient-breathe-bottom'}`} />
 
       {/* Primary flowing gold dust wave SVG */}
       <svg
@@ -184,6 +218,7 @@ export function AmbientBackground() {
             baseColor="rgba(229, 212, 184, 0.7)"
             glowColor="rgba(199, 163, 106, 0.4)"
             animationClass="ambient-particles ambient-particles--gold"
+            disableAnimation={isMobile}
           />
         </g>
 
@@ -206,6 +241,7 @@ export function AmbientBackground() {
             baseColor="rgba(195, 165, 100, 0.5)"
             glowColor="rgba(180, 145, 80, 0.3)"
             animationClass="ambient-particles ambient-particles--warm"
+            disableAnimation={isMobile}
           />
         </g>
 
@@ -216,6 +252,7 @@ export function AmbientBackground() {
             baseColor="rgba(245, 235, 210, 0.6)"
             glowColor="rgba(229, 212, 184, 0.35)"
             animationClass="ambient-particles ambient-particles--accent"
+            disableAnimation={isMobile}
           />
         </g>
       </svg>
