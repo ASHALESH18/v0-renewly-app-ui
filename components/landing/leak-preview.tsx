@@ -3,10 +3,10 @@
 import { motion, useInView, useSpring, useTransform } from 'framer-motion'
 import { useRef, useEffect, useState } from 'react'
 import { AlertTriangle, TrendingDown, Sparkles } from 'lucide-react'
-import { springs, ProgressRing } from '../motion'
+import { springs, ProgressRing, useMotionPreferences } from '../motion'
 import { getLeakStatusConfig } from '@/lib/leak-status-config'
 
-// Animated number counter component
+// Animated number counter component - optimized for mobile
 function AnimatedNumber({ 
   value, 
   prefix = '', 
@@ -14,7 +14,8 @@ function AnimatedNumber({
   isInView,
   delay = 0,
   duration = 1.2,
-  className = ''
+  className = '',
+  skipAnimation = false
 }: { 
   value: number
   prefix?: string
@@ -23,6 +24,7 @@ function AnimatedNumber({
   delay?: number
   duration?: number
   className?: string
+  skipAnimation?: boolean
 }) {
   const [hasAnimated, setHasAnimated] = useState(false)
   const springValue = useSpring(0, { 
@@ -31,9 +33,15 @@ function AnimatedNumber({
     duration: duration
   })
   const displayValue = useTransform(springValue, (v) => Math.round(v))
-  const [display, setDisplay] = useState(0)
+  const [display, setDisplay] = useState(skipAnimation ? value : 0)
 
   useEffect(() => {
+    // Skip animation on mobile for performance
+    if (skipAnimation) {
+      setDisplay(value)
+      return
+    }
+    
     if (isInView && !hasAnimated) {
       const timeout = setTimeout(() => {
         springValue.set(value)
@@ -41,12 +49,13 @@ function AnimatedNumber({
       }, delay * 1000)
       return () => clearTimeout(timeout)
     }
-  }, [isInView, value, delay, springValue, hasAnimated])
+  }, [isInView, value, delay, springValue, hasAnimated, skipAnimation])
 
   useEffect(() => {
+    if (skipAnimation) return
     const unsubscribe = displayValue.on('change', (v) => setDisplay(v))
     return () => unsubscribe()
-  }, [displayValue])
+  }, [displayValue, skipAnimation])
 
   return (
     <span className={className}>
@@ -59,6 +68,7 @@ export function LeakPreview() {
   const ref = useRef(null)
   // Use amount instead of margin for better scroll timing
   const isInView = useInView(ref, { once: true, amount: 0.25 })
+  const { shouldReduceAnimations } = useMotionPreferences()
 
   return (
     <section ref={ref} className="py-24 lg:py-32 px-4 bg-secondary dark:bg-obsidian relative overflow-hidden">
@@ -157,6 +167,7 @@ export function LeakPreview() {
                         isInView={isInView} 
                         delay={0.4}
                         duration={1}
+                        skipAnimation={shouldReduceAnimations}
                       />
                     </motion.div>
                     <span className="text-sm text-platinum">Leak Score</span>
@@ -174,6 +185,7 @@ export function LeakPreview() {
                       prefix="₹"
                       isInView={isInView} 
                       delay={0.5}
+                      skipAnimation={shouldReduceAnimations}
                     />
                   </p>
                 </div>
@@ -185,6 +197,7 @@ export function LeakPreview() {
                       prefix="₹"
                       isInView={isInView} 
                       delay={0.6}
+                      skipAnimation={shouldReduceAnimations}
                     />
                   </p>
                 </div>
@@ -196,6 +209,7 @@ export function LeakPreview() {
                       isInView={isInView} 
                       delay={0.7}
                       duration={0.8}
+                      skipAnimation={shouldReduceAnimations}
                     />
                   </p>
                 </div>
@@ -207,6 +221,7 @@ export function LeakPreview() {
                       prefix="₹"
                       isInView={isInView} 
                       delay={0.8}
+                      skipAnimation={shouldReduceAnimations}
                     />
                   </p>
                 </div>
@@ -230,11 +245,11 @@ export function LeakPreview() {
               <div className="absolute -bottom-20 -right-20 w-40 h-40 rounded-full bg-gold/10 blur-2xl" />
             </div>
 
-            {/* Floating badge */}
+            {/* Floating badge - simplified animation on mobile */}
             <motion.div
-              initial={{ opacity: 0, y: 20, rotate: -5 }}
+              initial={{ opacity: 0, y: shouldReduceAnimations ? 0 : 20, rotate: -5 }}
               animate={isInView ? { opacity: 1, y: 0, rotate: -5 } : {}}
-              transition={{ delay: 0.6, ...springs.bouncy }}
+              transition={{ delay: 0.4, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
               className="absolute -top-4 -right-4 px-4 py-2 rounded-xl gold-gradient text-obsidian text-sm font-semibold shadow-luxury"
             >
               Pro Feature
