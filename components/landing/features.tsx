@@ -57,7 +57,8 @@ const features = [
 
 export function Features() {
   const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: '-100px' })
+  // Reduced margin so animations trigger when section is more visible
+  const isInView = useInView(ref, { once: true, amount: 0.2 })
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
   return (
@@ -66,69 +67,50 @@ export function Features() {
       ref={ref}
       className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-24 lg:py-36 scroll-mt-24"
     >
-      {/* Refined ambient background - subtle and premium */}
+      {/* Refined ambient background - static for performance */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Subtle gold orb - top left */}
-        <motion.div
-          className="absolute -top-[8%] -left-[8%] w-[600px] h-[600px] rounded-full"
+        {/* Subtle gold orb - top left - static */}
+        <div
+          className="absolute -top-[8%] -left-[8%] w-[600px] h-[600px] rounded-full opacity-30"
           style={{ 
             background: 'radial-gradient(circle, rgba(176, 132, 64, 0.12) 0%, rgba(176, 132, 64, 0.03) 45%, transparent 70%)',
             filter: 'blur(80px)'
           }}
-          animate={{ 
-            scale: [1, 1.15, 1],
-            opacity: [0.25, 0.4, 0.25]
-          }}
-          transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
         />
         
-        {/* Subtle emerald orb - bottom right */}
-        <motion.div
-          className="absolute -bottom-[12%] -right-[8%] w-[500px] h-[500px] rounded-full"
+        {/* Subtle emerald orb - bottom right - static */}
+        <div
+          className="absolute -bottom-[12%] -right-[8%] w-[500px] h-[500px] rounded-full opacity-25"
           style={{ 
             background: 'radial-gradient(circle, rgba(61, 107, 88, 0.10) 0%, rgba(61, 107, 88, 0.03) 45%, transparent 70%)',
             filter: 'blur(90px)'
           }}
-          animate={{ 
-            scale: [1, 1.12, 1],
-            opacity: [0.2, 0.35, 0.2]
-          }}
-          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
         />
         
-        {/* Center warmth */}
-        <motion.div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px]"
+        {/* Center warmth - static */}
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] opacity-30"
           style={{ 
             background: 'radial-gradient(ellipse at center, rgba(176, 132, 64, 0.04) 0%, transparent 60%)'
           }}
-          animate={{ 
-            scale: [1, 1.06, 1],
-            opacity: [0.25, 0.4, 0.25]
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
         />
       </div>
 
       <div className="max-w-6xl mx-auto relative z-10">
         {/* Section header - refined premium treatment */}
         <motion.div
-          initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
-          animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-          transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+          initial={{ opacity: 0, y: 16 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
           className="text-center mb-16"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={isInView ? { opacity: 1, scale: 1 } : {}}
-            transition={{ delay: 0.08 }}
+            transition={{ delay: 0.1, duration: 0.5 }}
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gold/8 border border-gold/15 mb-5"
           >
-            <motion.span
-              className="w-1.5 h-1.5 rounded-full bg-gold"
-              animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
-              transition={{ duration: 2.5, repeat: Infinity }}
-            />
+            <span className="w-1.5 h-1.5 rounded-full bg-gold" />
             <span className="text-xs text-gold font-medium tracking-wider uppercase">Features</span>
           </motion.div>
           
@@ -162,9 +144,9 @@ export function Features() {
               custom={index}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
-              initial={{ opacity: 0, y: 20, filter: 'blur(4px)' }}
-              animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-              transition={{ delay: index * 0.08, duration: 0.4 }}
+              initial={{ opacity: 0, y: 16 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: 0.15 + index * 0.08, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
               className="group relative"
             >
               <motion.div
@@ -218,9 +200,9 @@ export function Features() {
 
         {/* Highlight section */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.4, ...springs.gentle }}
+          transition={{ delay: 0.5, duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
           className="mt-20 grid lg:grid-cols-2 gap-8 items-center"
         >
           <div>
@@ -272,9 +254,9 @@ export function Features() {
               ].map((item, i) => (
                 <motion.div
                   key={item.title}
-                  initial={{ opacity: 0, x: 20 }}
+                  initial={{ opacity: 0, x: 16 }}
                   animate={isInView ? { opacity: 1, x: 0 } : {}}
-                  transition={{ delay: 0.5 + i * 0.1, ...springs.gentle }}
+                  transition={{ delay: 0.6 + i * 0.1, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
                   className="flex items-start gap-4 p-4 rounded-xl bg-secondary/30 dark:bg-slate/30 border border-glass-border"
                 >
                   <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">

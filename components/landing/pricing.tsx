@@ -11,7 +11,8 @@ import { getUpgradeDestination, getStartedDestination } from '@/lib/upgrade-flow
 
 export function Pricing() {
   const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: '-100px' })
+  // Use amount for better scroll timing - triggers when 20% of section is visible
+  const isInView = useInView(ref, { once: true, amount: 0.2 })
   const { isAuthenticated } = useAuth()
 
   const plans = getAllPlans()
@@ -29,30 +30,16 @@ export function Pricing() {
 
   return (
     <section id="pricing" ref={ref} className="py-24 lg:py-32 px-4 bg-card/50 dark:bg-graphite/50 relative overflow-hidden scroll-mt-24">
-      {/* Subtle background elements */}
-      <motion.div 
-        className="absolute top-0 right-0 w-80 h-80 bg-gold/[0.03] rounded-full blur-[100px]"
-        animate={{ 
-          opacity: [0.25, 0.4, 0.25],
-          scale: [1, 1.08, 1]
-        }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <motion.div 
-        className="absolute bottom-0 left-0 w-72 h-72 bg-emerald/[0.03] rounded-full blur-[80px]"
-        animate={{ 
-          opacity: [0.2, 0.35, 0.2],
-          scale: [1, 1.05, 1]
-        }}
-        transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-      />
+      {/* Subtle background elements - static for performance */}
+      <div className="absolute top-0 right-0 w-80 h-80 bg-gold/[0.03] rounded-full blur-[100px] opacity-30" />
+      <div className="absolute bottom-0 left-0 w-72 h-72 bg-emerald/[0.03] rounded-full blur-[80px] opacity-25" />
 
       <div className="max-w-5xl mx-auto relative z-10">
         {/* Section header - refined */}
         <motion.div
-          initial={{ opacity: 0, y: 16, filter: 'blur(4px)' }}
-          animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-          transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+          initial={{ opacity: 0, y: 16 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
           className="text-center mb-14"
         >
           <p className="text-gold text-xs font-medium tracking-wider uppercase mb-3">
