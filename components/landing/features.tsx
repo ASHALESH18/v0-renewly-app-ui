@@ -162,18 +162,18 @@ export function Features() {
               custom={index}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
-              initial={{ opacity: 0, y: 24, filter: 'blur(6px)' }}
+              initial={{ opacity: 0, y: 16, filter: 'blur(4px)' }}
               animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-              transition={{ delay: index * 0.1, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+              transition={{ delay: index * 0.05, duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
               className="group relative"
             >
               <motion.div
                 whileHover={{ 
-                  y: -8,
-                  transition: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }
+                  y: -6,
+                  transition: { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }
                 }}
-                whileTap={{ y: -4, scale: 0.99 }}
-                className="relative h-full p-6 lg:p-7 rounded-2xl bg-card/90 backdrop-blur-xl border border-border/60 overflow-hidden shadow-sm transition-all duration-300 group-hover:shadow-lg group-hover:border-gold/20"
+                whileTap={{ y: -3, scale: 0.99 }}
+                className="relative h-full p-6 lg:p-7 rounded-2xl bg-card/90 backdrop-blur-xl border border-border/60 overflow-hidden shadow-sm transition-all duration-200 group-hover:shadow-lg group-hover:border-gold/20"
               >
                 {/* Animated hover glow - pulses subtly */}
                 <motion.div
@@ -183,7 +183,7 @@ export function Features() {
                     opacity: [0, 0.6, 0.4],
                     scale: [0.95, 1.02, 1],
                   } : { opacity: 0 }}
-                  transition={{ duration: 0.6, ease: 'easeOut' }}
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
                   style={{
                     background: `radial-gradient(ellipse at 30% 20%, ${feature.color}18 0%, transparent 55%)`
                   }}
@@ -199,7 +199,7 @@ export function Features() {
                     style={{ backgroundColor: feature.color }}
                     initial={{ x: '-100%' }}
                     whileHover={{ x: '0%' }}
-                    transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+                    transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
                   />
                 </motion.div>
                 
@@ -213,7 +213,7 @@ export function Features() {
                       opacity: [0, 0.5, 0.3],
                       scale: [0.9, 1.1, 1.05],
                     } : { opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                    transition={{ duration: 0.3, ease: 'easeOut' }}
                     style={{ 
                       background: `radial-gradient(circle, ${feature.color}40 0%, transparent 70%)`,
                       filter: 'blur(8px)'
@@ -223,11 +223,11 @@ export function Features() {
                     className="relative w-12 h-12 rounded-xl flex items-center justify-center"
                     style={{ backgroundColor: `${feature.color}12` }}
                     whileHover={{ scale: 1.08, rotate: 3 }}
-                    transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+                    transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
                   >
                     <motion.div
                       animate={hoveredIndex === index ? { rotate: [0, -5, 5, 0] } : {}}
-                      transition={{ duration: 0.4, ease: 'easeOut' }}
+                      transition={{ duration: 0.25, ease: 'easeOut' }}
                     >
                       <feature.icon className="w-6 h-6" style={{ color: feature.color }} />
                     </motion.div>
@@ -235,9 +235,9 @@ export function Features() {
                 </div>
                 
                 <motion.h3 
-                  className="text-lg font-semibold text-foreground mb-2 transition-colors duration-200"
+                  className="text-lg font-semibold text-foreground mb-2 transition-colors duration-150"
                   animate={hoveredIndex === index ? { color: feature.color } : {}}
-                  transition={{ duration: 0.25 }}
+                  transition={{ duration: 0.15 }}
                 >
                   {feature.title}
                 </motion.h3>
@@ -255,7 +255,7 @@ export function Features() {
                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent"
                     initial={{ x: '-100%' }}
                     whileHover={{ x: '200%' }}
-                    transition={{ duration: 0.8, ease: 'easeInOut', delay: 0.1 }}
+                    transition={{ duration: 0.5, ease: 'easeInOut', delay: 0.05 }}
                   />
                 </motion.div>
               </motion.div>
@@ -265,9 +265,9 @@ export function Features() {
 
         {/* Highlight section */}
         <motion.div
-          initial={{ opacity: 0, y: 32 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.5, duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+          transition={{ delay: 0.25, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
           className="mt-20 grid lg:grid-cols-2 gap-8 items-center"
         >
           <div>
@@ -275,12 +275,12 @@ export function Features() {
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald/10 text-emerald text-sm font-medium mb-4"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={isInView ? { opacity: 1, scale: 1 } : {}}
-              transition={{ delay: 0.55, duration: 0.4 }}
+              transition={{ delay: 0.28, duration: 0.25 }}
               whileHover={{ scale: 1.03 }}
             >
               <motion.div
                 animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
               >
                 <Smartphone className="w-4 h-4" />
               </motion.div>
@@ -288,9 +288,9 @@ export function Features() {
             </motion.div>
             <motion.h3 
               className="text-2xl md:text-3xl font-semibold text-foreground mb-4"
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.6, duration: 0.5 }}
+              transition={{ delay: 0.3, duration: 0.3 }}
             >
               Designed for your thumb.
               <br />
@@ -298,9 +298,9 @@ export function Features() {
             </motion.h3>
             <motion.p 
               className="text-platinum leading-relaxed mb-6"
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.65, duration: 0.5 }}
+              transition={{ delay: 0.32, duration: 0.3 }}
             >
               Renewly is crafted as a premium mobile experience first. Every tap, swipe, and gesture
               feels natural and satisfying. Manage your financial life from anywhere.
@@ -314,18 +314,18 @@ export function Features() {
                 <motion.div 
                   key={item.label}
                   className="flex flex-col items-start"
-                  initial={{ opacity: 0, y: 16 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={isInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ delay: 0.7 + i * 0.1, duration: 0.4 }}
+                  transition={{ delay: 0.35 + i * 0.05, duration: 0.25 }}
                 >
                   <motion.div 
                     className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-gold/10 text-gold text-xs font-semibold mb-3"
                     whileHover={{ scale: 1.05, backgroundColor: 'rgba(199, 163, 106, 0.18)' }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.15 }}
                   >
                     <motion.div
                       whileHover={{ rotate: 15 }}
-                      transition={{ duration: 0.2 }}
+                      transition={{ duration: 0.15 }}
                     >
                       <item.icon className="w-4 h-4" />
                     </motion.div>
@@ -347,23 +347,23 @@ export function Features() {
               ].map((item, i) => (
                 <motion.div
                   key={item.title}
-                  initial={{ opacity: 0, x: 32, filter: 'blur(4px)' }}
+                  initial={{ opacity: 0, x: 20, filter: 'blur(3px)' }}
                   animate={isInView ? { opacity: 1, x: 0, filter: 'blur(0px)' } : {}}
-                  transition={{ delay: 0.6 + i * 0.12, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+                  transition={{ delay: 0.3 + i * 0.06, duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
                   whileHover={{ 
                     x: -4, 
-                    transition: { duration: 0.25 } 
+                    transition: { duration: 0.15 } 
                   }}
-                  className="group flex items-start gap-4 p-4 rounded-xl bg-secondary/30 dark:bg-slate/30 border border-glass-border transition-all duration-300 hover:bg-secondary/50 dark:hover:bg-slate/50 hover:border-gold/15 cursor-pointer"
+                  className="group flex items-start gap-4 p-4 rounded-xl bg-secondary/30 dark:bg-slate/30 border border-glass-border transition-all duration-200 hover:bg-secondary/50 dark:hover:bg-slate/50 hover:border-gold/15 cursor-pointer"
                 >
                   <motion.div 
                     className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0 relative"
                     whileHover={{ scale: 1.1 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.15 }}
                   >
                     {/* Glow on hover */}
                     <motion.div
-                      className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                       style={{ 
                         background: `radial-gradient(circle, ${item.color}30 0%, transparent 70%)`,
                         filter: 'blur(6px)'
@@ -371,7 +371,7 @@ export function Features() {
                     />
                     <motion.div
                       animate={{ rotate: [0, 5, -5, 0] }}
-                      transition={{ duration: 0.4 }}
+                      transition={{ duration: 0.3 }}
                       whileHover={{ scale: 1.1 }}
                     >
                       <item.icon className="w-5 h-5 text-gold relative z-10" />
@@ -379,7 +379,7 @@ export function Features() {
                   </motion.div>
                   <div>
                     <motion.p 
-                      className="font-medium text-foreground group-hover:text-gold transition-colors duration-200"
+                      className="font-medium text-foreground group-hover:text-gold transition-colors duration-150"
                     >
                       {item.title}
                     </motion.p>
@@ -390,7 +390,7 @@ export function Features() {
                     className="ml-auto self-center opacity-0 group-hover:opacity-100"
                     initial={{ x: -8, opacity: 0 }}
                     whileHover={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.15 }}
                   >
                     <ArrowRight className="w-4 h-4 text-gold" />
                   </motion.div>

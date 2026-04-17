@@ -1,10 +1,53 @@
 'use client'
 
-import { motion, useInView } from 'framer-motion'
-import { useRef } from 'react'
+import { motion, useInView, useSpring, useTransform } from 'framer-motion'
+import { useRef, useEffect, useState } from 'react'
 import { AlertTriangle, TrendingDown, Sparkles } from 'lucide-react'
 import { springs, ProgressRing } from '../motion'
 import { getLeakStatusConfig } from '@/lib/leak-status-config'
+
+// Animated number counter component
+function AnimatedNumber({ 
+  value, 
+  prefix = '', 
+  suffix = '',
+  isInView,
+  delay = 0,
+  className = ''
+}: { 
+  value: number
+  prefix?: string
+  suffix?: string
+  isInView: boolean
+  delay?: number
+  className?: string
+}) {
+  const [hasAnimated, setHasAnimated] = useState(false)
+  const springValue = useSpring(0, { stiffness: 80, damping: 20 })
+  const displayValue = useTransform(springValue, (v) => Math.round(v))
+  const [display, setDisplay] = useState(0)
+
+  useEffect(() => {
+    if (isInView && !hasAnimated) {
+      const timeout = setTimeout(() => {
+        springValue.set(value)
+        setHasAnimated(true)
+      }, delay * 1000)
+      return () => clearTimeout(timeout)
+    }
+  }, [isInView, value, delay, springValue, hasAnimated])
+
+  useEffect(() => {
+    const unsubscribe = displayValue.on('change', (v) => setDisplay(v))
+    return () => unsubscribe()
+  }, [displayValue])
+
+  return (
+    <span className={className}>
+      {prefix}{display.toLocaleString('en-IN')}{suffix}
+    </span>
+  )
+}
 
 export function LeakPreview() {
   const ref = useRef(null)
@@ -19,27 +62,27 @@ export function LeakPreview() {
           scale: [1, 1.1, 1],
           opacity: [0.4, 0.6, 0.4]
         }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
       />
 
       <div className="max-w-6xl mx-auto relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left side - Content */}
           <motion.div
-            initial={{ opacity: 0, x: -32, filter: 'blur(6px)' }}
+            initial={{ opacity: 0, x: -24, filter: 'blur(4px)' }}
             animate={isInView ? { opacity: 1, x: 0, filter: 'blur(0px)' } : {}}
-            transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+            transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
           >
             <motion.div 
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold/10 text-gold text-sm font-medium mb-6"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={isInView ? { opacity: 1, scale: 1 } : {}}
-              transition={{ delay: 0.1, duration: 0.4 }}
+              transition={{ delay: 0.05, duration: 0.25 }}
               whileHover={{ scale: 1.03 }}
             >
               <motion.div
                 animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, repeat: Infinity, repeatDelay: 2 }}
+                transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
               >
                 <Sparkles className="w-4 h-4" />
               </motion.div>
@@ -48,24 +91,24 @@ export function LeakPreview() {
             
             <motion.h2 
               className="text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground tracking-tight mb-6"
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.15, duration: 0.5 }}
+              transition={{ delay: 0.08, duration: 0.3 }}
             >
               The
               <motion.span 
                 className="text-gold-gradient font-serif italic"
                 initial={{ opacity: 0 }}
                 animate={isInView ? { opacity: 1 } : {}}
-                transition={{ delay: 0.3, duration: 0.5 }}
+                transition={{ delay: 0.15, duration: 0.3 }}
               > Leak Report</motion.span>
             </motion.h2>
             
             <motion.p 
               className="text-lg text-platinum leading-relaxed mb-8"
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.25, duration: 0.5 }}
+              transition={{ delay: 0.12, duration: 0.3 }}
             >
               A comprehensive analysis of your subscription portfolio. Discover hidden charges, 
               unused services, and opportunities to reclaim your money with our signature feature.
@@ -79,32 +122,32 @@ export function LeakPreview() {
               ].map((item, i) => (
                 <motion.div
                   key={item.title}
-                  initial={{ opacity: 0, x: -16 }}
+                  initial={{ opacity: 0, x: -12 }}
                   animate={isInView ? { opacity: 1, x: 0 } : {}}
-                  transition={{ delay: 0.35 + i * 0.12, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+                  transition={{ delay: 0.18 + i * 0.06, duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
                   whileHover={{ x: 4 }}
                   className="flex items-start gap-3 group cursor-pointer"
                 >
                   <motion.div 
                     className="w-6 h-6 rounded-full bg-gold/20 flex items-center justify-center mt-0.5 relative"
                     whileHover={{ scale: 1.15 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.15 }}
                   >
                     {/* Pulse ring on hover */}
                     <motion.div
                       className="absolute inset-0 rounded-full bg-gold/30"
                       initial={{ scale: 1, opacity: 0 }}
                       whileHover={{ scale: 1.8, opacity: [0, 0.5, 0] }}
-                      transition={{ duration: 0.6, ease: 'easeOut' }}
+                      transition={{ duration: 0.4, ease: 'easeOut' }}
                     />
                     <motion.div 
                       className="w-2 h-2 rounded-full bg-gold"
                       animate={isInView ? { scale: [0, 1.2, 1] } : {}}
-                      transition={{ delay: 0.5 + i * 0.12, duration: 0.3 }}
+                      transition={{ delay: 0.25 + i * 0.06, duration: 0.2 }}
                     />
                   </motion.div>
                   <div>
-                    <p className="font-medium text-foreground group-hover:text-gold transition-colors duration-200">{item.title}</p>
+                    <p className="font-medium text-foreground group-hover:text-gold transition-colors duration-150">{item.title}</p>
                     <p className="text-sm text-platinum">{item.desc}</p>
                   </div>
                 </motion.div>
@@ -114,30 +157,30 @@ export function LeakPreview() {
 
           {/* Right side - Leak Report Card */}
           <motion.div
-            initial={{ opacity: 0, x: 40, filter: 'blur(8px)' }}
+            initial={{ opacity: 0, x: 28, filter: 'blur(4px)' }}
             animate={isInView ? { opacity: 1, x: 0, filter: 'blur(0px)' } : {}}
-            transition={{ delay: 0.25, duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+            transition={{ delay: 0.1, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
             className="relative"
           >
             {/* The Leak Report Card */}
             <motion.div 
               className="relative rounded-3xl bg-gradient-to-br from-card via-secondary to-card dark:from-graphite dark:via-slate dark:to-graphite border border-gold/20 p-6 md:p-8 shadow-luxury overflow-hidden"
-              whileHover={{ y: -4, transition: { duration: 0.3 } }}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
             >
               {/* Animated gold accent line */}
               <motion.div 
                 className="absolute top-0 left-0 right-0 h-1 gold-gradient"
                 initial={{ scaleX: 0, originX: 0 }}
                 animate={isInView ? { scaleX: 1 } : {}}
-                transition={{ delay: 0.4, duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+                transition={{ delay: 0.15, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
               />
               
               {/* Header */}
               <motion.div 
                 className="flex items-start justify-between mb-8"
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 0.35, duration: 0.4 }}
+                transition={{ delay: 0.15, duration: 0.25 }}
               >
                 <div>
                   <p className="text-sm text-platinum mb-1">Your Leak Report</p>
@@ -150,7 +193,7 @@ export function LeakPreview() {
                       className={`px-3 py-1.5 rounded-full text-xs font-medium border ${statusConfig.bgColor} ${statusConfig.textColor} ${statusConfig.borderColor} ${statusConfig.glowStrength}`}
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                      transition={{ delay: 0.5, duration: 0.3, type: 'spring', stiffness: 300 }}
+                      transition={{ delay: 0.2, duration: 0.2, type: 'spring', stiffness: 400 }}
                       whileHover={{ scale: 1.05 }}
                     >
                       {statusConfig.label}
@@ -163,25 +206,23 @@ export function LeakPreview() {
               <div className="flex items-center justify-center mb-8">
                 <motion.div 
                   className="relative"
-                  initial={{ scale: 0.8, opacity: 0 }}
+                  initial={{ scale: 0.85, opacity: 0 }}
                   animate={isInView ? { scale: 1, opacity: 1 } : {}}
-                  transition={{ delay: 0.45, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+                  transition={{ delay: 0.2, duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
                 >
                   <ProgressRing progress={72} size={160} strokeWidth={10} />
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <motion.span 
+                    <AnimatedNumber 
+                      value={72} 
+                      isInView={isInView} 
+                      delay={0.3}
                       className="text-4xl font-semibold text-gold"
-                      initial={{ opacity: 0, scale: 0.5, filter: 'blur(4px)' }}
-                      animate={isInView ? { opacity: 1, scale: 1, filter: 'blur(0px)' } : {}}
-                      transition={{ delay: 0.7, duration: 0.4, type: 'spring', stiffness: 200 }}
-                    >
-                      72
-                    </motion.span>
+                    />
                     <motion.span 
                       className="text-sm text-platinum"
                       initial={{ opacity: 0 }}
                       animate={isInView ? { opacity: 1 } : {}}
-                      transition={{ delay: 0.8, duration: 0.3 }}
+                      transition={{ delay: 0.35, duration: 0.2 }}
                     >
                       Leak Score
                     </motion.span>
@@ -192,55 +233,55 @@ export function LeakPreview() {
               {/* Metrics grid with staggered entrance */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 {[
-                  { label: 'Monthly Recurring', value: '₹7,644', isHighlight: false },
-                  { label: 'Yearly Projected', value: '₹91,728', isHighlight: false },
-                  { label: 'Active Subscriptions', value: '9', isHighlight: false },
-                  { label: 'Possible Savings', value: '₹2,398', isHighlight: true },
+                  { label: 'Monthly Recurring', value: 7644, prefix: '₹', isHighlight: false },
+                  { label: 'Yearly Projected', value: 91728, prefix: '₹', isHighlight: false },
+                  { label: 'Active Subscriptions', value: 9, prefix: '', isHighlight: false },
+                  { label: 'Possible Savings', value: 2398, prefix: '₹', isHighlight: true },
                 ].map((metric, i) => (
                   <motion.div 
                     key={metric.label}
-                    className={`p-4 rounded-xl border transition-all duration-300 cursor-pointer ${
+                    className={`p-4 rounded-xl border transition-all duration-200 cursor-pointer ${
                       metric.isHighlight 
                         ? 'bg-emerald/10 border-emerald/20 hover:bg-emerald/15 hover:border-emerald/30' 
                         : 'bg-muted dark:bg-obsidian/50 border-glass-border hover:bg-muted/80 hover:border-gold/15'
                     }`}
-                    initial={{ opacity: 0, y: 16, scale: 0.95 }}
+                    initial={{ opacity: 0, y: 12, scale: 0.95 }}
                     animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
-                    transition={{ delay: 0.6 + i * 0.08, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+                    transition={{ delay: 0.28 + i * 0.04, duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
                     whileHover={{ y: -2, scale: 1.02 }}
                   >
                     <p className={`text-xs mb-1 ${metric.isHighlight ? 'text-emerald' : 'text-platinum'}`}>
                       {metric.label}
                     </p>
-                    <motion.p 
-                      className={`text-xl font-semibold ${metric.isHighlight ? 'text-emerald' : 'text-foreground'}`}
-                      initial={{ opacity: 0 }}
-                      animate={isInView ? { opacity: 1 } : {}}
-                      transition={{ delay: 0.75 + i * 0.05, duration: 0.3 }}
-                    >
-                      {metric.value}
-                    </motion.p>
+                    <p className={`text-xl font-semibold ${metric.isHighlight ? 'text-emerald' : 'text-foreground'}`}>
+                      <AnimatedNumber 
+                        value={metric.value} 
+                        prefix={metric.prefix}
+                        isInView={isInView} 
+                        delay={0.35 + i * 0.04}
+                      />
+                    </p>
                   </motion.div>
                 ))}
               </div>
 
               {/* AI observation with animated entrance */}
               <motion.div 
-                className="p-4 rounded-xl bg-gold/5 border border-gold/20 group hover:bg-gold/8 hover:border-gold/30 transition-all duration-300 cursor-pointer"
-                initial={{ opacity: 0, y: 16 }}
+                className="p-4 rounded-xl bg-gold/5 border border-gold/20 group hover:bg-gold/8 hover:border-gold/30 transition-all duration-200 cursor-pointer"
+                initial={{ opacity: 0, y: 12 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 0.85, duration: 0.4 }}
+                transition={{ delay: 0.45, duration: 0.25 }}
                 whileHover={{ scale: 1.01 }}
               >
                 <div className="flex items-start gap-3">
                   <motion.div
                     animate={{ rotate: [0, 10, -10, 0] }}
-                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                    transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
                   >
                     <AlertTriangle className="w-5 h-5 text-gold shrink-0 mt-0.5" />
                   </motion.div>
                   <div>
-                    <p className="text-sm text-foreground font-medium mb-1 group-hover:text-gold transition-colors duration-200">AI Insight</p>
+                    <p className="text-sm text-foreground font-medium mb-1 group-hover:text-gold transition-colors duration-150">AI Insight</p>
                     <p className="text-xs text-platinum">
                       You have 2 music streaming services with overlapping features. 
                       Consider keeping only Spotify to save ₹99/month.
@@ -253,15 +294,15 @@ export function LeakPreview() {
               <motion.div 
                 className="absolute -bottom-20 -right-20 w-40 h-40 rounded-full bg-gold/10 blur-2xl"
                 animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-                transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+                transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
               />
             </motion.div>
 
             {/* Floating badge with bounce */}
             <motion.div
-              initial={{ opacity: 0, y: 24, rotate: -8, scale: 0.8 }}
+              initial={{ opacity: 0, y: 16, rotate: -8, scale: 0.85 }}
               animate={isInView ? { opacity: 1, y: 0, rotate: -5, scale: 1 } : {}}
-              transition={{ delay: 0.9, duration: 0.5, type: 'spring', stiffness: 200, damping: 15 }}
+              transition={{ delay: 0.5, duration: 0.3, type: 'spring', stiffness: 300, damping: 15 }}
               whileHover={{ scale: 1.08, rotate: -3, y: -2 }}
               className="absolute -top-4 -right-4 px-4 py-2 rounded-xl gold-gradient text-obsidian text-sm font-semibold shadow-luxury cursor-pointer"
             >
