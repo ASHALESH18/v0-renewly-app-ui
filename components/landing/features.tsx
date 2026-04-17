@@ -162,55 +162,102 @@ export function Features() {
               custom={index}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
-              initial={{ opacity: 0, y: 20, filter: 'blur(4px)' }}
+              initial={{ opacity: 0, y: 16, filter: 'blur(4px)' }}
               animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-              transition={{ delay: index * 0.08, duration: 0.4 }}
+              transition={{ delay: index * 0.05, duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
               className="group relative"
             >
               <motion.div
                 whileHover={{ 
                   y: -6,
+                  transition: { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }
                 }}
-                transition={{ duration: 0.25, ease: 'easeOut' }}
-                className="relative h-full p-6 lg:p-7 rounded-2xl bg-card/90 backdrop-blur-xl border border-border/60 overflow-hidden shadow-sm transition-shadow duration-300 group-hover:shadow-md group-hover:border-gold/15"
+                whileTap={{ y: -3, scale: 0.99 }}
+                className="relative h-full p-6 lg:p-7 rounded-2xl bg-card/90 backdrop-blur-xl border border-border/60 overflow-hidden shadow-sm transition-all duration-200 group-hover:shadow-lg group-hover:border-gold/20"
               >
-                {/* Subtle hover glow */}
+                {/* Animated hover glow - pulses subtly */}
                 <motion.div
-                  className="absolute -inset-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-400"
+                  className="absolute -inset-4 pointer-events-none"
+                  initial={{ opacity: 0 }}
+                  animate={hoveredIndex === index ? { 
+                    opacity: [0, 0.6, 0.4],
+                    scale: [0.95, 1.02, 1],
+                  } : { opacity: 0 }}
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
                   style={{
-                    background: `radial-gradient(circle at top left, ${feature.color}12 0%, transparent 50%)`
+                    background: `radial-gradient(ellipse at 30% 20%, ${feature.color}18 0%, transparent 55%)`
                   }}
                 />
                 
-                {/* Top accent line - refined */}
+                {/* Top accent line - animated sweep */}
                 <motion.div
-                  className="absolute top-0 left-0 right-0 h-0.5"
-                  style={{ backgroundColor: feature.color }}
-                  initial={{ scaleX: 0, originX: 0 }}
-                  whileHover={{ scaleX: 1 }}
-                  transition={{ duration: 0.35 }}
-                />
-                
-                {/* Icon with subtle glow */}
-                <div className="relative mb-5">
+                  className="absolute top-0 left-0 right-0 h-[2px] overflow-hidden"
+                  style={{ backgroundColor: `${feature.color}20` }}
+                >
                   <motion.div
-                    className="absolute -inset-2 rounded-xl blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-400"
-                    style={{ backgroundColor: `${feature.color}30` }}
+                    className="absolute inset-0"
+                    style={{ backgroundColor: feature.color }}
+                    initial={{ x: '-100%' }}
+                    whileHover={{ x: '0%' }}
+                    transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
                   />
-                  <div 
-                    className="relative w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105"
+                </motion.div>
+                
+                {/* Icon with animated glow ring */}
+                <div className="relative mb-5">
+                  {/* Pulsing glow ring on hover */}
+                  <motion.div
+                    className="absolute -inset-3 rounded-2xl"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={hoveredIndex === index ? { 
+                      opacity: [0, 0.5, 0.3],
+                      scale: [0.9, 1.1, 1.05],
+                    } : { opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.3, ease: 'easeOut' }}
+                    style={{ 
+                      background: `radial-gradient(circle, ${feature.color}40 0%, transparent 70%)`,
+                      filter: 'blur(8px)'
+                    }}
+                  />
+                  <motion.div 
+                    className="relative w-12 h-12 rounded-xl flex items-center justify-center"
                     style={{ backgroundColor: `${feature.color}12` }}
+                    whileHover={{ scale: 1.08, rotate: 3 }}
+                    transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
                   >
-                    <feature.icon className="w-6 h-6" style={{ color: feature.color }} />
-                  </div>
+                    <motion.div
+                      animate={hoveredIndex === index ? { rotate: [0, -5, 5, 0] } : {}}
+                      transition={{ duration: 0.25, ease: 'easeOut' }}
+                    >
+                      <feature.icon className="w-6 h-6" style={{ color: feature.color }} />
+                    </motion.div>
+                  </motion.div>
                 </div>
                 
-                <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-gold transition-colors duration-200">
+                <motion.h3 
+                  className="text-lg font-semibold text-foreground mb-2 transition-colors duration-150"
+                  animate={hoveredIndex === index ? { color: feature.color } : {}}
+                  transition={{ duration: 0.15 }}
+                >
                   {feature.title}
-                </h3>
+                </motion.h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   {feature.description}
                 </p>
+                
+                {/* Subtle shimmer effect on hover */}
+                <motion.div
+                  className="absolute inset-0 pointer-events-none"
+                  initial={{ opacity: 0 }}
+                  whileHover={{ opacity: 1 }}
+                >
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent"
+                    initial={{ x: '-100%' }}
+                    whileHover={{ x: '200%' }}
+                    transition={{ duration: 0.5, ease: 'easeInOut', delay: 0.05 }}
+                  />
+                </motion.div>
               </motion.div>
             </motion.div>
           ))}
@@ -218,47 +265,75 @@ export function Features() {
 
         {/* Highlight section */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.4, ...springs.gentle }}
+          transition={{ delay: 0.25, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
           className="mt-20 grid lg:grid-cols-2 gap-8 items-center"
         >
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald/10 text-emerald text-sm font-medium mb-4">
-              <Smartphone className="w-4 h-4" />
+            <motion.div 
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald/10 text-emerald text-sm font-medium mb-4"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={isInView ? { opacity: 1, scale: 1 } : {}}
+              transition={{ delay: 0.28, duration: 0.25 }}
+              whileHover={{ scale: 1.03 }}
+            >
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
+              >
+                <Smartphone className="w-4 h-4" />
+              </motion.div>
               Mobile-first design
-            </div>
-            <h3 className="text-2xl md:text-3xl font-semibold text-foreground mb-4">
+            </motion.div>
+            <motion.h3 
+              className="text-2xl md:text-3xl font-semibold text-foreground mb-4"
+              initial={{ opacity: 0, y: 12 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: 0.3, duration: 0.3 }}
+            >
               Designed for your thumb.
               <br />
               <span className="text-platinum">Built for your wallet.</span>
-            </h3>
-            <p className="text-platinum leading-relaxed mb-6">
+            </motion.h3>
+            <motion.p 
+              className="text-platinum leading-relaxed mb-6"
+              initial={{ opacity: 0, y: 10 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: 0.32, duration: 0.3 }}
+            >
               Renewly is crafted as a premium mobile experience first. Every tap, swipe, and gesture
               feels natural and satisfying. Manage your financial life from anywhere.
-            </p>
+            </motion.p>
             <div className="grid grid-cols-3 gap-8">
-              <div className="flex flex-col items-start">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-gold/10 text-gold text-xs font-semibold mb-3">
-                  <Calendar className="w-4 h-4" />
-                  CALENDAR-FIRST
-                </div>
-                <p className="text-sm text-platinum">Complete control over your renewal timeline</p>
-              </div>
-              <div className="flex flex-col items-start">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-gold/10 text-gold text-xs font-semibold mb-3">
-                  <TrendingDown className="w-4 h-4" />
-                  LEAK DETECTION
-                </div>
-                <p className="text-sm text-platinum">Identify unused subscriptions automatically</p>
-              </div>
-              <div className="flex flex-col items-start">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-gold/10 text-gold text-xs font-semibold mb-3">
-                  <Globe className="w-4 h-4" />
-                  MULTI-CURRENCY
-                </div>
-                <p className="text-sm text-platinum">Track subscriptions in any currency worldwide</p>
-              </div>
+              {[
+                { icon: Calendar, label: 'CALENDAR-FIRST', desc: 'Complete control over your renewal timeline' },
+                { icon: TrendingDown, label: 'LEAK DETECTION', desc: 'Identify unused subscriptions automatically' },
+                { icon: Globe, label: 'MULTI-CURRENCY', desc: 'Track subscriptions in any currency worldwide' },
+              ].map((item, i) => (
+                <motion.div 
+                  key={item.label}
+                  className="flex flex-col items-start"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={isInView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ delay: 0.35 + i * 0.05, duration: 0.25 }}
+                >
+                  <motion.div 
+                    className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-gold/10 text-gold text-xs font-semibold mb-3"
+                    whileHover={{ scale: 1.05, backgroundColor: 'rgba(199, 163, 106, 0.18)' }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <motion.div
+                      whileHover={{ rotate: 15 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <item.icon className="w-4 h-4" />
+                    </motion.div>
+                    {item.label}
+                  </motion.div>
+                  <p className="text-sm text-platinum">{item.desc}</p>
+                </motion.div>
+              ))}
             </div>
           </div>
 
@@ -266,22 +341,60 @@ export function Features() {
             {/* Feature highlight cards */}
             <div className="space-y-4">
               {[
-                { icon: Zap, title: 'Instant Insights', desc: 'Real-time analysis of your spending patterns' },
-                { icon: Bell, title: 'Smart Notifications', desc: 'Know exactly when and what to expect' },
-                { icon: Shield, title: 'Privacy First', desc: 'Your data never leaves your device' },
-              ].map((item) => (
-                <div
+                { icon: Zap, title: 'Instant Insights', desc: 'Real-time analysis of your spending patterns', color: '#C7A36A' },
+                { icon: Bell, title: 'Smart Notifications', desc: 'Know exactly when and what to expect', color: '#2E5E52' },
+                { icon: Shield, title: 'Privacy First', desc: 'Your data never leaves your device', color: '#BCC2CC' },
+              ].map((item, i) => (
+                <motion.div
                   key={item.title}
-                  className="flex items-start gap-4 p-4 rounded-xl bg-secondary/30 dark:bg-slate/30 border border-glass-border"
+                  initial={{ opacity: 0, x: 20, filter: 'blur(3px)' }}
+                  animate={isInView ? { opacity: 1, x: 0, filter: 'blur(0px)' } : {}}
+                  transition={{ delay: 0.3 + i * 0.06, duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+                  whileHover={{ 
+                    x: -4, 
+                    transition: { duration: 0.15 } 
+                  }}
+                  className="group flex items-start gap-4 p-4 rounded-xl bg-secondary/30 dark:bg-slate/30 border border-glass-border transition-all duration-200 hover:bg-secondary/50 dark:hover:bg-slate/50 hover:border-gold/15 cursor-pointer"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
-                    <item.icon className="w-5 h-5 text-gold" />
-                  </div>
+                  <motion.div 
+                    className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0 relative"
+                    whileHover={{ scale: 1.1 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    {/* Glow on hover */}
+                    <motion.div
+                      className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      style={{ 
+                        background: `radial-gradient(circle, ${item.color}30 0%, transparent 70%)`,
+                        filter: 'blur(6px)'
+                      }}
+                    />
+                    <motion.div
+                      animate={{ rotate: [0, 5, -5, 0] }}
+                      transition={{ duration: 0.3 }}
+                      whileHover={{ scale: 1.1 }}
+                    >
+                      <item.icon className="w-5 h-5 text-gold relative z-10" />
+                    </motion.div>
+                  </motion.div>
                   <div>
-                    <p className="font-medium text-foreground">{item.title}</p>
+                    <motion.p 
+                      className="font-medium text-foreground group-hover:text-gold transition-colors duration-150"
+                    >
+                      {item.title}
+                    </motion.p>
                     <p className="text-sm text-platinum">{item.desc}</p>
                   </div>
-                </div>
+                  {/* Arrow indicator on hover */}
+                  <motion.div
+                    className="ml-auto self-center opacity-0 group-hover:opacity-100"
+                    initial={{ x: -8, opacity: 0 }}
+                    whileHover={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <ArrowRight className="w-4 h-4 text-gold" />
+                  </motion.div>
+                </motion.div>
               ))}
             </div>
           </div>
