@@ -28,40 +28,40 @@ export function Pricing() {
   }
 
   return (
-    <section id="pricing" ref={ref} className="py-24 lg:py-32 px-4 bg-card dark:bg-graphite relative overflow-hidden scroll-mt-24">
-      {/* Animated background elements */}
+    <section id="pricing" ref={ref} className="py-24 lg:py-32 px-4 bg-card/50 dark:bg-graphite/50 relative overflow-hidden scroll-mt-24">
+      {/* Subtle background elements */}
       <motion.div 
-        className="absolute top-0 right-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl"
+        className="absolute top-0 right-0 w-80 h-80 bg-gold/[0.03] rounded-full blur-[100px]"
         animate={{ 
-          opacity: [0.3, 0.5, 0.3],
-          scale: [1, 1.1, 1]
+          opacity: [0.25, 0.4, 0.25],
+          scale: [1, 1.08, 1]
         }}
-        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div 
-        className="absolute bottom-0 left-0 w-96 h-96 bg-emerald/5 rounded-full blur-3xl"
+        className="absolute bottom-0 left-0 w-72 h-72 bg-emerald/[0.03] rounded-full blur-[80px]"
         animate={{ 
-          opacity: [0.3, 0.5, 0.3],
+          opacity: [0.2, 0.35, 0.2],
           scale: [1, 1.05, 1]
         }}
-        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+        transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
       />
 
       <div className="max-w-5xl mx-auto relative z-10">
-        {/* Section header */}
+        {/* Section header - refined */}
         <motion.div
-          initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
+          initial={{ opacity: 0, y: 16, filter: 'blur(4px)' }}
           animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-          transition={springs.gentle}
-          className="text-center mb-16"
+          transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+          className="text-center mb-14"
         >
-          <p className="text-gold text-sm font-medium tracking-wide uppercase mb-4">
+          <p className="text-gold text-xs font-medium tracking-wider uppercase mb-3">
             Pricing
           </p>
-          <h2 className="text-3xl md:text-4xl font-semibold text-foreground tracking-tight mb-4">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-foreground tracking-[-0.02em] mb-3">
             Simple, transparent pricing
           </h2>
-          <p className="text-platinum max-w-xl mx-auto">
+          <p className="text-muted-foreground max-w-md mx-auto text-sm md:text-base">
             Start free and upgrade when you need more. No hidden fees, no surprises.
           </p>
         </motion.div>

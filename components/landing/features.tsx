@@ -64,109 +64,85 @@ export function Features() {
     <section
       id="features"
       ref={ref}
-      className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-24 lg:py-40 scroll-mt-24"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-24 lg:py-36 scroll-mt-24"
     >
-      {/* DRAMATIC: Full cinematic ambient background */}
+      {/* Refined ambient background - subtle and premium */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* DRAMATIC: Large animated gold orb - top left */}
+        {/* Subtle gold orb - top left */}
         <motion.div
-          className="absolute -top-[10%] -left-[10%] w-[800px] h-[800px] rounded-full"
+          className="absolute -top-[8%] -left-[8%] w-[600px] h-[600px] rounded-full"
           style={{ 
-            background: 'radial-gradient(circle, rgba(199, 163, 106, 0.2) 0%, rgba(199, 163, 106, 0.05) 40%, transparent 70%)',
-            filter: 'blur(100px)'
+            background: 'radial-gradient(circle, rgba(176, 132, 64, 0.12) 0%, rgba(176, 132, 64, 0.03) 45%, transparent 70%)',
+            filter: 'blur(80px)'
           }}
           animate={{ 
-            scale: [1, 1.3, 1],
-            x: [0, 80, 0],
-            y: [0, 40, 0],
-            opacity: [0.3, 0.6, 0.3]
+            scale: [1, 1.15, 1],
+            opacity: [0.25, 0.4, 0.25]
           }}
-          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
         />
         
-        {/* DRAMATIC: Emerald orb - bottom right */}
+        {/* Subtle emerald orb - bottom right */}
         <motion.div
-          className="absolute -bottom-[15%] -right-[10%] w-[700px] h-[700px] rounded-full"
+          className="absolute -bottom-[12%] -right-[8%] w-[500px] h-[500px] rounded-full"
           style={{ 
-            background: 'radial-gradient(circle, rgba(46, 94, 82, 0.18) 0%, rgba(46, 94, 82, 0.05) 45%, transparent 70%)',
-            filter: 'blur(120px)'
+            background: 'radial-gradient(circle, rgba(61, 107, 88, 0.10) 0%, rgba(61, 107, 88, 0.03) 45%, transparent 70%)',
+            filter: 'blur(90px)'
           }}
           animate={{ 
-            scale: [1, 1.25, 1],
-            x: [0, -40, 0],
-            y: [0, -60, 0],
-            opacity: [0.25, 0.5, 0.25]
+            scale: [1, 1.12, 1],
+            opacity: [0.2, 0.35, 0.2]
           }}
-          transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
+          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
         />
         
-        {/* DRAMATIC: Center spotlight */}
+        {/* Center warmth */}
         <motion.div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[600px]"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px]"
           style={{ 
-            background: 'radial-gradient(ellipse at center, rgba(199, 163, 106, 0.08) 0%, transparent 60%)'
+            background: 'radial-gradient(ellipse at center, rgba(176, 132, 64, 0.04) 0%, transparent 60%)'
           }}
           animate={{ 
-            scale: [1, 1.1, 1],
-            opacity: [0.3, 0.5, 0.3]
+            scale: [1, 1.06, 1],
+            opacity: [0.25, 0.4, 0.25]
           }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        
-        {/* DRAMATIC: Light sweep */}
-        <motion.div
-          className="absolute inset-0"
-          style={{
-            background: 'linear-gradient(115deg, transparent 0%, rgba(199, 163, 106, 0.05) 25%, rgba(199, 163, 106, 0.1) 50%, rgba(199, 163, 106, 0.05) 75%, transparent 100%)',
-            transform: 'skewX(-15deg)'
-          }}
-          animate={{ x: ['-150%', '150%'] }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', repeatDelay: 8 }}
-        />
-        
-        {/* Grid pattern - more visible */}
-        <div 
-          className="absolute inset-0 opacity-[0.025]"
-          style={{
-            backgroundImage: 'linear-gradient(rgba(199, 163, 106, 0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(199, 163, 106, 0.6) 1px, transparent 1px)',
-            backgroundSize: '100px 100px'
-          }}
+          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
         />
       </div>
 
       <div className="max-w-6xl mx-auto relative z-10">
-        {/* Section header with premium treatment */}
+        {/* Section header - refined premium treatment */}
         <motion.div
-          initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
+          initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
           animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-          transition={{ duration: 0.7, ease: 'easeOut' }}
-          className="text-center mb-20"
+          transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+          className="text-center mb-16"
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={isInView ? { opacity: 1, scale: 1 } : {}}
-            transition={{ delay: 0.1 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 border border-gold/20 mb-6"
+            transition={{ delay: 0.08 }}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gold/8 border border-gold/15 mb-5"
           >
             <motion.span
-              className="w-2 h-2 rounded-full bg-gold"
-              animate={{ scale: [1, 1.3, 1], opacity: [0.7, 1, 0.7] }}
-              transition={{ duration: 2, repeat: Infinity }}
+              className="w-1.5 h-1.5 rounded-full bg-gold"
+              animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
+              transition={{ duration: 2.5, repeat: Infinity }}
             />
-            <span className="text-sm text-gold font-medium tracking-wide uppercase">Features</span>
+            <span className="text-xs text-gold font-medium tracking-wider uppercase">Features</span>
           </motion.div>
           
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-foreground tracking-tight leading-tight">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground tracking-[-0.02em] leading-tight">
             Everything you need to
             <br />
             <span className="text-gold-gradient font-serif italic">master your subscriptions</span>
           </h2>
           
           <motion.p
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 0.3 }}
-            className="mt-6 text-lg text-platinum max-w-2xl mx-auto"
+            transition={{ delay: 0.2 }}
+            className="mt-5 text-base md:text-lg text-muted-foreground max-w-xl mx-auto"
           >
             Powerful tools designed to give you complete control over your recurring expenses
           </motion.p>
@@ -186,76 +162,55 @@ export function Features() {
               custom={index}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
-              initial={{ opacity: 0, y: 30, filter: 'blur(6px)' }}
+              initial={{ opacity: 0, y: 20, filter: 'blur(4px)' }}
               animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-              transition={{ delay: index * 0.1, duration: 0.5 }}
+              transition={{ delay: index * 0.08, duration: 0.4 }}
               className="group relative"
             >
               <motion.div
                 whileHover={{ 
-                  y: -10,
-                  boxShadow: `0 32px 64px -16px ${feature.color}30, 0 0 0 1px ${feature.color}20`
+                  y: -6,
                 }}
-                transition={{ duration: 0.4 }}
-                className="relative h-full p-7 lg:p-9 rounded-3xl bg-card/80 backdrop-blur-2xl border border-glass-border overflow-hidden shadow-card"
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+                className="relative h-full p-6 lg:p-7 rounded-2xl bg-card/90 backdrop-blur-xl border border-border/60 overflow-hidden shadow-sm transition-shadow duration-300 group-hover:shadow-md group-hover:border-gold/15"
               >
-                {/* DRAMATIC: Multi-layer hover glow effect */}
+                {/* Subtle hover glow */}
                 <motion.div
-                  className="absolute -inset-4 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  className="absolute -inset-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-400"
                   style={{
-                    background: `radial-gradient(circle at top left, ${feature.color}25 0%, transparent 50%)`
-                  }}
-                />
-                <motion.div
-                  className="absolute -inset-4 pointer-events-none opacity-0 group-hover:opacity-60 transition-opacity duration-700"
-                  style={{
-                    background: `radial-gradient(circle at bottom right, ${feature.color}15 0%, transparent 50%)`
+                    background: `radial-gradient(circle at top left, ${feature.color}12 0%, transparent 50%)`
                   }}
                 />
                 
-                {/* DRAMATIC: Top accent line - thicker */}
+                {/* Top accent line - refined */}
                 <motion.div
-                  className="absolute top-0 left-0 right-0 h-1"
+                  className="absolute top-0 left-0 right-0 h-0.5"
                   style={{ backgroundColor: feature.color }}
-                  initial={{ scaleX: 0 }}
+                  initial={{ scaleX: 0, originX: 0 }}
                   whileHover={{ scaleX: 1 }}
-                  transition={{ duration: 0.5 }}
+                  transition={{ duration: 0.35 }}
                 />
                 
-                {/* DRAMATIC: Icon with multi-layer glow */}
-                <div className="relative mb-6">
+                {/* Icon with subtle glow */}
+                <div className="relative mb-5">
                   <motion.div
-                    className="absolute -inset-3 rounded-2xl blur-xl opacity-0 group-hover:opacity-70 transition-opacity duration-500"
-                    style={{ backgroundColor: `${feature.color}50` }}
-                  />
-                  <motion.div
-                    className="absolute -inset-1 rounded-xl blur-md opacity-0 group-hover:opacity-40 transition-opacity duration-300"
-                    style={{ backgroundColor: `${feature.color}40` }}
+                    className="absolute -inset-2 rounded-xl blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-400"
+                    style={{ backgroundColor: `${feature.color}30` }}
                   />
                   <div 
-                    className="relative w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110"
-                    style={{ backgroundColor: `${feature.color}18` }}
+                    className="relative w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105"
+                    style={{ backgroundColor: `${feature.color}12` }}
                   >
-                    <feature.icon className="w-8 h-8" style={{ color: feature.color }} />
+                    <feature.icon className="w-6 h-6" style={{ color: feature.color }} />
                   </div>
                 </div>
                 
-                <h3 className="text-xl font-semibold text-foreground mb-3 group-hover:text-gold transition-colors">
+                <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-gold transition-colors duration-200">
                   {feature.title}
                 </h3>
-                <p className="text-platinum text-sm leading-relaxed mb-4">
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   {feature.description}
                 </p>
-                
-                {/* Learn more link */}
-                <motion.div
-                  className="flex items-center gap-2 text-sm font-medium text-gold opacity-0 group-hover:opacity-100 transition-opacity"
-                  initial={{ x: -10 }}
-                  whileHover={{ x: 0 }}
-                >
-                  <span>Learn more</span>
-                  <ArrowRight className="w-4 h-4" />
-                </motion.div>
               </motion.div>
             </motion.div>
           ))}
