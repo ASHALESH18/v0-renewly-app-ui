@@ -878,18 +878,13 @@ button,
   animation-delay: -16s;
 }
 
-/* GLOW AREAS - Soft warmth zones for seamless merging */
+/* GLOW AREAS - Soft warmth zones */
 .ambient-glow {
   position: absolute;
   border-radius: 9999px;
-  filter: blur(120px);
+  filter: blur(100px);
   will-change: transform, opacity;
   pointer-events: none;
-  mix-blend-mode: screen;
-}
-
-.dark .ambient-glow {
-  mix-blend-mode: normal;
 }
 
 .ambient-glow--top {
@@ -960,34 +955,41 @@ button,
   );
 }
 
-/* TEXTURE - Disabled to ensure seamless dust merging */
+/* TEXTURE - Subtle grain for matte finish */
 .ambient-texture {
-  display: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(199, 163, 106, 0.015) 1px, transparent 1px),
+    radial-gradient(circle at 80% 70%, rgba(199, 163, 106, 0.01) 1px, transparent 1px);
+  background-size: 80px 80px, 120px 120px;
 }
 
 .dark .ambient-texture {
-  display: none;
+  opacity: 0.03;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(199, 163, 106, 0.02) 1px, transparent 1px),
+    radial-gradient(circle at 80% 70%, rgba(199, 163, 106, 0.015) 1px, transparent 1px);
 }
 
-/* VIGNETTE - Soft cinematic depth framing with seamless edges */
+/* VIGNETTE - Cinematic depth framing */
 .ambient-vignette {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse 100% 100% at 50% 50%, 
+  background: radial-gradient(ellipse 90% 85% at 50% 50%, 
     transparent 0%, 
-    transparent 65%, 
-    rgba(245, 239, 229, 0.3) 85%,
-    rgba(230, 217, 195, 0.5) 100%
+    transparent 55%, 
+    rgba(0, 0, 0, 0.05) 100%
   );
 }
 
 .dark .ambient-vignette {
-  background: radial-gradient(ellipse 100% 100% at 50% 50%, 
+  background: radial-gradient(ellipse 90% 85% at 50% 50%, 
     transparent 0%, 
-    transparent 60%, 
-    rgba(5, 8, 12, 0.35) 80%,
-    rgba(5, 8, 12, 0.55) 100%
+    transparent 50%, 
+    rgba(5, 8, 12, 0.4) 100%
   );
 }
 
