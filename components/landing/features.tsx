@@ -269,12 +269,9 @@ export function Features() {
                 { icon: Zap, title: 'Instant Insights', desc: 'Real-time analysis of your spending patterns' },
                 { icon: Bell, title: 'Smart Notifications', desc: 'Know exactly when and what to expect' },
                 { icon: Shield, title: 'Privacy First', desc: 'Your data never leaves your device' },
-              ].map((item, i) => (
-                <motion.div
+              ].map((item) => (
+                <div
                   key={item.title}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={isInView ? { opacity: 1, x: 0 } : {}}
-                  transition={{ delay: 0.5 + i * 0.1, ...springs.gentle }}
                   className="flex items-start gap-4 p-4 rounded-xl bg-secondary/30 dark:bg-slate/30 border border-glass-border"
                 >
                   <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
@@ -284,7 +281,7 @@ export function Features() {
                     <p className="font-medium text-foreground">{item.title}</p>
                     <p className="text-sm text-platinum">{item.desc}</p>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
