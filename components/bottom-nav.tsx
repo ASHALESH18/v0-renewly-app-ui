@@ -17,6 +17,9 @@ import {
   ChevronRight,
   Pin,
   PinOff,
+  Inbox,
+  Link2,
+  FlaskConical,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from './motion'
@@ -37,6 +40,9 @@ const primaryNavItems = [
 
 const moreNavItems = [
   { id: 'leak-report', icon: FileText, label: 'Leak Report', href: '/app/leak-report' },
+  { id: 'inbox', icon: Inbox, label: 'Smart Inbox', href: '/app/inbox' },
+  { id: 'integrations', icon: Link2, label: 'Integrations', href: '/app/integrations' },
+  { id: 'notification-lab', icon: FlaskConical, label: 'Notification Lab', href: '/app/labs/notification-capture' },
   { id: 'notifications', icon: Bell, label: 'Notifications', href: '/app/notifications' },
   { id: 'settings', icon: Settings, label: 'Settings', href: '/app/settings' },
 ]
@@ -251,6 +257,8 @@ const sidebarItems = [
   { id: 'calendar', icon: Calendar, label: 'Calendar', href: '/app/calendar' },
   { id: 'analytics', icon: PieChart, label: 'Analytics', href: '/app/analytics' },
   { id: 'leak-report', icon: FileText, label: 'Leak Report', href: '/app/leak-report' },
+  { id: 'inbox', icon: Inbox, label: 'Smart Inbox', href: '/app/inbox' },
+  { id: 'integrations', icon: Link2, label: 'Integrations', href: '/app/integrations' },
   { id: 'notifications', icon: Bell, label: 'Notifications', href: '/app/notifications' },
   { id: 'settings', icon: Settings, label: 'Settings', href: '/app/settings' },
 ]
