@@ -54,42 +54,53 @@ function buildNotifications(subscriptions: SubscriptionRow[]): Notification[] {
       (renewalDate.getTime() - today.getTime()) / DAY_MS
     )
 
-    if (daysUntilRenewal === 3) {
-      notifications.push({
-        id: `reminder-3-${sub.id}`,
-        type: 'reminder',
-        title: 'Upcoming Renewal',
-        message: `${sub.name} renews in 3 days (${sub.currency}${sub.amount})`,
-        date: today.toISOString(),
-        read: false,
-        subscriptionId: sub.id,
-      })
+    // Generate notifications for upcoming renewals within 7 days
+    if (daysUntilRenewal >= 0 && daysUntilRenewal <= 7) {
+      if (daysUntilRenewal === 0) {
+        notifications.push({
+          id: `today-${sub.id}`,
+          type: 'alert',
+          title: 'Renewal Today',
+          message: `${sub.name} is being renewed today for ${sub.currency}${sub.amount}`,
+          date: today.toISOString(),
+          read: false,
+          subscriptionId: sub.id,
+        })
+      } else if (daysUntilRenewal === 1) {
+        notifications.push({
+          id: `reminder-1-${sub.id}`,
+          type: 'alert',
+          title: 'Renewal Tomorrow',
+          message: `${sub.name} renews tomorrow - ${sub.currency}${sub.amount} will be charged`,
+          date: today.toISOString(),
+          read: false,
+          subscriptionId: sub.id,
+        })
+      } else if (daysUntilRenewal <= 3) {
+        notifications.push({
+          id: `reminder-${daysUntilRenewal}-${sub.id}`,
+          type: 'reminder',
+          title: 'Upcoming Renewal',
+          message: `${sub.name} renews in ${daysUntilRenewal} days (${sub.currency}${sub.amount})`,
+          date: today.toISOString(),
+          read: false,
+          subscriptionId: sub.id,
+        })
+      } else {
+        // 4-7 days away - info notification
+        notifications.push({
+          id: `upcoming-${daysUntilRenewal}-${sub.id}`,
+          type: 'info',
+          title: 'Upcoming Renewal',
+          message: `${sub.name} renews in ${daysUntilRenewal} days (${sub.currency}${sub.amount})`,
+          date: today.toISOString(),
+          read: false,
+          subscriptionId: sub.id,
+        })
+      }
     }
 
-    if (daysUntilRenewal === 1) {
-      notifications.push({
-        id: `reminder-1-${sub.id}`,
-        type: 'alert',
-        title: 'Renewal Tomorrow',
-        message: `${sub.name} renews tomorrow - ${sub.currency}${sub.amount} will be charged`,
-        date: today.toISOString(),
-        read: false,
-        subscriptionId: sub.id,
-      })
-    }
-
-    if (daysUntilRenewal === 0) {
-      notifications.push({
-        id: `today-${sub.id}`,
-        type: 'alert',
-        title: 'Renewal Today',
-        message: `${sub.name} is being renewed today for ${sub.currency}${sub.amount}`,
-        date: today.toISOString(),
-        read: false,
-        subscriptionId: sub.id,
-      })
-    }
-
+    // Recent renewals (past 7 days)
     if (daysUntilRenewal < 0 && daysUntilRenewal >= -7) {
       notifications.push({
         id: `past-${sub.id}`,

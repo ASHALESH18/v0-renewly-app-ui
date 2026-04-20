@@ -114,13 +114,8 @@ export function DashboardScreen({
       />
 
       <div className="px-4 lg:px-6 space-y-6 pb-8">
-        {/* Command Center Hero - instant render */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
-          className="rounded-2xl overflow-hidden relative"
-        >
+        {/* Command Center Hero - static, no animation for instant render */}
+        <div className="rounded-2xl overflow-hidden relative">
           {/* Subtle background treatment */}
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,254,250,0.75),rgba(248,244,236,0.60))] dark:bg-[linear-gradient(180deg,rgba(17,20,24,0.80),rgba(8,9,12,0.75))]" />
