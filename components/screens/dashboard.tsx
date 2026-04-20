@@ -287,8 +287,7 @@ export function DashboardScreen({
               </motion.button>
             </motion.div>
           </div>
-        </motion.div>
-
+        </div>
 
         {/* Metrics grid */}
         <StaggerList className="grid grid-cols-2 gap-4">
