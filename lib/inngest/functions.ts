@@ -1,5 +1,5 @@
 import { inngest } from './client'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { invalidateUserCaches } from '@/lib/redis'
 
 // Process incoming email and extract subscription candidates
@@ -11,7 +11,7 @@ export const processEmail = inngest.createFunction(
 
     // Step 1: Create ingestion event
     const ingestionEvent = await step.run('create-ingestion-event', async () => {
-      const supabase = await createServerSupabaseClient()
+      const supabase = await createClient()
       
       const { data, error } = await supabase
         .from('ingestion_events')
@@ -119,7 +119,7 @@ export const processEmail = inngest.createFunction(
     // Step 3: Create candidate if applicable
     if (parseResult.isCandidate) {
       await step.run('create-candidate', async () => {
-        const supabase = await createServerSupabaseClient()
+        const supabase = await createClient()
         
         const { error } = await supabase
           .from('subscription_candidates')
@@ -155,7 +155,7 @@ export const processEmail = inngest.createFunction(
     } else {
       // Mark as skipped
       await step.run('mark-skipped', async () => {
-        const supabase = await createServerSupabaseClient()
+        const supabase = await createClient()
         await supabase
           .from('ingestion_events')
           .update({ 
@@ -179,7 +179,7 @@ export const processNotification = inngest.createFunction(
 
     // Step 1: Create ingestion event
     const ingestionEvent = await step.run('create-ingestion-event', async () => {
-      const supabase = await createServerSupabaseClient()
+      const supabase = await createClient()
       
       const { data, error } = await supabase
         .from('ingestion_events')
@@ -239,7 +239,7 @@ export const processNotification = inngest.createFunction(
     // Step 3: Create candidate if applicable
     if (parseResult.isCandidate) {
       await step.run('create-candidate', async () => {
-        const supabase = await createServerSupabaseClient()
+        const supabase = await createClient()
         
         await supabase
           .from('subscription_candidates')
@@ -275,7 +275,7 @@ export const syncGmailAccounts = inngest.createFunction(
   { id: 'sync-gmail-accounts', name: 'Sync Gmail Accounts' },
   { cron: '0 */6 * * *' }, // Every 6 hours
   async ({ step }) => {
-    const supabase = await createServerSupabaseClient()
+    const supabase = await createClient()
     
     // Get all active Gmail accounts
     const { data: accounts } = await supabase
@@ -306,7 +306,7 @@ export const syncOutlookAccounts = inngest.createFunction(
   { id: 'sync-outlook-accounts', name: 'Sync Outlook Accounts' },
   { cron: '0 */6 * * *' }, // Every 6 hours
   async ({ step }) => {
-    const supabase = await createServerSupabaseClient()
+    const supabase = await createClient()
     
     // Get all active Outlook accounts
     const { data: accounts } = await supabase
