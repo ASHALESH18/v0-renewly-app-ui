@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { invalidateUserCaches } from '@/lib/redis'
+import { inngest } from '@/lib/inngest/client'
 
 type DecisionAction = 'confirm' | 'ignore' | 'already_tracked' | 'save_for_later' | 'retry'
 
@@ -137,8 +139,21 @@ export async function POST(
         // Don't fail the whole operation, just note the issue
       } else {
         subscriptionId = subscription?.id
+        
+        // Send Inngest event for post-confirmation processing
+        await inngest.send({
+          name: 'smart-capture/candidate.confirmed',
+          data: {
+            userId: user.id,
+            candidateId: id,
+            subscriptionId,
+          },
+        })
       }
     }
+
+    // Invalidate user caches after any decision
+    await invalidateUserCaches(user.id)
 
     return NextResponse.json({
       success: true,

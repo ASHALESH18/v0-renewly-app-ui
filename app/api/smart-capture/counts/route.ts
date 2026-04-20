@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { withCache, CACHE_KEYS, CACHE_TTL } from '@/lib/redis'
 
 /**
  * GET /api/smart-capture/counts
  * Fetch inbox candidate counts by status for the authenticated user
+ * Cached for 1 minute for quick badge updates
  */
 export async function GET(request: NextRequest) {
   try {
@@ -17,39 +19,42 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Fetch counts by status using group by
-    const { data: statusCounts, error } = await supabase
-      .from('subscription_candidates')
-      .select('status')
-      .eq('user_id', user.id)
+    const cacheKey = CACHE_KEYS.inboxCounts(user.id)
 
-    if (error) {
-      console.error('[smart-capture] Error fetching counts:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch counts' },
-        { status: 500 }
-      )
-    }
+    const counts = await withCache(cacheKey, async () => {
+      // Fetch counts by status
+      const { data: statusCounts, error } = await supabase
+        .from('subscription_candidates')
+        .select('status')
+        .eq('user_id', user.id)
 
-    // Aggregate counts
-    const counts = {
-      new: 0,
-      review_needed: 0,
-      added: 0,
-      ignored: 0,
-      error: 0,
-      total: 0,
-    }
-
-    if (statusCounts) {
-      for (const row of statusCounts) {
-        const status = row.status as keyof typeof counts
-        if (status in counts) {
-          counts[status]++
-        }
-        counts.total++
+      if (error) {
+        console.error('[smart-capture] Error fetching counts:', error)
+        throw error
       }
-    }
+
+      // Aggregate counts
+      const result = {
+        new: 0,
+        review_needed: 0,
+        confirmed: 0,
+        ignored: 0,
+        error: 0,
+        total: 0,
+      }
+
+      if (statusCounts) {
+        for (const row of statusCounts) {
+          const status = row.status as keyof typeof result
+          if (status in result) {
+            result[status]++
+          }
+          result.total++
+        }
+      }
+
+      return result
+    }, CACHE_TTL.short)
 
     return NextResponse.json({ counts })
   } catch (error) {

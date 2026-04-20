@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { withCache, CACHE_KEYS, CACHE_TTL } from '@/lib/redis'
 
 /**
  * GET /api/smart-capture/integrations
  * Fetch connected integrations for the authenticated user
+ * Cached for 5 minutes as integrations rarely change
  */
 export async function GET(request: NextRequest) {
   try {
@@ -17,22 +19,23 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Fetch connected accounts
-    const { data: accounts, error } = await supabase
-      .from('connected_accounts')
-      .select('*')
-      .eq('user_id', user.id)
+    const cacheKey = CACHE_KEYS.integrations(user.id)
 
-    if (error) {
-      console.error('[integrations] Error fetching accounts:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch integrations' },
-        { status: 500 }
-      )
-    }
+    const integrations = await withCache(cacheKey, async () => {
+      // Fetch connected accounts
+      const { data: accounts, error } = await supabase
+        .from('connected_accounts')
+        .select('*')
+        .eq('user_id', user.id)
 
-    // Build integration info from accounts
-    const integrations = buildIntegrationList(accounts || [])
+      if (error) {
+        console.error('[integrations] Error fetching accounts:', error)
+        throw error
+      }
+
+      // Build integration info from accounts
+      return buildIntegrationList(accounts || [])
+    }, CACHE_TTL.medium)
 
     return NextResponse.json({ integrations })
   } catch (error) {
