@@ -1,15 +1,18 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react'
 import { Header } from '@/components/header'
-import { PageTransition, springs } from '@/components/motion'
+import { PageTransition } from '@/components/motion'
 import { SegmentedControl } from '@/components/filter-chips'
 import { useCalendarEvents } from '@/lib/hooks/use-remote-data'
 import { SubscriptionIcon } from '@/lib/brand-icons'
 import { cn } from '@/lib/utils'
 import { CalendarSkeleton } from '@/components/skeletons'
+
+// Fast transition for responsive feel
+const fastTransition = { duration: 0.2, ease: [0.32, 0.72, 0, 1] }
 
 const viewSegments = [
   { id: 'month', label: 'Month' },
@@ -309,7 +312,7 @@ export function CalendarScreen() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={springs.gentle}
+            transition={fastTransition}
             className="rounded-2xl bg-card border border-border p-4"
           >
             <div className="flex gap-2 overflow-x-auto pb-2">
@@ -387,7 +390,7 @@ export function CalendarScreen() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={springs.gentle}
+            transition={fastTransition}
             className="rounded-2xl bg-card border border-border p-4"
           >
             <div className="flex items-center justify-between mb-4 gap-4">
@@ -452,9 +455,9 @@ export function CalendarScreen() {
               {upcomingEvents.map((event, index) => (
                 <motion.div
                   key={`${event.date}-${index}`}
-                  initial={{ opacity: 0, y: 12 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.04, ...springs.gentle }}
+                  transition={{ delay: index * 0.03, ...fastTransition }}
                   className="relative pl-6"
                 >
                   {index < upcomingEvents.length - 1 && (

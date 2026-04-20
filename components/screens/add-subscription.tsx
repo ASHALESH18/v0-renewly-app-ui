@@ -197,7 +197,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
             className="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-hidden rounded-t-3xl bg-card"
           >
             <div className="flex justify-center pt-3 pb-2">

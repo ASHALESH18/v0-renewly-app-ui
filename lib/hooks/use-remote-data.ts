@@ -8,7 +8,7 @@ let notificationsCache: any = null
 export function useCalendarEvents() {
   const [data, setData] = useState(calendarEventsCache)
   const [isLoading, setIsLoading] = useState(!calendarEventsCache)
-  const [error, setError] = useState<any>(null)
+  const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {
     let active = true
@@ -20,7 +20,20 @@ export function useCalendarEvents() {
         }
 
         const res = await fetch('/api/calendar/events')
-        if (!res.ok) throw new Error('Failed to fetch calendar events')
+        
+        // Handle auth errors gracefully
+        if (res.status === 401) {
+          if (active) {
+            setData({ calendarEvents: [] })
+            setError(null)
+            setIsLoading(false)
+          }
+          return
+        }
+        
+        if (!res.ok) {
+          throw new Error(`Failed to fetch calendar events: ${res.status}`)
+        }
 
         const json = await res.json()
         calendarEventsCache = json
@@ -30,8 +43,11 @@ export function useCalendarEvents() {
           setError(null)
         }
       } catch (err) {
+        console.error('[v0] Calendar fetch error:', err)
         if (active) {
-          setError(err)
+          setError(err instanceof Error ? err : new Error('Unknown error'))
+          // Return empty data to prevent crashes
+          setData({ calendarEvents: [] })
         }
       } finally {
         if (active) {
