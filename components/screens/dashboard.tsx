@@ -16,13 +16,16 @@ import { Header, SearchOverlay } from '@/components/header'
 import { MetricCard } from '@/components/metric-card'
 import { SubscriptionCard, SubscriptionCardCompact } from '@/components/subscription-card'
 import { FilterChips, SegmentedControl } from '@/components/filter-chips'
-import { PageTransition, StaggerList, staggerItem, springs } from '@/components/motion'
+import { PageTransition, StaggerList, staggerItem } from '@/components/motion'
 import useStore from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { useCountUp } from '@/lib/hooks/use-count-up'
 import type { Subscription } from '@/lib/types'
 import { formatMoney, formatNumberForLocale, getCurrencySymbol } from '@/lib/preferences-format'
 import { calculateMetrics, getUpcomingRenewals } from '@/lib/subscription-math'
+
+// Fast, performant transition - no spring physics overhead
+const fastTransition = { duration: 0.2, ease: [0.32, 0.72, 0, 1] }
 
 const viewSegments = [
   { id: 'cards', label: 'Cards' },
@@ -415,7 +418,7 @@ export function DashboardScreen({
                 initial="initial"
                 animate="animate"
                 custom={index}
-                transition={{ ...springs.gentle, delay: index * 0.05 }}
+                transition={{ ...fastTransition, delay: index * 0.03 }}
                 onClick={() => onSubscriptionSelect?.(subscription)}
                 className="cursor-pointer"
               >
