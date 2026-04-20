@@ -4,8 +4,7 @@ import { invalidateUserCaches } from '@/lib/redis'
 
 // Process incoming email and extract subscription candidates
 export const processEmail = inngest.createFunction(
-  { id: 'process-email', name: 'Process Email for Subscriptions' },
-  { event: 'smart-capture/email.received' },
+  { id: 'process-email', name: 'Process Email for Subscriptions', triggers: [{ event: 'smart-capture/email.received' }] },
   async ({ event, step }) => {
     const { userId, accountId, emailId, from, subject, body, receivedAt, provider } = event.data
 
@@ -172,8 +171,7 @@ export const processEmail = inngest.createFunction(
 
 // Process notification lab submission
 export const processNotification = inngest.createFunction(
-  { id: 'process-notification', name: 'Process Notification for Subscriptions' },
-  { event: 'smart-capture/notification.received' },
+  { id: 'process-notification', name: 'Process Notification for Subscriptions', triggers: [{ event: 'smart-capture/notification.received' }] },
   async ({ event, step }) => {
     const { userId, title, body, appName, receivedAt, source } = event.data
 
@@ -272,8 +270,7 @@ export const processNotification = inngest.createFunction(
 
 // Scheduled sync for Gmail accounts
 export const syncGmailAccounts = inngest.createFunction(
-  { id: 'sync-gmail-accounts', name: 'Sync Gmail Accounts' },
-  { cron: '0 */6 * * *' }, // Every 6 hours
+  { id: 'sync-gmail-accounts', name: 'Sync Gmail Accounts', triggers: [{ cron: '0 */6 * * *' }] }, // Every 6 hours
   async ({ step }) => {
     const supabase = await createClient()
     
@@ -303,8 +300,7 @@ export const syncGmailAccounts = inngest.createFunction(
 
 // Scheduled sync for Outlook accounts
 export const syncOutlookAccounts = inngest.createFunction(
-  { id: 'sync-outlook-accounts', name: 'Sync Outlook Accounts' },
-  { cron: '0 */6 * * *' }, // Every 6 hours
+  { id: 'sync-outlook-accounts', name: 'Sync Outlook Accounts', triggers: [{ cron: '0 */6 * * *' }] }, // Every 6 hours
   async ({ step }) => {
     const supabase = await createClient()
     
