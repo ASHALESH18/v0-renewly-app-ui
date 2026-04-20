@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import useSWR, { mutate } from 'swr'
 import {
   Smartphone,
   Send,
@@ -16,22 +17,46 @@ import {
   RefreshCw,
   Info,
   DollarSign,
-  Tag,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Header } from '@/components/header'
 import { PageTransition } from '@/components/motion'
 import {
-  mockNotificationLabEvents,
   notificationTemplates,
 } from '@/lib/smart-capture/mock-data'
-import type { NotificationLabEvent } from '@/lib/smart-capture/types'
+
+// SWR fetcher
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
+
+// Event type from API
+interface IngestionEvent {
+  id: string
+  user_id: string
+  source_type: string
+  source_provider: string
+  raw_content: { appName?: string; title?: string; body?: string }
+  status: 'queued' | 'processing' | 'processed' | 'failed' | 'skipped'
+  created_at: string
+}
+
+// Map DB status to display status
+type DisplayStatus = 'queued' | 'processing' | 'candidate_created' | 'failed'
+function mapStatus(dbStatus: IngestionEvent['status']): DisplayStatus {
+  switch (dbStatus) {
+    case 'queued': return 'queued'
+    case 'processing': return 'processing'
+    case 'processed': return 'candidate_created'
+    case 'failed': return 'failed'
+    case 'skipped': return 'failed'
+    default: return 'queued'
+  }
+}
 
 // Fast transition
 const fastTransition = { duration: 0.2, ease: [0.32, 0.72, 0, 1] }
 
 // Status badge component
-function StatusBadge({ status }: { status: NotificationLabEvent['status'] }) {
+function StatusBadge({ status }: { status: DisplayStatus }) {
   const config = {
     queued: { label: 'Queued', icon: Clock, bg: 'bg-muted', text: 'text-muted-foreground' },
     processing: { label: 'Processing', icon: Loader2, bg: 'bg-blue-500/15', text: 'text-blue-400', spin: true },
@@ -80,13 +105,16 @@ function TemplateCard({ template, onUse }: TemplateCardProps) {
 }
 
 // Event row component
-function EventRow({ event }: { event: NotificationLabEvent }) {
-  const formatTime = (date: Date) => {
-    return new Date(date).toLocaleTimeString('en-US', {
+function EventRow({ event }: { event: IngestionEvent }) {
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
     })
   }
+
+  const appName = event.raw_content?.appName || event.source_provider
+  const title = event.raw_content?.title || 'Notification'
 
   return (
     <motion.div
@@ -100,13 +128,13 @@ function EventRow({ event }: { event: NotificationLabEvent }) {
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <p className="font-medium text-foreground truncate">{event.appName}</p>
-          <span className="text-xs text-muted-foreground">{formatTime(event.timestamp)}</span>
+          <p className="font-medium text-foreground truncate">{appName}</p>
+          <span className="text-xs text-muted-foreground">{formatTime(event.created_at)}</span>
         </div>
-        <p className="text-sm text-muted-foreground truncate">{event.title}</p>
+        <p className="text-sm text-muted-foreground truncate">{title}</p>
       </div>
 
-      <StatusBadge status={event.status} />
+      <StatusBadge status={mapStatus(event.status)} />
     </motion.div>
   )
 }
@@ -122,7 +150,14 @@ export function NotificationLabScreen() {
     merchant: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [recentEvents, setRecentEvents] = useState<NotificationLabEvent[]>(mockNotificationLabEvents)
+
+  // Fetch recent events from API
+  const { data: eventsData, mutate: mutateEvents } = useSWR<{ events: IngestionEvent[] }>(
+    '/api/smart-capture/notification-lab?limit=20',
+    fetcher,
+    { refreshInterval: 5000 } // Refresh every 5s to see status updates
+  )
+  const recentEvents = eventsData?.events || []
 
   // Handle template use
   const handleUseTemplate = (template: typeof notificationTemplates[0]) => {
@@ -143,44 +178,38 @@ export function NotificationLabScreen() {
 
     setIsSubmitting(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const res = await fetch('/api/smart-capture/notification-lab', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          appName: formData.appName,
+          title: formData.title,
+          body: formData.body,
+        }),
+      })
 
-    const newEvent: NotificationLabEvent = {
-      id: `lab_${Date.now()}`,
-      userId: 'user_1',
-      appName: formData.appName,
-      title: formData.title,
-      body: formData.body,
-      timestamp: new Date(),
-      amount: formData.amount ? parseFloat(formData.amount) : undefined,
-      currency: formData.currency,
-      merchant: formData.merchant || undefined,
-      status: 'processing',
-      createdAt: new Date(),
+      if (res.ok) {
+        // Refresh events list
+        await mutateEvents()
+        // Also refresh inbox counts
+        await mutate('/api/smart-capture/counts')
+        
+        // Reset form
+        setFormData({
+          appName: '',
+          title: '',
+          body: '',
+          amount: '',
+          currency: 'INR',
+          merchant: '',
+        })
+      }
+    } catch (err) {
+      console.error('Failed to submit notification:', err)
+    } finally {
+      setIsSubmitting(false)
     }
-
-    setRecentEvents((prev) => [newEvent, ...prev])
-
-    // Simulate processing completion
-    setTimeout(() => {
-      setRecentEvents((prev) =>
-        prev.map((e) =>
-          e.id === newEvent.id ? { ...e, status: 'candidate_created' as const } : e
-        )
-      )
-    }, 2000)
-
-    // Reset form
-    setFormData({
-      appName: '',
-      title: '',
-      body: '',
-      amount: '',
-      currency: 'INR',
-      merchant: '',
-    })
-    setIsSubmitting(false)
   }
 
   return (
@@ -389,7 +418,7 @@ export function NotificationLabScreen() {
                 </div>
               </div>
               <button
-                onClick={() => setRecentEvents(mockNotificationLabEvents)}
+                onClick={() => mutateEvents()}
                 className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />

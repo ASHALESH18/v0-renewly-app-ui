@@ -6,6 +6,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { ToastContainer } from '@/components/toast-container'
 import { ThemeProvider } from '@/components/theme-provider'
 import { AmbientBackground } from '@/components/ambient-background'
+import { SubscriptionsProvider } from '@/components/providers/subscriptions-provider'
 import './globals.css'
 import { PreferencesBridge } from '@/components/preferences-bridge'
 
@@ -211,14 +212,16 @@ export default async function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          <PreferencesBridge />
-          <div className="relative isolate min-h-screen overflow-x-hidden">
-            <AmbientBackground />
-            <div className="relative z-10">
-              {children}
-              <ToastContainer />
+          <SubscriptionsProvider>
+            <PreferencesBridge />
+            <div className="relative isolate min-h-screen overflow-x-hidden">
+              <AmbientBackground />
+              <div className="relative z-10">
+                {children}
+                <ToastContainer />
+              </div>
             </div>
-          </div>
+          </SubscriptionsProvider>
         </ThemeProvider>
         <Analytics />
       </body>

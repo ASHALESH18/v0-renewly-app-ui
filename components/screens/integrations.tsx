@@ -1,31 +1,46 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
+import useSWR from 'swr'
 import {
   Mail,
   Smartphone,
   Cpu,
   FlaskConical,
-  CheckCircle2,
-  XCircle,
   AlertTriangle,
   RefreshCw,
   Settings,
   Pause,
-  Play,
   Link2,
   Clock,
   Activity,
   ChevronRight,
-  ExternalLink,
   Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Header } from '@/components/header'
 import { PageTransition } from '@/components/motion'
-import { mockIntegrations, mockSyncState } from '@/lib/smart-capture/mock-data'
-import type { IntegrationInfo } from '@/lib/smart-capture/types'
+
+// SWR fetcher
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
+
+// Integration type from API
+interface IntegrationInfo {
+  id: string
+  name: string
+  description: string
+  icon: string
+  isConnected: boolean
+  account?: { email: string } | null
+  lastSync?: string | null
+  syncHealth?: 'healthy' | 'degraded' | 'unhealthy'
+  webhookStatus?: 'active' | 'inactive' | 'error'
+  canConnect: boolean
+  canReconnect: boolean
+  canRescan: boolean
+  canPause: boolean
+}
 
 // Fast transition
 const fastTransition = { duration: 0.2, ease: [0.32, 0.72, 0, 1] }
@@ -113,7 +128,7 @@ function IntegrationCard({
     setIsLoading(false)
   }
 
-  const formatLastSync = (date?: Date) => {
+  const formatLastSync = (date?: string | null) => {
     if (!date) return 'Never synced'
     const diff = Date.now() - new Date(date).getTime()
     const mins = Math.floor(diff / 60000)
@@ -271,7 +286,7 @@ function IntegrationCard({
 }
 
 // Sync stats component
-function SyncStats() {
+function SyncStats({ stats }: { stats: { processed: number; candidates: number; errors: number } }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -283,19 +298,19 @@ function SyncStats() {
 
       <div className="grid grid-cols-3 gap-4">
         <div className="text-center p-4 rounded-xl bg-muted/50 border border-border/50">
-          <p className="text-2xl font-bold text-foreground">{mockSyncState.messagesProcessed.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-foreground">{stats.processed.toLocaleString()}</p>
           <p className="text-xs text-muted-foreground mt-1">Messages Processed</p>
         </div>
         <div className="text-center p-4 rounded-xl bg-muted/50 border border-border/50">
-          <p className="text-2xl font-bold text-gold">{mockSyncState.candidatesCreated}</p>
+          <p className="text-2xl font-bold text-gold">{stats.candidates}</p>
           <p className="text-xs text-muted-foreground mt-1">Candidates Found</p>
         </div>
         <div className="text-center p-4 rounded-xl bg-muted/50 border border-border/50">
           <p className={cn(
             'text-2xl font-bold',
-            mockSyncState.errorsCount > 0 ? 'text-crimson' : 'text-emerald'
+            stats.errors > 0 ? 'text-crimson' : 'text-emerald'
           )}>
-            {mockSyncState.errorsCount}
+            {stats.errors}
           </p>
           <p className="text-xs text-muted-foreground mt-1">Errors</p>
         </div>
@@ -306,23 +321,46 @@ function SyncStats() {
 
 // Main Integrations Screen
 export function IntegrationsScreen() {
-  const [integrations, setIntegrations] = useState<IntegrationInfo[]>(mockIntegrations)
+  // Fetch integrations from API
+  const { data: integrationsData, mutate: mutateIntegrations } = useSWR<{ integrations: IntegrationInfo[] }>(
+    '/api/smart-capture/integrations',
+    fetcher,
+    { refreshInterval: 60000 } // Refresh every minute
+  )
+  const integrations = integrationsData?.integrations || []
+
+  // Fetch counts for stats
+  const { data: countsData } = useSWR<{ counts: { total: number } }>(
+    '/api/smart-capture/counts',
+    fetcher
+  )
+
+  // Calculate stats from counts
+  const stats = {
+    processed: 0, // Would need a separate endpoint for this
+    candidates: countsData?.counts?.total || 0,
+    errors: 0, // Would need a separate endpoint for this
+  }
 
   const handleConnect = (id: string) => {
     console.log('Connect integration:', id)
     // In real implementation, this would trigger OAuth flow
   }
 
-  const handleReconnect = (id: string) => {
+  const handleReconnect = async (id: string) => {
     console.log('Reconnect integration:', id)
+    await mutateIntegrations()
   }
 
-  const handleRescan = (id: string) => {
+  const handleRescan = async (id: string) => {
     console.log('Rescan integration:', id)
+    // Would trigger sync via Inngest
+    await mutateIntegrations()
   }
 
-  const handlePause = (id: string) => {
+  const handlePause = async (id: string) => {
     console.log('Pause integration:', id)
+    await mutateIntegrations()
   }
 
   const handleSettings = (id: string) => {
@@ -347,7 +385,7 @@ export function IntegrationsScreen() {
         </motion.div>
 
         {/* Sync stats */}
-        <SyncStats />
+        <SyncStats stats={stats} />
 
         {/* Email integrations */}
         <motion.div

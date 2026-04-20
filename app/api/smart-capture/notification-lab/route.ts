@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { inngest } from '@/lib/inngest/client'
+import { invalidateUserCaches } from '@/lib/redis'
 
 /**
  * POST /api/smart-capture/notification-lab
- * Submit a test notification to the processing pipeline
+ * Submit a test notification to the processing pipeline via Inngest
  * 
  * This endpoint is used by the Notification Lab for testing
  * subscription detection with simulated notifications.
@@ -25,9 +27,6 @@ export async function POST(request: NextRequest) {
       appName,
       title,
       body: notificationBody,
-      amount,
-      currency,
-      merchant,
     } = body
 
     // Validate required fields
@@ -38,23 +37,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create notification lab event
-    const eventData = {
-      user_id: user.id,
-      app_name: appName,
-      title,
-      body: notificationBody,
-      timestamp: new Date().toISOString(),
-      amount: amount || null,
-      currency: currency || 'INR',
-      merchant: merchant || null,
-      status: 'queued',
-      created_at: new Date().toISOString(),
-    }
-
-    const { data: event, error: createError } = await supabase
-      .from('notification_lab_events')
-      .insert(eventData)
+    // Create ingestion event in the database
+    const { data: ingestionEvent, error: createError } = await supabase
+      .from('ingestion_events')
+      .insert({
+        user_id: user.id,
+        source_type: 'notification',
+        source_provider: 'notification_lab',
+        raw_content: { appName, title, body: notificationBody },
+        metadata: { receivedAt: new Date().toISOString() },
+        status: 'queued',
+      })
       .select()
       .single()
 
@@ -66,69 +59,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Queue for processing (in production, this would go to Redis/queue)
-    // For now, we'll do inline processing simulation
-    
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 500))
+    // Send to Inngest for async processing
+    await inngest.send({
+      name: 'smart-capture/notification.received',
+      data: {
+        userId: user.id,
+        title,
+        body: notificationBody,
+        appName,
+        receivedAt: new Date().toISOString(),
+        source: 'notification_lab',
+      },
+    })
 
-    // Simple pattern matching for demonstration
-    const providerName = merchant || extractProviderFromText(appName, title, notificationBody)
-    const detectedAmount = amount || extractAmountFromText(notificationBody)
-    
-    // Create candidate from notification
-    const candidateData = {
-      user_id: user.id,
-      source: 'notification_lab',
-      ingestion_event_id: event.id,
-      provider_name: providerName,
-      amount: detectedAmount,
-      currency: currency || 'INR',
-      billing_cycle: 'unknown',
-      confidence_score: calculateConfidence(providerName, detectedAmount),
-      confidence_level: detectedAmount ? 'medium' : 'low',
-      status: 'new',
-      evidence_snippet: `${title}: ${notificationBody}`,
-      evidence_details: [
-        { type: 'notification', label: 'App', value: appName, confidence: 100 },
-        { type: 'body', label: 'Title', value: title, confidence: 90 },
-      ],
-      tags: [],
-      detected_at: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }
-
-    const { data: candidate, error: candidateError } = await supabase
-      .from('subscription_candidates')
-      .insert(candidateData)
-      .select()
-      .single()
-
-    // Update event status
-    await supabase
-      .from('notification_lab_events')
-      .update({
-        status: candidateError ? 'failed' : 'candidate_created',
-        candidate_id: candidate?.id || null,
-        error_message: candidateError?.message || null,
-      })
-      .eq('id', event.id)
-
-    if (candidateError) {
-      console.error('[notification-lab] Error creating candidate:', candidateError)
-      return NextResponse.json({
-        event,
-        status: 'failed',
-        error: 'Failed to create candidate',
-      })
-    }
+    // Invalidate caches
+    await invalidateUserCaches(user.id)
 
     return NextResponse.json({
-      event,
-      candidate,
-      status: 'candidate_created',
-    }, { status: 201 })
+      event: ingestionEvent,
+      status: 'queued',
+      message: 'Notification queued for processing',
+    }, { status: 202 })
   } catch (error) {
     console.error('[notification-lab] Unexpected error:', error)
     return NextResponse.json(
@@ -140,7 +91,7 @@ export async function POST(request: NextRequest) {
 
 /**
  * GET /api/smart-capture/notification-lab
- * Fetch recent notification lab events
+ * Fetch recent notification lab ingestion events
  */
 export async function GET(request: NextRequest) {
   try {
@@ -156,10 +107,12 @@ export async function GET(request: NextRequest) {
 
     const limit = parseInt(request.nextUrl.searchParams.get('limit') || '20', 10)
 
+    // Query ingestion_events from notification_lab source
     const { data: events, error } = await supabase
-      .from('notification_lab_events')
+      .from('ingestion_events')
       .select('*')
       .eq('user_id', user.id)
+      .eq('source_provider', 'notification_lab')
       .order('created_at', { ascending: false })
       .limit(limit)
 
@@ -171,7 +124,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ events })
+    return NextResponse.json({ events: events || [] })
   } catch (error) {
     console.error('[notification-lab] Unexpected error:', error)
     return NextResponse.json(

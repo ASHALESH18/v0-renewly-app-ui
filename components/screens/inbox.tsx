@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import useSWR, { mutate } from 'swr'
 import {
   Inbox,
   RefreshCw,
@@ -17,29 +18,56 @@ import {
   ChevronRight,
   Sparkles,
   Eye,
-  Plus,
   X,
-  Calendar,
-  DollarSign,
-  Tag,
+  Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Header } from '@/components/header'
 import { PageTransition } from '@/components/motion'
-import { SegmentedControl } from '@/components/filter-chips'
 import { SubscriptionIcon } from '@/lib/brand-icons'
-import {
-  mockCandidates,
-  getMockInboxCounts,
-  mockSyncState,
-} from '@/lib/smart-capture/mock-data'
 import type {
-  SubscriptionCandidate,
   CandidateStatus,
   CaptureSource,
   ConfidenceLevel,
   CandidateTag,
 } from '@/lib/smart-capture/types'
+
+// SWR fetcher
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
+
+// API response types
+interface Candidate {
+  id: string
+  provider_name: string
+  plan_name?: string
+  amount?: number
+  currency: string
+  billing_cycle: string
+  confidence_score: number
+  status: CandidateStatus
+  source?: CaptureSource
+  tags: CandidateTag[]
+  evidence_snippet?: string
+  is_trial?: boolean
+  possible_duplicate_id?: string
+  created_at: string
+}
+
+interface CandidatesResponse {
+  candidates: Candidate[]
+  total: number
+}
+
+interface CountsResponse {
+  counts: {
+    new: number
+    review_needed: number
+    confirmed: number
+    ignored: number
+    error: number
+    total: number
+  }
+}
 
 // Fast transition for responsive feel
 const fastTransition = { duration: 0.2, ease: [0.32, 0.72, 0, 1] }
@@ -124,7 +152,7 @@ function formatRelativeTime(date: Date): string {
 
 // Candidate card component
 interface CandidateCardProps {
-  candidate: SubscriptionCandidate
+  candidate: Candidate
   onReview: () => void
   onAdd: () => void
   onIgnore: () => void
@@ -146,6 +174,11 @@ function CandidateCard({ candidate, onReview, onAdd, onIgnore }: CandidateCardPr
     unknown: 'Unknown cycle',
   }
 
+  // Map confidence score to level
+  const confidenceLevel: ConfidenceLevel = 
+    candidate.confidence_score >= 70 ? 'high' : 
+    candidate.confidence_score >= 40 ? 'medium' : 'low'
+
   return (
     <motion.div
       layout
@@ -163,23 +196,23 @@ function CandidateCard({ candidate, onReview, onAdd, onIgnore }: CandidateCardPr
         <div className="flex items-start gap-3 mb-3">
           {/* Provider icon */}
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20 flex items-center justify-center flex-shrink-0">
-            <SubscriptionIcon name={candidate.providerName} size={28} />
+            <SubscriptionIcon name={candidate.provider_name} size={28} />
           </div>
 
           {/* Provider info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <h3 className="font-semibold text-foreground truncate">
-                {candidate.providerName}
+                {candidate.provider_name}
               </h3>
-              {candidate.possibleDuplicateId && (
+              {candidate.possible_duplicate_id && (
                 <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-500/15 text-orange-400 border border-orange-500/30">
                   Possible duplicate
                 </span>
               )}
             </div>
-            {candidate.planName && (
-              <p className="text-sm text-muted-foreground truncate">{candidate.planName}</p>
+            {candidate.plan_name && (
+              <p className="text-sm text-muted-foreground truncate">{candidate.plan_name}</p>
             )}
           </div>
 
@@ -189,24 +222,24 @@ function CandidateCard({ candidate, onReview, onAdd, onIgnore }: CandidateCardPr
               {formatAmount(candidate.amount, candidate.currency)}
             </p>
             <p className="text-xs text-muted-foreground">
-              {billingLabels[candidate.billingCycle]}
+              {billingLabels[candidate.billing_cycle] || 'Unknown'}
             </p>
           </div>
         </div>
 
         {/* Evidence snippet */}
-        {candidate.evidenceSnippet && (
+        {candidate.evidence_snippet && (
           <div className="mb-3 p-2.5 rounded-lg bg-muted/50 border border-border/50">
             <p className="text-sm text-muted-foreground line-clamp-2 italic">
-              &ldquo;{candidate.evidenceSnippet}&rdquo;
+              &ldquo;{candidate.evidence_snippet}&rdquo;
             </p>
           </div>
         )}
 
         {/* Tags and metadata row */}
         <div className="flex items-center flex-wrap gap-2 mb-3">
-          <ConfidenceBadge level={candidate.confidenceLevel} score={candidate.confidenceScore} />
-          {candidate.tags.map((tag) => (
+          <ConfidenceBadge level={confidenceLevel} score={candidate.confidence_score} />
+          {candidate.tags?.map((tag) => (
             <TagBadge key={tag} tag={tag} />
           ))}
         </div>
@@ -215,13 +248,15 @@ function CandidateCard({ candidate, onReview, onAdd, onIgnore }: CandidateCardPr
         <div className="flex items-center justify-between pt-3 border-t border-border/50">
           {/* Source and time */}
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <SourceIcon source={candidate.source} />
-              <span className="capitalize">{candidate.source.replace('_', ' ')}</span>
-            </span>
+            {candidate.source && (
+              <span className="flex items-center gap-1.5">
+                <SourceIcon source={candidate.source} />
+                <span className="capitalize">{candidate.source.replace('_', ' ')}</span>
+              </span>
+            )}
             <span className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" />
-              {formatRelativeTime(candidate.detectedAt)}
+              {formatRelativeTime(new Date(candidate.created_at))}
             </span>
           </div>
 
@@ -250,11 +285,11 @@ function CandidateCard({ candidate, onReview, onAdd, onIgnore }: CandidateCardPr
           ) : (
             <span className={cn(
               'px-2.5 py-1 rounded-lg text-xs font-medium',
-              candidate.status === 'added' && 'bg-emerald/15 text-emerald',
+              candidate.status === 'confirmed' && 'bg-emerald/15 text-emerald',
               candidate.status === 'ignored' && 'bg-muted text-muted-foreground',
               candidate.status === 'error' && 'bg-crimson/15 text-crimson',
             )}>
-              {candidate.status === 'added' && 'Added'}
+              {candidate.status === 'confirmed' && 'Added'}
               {candidate.status === 'ignored' && 'Ignored'}
               {candidate.status === 'error' && 'Error'}
             </span>
@@ -314,7 +349,7 @@ function EmptyState({ status }: { status: CandidateStatus | 'all' }) {
 
 // Main Inbox Screen
 interface InboxScreenProps {
-  onReviewCandidate?: (candidate: SubscriptionCandidate) => void
+  onReviewCandidate?: (candidate: Candidate) => void
 }
 
 export function InboxScreen({ onReviewCandidate }: InboxScreenProps) {
@@ -324,58 +359,91 @@ export function InboxScreen({ onReviewCandidate }: InboxScreenProps) {
   const [showFilters, setShowFilters] = useState(false)
   const [isResyncing, setIsResyncing] = useState(false)
 
-  // Get counts
-  const counts = useMemo(() => getMockInboxCounts(), [])
+  // Fetch counts with SWR
+  const { data: countsData } = useSWR<CountsResponse>(
+    '/api/smart-capture/counts',
+    fetcher,
+    { refreshInterval: 30000 } // Refresh every 30s
+  )
+  const counts = countsData?.counts || { new: 0, review_needed: 0, confirmed: 0, ignored: 0, error: 0, total: 0 }
 
-  // Filter candidates
+  // Build API URL with filters
+  const candidatesUrl = useMemo(() => {
+    const params = new URLSearchParams()
+    if (activeStatus !== 'all') params.set('status', activeStatus)
+    if (sourceFilter !== 'all') params.set('source', sourceFilter)
+    return `/api/smart-capture/candidates?${params.toString()}`
+  }, [activeStatus, sourceFilter])
+
+  // Fetch candidates with SWR
+  const { data: candidatesData, error, isLoading, mutate: mutateCandidates } = useSWR<CandidatesResponse>(
+    candidatesUrl,
+    fetcher,
+    { revalidateOnFocus: true }
+  )
+
+  // Filter by search locally (search is client-side for instant feedback)
   const filteredCandidates = useMemo(() => {
-    return mockCandidates.filter((c) => {
-      // Status filter
-      if (activeStatus !== 'all' && c.status !== activeStatus) return false
+    const candidates = candidatesData?.candidates || []
+    if (!searchQuery) return candidates
 
-      // Source filter
-      if (sourceFilter !== 'all' && c.source !== sourceFilter) return false
-
-      // Search filter
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase()
-        return (
-          c.providerName.toLowerCase().includes(query) ||
-          c.planName?.toLowerCase().includes(query) ||
-          c.evidenceSnippet?.toLowerCase().includes(query)
-        )
-      }
-
-      return true
-    })
-  }, [activeStatus, sourceFilter, searchQuery])
+    const query = searchQuery.toLowerCase()
+    return candidates.filter((c) =>
+      c.provider_name.toLowerCase().includes(query) ||
+      c.plan_name?.toLowerCase().includes(query) ||
+      c.evidence_snippet?.toLowerCase().includes(query)
+    )
+  }, [candidatesData?.candidates, searchQuery])
 
   // Handlers
-  const handleResync = async () => {
+  const handleResync = useCallback(async () => {
     setIsResyncing(true)
-    // Simulate resync
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    setIsResyncing(false)
-  }
+    try {
+      // Trigger fresh fetch by invalidating cache
+      await mutateCandidates()
+      await mutate('/api/smart-capture/counts')
+    } finally {
+      setIsResyncing(false)
+    }
+  }, [mutateCandidates])
 
-  const handleReview = (candidate: SubscriptionCandidate) => {
+  const handleReview = useCallback((candidate: Candidate) => {
     onReviewCandidate?.(candidate)
-  }
+  }, [onReviewCandidate])
 
-  const handleAdd = (candidate: SubscriptionCandidate) => {
-    // Quick add - in real implementation this would open a sheet
-    onReviewCandidate?.(candidate)
-  }
+  const handleAdd = useCallback(async (candidate: Candidate) => {
+    try {
+      const res = await fetch(`/api/smart-capture/candidates/${candidate.id}/decision`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'confirm' }),
+      })
+      if (res.ok) {
+        // Refresh data
+        await mutateCandidates()
+        await mutate('/api/smart-capture/counts')
+      }
+    } catch (err) {
+      console.error('Failed to add candidate:', err)
+    }
+  }, [mutateCandidates])
 
-  const handleIgnore = (candidate: SubscriptionCandidate) => {
-    // In real implementation this would call API
-    console.log('Ignoring candidate:', candidate.id)
-  }
-
-  // Format sync time
-  const lastSyncText = mockSyncState.lastSyncCompleted
-    ? formatRelativeTime(mockSyncState.lastSyncCompleted)
-    : 'Never'
+  const handleIgnore = useCallback(async (candidate: Candidate) => {
+    try {
+      const res = await fetch(`/api/smart-capture/candidates/${candidate.id}/decision`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'ignore' }),
+      })
+      if (res.ok) {
+        // Refresh data
+        await mutateCandidates()
+        await mutate('/api/smart-capture/counts')
+      }
+    } catch (err) {
+      console.error('Failed to ignore candidate:', err)
+    }
+  }, [mutateCandidates])
 
   return (
     <PageTransition>
@@ -401,10 +469,10 @@ export function InboxScreen({ onReviewCandidate }: InboxScreenProps) {
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
               <div className={cn(
                 'w-2 h-2 rounded-full',
-                mockSyncState.isHealthy ? 'bg-emerald' : 'bg-crimson'
+                error ? 'bg-crimson' : 'bg-emerald'
               )} />
               <span className="text-xs text-muted-foreground">
-                Synced {lastSyncText}
+                {isLoading ? 'Loading...' : `${counts.total} candidates`}
               </span>
             </div>
 
@@ -555,6 +623,34 @@ export function InboxScreen({ onReviewCandidate }: InboxScreenProps) {
 
         {/* Candidates list */}
         <div className="space-y-3">
+          {isLoading ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center py-16"
+            >
+              <Loader2 className="w-8 h-8 text-gold animate-spin mb-4" />
+              <p className="text-sm text-muted-foreground">Loading candidates...</p>
+            </motion.div>
+          ) : error ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center py-16 text-center"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-crimson/10 border border-crimson/30 flex items-center justify-center mb-4">
+                <AlertCircle className="w-8 h-8 text-crimson" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Failed to load</h3>
+              <p className="text-sm text-muted-foreground mb-4">Could not fetch candidates. Please try again.</p>
+              <button
+                onClick={() => mutateCandidates()}
+                className="px-4 py-2 rounded-xl text-sm font-medium bg-gold/10 text-gold border border-gold/30 hover:bg-gold/20"
+              >
+                Retry
+              </button>
+            </motion.div>
+          ) : (
           <AnimatePresence mode="popLayout">
             {filteredCandidates.length > 0 ? (
               filteredCandidates.map((candidate) => (
@@ -570,6 +666,7 @@ export function InboxScreen({ onReviewCandidate }: InboxScreenProps) {
               <EmptyState status={activeStatus} />
             )}
           </AnimatePresence>
+          )}
         </div>
       </div>
     </PageTransition>

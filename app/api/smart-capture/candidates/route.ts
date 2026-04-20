@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { withCache, CACHE_KEYS, CACHE_TTL, invalidateUserCaches } from '@/lib/redis'
 import type { 
-  SubscriptionCandidate, 
   CandidateStatus, 
-  CaptureSource 
 } from '@/lib/smart-capture/types'
 
 /**
@@ -33,40 +32,50 @@ export async function GET(request: NextRequest) {
     const source = searchParams.get('source') || 'all'
     const limit = parseInt(searchParams.get('limit') || '50', 10)
     const offset = parseInt(searchParams.get('offset') || '0', 10)
+    const skipCache = searchParams.get('fresh') === 'true'
 
-    // Build query
-    let query = supabase
-      .from('subscription_candidates')
-      .select('*', { count: 'exact' })
-      .eq('user_id', user.id)
-      .order('detected_at', { ascending: false })
-      .range(offset, offset + limit - 1)
+    // Cache key includes status for filtered results
+    const cacheKey = CACHE_KEYS.candidates(user.id, status)
 
-    // Apply filters
-    if (status !== 'all') {
-      query = query.eq('status', status)
+    const fetchCandidates = async () => {
+      // Build query
+      let query = supabase
+        .from('subscription_candidates')
+        .select('*', { count: 'exact' })
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1)
+
+      // Apply filters
+      if (status !== 'all') {
+        query = query.eq('status', status)
+      }
+
+      if (source !== 'all') {
+        query = query.eq('source', source)
+      }
+
+      const { data: candidates, error, count } = await query
+
+      if (error) {
+        console.error('[smart-capture] Error fetching candidates:', error)
+        throw error
+      }
+
+      return {
+        candidates: candidates || [],
+        total: count || 0,
+        limit,
+        offset,
+      }
     }
 
-    if (source !== 'all') {
-      query = query.eq('source', source)
-    }
+    // Use cache unless explicitly requesting fresh data
+    const result = skipCache 
+      ? await fetchCandidates()
+      : await withCache(cacheKey, fetchCandidates, CACHE_TTL.short)
 
-    const { data: candidates, error, count } = await query
-
-    if (error) {
-      console.error('[smart-capture] Error fetching candidates:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch candidates' },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({
-      candidates: candidates || [],
-      total: count || 0,
-      limit,
-      offset,
-    })
+    return NextResponse.json(result)
   } catch (error) {
     console.error('[smart-capture] Unexpected error:', error)
     return NextResponse.json(
@@ -141,6 +150,9 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
+
+    // Invalidate caches after creating a new candidate
+    await invalidateUserCaches(user.id)
 
     return NextResponse.json({ candidate }, { status: 201 })
   } catch (error) {
