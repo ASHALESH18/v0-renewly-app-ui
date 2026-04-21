@@ -41,6 +41,10 @@ export function useSubscriptions() {
     {
       revalidateOnFocus: true,
       dedupingInterval: 5000,
+      // Don't throw errors - let the UI handle them gracefully
+      onError: (err) => {
+        console.error('[v0] Failed to fetch subscriptions:', err)
+      },
     }
   )
 
@@ -52,10 +56,14 @@ export function useSubscriptions() {
     }
   }, [data, setSubscriptions])
 
+  // Handle 401 errors gracefully - user may not be authenticated yet
+  const isAuthError = error?.status === 401 || (error && error.message?.includes('401'))
+  
   return {
     subscriptions: data?.subscriptions?.map(mapSubscription) || [],
     isLoading,
-    error,
+    error: isAuthError ? null : error, // Don't surface auth errors as they're expected during loading
+    isAuthError,
     revalidate,
   }
 }
