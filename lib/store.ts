@@ -515,7 +515,7 @@ const useStore = create<AppState>()(
     }),
     {
       name: 'renewly-store',
-      version: 2,
+      version: 3,
       // Only persist non-cloud-dependent state
       partialize: (state) => ({
         theme: state.theme,
@@ -528,6 +528,15 @@ const useStore = create<AppState>()(
             theme: persistedState?.theme || 'dark',
           }
         }
+        
+        if (version < 3) {
+          // From v2 to v3: clear subscriptions to force fresh load
+          // This ensures old persisted subscriptions with bad data shapes don't break the app
+          return {
+            theme: persistedState?.theme || 'dark',
+          }
+        }
+        
         return persistedState
       },
     }
