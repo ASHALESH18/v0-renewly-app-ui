@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { inngest } from '@/lib/inngest/client'
+import { sendEvent, isInngestAvailable } from '@/lib/inngest/client'
 import { invalidateUserCaches } from '@/lib/redis'
 
 /**
  * POST /api/smart-capture/notification-lab
- * Submit a test notification to the processing pipeline via Inngest
+ * Submit a test notification to the processing pipeline
  * 
- * This endpoint is used by the Notification Lab for testing
- * subscription detection with simulated notifications.
+ * Works even if Inngest is not configured - still creates the ingestion event
  */
 export async function POST(request: NextRequest) {
   try {
@@ -59,18 +58,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Send to Inngest for async processing
-    await inngest.send({
-      name: 'smart-capture/notification.received',
-      data: {
-        userId: user.id,
-        title,
-        body: notificationBody,
-        appName,
-        receivedAt: new Date().toISOString(),
-        source: 'notification_lab',
-      },
-    })
+    // Try to send to Inngest if available, but don't fail if not
+    const inngestAvailable = isInngestAvailable()
+    let inngestResult = null
+    
+    if (inngestAvailable) {
+      try {
+        inngestResult = await sendEvent({
+          name: 'smart-capture/notification.received',
+          data: {
+            userId: user.id,
+            title,
+            body: notificationBody,
+            appName,
+            receivedAt: new Date().toISOString(),
+            source: 'notification_lab',
+          },
+        })
+        console.log('[notification-lab] Event sent to Inngest:', inngestResult)
+      } catch (inngestError) {
+        console.warn('[notification-lab] Inngest send failed:', inngestError)
+        // Continue anyway - the event was created in the database
+      }
+    } else {
+      console.log('[notification-lab] Inngest not available, event will be stored for manual processing')
+    }
 
     // Invalidate caches
     await invalidateUserCaches(user.id)
@@ -79,6 +91,8 @@ export async function POST(request: NextRequest) {
       event: ingestionEvent,
       status: 'queued',
       message: 'Notification queued for processing',
+      inngestQueued: inngestAvailable && inngestResult?.ok,
+      inngestConfigured: inngestAvailable,
     }, { status: 202 })
   } catch (error) {
     console.error('[notification-lab] Unexpected error:', error)
@@ -132,64 +146,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
-
-// Helper: Extract provider name from notification text
-function extractProviderFromText(appName: string, title: string, body: string): string {
-  const combinedText = `${appName} ${title} ${body}`.toLowerCase()
-  
-  // Common subscription services
-  const providers = [
-    'netflix', 'spotify', 'amazon prime', 'youtube premium', 'disney+',
-    'hotstar', 'apple music', 'google one', 'icloud', 'microsoft 365',
-    'adobe', 'dropbox', 'notion', 'slack', 'zoom', 'canva'
-  ]
-
-  for (const provider of providers) {
-    if (combinedText.includes(provider)) {
-      return provider.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-    }
-  }
-
-  // Fall back to app name
-  return appName
-}
-
-// Helper: Extract amount from text
-function extractAmountFromText(text: string): number | null {
-  // Match patterns like "Rs 649", "$9.99", "€12.50", "Rs. 119"
-  const patterns = [
-    /(?:Rs\.?|INR|₹)\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)/i,
-    /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)/,
-    /€\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)/,
-    /(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:rupees?|dollars?|euros?)/i,
-  ]
-
-  for (const pattern of patterns) {
-    const match = text.match(pattern)
-    if (match) {
-      const amount = parseFloat(match[1].replace(/,/g, ''))
-      if (!isNaN(amount)) return amount
-    }
-  }
-
-  return null
-}
-
-// Helper: Calculate confidence score
-function calculateConfidence(provider: string, amount: number | null): number {
-  let score = 30 // Base score
-
-  // Known provider boost
-  const knownProviders = ['netflix', 'spotify', 'amazon', 'youtube', 'disney', 'apple', 'google', 'microsoft']
-  if (knownProviders.some(p => provider.toLowerCase().includes(p))) {
-    score += 40
-  }
-
-  // Amount detected boost
-  if (amount && amount > 0) {
-    score += 25
-  }
-
-  return Math.min(score, 95)
 }

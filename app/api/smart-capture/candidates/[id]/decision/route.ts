@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { invalidateUserCaches } from '@/lib/redis'
-import { inngest } from '@/lib/inngest/client'
+import { sendEvent, isInngestAvailable } from '@/lib/inngest/client'
 
 type DecisionAction = 'confirm' | 'ignore' | 'already_tracked' | 'save_for_later' | 'retry'
 
@@ -140,15 +140,22 @@ export async function POST(
       } else {
         subscriptionId = subscription?.id
         
-        // Send Inngest event for post-confirmation processing
-        await inngest.send({
-          name: 'smart-capture/candidate.confirmed',
-          data: {
-            userId: user.id,
-            candidateId: id,
-            subscriptionId,
-          },
-        })
+        // Send Inngest event for post-confirmation processing if available
+        if (isInngestAvailable()) {
+          try {
+            await sendEvent({
+              name: 'smart-capture/candidate.confirmed',
+              data: {
+                userId: user.id,
+                candidateId: id,
+                subscriptionId,
+              },
+            })
+          } catch (inngestError) {
+            console.warn('[smart-capture] Failed to send Inngest event:', inngestError)
+            // Continue anyway - subscription was created successfully
+          }
+        }
       }
     }
 
