@@ -70,6 +70,7 @@ export interface AppState {
   hydrateAuthenticatedUserData: (userId: string, email: string) => Promise<void>
   migrateLocalDataToSupabaseOnce: (userId: string) => Promise<void>
   loadSubscriptionsFromSupabase: (subscriptions: Subscription[]) => void
+  setSubscriptions: (subscriptions: Subscription[]) => void
 
   // Actions - Subscriptions (local only - for optimistic updates)
   addSubscription: (subscription: Omit<Subscription, 'id'>) => void
@@ -275,6 +276,9 @@ const useStore = create<AppState>()(
 
       // Load subscriptions from Supabase
       loadSubscriptionsFromSupabase: (subscriptions) => set({ subscriptions }),
+
+      // Set subscriptions directly (used by useSubscriptions hook to sync API data)
+      setSubscriptions: (subscriptions) => set({ subscriptions }),
 
       // Local subscription actions (these will be synced to Supabase via API)
       addSubscription: (subscription) => set((state) => ({

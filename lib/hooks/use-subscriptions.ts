@@ -142,7 +142,7 @@ export function useSubscriptions() {
         .map(normalizeSubscription)
         .filter((sub): sub is Subscription => sub !== null)
       
-      // Only update if we have valid subscriptions
+      // Only update if we have valid subscriptions or if the API returned empty
       if (normalized.length > 0 || data.subscriptions.length === 0) {
         setSubscriptions(normalized)
       } else {
@@ -236,71 +236,3 @@ export async function deleteSubscription(id: string) {
   return res.json()
 }
 
-// Create a new subscription
-export async function createSubscription(data: Partial<Subscription>) {
-  const res = await fetch('/api/subscriptions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: data.name,
-      category: data.category,
-      amount: data.amount,
-      currency: 'INR', // Could be from preferences
-      billing_cycle: data.billingCycle,
-      renewal_date: data.renewalDate,
-      description: data.description,
-      status: data.status,
-    }),
-  })
-
-  if (!res.ok) {
-    throw new Error('Failed to create subscription')
-  }
-
-  // Revalidate the subscriptions list
-  await mutate('/api/subscriptions')
-
-  return res.json()
-}
-
-// Update a subscription
-export async function updateSubscription(id: string, data: Partial<Subscription>) {
-  const res = await fetch(`/api/subscriptions/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: data.name,
-      category: data.category,
-      amount: data.amount,
-      billing_cycle: data.billingCycle,
-      renewal_date: data.renewalDate,
-      description: data.description,
-      status: data.status,
-    }),
-  })
-
-  if (!res.ok) {
-    throw new Error('Failed to update subscription')
-  }
-
-  // Revalidate the subscriptions list
-  await mutate('/api/subscriptions')
-
-  return res.json()
-}
-
-// Delete a subscription
-export async function deleteSubscription(id: string) {
-  const res = await fetch(`/api/subscriptions/${id}`, {
-    method: 'DELETE',
-  })
-
-  if (!res.ok) {
-    throw new Error('Failed to delete subscription')
-  }
-
-  // Revalidate the subscriptions list
-  await mutate('/api/subscriptions')
-
-  return res.json()
-}
