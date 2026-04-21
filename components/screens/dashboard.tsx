@@ -22,7 +22,7 @@ import { cn } from '@/lib/utils'
 import { useCountUp } from '@/lib/hooks/use-count-up'
 import type { Subscription } from '@/lib/types'
 import { formatMoney, formatNumberForLocale, getCurrencySymbol } from '@/lib/preferences-format'
-import { calculateMetrics, getUpcomingRenewals } from '@/lib/subscription-math'
+import { calculateMetrics, getUpcomingRenewals, getDaysUntilRenewal } from '@/lib/subscription-math'
 
 // Fast, performant transition - no spring physics overhead
 const fastTransition = { duration: 0.2, ease: [0.32, 0.72, 0, 1] }
@@ -90,8 +90,8 @@ export function DashboardScreen({
   const filteredSubscriptions = subscriptions.filter(sub => {
     if (selectedFilter === 'all') return true
     if (selectedFilter === 'upcoming') {
-      const days = getDaysUntil(sub.renewalDate || '')
-      return days <= 7 && days > 0
+      const days = getDaysUntilRenewal(sub)
+      return days <= 30 && days > 0
     }
     return sub.category === selectedFilter
   })
@@ -530,6 +530,8 @@ function UpcomingCard({
   )
 }
 
+
+
 interface AnimatedNumberProps {
   value: number
   language?: string
@@ -538,13 +540,4 @@ interface AnimatedNumberProps {
 function AnimatedNumber({ value, language = 'en' }: AnimatedNumberProps) {
   const displayValue = useCountUp(value, 1500, 0)
   return <>{formatNumberForLocale(displayValue, language)}</>
-}
-
-function getDaysUntil(dateStr: string): number {
-  if (!dateStr) return 0
-  const date = new Date(dateStr)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  date.setHours(0, 0, 0, 0)
-  return Math.ceil((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 }
