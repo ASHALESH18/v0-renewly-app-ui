@@ -59,12 +59,13 @@ function MetricCard({
   return (
     <motion.div 
       initial={{ opacity: 0, y: 30, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
       whileHover={{ 
         y: -8, 
         boxShadow: '0 32px 64px -16px rgba(199, 163, 106, 0.25), 0 0 0 1px rgba(199, 163, 106, 0.15), 0 0 60px -20px rgba(199, 163, 106, 0.15)'
       }}
-      transition={{ duration: 0.6 }}
+      transition={{ duration: 0.7 }}
+      viewport={{ once: true, margin: '0px 0px -50px 0px' }}
       className="relative rounded-3xl border border-gold/15 bg-card/90 backdrop-blur-2xl p-7 shadow-card overflow-hidden group"
     >
       {/* DRAMATIC: Multi-layer ambient glow on hover */}

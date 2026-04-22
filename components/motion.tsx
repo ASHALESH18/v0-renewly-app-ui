@@ -226,7 +226,67 @@ export const slideInPanel: Variants = {
   exit: { x: '-100%', opacity: 0.6, transition: { duration: 0.25 } },
 }
 
-// === PAGE TRANSITION SYSTEM ===
+// === VIEWPORT-TRIGGERED ANIMATIONS (Premium Cinematic Feel) ===
+
+// Viewport reveal for sections - fade + slide + subtle scale
+export const viewportFadeInUp: Variants = {
+  initial: { opacity: 0, y: 24 },
+  whileInView: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease: easings.premium }
+  },
+}
+
+// Slower viewport reveal for hero/feature sections
+export const viewportFadeInUpSlow: Variants = {
+  initial: { opacity: 0, y: 32 },
+  whileInView: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.85, ease: easings.premium }
+  },
+}
+
+// Viewport stagger container - slower for premium feel
+export const viewportStaggerContainer: Variants = {
+  whileInView: {
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.1,
+    },
+  },
+}
+
+// Viewport stagger item - slower reveal
+export const viewportStaggerItem: Variants = {
+  initial: { opacity: 0, y: 20 },
+  whileInView: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: easings.premium }
+  },
+}
+
+// Viewport scale reveal - for metric cards
+export const viewportScaleReveal: Variants = {
+  initial: { opacity: 0, scale: 0.92 },
+  whileInView: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.65, ease: easings.premium }
+  },
+}
+
+// Slower and more luxurious
+export const luxuryViewportReveal: Variants = {
+  initial: { opacity: 0, y: 28 },
+  whileInView: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.75, ease: easings.premium }
+  },
+}
 
 // Premium page transitions - fast, no blur
 export const premiumPageTransition: Variants = {
@@ -258,35 +318,35 @@ export const crossfadeTransition: Variants = {
 
 // === STAGGER ANIMATION SYSTEM ===
 
-// Standard stagger container
+// Standard stagger container - increased delays for luxury
 export const staggerContainer: Variants = {
   initial: {},
   animate: {
     transition: {
-      staggerChildren: 0.06,
-      delayChildren: 0.08,
+      staggerChildren: 0.09,
+      delayChildren: 0.12,
     },
   },
 }
 
-// Slower stagger for hero sections
+// Slower stagger for hero sections - premium timing
 export const staggerContainerSlow: Variants = {
   initial: {},
   animate: {
     transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.15,
+      staggerChildren: 0.14,
+      delayChildren: 0.18,
     },
   },
 }
 
-// Standard stagger item
+// Standard stagger item - slower reveal
 export const staggerItem: Variants = {
   initial: { opacity: 0, y: 12 },
   animate: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.4, ease: easings.premium },
+    transition: { duration: 0.55, ease: easings.premium },
   },
 }
 

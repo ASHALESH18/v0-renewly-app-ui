@@ -16,7 +16,8 @@ import { Header, SearchOverlay } from '@/components/header'
 import { MetricCard } from '@/components/metric-card'
 import { SubscriptionCard, SubscriptionCardCompact } from '@/components/subscription-card'
 import { FilterChips, SegmentedControl } from '@/components/filter-chips'
-import { PageTransition, StaggerList, staggerItem } from '@/components/motion'
+import { PageTransition, StaggerList, staggerItem, viewportFadeInUp } from '@/components/motion'
+import { MotionSection, MotionSectionItem } from '@/components/motion-section'
 import useStore from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { useCountUp } from '@/lib/hooks/use-count-up'
@@ -144,7 +145,7 @@ export function DashboardScreen({
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
+              transition={{ delay: 0.08, duration: 0.5 }}
               className="flex items-center gap-2 mb-6"
             >
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold/6 border border-gold/15 backdrop-blur-sm">
@@ -161,7 +162,7 @@ export function DashboardScreen({
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15, duration: 0.4 }}
+                transition={{ delay: 0.18, duration: 0.55 }}
                 whileHover={{ y: -3, transition: { duration: 0.2 } }}
                 className="relative p-5 rounded-xl bg-card/50 backdrop-blur-xl border border-gold/12 group"
               >
@@ -187,7 +188,7 @@ export function DashboardScreen({
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.22, duration: 0.4 }}
+                transition={{ delay: 0.26, duration: 0.55 }}
                 whileHover={{ y: -3, transition: { duration: 0.2 } }}
                 className="relative p-5 rounded-xl bg-card/50 backdrop-blur-xl border border-border/50 group"
               >
@@ -208,7 +209,7 @@ export function DashboardScreen({
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.29, duration: 0.4 }}
+                transition={{ delay: 0.34, duration: 0.55 }}
                 whileHover={{ y: -3, transition: { duration: 0.2 } }}
                 className="relative p-5 rounded-xl bg-gradient-to-br from-emerald/6 to-emerald/2 backdrop-blur-xl border border-emerald/15 group"
               >
@@ -258,7 +259,7 @@ export function DashboardScreen({
                       animate={{
                         strokeDashoffset: 2 * Math.PI * 28 * (1 - metrics.leakScore / 100)
                       }}
-                      transition={{ delay: 0.7, duration: 1.8, ease: 'easeOut' }}
+                      transition={{ delay: 0.8, duration: 2, ease: 'easeOut' }}
                       strokeLinecap="round"
                     />
                     <defs>
@@ -335,14 +336,15 @@ export function DashboardScreen({
           />
         </StaggerList>
 
-        {/* Premium Quick Insights Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          whileHover={{ y: -2, boxShadow: '0 20px 40px -12px rgba(199, 163, 106, 0.15)' }}
-          className="relative rounded-2xl overflow-hidden cursor-pointer group"
-        >
+        {/* Premium Quick Insights Card - Viewport triggered */}
+        <MotionSection>
+          <motion.div
+            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 24 }}
+            transition={{ duration: 0.65, ease: 'easeOut' }}
+            whileHover={{ y: -2, boxShadow: '0 20px 40px -12px rgba(199, 163, 106, 0.15)' }}
+            className="relative rounded-2xl overflow-hidden cursor-pointer group"
+          >
           {/* Gradient background */}
           <div className="absolute inset-0 bg-gradient-to-br from-gold/8 via-card to-emerald/5 dark:from-gold/10 dark:via-graphite dark:to-emerald/5" />
 
@@ -382,6 +384,7 @@ export function DashboardScreen({
             </div>
           </div>
         </motion.div>
+        </MotionSection>
 
         {/* Filters section */}
         <div className="space-y-4">
