@@ -1,25 +1,29 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import useStore from '@/lib/store'
 import { useSubscriptions } from '@/lib/hooks/use-subscriptions'
 
-/**
- * SubscriptionsProvider
- * Fetches and syncs subscriptions to the Zustand store on app startup.
- * The useSubscriptions hook handles all the heavy lifting - fetching from API,
- * normalizing snake_case DB fields to camelCase, and syncing to store.
- */
 export function SubscriptionsProvider({
   children,
 }: {
   children: React.ReactNode
 }) {
-  // Call the hook to trigger subscription loading and syncing
-  // This will run on mount and whenever the dependency changes
+  const setSubscriptions = useStore((state) => state.setSubscriptions)
+  const [ready, setReady] = useState(false)
+
+  // Start subscription sync
   useSubscriptions()
+
+  // Clear stale browser-stored subscription data before rendering pages
+  useEffect(() => {
+    setSubscriptions([])
+    setReady(true)
+  }, [setSubscriptions])
+
+  if (!ready) return null
 
   return <>{children}</>
 }
 
 export default SubscriptionsProvider
-
-
