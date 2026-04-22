@@ -5,19 +5,14 @@ import {
   ThemeProvider as NextThemesProvider,
   type ThemeProviderProps,
 } from 'next-themes'
-import { DEFAULT_THEME, THEME_CLASS_MAP, THEME_IDS } from '@/lib/themes'
+import { DEFAULT_THEME, THEME_IDS } from '@/lib/themes'
 
 /**
- * Renewly ThemeProvider
+ * Renewly ThemeProvider (Fixed)
  *
- * Wraps `next-themes` to support the 4 temporary theme variants used
- * by the Theme Preview Lab:
- *   - `old-light`, `old-dark`  (baseline)
- *   - `light-e`, `dark-e`      (new premium direction)
- *
- * The `value` mapping ensures dark variants also receive the `.dark`
- * class on <html>, so every existing `.dark` selector in the codebase
- * continues to work unchanged.
+ * FIX: No longer use `value` mapping with multi-word class strings.
+ * Instead, next-themes manages the variant ID directly as the theme name,
+ * and we handle `.dark` class and `data-theme-variant` separately in layout.tsx.
  */
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   return (
@@ -25,10 +20,10 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
       attribute="class"
       defaultTheme={DEFAULT_THEME}
       themes={[...THEME_IDS]}
-      value={THEME_CLASS_MAP}
       enableSystem={false}
       disableTransitionOnChange
       storageKey="renewly-theme"
+      forcedTheme={undefined}
       {...props}
     >
       {children}

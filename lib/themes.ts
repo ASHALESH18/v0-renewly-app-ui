@@ -122,15 +122,19 @@ export const THEME_VARIANTS: readonly ThemeVariant[] = [
 export const DEFAULT_THEME: ThemeId = 'dark-e'
 
 /**
- * Class names applied to the <html> element for each theme.
- * Dark variants include `dark` so every existing `.dark` selector
- * keeps working unchanged.
+ * FIX: No longer use multi-word class strings in THEME_CLASS_MAP.
+ * 
+ * Instead:
+ * - Use `.dark` class only for dark mode (mode-based)
+ * - Store variant id in data-theme-variant="..." attribute
+ * 
+ * This avoids InvalidCharacterError from DOMTokenList.
  */
-export const THEME_CLASS_MAP: { [themeName: string]: string } = {
-  'old-light': 'old-light',
-  'old-dark': 'dark old-dark',
-  'light-e': 'light-e',
-  'dark-e': 'dark dark-e',
+export const THEME_MODE_MAP: { [themeId: string]: 'dark' | 'light' } = {
+  'old-light': 'light',
+  'old-dark': 'dark',
+  'light-e': 'light',
+  'dark-e': 'dark',
 }
 
 export const THEME_IDS: readonly ThemeId[] = THEME_VARIANTS.map((t) => t.id)
@@ -155,6 +159,10 @@ export function getThemeVariant(id: ThemeId): ThemeVariant {
   return THEME_VARIANTS.find((t) => t.id === id) ?? THEME_VARIANTS[3]
 }
 
+/**
+ * Get the base mode (`dark` or `light`) for a theme variant.
+ * Used to set the `.dark` class on `<html>`.
+ */
 export function getThemeMode(id: ThemeId): ThemeMode {
   return getThemeVariant(id).mode
 }

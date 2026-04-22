@@ -221,23 +221,21 @@ button,
 }
 
 /* ================================================================ */
-/* TEMPORARY THEME PREVIEW LAB                                       */
-/* Adds two premium variants alongside the baseline themes so we can */
-/* compare Old Light / Old Dark against Light E / Dark E.            */
+/* TEMPORARY THEME PREVIEW LAB (FIXED)                               */
+/* Uses data-theme-variant instead of multi-word class strings       */
 /*                                                                   */
-/* - `.old-light`  → identical to `:root` (baseline light)           */
-/* - `.old-dark`   → identical to `.dark`  (baseline dark)           */
-/* - `.light-e`    → new premium warm-pearl light theme              */
-/* - `.dark-e`     → new premium graphite/obsidian dark theme        */
+/* - `.dark` for dark mode behavior (no variant classes)             */
+/* - `[data-theme-variant="old-light"]` for old light variant rules  */
+/* - `[data-theme-variant="old-dark"]` for old dark variant rules    */
+/* - `[data-theme-variant="light-e"]` for new light E variant        */
+/* - `[data-theme-variant="dark-e"]` for new dark E variant          */
 /*                                                                   */
-/* Dark variants also receive the `.dark` class, so every existing   */
-/* `.dark .something` selector in this file keeps working.           */
-/* When the final theme pair is chosen, delete the two variants you  */
-/* don't want and rename the remaining pair back to `:root`/`.dark`. */
+/* When the final theme pair is chosen, delete the unwanted variants */
+/* and rename the remaining pair back to `:root`/`.dark`.            */
 /* ================================================================ */
 
 /* Light E — Warm Pearl / Editorial Premium */
-.light-e {
+[data-theme-variant="light-e"] {
   --background: #F1EBDD;
   --foreground: #1C1712;
   --card: #FBF7EE;
@@ -309,7 +307,7 @@ button,
 }
 
 /* Dark E — Graphite / Obsidian Premium */
-.dark-e {
+[data-theme-variant="dark-e"] {
   --background: #0B0E14;
   --foreground: #ECE6DA;
   --card: #161B25;
@@ -588,7 +586,7 @@ button,
 /* ================================================================ */
 
 /* Light E — pearl-toned glass surfaces, softer warm edges */
-.light-e .glass-strong {
+[data-theme-variant="light-e"] .glass-strong {
   background: rgba(251, 247, 238, 0.88);
   border: 1px solid rgba(156, 120, 54, 0.12);
   box-shadow:
@@ -597,7 +595,7 @@ button,
     0 6px 20px -6px rgba(100, 75, 40, 0.08);
 }
 
-.light-e .glass-premium {
+[data-theme-variant="light-e"] .glass-premium {
   background: rgba(253, 250, 242, 0.78);
   border: 1px solid rgba(156, 120, 54, 0.11);
   box-shadow:
@@ -606,12 +604,12 @@ button,
     0 24px 56px -16px rgba(100, 75, 40, 0.12);
 }
 
-.light-e .glass-subtle {
+[data-theme-variant="light-e"] .glass-subtle {
   background: rgba(253, 250, 242, 0.58);
   border: 1px solid rgba(156, 120, 54, 0.08);
 }
 
-.light-e .surface-cinematic {
+[data-theme-variant="light-e"] .surface-cinematic {
   background: linear-gradient(180deg, rgba(253, 250, 242, 0.96) 0%, rgba(241, 235, 221, 0.98) 100%);
   border: 1px solid rgba(156, 120, 54, 0.14);
   box-shadow:
@@ -620,11 +618,11 @@ button,
     0 22px 44px -12px rgba(100, 75, 40, 0.09);
 }
 
-.light-e .surface-spotlight::before {
+[data-theme-variant="light-e"] .surface-spotlight::before {
   background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(156, 120, 54, 0.08) 0%, transparent 72%);
 }
 
-.light-e .card-floating {
+[data-theme-variant="light-e"] .card-floating {
   background: rgba(253, 250, 242, 0.92);
   border: 1px solid rgba(156, 120, 54, 0.10);
   box-shadow:
@@ -633,7 +631,7 @@ button,
     0 6px 16px -6px rgba(100, 75, 40, 0.07);
 }
 
-.light-e .card-floating:hover {
+[data-theme-variant="light-e"] .card-floating:hover {
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.65) inset,
     0 34px 64px -16px rgba(156, 120, 54, 0.16),
@@ -642,7 +640,7 @@ button,
 }
 
 /* Dark E — graphite glass, restrained gold edge highlights */
-.dark-e .glass-strong {
+[data-theme-variant="dark-e"] .glass-strong {
   background: rgba(22, 27, 37, 0.92);
   border: 1px solid rgba(201, 164, 110, 0.10);
   box-shadow:
@@ -650,7 +648,7 @@ button,
     0 6px 24px -6px rgba(0, 0, 0, 0.55);
 }
 
-.dark-e .glass-premium {
+[data-theme-variant="dark-e"] .glass-premium {
   background: rgba(22, 27, 37, 0.86);
   border: 1px solid rgba(201, 164, 110, 0.12);
   box-shadow:
@@ -658,12 +656,12 @@ button,
     0 24px 68px -18px rgba(0, 0, 0, 0.6);
 }
 
-.dark-e .glass-subtle {
+[data-theme-variant="dark-e"] .glass-subtle {
   background: rgba(22, 27, 37, 0.66);
   border: 1px solid rgba(201, 164, 110, 0.08);
 }
 
-.dark-e .surface-cinematic {
+[data-theme-variant="dark-e"] .surface-cinematic {
   background: linear-gradient(180deg, rgba(22, 27, 37, 0.97) 0%, rgba(11, 14, 20, 0.99) 100%);
   border: 1px solid rgba(201, 164, 110, 0.14);
   box-shadow:
@@ -672,11 +670,11 @@ button,
     0 22px 44px -12px rgba(0, 0, 0, 0.4);
 }
 
-.dark-e .surface-spotlight::before {
+[data-theme-variant="dark-e"] .surface-spotlight::before {
   background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(201, 164, 110, 0.10) 0%, transparent 70%);
 }
 
-.dark-e .card-floating {
+[data-theme-variant="dark-e"] .card-floating {
   background: rgba(22, 27, 37, 0.94);
   border: 1px solid rgba(201, 164, 110, 0.10);
   box-shadow:
@@ -685,7 +683,7 @@ button,
     0 6px 16px -6px rgba(0, 0, 0, 0.3);
 }
 
-.dark-e .card-floating:hover {
+[data-theme-variant="dark-e"] .card-floating:hover {
   box-shadow:
     0 1px 0 rgba(201, 164, 110, 0.08) inset,
     0 34px 64px -16px rgba(201, 164, 110, 0.12),
