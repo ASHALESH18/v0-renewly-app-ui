@@ -4,9 +4,8 @@ import { useState, useMemo, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useTheme } from 'next-themes'
 import {
-  Bell, CreditCard, Shield, Moon, Sun, Globe,
+  Bell, CreditCard, Shield, Globe,
   HelpCircle, FileText, LogOut, ChevronRight, ChevronLeft, Crown,
   Smartphone, Mail, Lock, Download, FileJson, X,
   Check, AlertCircle, Eye, EyeOff, RefreshCw
@@ -21,6 +20,7 @@ import { PlanSelectionSheet } from '@/components/plan-selection-sheet'
 import { generateAvatar } from '@/lib/avatar-utils'
 import { signOutAndRedirectHome } from '@/lib/auth/sign-out'
 import { currencies } from '@/lib/locale-utils'
+import { ThemeSelectorCards } from '@/components/theme-selector-cards'
 
 // Sheet component for settings modals
 function SettingsSheet({
@@ -113,7 +113,6 @@ export function SettingsScreen() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const section = searchParams.get('section')
-  const { theme, setTheme } = useTheme()
 
   // Sheet states
   const [activeSheet, setActiveSheet] = useState<string | null>(null)
@@ -300,12 +299,7 @@ export function SettingsScreen() {
 
 
 
-  const handleToggleDarkMode = async () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark'
-    setTheme(newTheme)
-    // Also persist to store for sync across sessions
-    await updateNotificationSettings({ theme: newTheme })
-  }
+  // Theme handling has moved to <ThemeSelectorCards /> (Light / Dark / Glass).
 
   // Show premium skeleton while store hydrates
   if (!isMounted) {
@@ -439,12 +433,10 @@ export function SettingsScreen() {
 
         {/* Appearance Section */}
         <SettingsSection title="Appearance" delay={0.3}>
-          <SettingsToggle
-            icon={theme === 'dark' ? Moon : Sun}
-            label="Dark Mode"
-            checked={theme === 'dark'}
-            onToggle={handleToggleDarkMode}
-          />
+          {/* Premium 3-card theme selector (Light / Dark / Glass) */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-card border border-border">
+            <ThemeSelectorCards />
+          </div>
 
           <SettingsItem
             icon={Globe}

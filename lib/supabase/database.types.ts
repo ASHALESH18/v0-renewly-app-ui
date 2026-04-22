@@ -16,7 +16,7 @@ export interface ProfileRow {
 export interface UserSettingsRow {
   user_id: string
   currency_code: string
-  theme: 'light' | 'dark'
+  theme: 'light' | 'dark' | 'glass'
   language: string
   country_code: string | null
   locale: string | null
