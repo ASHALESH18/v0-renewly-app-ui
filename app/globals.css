@@ -348,8 +348,8 @@ button,
 /* Premium frosted glass - hero sections, featured cards */
 .glass-premium {
   background: rgba(255, 254, 250, 0.80);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid rgba(176, 132, 64, 0.10);
   box-shadow: 
     0 1px 0 rgba(255, 255, 255, 0.7) inset,
@@ -384,8 +384,8 @@ button,
 .surface-cinematic {
   position: relative;
   background: linear-gradient(180deg, rgba(255, 254, 250, 0.96) 0%, rgba(248, 244, 236, 0.98) 100%);
-  backdrop-filter: blur(60px) saturate(200%);
-  -webkit-backdrop-filter: blur(60px) saturate(200%);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
   border: 1px solid rgba(176, 132, 64, 0.12);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.8) inset,
@@ -425,7 +425,7 @@ button,
 /* Floating card with refined depth and lift */
 .card-floating {
   background: rgba(255, 254, 250, 0.94);
-  backdrop-filter: blur(24px);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(176, 132, 64, 0.08);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.5) inset,
@@ -643,8 +643,8 @@ button,
 /* Floating surface - dropdowns, popovers */
 .surface-floating {
   background: var(--surface-floating);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
   box-shadow: var(--shadow-lg);
 }
 
@@ -951,391 +951,9 @@ button,
   }
 }
 
-/* ============================================ */
-/* GLOBAL AMBIENT BACKGROUND SYSTEM */
-/* Premium floating gold dust effect */
-/* Theme-aware: obsidian (dark) / ivory (light) */
-/* ============================================ */
+/* Removed: Global ambient background animations system */
+/* Now using static premium dark background for better perceived speed */
 
-/* BASE LAYER - Deep foundation with matte finish */
-.ambient-base {
-  position: absolute;
-  inset: 0;
-  /* Light mode: Warm ivory/champagne base */
-  background:
-    radial-gradient(ellipse 140% 100% at 20% 0%, rgba(199, 163, 106, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse 120% 80% at 80% 100%, rgba(180, 145, 80, 0.04) 0%, transparent 45%),
-    linear-gradient(180deg, 
-      #faf6ef 0%, 
-      #f5efe4 25%, 
-      #f0e8d9 50%, 
-      #ebe0ce 75%, 
-      #e6d9c3 100%
-    );
-}
-
-.dark .ambient-base {
-  /* Dark mode: Deep obsidian/navy with subtle warmth */
-  background:
-    radial-gradient(ellipse 160% 120% at 15% 5%, rgba(199, 163, 106, 0.07) 0%, transparent 45%),
-    radial-gradient(ellipse 140% 100% at 85% 95%, rgba(199, 163, 106, 0.04) 0%, transparent 40%),
-    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(20, 25, 35, 0.5) 0%, transparent 70%),
-    linear-gradient(180deg, 
-      #05080c 0%, 
-      #080c12 20%, 
-      #0a0f18 40%, 
-      #0c1220 60%, 
-      #0a0f18 80%, 
-      #05080c 100%
-    );
-}
-
-/* Soft ambient wash for additional depth */
-.ambient-soft-wash {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 100% 60% at 50% 30%, rgba(199, 163, 106, 0.03) 0%, transparent 60%);
-}
-
-.dark .ambient-soft-wash {
-  background:
-    radial-gradient(ellipse 100% 60% at 50% 30%, rgba(199, 163, 106, 0.025) 0%, transparent 55%);
-}
-
-/* SVG container for dust waves */
-.ambient-dust-svg {
-  position: absolute;
-  inset: -8%;
-  width: 116%;
-  height: 116%;
-  pointer-events: none;
-  overflow: visible;
-}
-
-/* WAVE ANIMATIONS - Slow, calming motion */
-.ambient-wave {
-  transform-origin: center;
-  will-change: transform, opacity;
-}
-
-.ambient-wave--gold {
-  animation: ambient-wave-gold 40s ease-in-out infinite;
-}
-
-.ambient-wave--warm {
-  animation: ambient-wave-warm 48s ease-in-out infinite;
-  animation-delay: -12s;
-}
-
-.ambient-wave--accent {
-  animation: ambient-wave-accent 36s ease-in-out infinite;
-  animation-delay: -20s;
-}
-
-/* DUST PATH STYLING */
-.ambient-dust-path {
-  fill: none;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.ambient-dust-soft {
-  opacity: 0.22;
-}
-
-.dark .ambient-dust-soft {
-  opacity: 0.38;
-}
-
-.ambient-dust-core {
-  opacity: 0.12;
-}
-
-.dark .ambient-dust-core {
-  opacity: 0.22;
-}
-
-/* PARTICLE STYLING - Floating gold dust */
-.ambient-particles {
-  opacity: 0.25;
-}
-
-.dark .ambient-particles {
-  opacity: 0.45;
-}
-
-.ambient-particles circle {
-  will-change: transform, opacity;
-}
-
-.ambient-particles--gold {
-  animation: ambient-particles-drift-gold 32s ease-in-out infinite;
-}
-
-.ambient-particles--warm {
-  animation: ambient-particles-drift-warm 38s ease-in-out infinite;
-  animation-delay: -8s;
-}
-
-.ambient-particles--accent {
-  animation: ambient-particles-drift-accent 28s ease-in-out infinite;
-  animation-delay: -16s;
-}
-
-/* GLOW AREAS - Soft warmth zones */
-.ambient-glow {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(100px);
-  will-change: transform, opacity;
-  pointer-events: none;
-}
-
-.ambient-glow--top {
-  top: -6rem;
-  left: 50%;
-  width: 50rem;
-  height: 16rem;
-  transform: translateX(-50%);
-  opacity: 0.2;
-  background: radial-gradient(ellipse at center, 
-    rgba(199, 163, 106, 0.12) 0%, 
-    rgba(199, 163, 106, 0.04) 40%, 
-    transparent 70%
-  );
-}
-
-.dark .ambient-glow--top {
-  opacity: 0.35;
-  background: radial-gradient(ellipse at center, 
-    rgba(199, 163, 106, 0.18) 0%, 
-    rgba(199, 163, 106, 0.06) 40%, 
-    transparent 70%
-  );
-}
-
-.ambient-glow--center {
-  top: 20%;
-  left: 50%;
-  width: 60rem;
-  height: 36rem;
-  transform: translateX(-50%);
-  opacity: 0.25;
-  background: radial-gradient(ellipse at center, 
-    rgba(199, 163, 106, 0.08) 0%, 
-    rgba(180, 145, 80, 0.03) 45%, 
-    transparent 70%
-  );
-}
-
-.dark .ambient-glow--center {
-  opacity: 0.4;
-  background: radial-gradient(ellipse at center, 
-    rgba(199, 163, 106, 0.12) 0%, 
-    rgba(180, 145, 80, 0.04) 45%, 
-    transparent 70%
-  );
-}
-
-.ambient-glow--bottom {
-  right: -4rem;
-  bottom: -2rem;
-  width: 36rem;
-  height: 24rem;
-  opacity: 0.18;
-  background: radial-gradient(ellipse at center, 
-    rgba(199, 163, 106, 0.1) 0%, 
-    rgba(180, 145, 80, 0.03) 45%, 
-    transparent 70%
-  );
-}
-
-.dark .ambient-glow--bottom {
-  opacity: 0.32;
-  background: radial-gradient(ellipse at center, 
-    rgba(199, 163, 106, 0.14) 0%, 
-    rgba(180, 145, 80, 0.05) 45%, 
-    transparent 70%
-  );
-}
-
-/* TEXTURE - Subtle grain for matte finish */
-.ambient-texture {
-  position: absolute;
-  inset: 0;
-  opacity: 0.04;
-  background-image:
-    radial-gradient(circle at 20% 30%, rgba(199, 163, 106, 0.015) 1px, transparent 1px),
-    radial-gradient(circle at 80% 70%, rgba(199, 163, 106, 0.01) 1px, transparent 1px);
-  background-size: 80px 80px, 120px 120px;
-}
-
-.dark .ambient-texture {
-  opacity: 0.03;
-  background-image:
-    radial-gradient(circle at 20% 30%, rgba(199, 163, 106, 0.02) 1px, transparent 1px),
-    radial-gradient(circle at 80% 70%, rgba(199, 163, 106, 0.015) 1px, transparent 1px);
-}
-
-/* VIGNETTE - Cinematic depth framing */
-.ambient-vignette {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(ellipse 90% 85% at 50% 50%, 
-    transparent 0%, 
-    transparent 55%, 
-    rgba(0, 0, 0, 0.05) 100%
-  );
-}
-
-.dark .ambient-vignette {
-  background: radial-gradient(ellipse 90% 85% at 50% 50%, 
-    transparent 0%, 
-    transparent 50%, 
-    rgba(5, 8, 12, 0.4) 100%
-  );
-}
-
-/* ============================================ */
-/* KEYFRAME ANIMATIONS */
-/* Slow, calming, luxurious floating motion */
-/* ============================================ */
-
-@keyframes ambient-wave-gold {
-  0%, 100% {
-    transform: translate3d(0, 0, 0) rotate(-3deg) scale(1);
-    opacity: 1;
-  }
-  25% {
-    transform: translate3d(2vw, 0.8vh, 0) rotate(-2deg) scale(1.005);
-  }
-  50% {
-    transform: translate3d(4vw, 1.5vh, 0) rotate(-1deg) scale(1.01);
-    opacity: 0.95;
-  }
-  75% {
-    transform: translate3d(2vw, 0.5vh, 0) rotate(-2deg) scale(1.005);
-  }
-}
-
-@keyframes ambient-wave-warm {
-  0%, 100% {
-    transform: translate3d(0, 0, 0) rotate(2deg) scale(1);
-    opacity: 1;
-  }
-  33% {
-    transform: translate3d(-3vw, -1vh, 0) rotate(3deg) scale(1.008);
-  }
-  66% {
-    transform: translate3d(-1vw, 0.5vh, 0) rotate(1deg) scale(1.004);
-    opacity: 0.92;
-  }
-}
-
-@keyframes ambient-wave-accent {
-  0%, 100% {
-    transform: translate3d(0, 0, 0) scale(1);
-    opacity: 0.8;
-  }
-  50% {
-    transform: translate3d(1.5vw, -0.8vh, 0) scale(1.006);
-    opacity: 1;
-  }
-}
-
-@keyframes ambient-particles-drift-gold {
-  0%, 100% {
-    transform: translate3d(0, 0, 0);
-    opacity: 0.25;
-  }
-  25% {
-    transform: translate3d(1vw, -0.5vh, 0);
-    opacity: 0.35;
-  }
-  50% {
-    transform: translate3d(2vw, -1vh, 0);
-    opacity: 0.45;
-  }
-  75% {
-    transform: translate3d(1vw, -0.5vh, 0);
-    opacity: 0.35;
-  }
-}
-
-@keyframes ambient-particles-drift-warm {
-  0%, 100% {
-    transform: translate3d(0, 0, 0);
-    opacity: 0.2;
-  }
-  50% {
-    transform: translate3d(-1.5vw, 0.8vh, 0);
-    opacity: 0.35;
-  }
-}
-
-@keyframes ambient-particles-drift-accent {
-  0%, 100% {
-    transform: translate3d(0, 0, 0);
-    opacity: 0.15;
-  }
-  33% {
-    transform: translate3d(0.8vw, -0.4vh, 0);
-    opacity: 0.3;
-  }
-  66% {
-    transform: translate3d(-0.5vw, 0.3vh, 0);
-    opacity: 0.25;
-  }
-}
-
-@keyframes ambient-breathe-top {
-  0%, 100% {
-    transform: translateX(-50%) scale(1);
-    opacity: 0.2;
-  }
-  50% {
-    transform: translateX(-50%) scale(1.03);
-    opacity: 0.3;
-  }
-}
-
-@keyframes ambient-breathe-center {
-  0%, 100% {
-    transform: translateX(-50%) scale(1);
-    opacity: 0.25;
-  }
-  50% {
-    transform: translateX(-50%) scale(1.04);
-    opacity: 0.38;
-  }
-}
-
-@keyframes ambient-breathe-bottom {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0.18;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.28;
-  }
-}
-
-.animate-ambient-breathe-top {
-  animation: ambient-breathe-top 24s ease-in-out infinite;
-}
-
-.animate-ambient-breathe-center {
-  animation: ambient-breathe-center 28s ease-in-out infinite;
-  animation-delay: -6s;
-}
-
-.animate-ambient-breathe-bottom {
-  animation: ambient-breathe-bottom 32s ease-in-out infinite;
-  animation-delay: -14s;
-}
 
 /* MOBILE PERFORMANCE OPTIMIZATIONS */
 @media (max-width: 768px) {
