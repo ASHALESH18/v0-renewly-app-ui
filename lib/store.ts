@@ -33,12 +33,7 @@ export interface NotificationSettings {
   leakAlerts: boolean
   reminderDays: number
   currencyCode: string
-  /**
-   * Theme id used by the Theme Preview Lab.
-   * Supports the 4 current variants plus legacy `light`/`dark` values
-   * from older installs (normalized on read via `normalizeTheme`).
-   */
-  theme: 'old-light' | 'old-dark' | 'light-e' | 'dark-e' | 'light' | 'dark'
+  theme: 'light' | 'dark'
   language: string
   biometricEnabled: boolean
   countryCode?: string
@@ -56,7 +51,7 @@ export interface AppState {
   notificationSettings: NotificationSettings
 
   // UI State
-  theme: 'old-light' | 'old-dark' | 'light-e' | 'dark-e' | 'light' | 'dark'
+  theme: 'light' | 'dark'
   toasts: Toast[]
 
   // Loading/Sync State
@@ -92,7 +87,7 @@ export interface AppState {
   updateNotificationSettings: (settings: Partial<NotificationSettings>) => void
 
   // Actions - UI
-  setTheme: (theme: 'old-light' | 'old-dark' | 'light-e' | 'dark-e' | 'light' | 'dark') => void
+  setTheme: (theme: 'light' | 'dark') => void
   addToast: (toast: Omit<Toast, 'id'>) => void
   removeToast: (id: string) => void
 

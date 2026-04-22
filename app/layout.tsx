@@ -5,7 +5,6 @@ import { Inter, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ToastContainer } from '@/components/toast-container'
 import { ThemeProvider } from '@/components/theme-provider'
-import { ThemeSyncEffect } from '@/components/theme-sync-effect'
 import { AmbientBackground } from '@/components/ambient-background'
 import { SubscriptionsProvider } from '@/components/providers/subscriptions-provider'
 import './globals.css'
@@ -122,23 +121,7 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies()
   const cookieTheme = cookieStore.get('renewly-theme')?.value
-  
-  // Normalize to one of the 4 temporary variants:
-  //   old-light | old-dark | light-e | dark-e
-  // Legacy 'light'/'dark' cookies map to old-light/old-dark so existing
-  // users keep seeing their current theme until they opt into E.
-  const themeMap: Record<string, string> = {
-    'old-light': 'old-light',
-    'old-dark': 'old-dark',
-    'light-e': 'light-e',
-    'dark-e': 'dark-e',
-    'light': 'old-light',
-    'dark': 'old-dark',
-  }
-  const currentThemeId = themeMap[cookieTheme ?? ''] ?? 'dark-e'
-  
-  // Determine if dark mode based on theme ID
-  const isDark = currentThemeId === 'old-dark' || currentThemeId === 'dark-e'
+  const initialTheme = cookieTheme === 'light' ? 'light' : 'dark'
 
   const schemaData = {
     '@context': 'https://schema.org',
@@ -168,8 +151,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={isDark ? 'dark' : ''}
-      data-theme-variant={currentThemeId}
+      className={initialTheme === 'dark' ? 'dark' : ''}
       suppressHydrationWarning
     >
       <head>
@@ -178,19 +160,8 @@ export default async function RootLayout({
             __html: `
   (function () {
     try {
-      // Theme system fix: use data-theme-variant instead of multi-word class strings
-      // Map theme IDs to their dark mode status
-      var modeMap = {
-        'old-light': false,
-        'old-dark': true,
-        'light-e': false,
-        'dark-e': true,
-        'light': false,
-        'dark': true
-      };
-
-      var cookieMatch = document.cookie.match(/(?:^|; )renewly-theme=([^;]+)/);
-      var theme = cookieMatch ? decodeURIComponent(cookieMatch[1]) : null;
+      var cookieMatch = document.cookie.match(/(?:^|; )renewly-theme=(light|dark)/);
+      var theme = cookieMatch ? cookieMatch[1] : null;
 
       if (!theme) {
         theme = localStorage.getItem('renewly-theme');
@@ -199,40 +170,28 @@ export default async function RootLayout({
       if (!theme) {
         var store = localStorage.getItem('renewly-store');
         if (store) {
-          try {
-            var parsed = JSON.parse(store);
-            var state = parsed && parsed.state ? parsed.state : null;
-            theme =
-              (state && state.theme) ||
-              (state && state.notificationSettings && state.notificationSettings.theme) ||
-              null;
-          } catch (e) {
-            // Ignore JSON parse errors
-          }
+          var parsed = JSON.parse(store);
+          var state = parsed && parsed.state ? parsed.state : null;
+          theme =
+            (state && state.theme) ||
+            (state && state.notificationSettings && state.notificationSettings.theme) ||
+            'dark';
         }
       }
 
-      if (!modeMap.hasOwnProperty(theme)) {
-        theme = 'dark-e';
-      }
+      theme = theme || 'dark';
 
       var root = document.documentElement;
-      var isDark = modeMap[theme];
-      
-      // Set .dark class based on mode
-      root.classList.remove('dark');
-      if (isDark) {
+      if (theme === 'light') {
+        root.classList.remove('dark');
+      } else {
         root.classList.add('dark');
       }
-      
-      // Set data-theme-variant attribute
-      root.setAttribute('data-theme-variant', theme);
+
       root.dataset.theme = theme;
     } catch (e) {
-      // Fallback to dark-e
       document.documentElement.classList.add('dark');
-      document.documentElement.setAttribute('data-theme-variant', 'dark-e');
-      document.documentElement.dataset.theme = 'dark-e';
+      document.documentElement.dataset.theme = 'dark';
     }
   })();
 `,
@@ -246,8 +205,13 @@ export default async function RootLayout({
       <body
         className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-background min-h-screen overflow-x-hidden`}
       >
-        <ThemeProvider>
-          <ThemeSyncEffect />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          storageKey="renewly-theme"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
           <SubscriptionsProvider>
             <PreferencesBridge />
             <div className="relative isolate min-h-screen overflow-x-hidden">
