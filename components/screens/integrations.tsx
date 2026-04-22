@@ -22,8 +22,28 @@ import { cn } from '@/lib/utils'
 import { Header } from '@/components/header'
 import { PageTransition } from '@/components/motion'
 
-// SWR fetcher
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+// SWR fetcher — returns null on any failure so the UI falls back to empty state
+// instead of propagating errors that would white-screen the route.
+const fetcher = async (url: string) => {
+  try {
+    const res = await fetch(url)
+    if (!res.ok) {
+      console.log('[v0] integrations fetcher: non-ok response', url, res.status)
+      return null
+    }
+    return await res.json()
+  } catch (err) {
+    console.log('[v0] integrations fetcher: threw', url, err)
+    return null
+  }
+}
+
+// Allowed literal values — anything else gets normalized to a safe default.
+type HealthValue = 'healthy' | 'degraded' | 'unhealthy'
+type WebhookValue = 'active' | 'inactive' | 'error'
+
+const HEALTH_VALUES: readonly HealthValue[] = ['healthy', 'degraded', 'unhealthy']
+const WEBHOOK_VALUES: readonly WebhookValue[] = ['active', 'inactive', 'error']
 
 // Integration type from API
 interface IntegrationInfo {
@@ -34,27 +54,108 @@ interface IntegrationInfo {
   isConnected: boolean
   account?: { email: string } | null
   lastSync?: string | null
-  syncHealth?: 'healthy' | 'degraded' | 'unhealthy'
-  webhookStatus?: 'active' | 'inactive' | 'error'
+  syncHealth?: HealthValue
+  webhookStatus?: WebhookValue
   canConnect: boolean
   canReconnect: boolean
   canRescan: boolean
   canPause: boolean
 }
 
+// Normalize a raw, possibly-malformed integration record into a safe, fully
+// populated IntegrationInfo. Anything missing/invalid collapses to a safe
+// default so downstream rendering never crashes.
+function normalizeIntegration(raw: unknown, index: number): IntegrationInfo {
+  const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
+
+  const idFromRaw = typeof r.id === 'string' && r.id.length > 0 ? r.id : null
+  const id = idFromRaw ?? `integration-${index}`
+  const name = typeof r.name === 'string' && r.name.trim().length > 0 ? r.name : 'Unknown integration'
+  const description =
+    typeof r.description === 'string' && r.description.trim().length > 0
+      ? r.description
+      : 'No description available'
+  const icon = typeof r.icon === 'string' && r.icon.length > 0 ? r.icon : 'mail'
+  const isConnected = r.isConnected === true
+
+  // Account is either { email } or null
+  let account: { email: string } | null = null
+  if (r.account && typeof r.account === 'object') {
+    const emailRaw = (r.account as Record<string, unknown>).email
+    if (typeof emailRaw === 'string' && emailRaw.length > 0) {
+      account = { email: emailRaw }
+    }
+  }
+
+  const lastSync = typeof r.lastSync === 'string' && r.lastSync.length > 0 ? r.lastSync : null
+
+  const syncHealth =
+    typeof r.syncHealth === 'string' && (HEALTH_VALUES as readonly string[]).includes(r.syncHealth)
+      ? (r.syncHealth as HealthValue)
+      : undefined
+
+  const webhookStatus =
+    typeof r.webhookStatus === 'string' && (WEBHOOK_VALUES as readonly string[]).includes(r.webhookStatus)
+      ? (r.webhookStatus as WebhookValue)
+      : undefined
+
+  return {
+    id,
+    name,
+    description,
+    icon,
+    isConnected,
+    account,
+    lastSync,
+    syncHealth,
+    webhookStatus,
+    canConnect: r.canConnect === true,
+    canReconnect: r.canReconnect === true,
+    canRescan: r.canRescan === true,
+    canPause: r.canPause === true,
+  }
+}
+
+// Safe "time ago" formatter. Never throws, never returns "NaN ago".
+// Falls back to "Never" if the date is missing, malformed, or unparseable.
+function formatLastSync(date?: string | null): string {
+  if (!date || typeof date !== 'string') return 'Never'
+  try {
+    const parsedMs = new Date(date).getTime()
+    if (!Number.isFinite(parsedMs)) return 'Never'
+
+    const diff = Date.now() - parsedMs
+    if (!Number.isFinite(diff) || diff < 0) {
+      // Future dates or computation errors — fall back to locale date only.
+      const locale = new Date(parsedMs).toLocaleDateString()
+      return locale || 'Never'
+    }
+
+    const mins = Math.floor(diff / 60000)
+    if (mins < 1) return 'Just now'
+    if (mins < 60) return `${mins}m ago`
+    const hours = Math.floor(mins / 60)
+    if (hours < 24) return `${hours}h ago`
+    return new Date(parsedMs).toLocaleDateString()
+  } catch {
+    return 'Never'
+  }
+}
+
 // Fast transition
-const fastTransition = { duration: 0.2, ease: [0.32, 0.72, 0, 1] }
+const fastTransition = { duration: 0.2, ease: [0.32, 0.72, 0, 1] as const }
 
-// Health status component
-function HealthStatus({ health }: { health?: 'healthy' | 'degraded' | 'unhealthy' }) {
-  if (!health) return null
-
-  const config = {
+// Health status component — guards against unknown values.
+function HealthStatus({ health }: { health?: HealthValue }) {
+  const config: Record<HealthValue, { label: string; color: string; pulse: boolean }> = {
     healthy: { label: 'Healthy', color: 'bg-emerald', pulse: false },
     degraded: { label: 'Degraded', color: 'bg-gold', pulse: true },
     unhealthy: { label: 'Unhealthy', color: 'bg-crimson', pulse: true },
   }
-  const { label, color, pulse } = config[health]
+  // Fall back to a safe "Unavailable" tile if health is missing or unknown
+  // (prevents destructuring undefined, which was a crash vector).
+  const entry = health && config[health] ? config[health] : { label: 'Unavailable', color: 'bg-muted-foreground', pulse: false }
+  const { label, color, pulse } = entry
 
   return (
     <div className="flex items-center gap-2">
@@ -69,16 +170,18 @@ function HealthStatus({ health }: { health?: 'healthy' | 'degraded' | 'unhealthy
   )
 }
 
-// Webhook status component
-function WebhookStatus({ status }: { status?: 'active' | 'inactive' | 'error' }) {
-  if (!status) return null
-
-  const config = {
+// Webhook status component — guards against unknown values.
+function WebhookStatus({ status }: { status?: WebhookValue }) {
+  const config: Record<WebhookValue, { label: string; icon: typeof Activity; color: string }> = {
     active: { label: 'Webhook Active', icon: Activity, color: 'text-emerald' },
     inactive: { label: 'Webhook Inactive', icon: Pause, color: 'text-muted-foreground' },
     error: { label: 'Webhook Error', icon: AlertTriangle, color: 'text-crimson' },
   }
-  const { label, icon: Icon, color } = config[status]
+  // Fall back to an "Unknown" state rather than destructuring undefined.
+  const entry = status && config[status]
+    ? config[status]
+    : { label: 'Webhook Unknown', icon: Activity, color: 'text-muted-foreground' }
+  const { label, icon: Icon, color } = entry
 
   return (
     <div className={cn('flex items-center gap-1.5 text-xs', color)}>
@@ -123,20 +226,14 @@ function IntegrationCard({
 
   const handleAction = async (action: () => void) => {
     setIsLoading(true)
-    await new Promise((r) => setTimeout(r, 1000))
-    action()
-    setIsLoading(false)
-  }
-
-  const formatLastSync = (date?: string | null) => {
-    if (!date) return 'Never synced'
-    const diff = Date.now() - new Date(date).getTime()
-    const mins = Math.floor(diff / 60000)
-    if (mins < 1) return 'Just now'
-    if (mins < 60) return `${mins}m ago`
-    const hours = Math.floor(mins / 60)
-    if (hours < 24) return `${hours}h ago`
-    return new Date(date).toLocaleDateString()
+    try {
+      await new Promise((r) => setTimeout(r, 1000))
+      action()
+    } catch (err) {
+      console.log('[v0] integration action failed', err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -193,16 +290,14 @@ function IntegrationCard({
                 <WebhookStatus status={integration.webhookStatus} />
               </div>
 
-              {integration.lastSync && (
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Clock className="w-3.5 h-3.5" />
-                  Last sync: {formatLastSync(integration.lastSync)}
-                </div>
-              )}
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Clock className="w-3.5 h-3.5" />
+                Last sync: {formatLastSync(integration.lastSync)}
+              </div>
             </div>
 
             {/* Account email if available */}
-            {integration.account && (
+            {integration.account?.email && (
               <div className="mt-3 px-3 py-2 rounded-lg bg-muted/50 border border-border/50">
                 <p className="text-xs text-muted-foreground">Connected account</p>
                 <p className="text-sm text-foreground">{integration.account.email}</p>
@@ -274,6 +369,7 @@ function IntegrationCard({
               <button
                 onClick={onSettings}
                 className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted border border-border transition-all"
+                aria-label="Integration settings"
               >
                 <Settings className="w-4 h-4" />
               </button>
@@ -285,8 +381,18 @@ function IntegrationCard({
   )
 }
 
-// Sync stats component
+// Coerce an unknown value into a finite, non-negative number.
+function safeNumber(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value)
+  return Number.isFinite(n) && n >= 0 ? n : 0
+}
+
+// Sync stats component — numbers are coerced defensively.
 function SyncStats({ stats }: { stats: { processed: number; candidates: number; errors: number } }) {
+  const processed = safeNumber(stats?.processed)
+  const candidates = safeNumber(stats?.candidates)
+  const errors = safeNumber(stats?.errors)
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -298,19 +404,19 @@ function SyncStats({ stats }: { stats: { processed: number; candidates: number; 
 
       <div className="grid grid-cols-3 gap-4">
         <div className="text-center p-4 rounded-xl bg-muted/50 border border-border/50">
-          <p className="text-2xl font-bold text-foreground">{stats.processed.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-foreground">{processed.toLocaleString()}</p>
           <p className="text-xs text-muted-foreground mt-1">Messages Processed</p>
         </div>
         <div className="text-center p-4 rounded-xl bg-muted/50 border border-border/50">
-          <p className="text-2xl font-bold text-gold">{stats.candidates}</p>
+          <p className="text-2xl font-bold text-gold">{candidates.toLocaleString()}</p>
           <p className="text-xs text-muted-foreground mt-1">Candidates Found</p>
         </div>
         <div className="text-center p-4 rounded-xl bg-muted/50 border border-border/50">
           <p className={cn(
             'text-2xl font-bold',
-            stats.errors > 0 ? 'text-crimson' : 'text-emerald'
+            errors > 0 ? 'text-crimson' : 'text-emerald'
           )}>
-            {stats.errors}
+            {errors.toLocaleString()}
           </p>
           <p className="text-xs text-muted-foreground mt-1">Errors</p>
         </div>
@@ -321,51 +427,79 @@ function SyncStats({ stats }: { stats: { processed: number; candidates: number; 
 
 // Main Integrations Screen
 export function IntegrationsScreen() {
-  // Fetch integrations from API
-  const { data: integrationsData, mutate: mutateIntegrations } = useSWR<{ integrations: IntegrationInfo[] }>(
+  // Fetch integrations from API — fetcher never throws, so SWR's `error`
+  // path shouldn't fire, but we still defensively coerce the result below.
+  const { data: integrationsData, mutate: mutateIntegrations } = useSWR<unknown>(
     '/api/smart-capture/integrations',
     fetcher,
     { refreshInterval: 60000 } // Refresh every minute
   )
-  const integrations = integrationsData?.integrations || []
+
+  // Pull `.integrations` only if data is an object with an array at that key.
+  const rawIntegrations: unknown[] = (() => {
+    if (!integrationsData || typeof integrationsData !== 'object') return []
+    const list = (integrationsData as Record<string, unknown>).integrations
+    return Array.isArray(list) ? list : []
+  })()
+
+  // Normalize every entry into a safe shape.
+  const integrations: IntegrationInfo[] = rawIntegrations.map((raw, i) => normalizeIntegration(raw, i))
 
   // Fetch counts for stats
-  const { data: countsData } = useSWR<{ counts: { total: number } }>(
-    '/api/smart-capture/counts',
-    fetcher
-  )
+  const { data: countsData } = useSWR<unknown>('/api/smart-capture/counts', fetcher)
 
-  // Calculate stats from counts
+  // Calculate stats from counts — fully guarded.
+  const countsTotal = (() => {
+    if (!countsData || typeof countsData !== 'object') return 0
+    const counts = (countsData as Record<string, unknown>).counts
+    if (!counts || typeof counts !== 'object') return 0
+    return safeNumber((counts as Record<string, unknown>).total)
+  })()
+
   const stats = {
     processed: 0, // Would need a separate endpoint for this
-    candidates: countsData?.counts?.total || 0,
+    candidates: countsTotal,
     errors: 0, // Would need a separate endpoint for this
   }
 
   const handleConnect = (id: string) => {
-    console.log('Connect integration:', id)
+    console.log('[v0] Connect integration:', id)
     // In real implementation, this would trigger OAuth flow
   }
 
   const handleReconnect = async (id: string) => {
-    console.log('Reconnect integration:', id)
-    await mutateIntegrations()
+    console.log('[v0] Reconnect integration:', id)
+    try {
+      await mutateIntegrations()
+    } catch (err) {
+      console.log('[v0] reconnect revalidate failed', err)
+    }
   }
 
   const handleRescan = async (id: string) => {
-    console.log('Rescan integration:', id)
-    // Would trigger sync via Inngest
-    await mutateIntegrations()
+    console.log('[v0] Rescan integration:', id)
+    try {
+      await mutateIntegrations()
+    } catch (err) {
+      console.log('[v0] rescan revalidate failed', err)
+    }
   }
 
   const handlePause = async (id: string) => {
-    console.log('Pause integration:', id)
-    await mutateIntegrations()
+    console.log('[v0] Pause integration:', id)
+    try {
+      await mutateIntegrations()
+    } catch (err) {
+      console.log('[v0] pause revalidate failed', err)
+    }
   }
 
   const handleSettings = (id: string) => {
-    console.log('Open settings for:', id)
+    console.log('[v0] Open settings for:', id)
   }
+
+  const emailIntegrations = integrations.filter((i) => i.icon === 'mail')
+  const systemIntegrations = integrations.filter((i) => i.icon !== 'mail')
 
   return (
     <PageTransition>
@@ -395,9 +529,12 @@ export function IntegrationsScreen() {
         >
           <h2 className="text-lg font-semibold text-foreground mb-4">Email Sources</h2>
           <div className="grid md:grid-cols-2 gap-4">
-            {integrations
-              .filter((i) => i.icon === 'mail')
-              .map((integration) => (
+            {emailIntegrations.length === 0 ? (
+              <div className="col-span-full rounded-2xl bg-muted/30 border border-dashed border-border p-5">
+                <p className="text-sm text-muted-foreground">No email sources available yet.</p>
+              </div>
+            ) : (
+              emailIntegrations.map((integration) => (
                 <IntegrationCard
                   key={integration.id}
                   integration={integration}
@@ -407,7 +544,8 @@ export function IntegrationsScreen() {
                   onPause={() => handlePause(integration.id)}
                   onSettings={() => handleSettings(integration.id)}
                 />
-              ))}
+              ))
+            )}
           </div>
         </motion.div>
 
@@ -419,9 +557,12 @@ export function IntegrationsScreen() {
         >
           <h2 className="text-lg font-semibold text-foreground mb-4">System</h2>
           <div className="grid md:grid-cols-2 gap-4">
-            {integrations
-              .filter((i) => i.icon !== 'mail')
-              .map((integration) => (
+            {systemIntegrations.length === 0 ? (
+              <div className="col-span-full rounded-2xl bg-muted/30 border border-dashed border-border p-5">
+                <p className="text-sm text-muted-foreground">No system integrations available yet.</p>
+              </div>
+            ) : (
+              systemIntegrations.map((integration) => (
                 <IntegrationCard
                   key={integration.id}
                   integration={integration}
@@ -431,7 +572,8 @@ export function IntegrationsScreen() {
                   onPause={() => handlePause(integration.id)}
                   onSettings={() => handleSettings(integration.id)}
                 />
-              ))}
+              ))
+            )}
           </div>
         </motion.div>
 
