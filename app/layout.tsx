@@ -121,7 +121,19 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies()
   const cookieTheme = cookieStore.get('renewly-theme')?.value
-  const initialTheme = cookieTheme === 'light' ? 'light' : 'dark'
+  // Normalize to one of the 4 temporary variants:
+  //   old-light | old-dark | light-e | dark-e
+  // Legacy 'light'/'dark' cookies map to old-light/old-dark so existing
+  // users keep seeing their current theme until they opt into E.
+  const themeClassMap: Record<string, string> = {
+    'old-light': 'old-light',
+    'old-dark': 'dark old-dark',
+    'light-e': 'light-e',
+    'dark-e': 'dark dark-e',
+    light: 'old-light',
+    dark: 'dark old-dark',
+  }
+  const initialHtmlClass = themeClassMap[cookieTheme ?? ''] ?? 'dark dark-e'
 
   const schemaData = {
     '@context': 'https://schema.org',
@@ -151,7 +163,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={initialTheme === 'dark' ? 'dark' : ''}
+      className={initialHtmlClass}
       suppressHydrationWarning
     >
       <head>
@@ -160,8 +172,20 @@ export default async function RootLayout({
             __html: `
   (function () {
     try {
-      var cookieMatch = document.cookie.match(/(?:^|; )renewly-theme=(light|dark)/);
-      var theme = cookieMatch ? cookieMatch[1] : null;
+      // Theme Preview Lab: 4 temporary theme variants
+      //   old-light | old-dark | light-e | dark-e
+      // Legacy cookies with 'light'/'dark' are mapped to the baseline variants.
+      var classMap = {
+        'old-light': ['old-light'],
+        'old-dark':  ['dark', 'old-dark'],
+        'light-e':   ['light-e'],
+        'dark-e':    ['dark', 'dark-e'],
+        'light':     ['old-light'],
+        'dark':      ['dark', 'old-dark']
+      };
+
+      var cookieMatch = document.cookie.match(/(?:^|; )renewly-theme=([^;]+)/);
+      var theme = cookieMatch ? decodeURIComponent(cookieMatch[1]) : null;
 
       if (!theme) {
         theme = localStorage.getItem('renewly-theme');
@@ -175,23 +199,29 @@ export default async function RootLayout({
           theme =
             (state && state.theme) ||
             (state && state.notificationSettings && state.notificationSettings.theme) ||
-            'dark';
+            null;
         }
       }
 
-      theme = theme || 'dark';
+      if (!classMap[theme]) {
+        theme = 'dark-e';
+      }
 
       var root = document.documentElement;
-      if (theme === 'light') {
-        root.classList.remove('dark');
-      } else {
-        root.classList.add('dark');
+      // Clear any existing theme classes we own before applying the new one.
+      var ownedClasses = ['dark', 'old-light', 'old-dark', 'light-e', 'dark-e'];
+      for (var i = 0; i < ownedClasses.length; i++) {
+        root.classList.remove(ownedClasses[i]);
+      }
+      var classesToAdd = classMap[theme];
+      for (var j = 0; j < classesToAdd.length; j++) {
+        root.classList.add(classesToAdd[j]);
       }
 
       root.dataset.theme = theme;
     } catch (e) {
-      document.documentElement.classList.add('dark');
-      document.documentElement.dataset.theme = 'dark';
+      document.documentElement.classList.add('dark', 'dark-e');
+      document.documentElement.dataset.theme = 'dark-e';
     }
   })();
 `,
@@ -205,13 +235,7 @@ export default async function RootLayout({
       <body
         className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-background min-h-screen overflow-x-hidden`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          storageKey="renewly-theme"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
+        <ThemeProvider>
           <SubscriptionsProvider>
             <PreferencesBridge />
             <div className="relative isolate min-h-screen overflow-x-hidden">

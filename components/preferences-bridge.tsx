@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
 import useStore from '@/lib/store'
 import { getLocaleFromLanguage } from '@/lib/preferences-format'
+import { normalizeTheme } from '@/lib/themes'
 
 export function PreferencesBridge() {
   const notificationSettings = useStore((state) => state.notificationSettings)
@@ -12,7 +13,9 @@ export function PreferencesBridge() {
   const [storeHydrated, setStoreHydrated] = useState(false)
 
   const persistApi = (useStore as any).persist
-  const storeTheme = fallbackTheme || notificationSettings.theme || 'dark'
+  // Normalize any legacy 'light'/'dark' values into one of the 4 theme ids
+  // supported by the Theme Preview Lab.
+  const storeTheme = normalizeTheme(fallbackTheme || notificationSettings.theme)
   const language = notificationSettings.language || 'en'
   const currencyCode = notificationSettings.currencyCode || 'INR'
 
