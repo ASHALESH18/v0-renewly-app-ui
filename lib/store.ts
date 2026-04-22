@@ -319,12 +319,15 @@ const useStore = create<AppState>()(
           })
 
           if (result.success) {
+            // Fetch fresh subscriptions from API and replace store
             await mutate('/api/subscriptions')
+            set({ syncError: null })
             return { success: true }
           }
 
-          set({ syncError: result.error || 'Failed to add subscription' })
-          return { success: false, error: result.error }
+          const error = result.error || 'Failed to add subscription'
+          set({ syncError: error })
+          return { success: false, error }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to add subscription'
           set({ syncError: message })
@@ -335,10 +338,7 @@ const useStore = create<AppState>()(
       },
 
       updateSubscriptionRemote: async (id, updates) => {
-        if (result.success) {
-          await mutate('/api/subscriptions')
-          return { success: true }
-        }
+        set({ isSyncingUserData: true, syncError: null })
 
         try {
           const result = await updateSubscription(id, {
@@ -353,17 +353,15 @@ const useStore = create<AppState>()(
           })
 
           if (result.success) {
-            set((state) => ({
-              subscriptions: state.subscriptions.map((sub) =>
-                sub.id === id ? { ...sub, ...updates } : sub
-              ),
-            }))
-
+            // Fetch fresh subscriptions from API and replace store
+            await mutate('/api/subscriptions')
+            set({ syncError: null })
             return { success: true }
           }
 
-          set({ syncError: result.error || 'Failed to update subscription' })
-          return { success: false, error: result.error }
+          const error = result.error || 'Failed to update subscription'
+          set({ syncError: error })
+          return { success: false, error }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to update subscription'
           set({ syncError: message })
@@ -379,14 +377,15 @@ const useStore = create<AppState>()(
           const result = await deleteSubscription(id)
 
           if (result.success) {
-            set((state) => ({
-              subscriptions: state.subscriptions.filter(sub => sub.id !== id),
-            }))
+            // Fetch fresh subscriptions from API and replace store
+            await mutate('/api/subscriptions')
+            set({ syncError: null })
             return { success: true }
           }
 
-          set({ syncError: result.error || 'Failed to delete subscription' })
-          return { success: false, error: result.error }
+          const error = result.error || 'Failed to delete subscription'
+          set({ syncError: error })
+          return { success: false, error }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to delete subscription'
           set({ syncError: message })
