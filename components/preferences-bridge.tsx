@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
-import useStore from '@/lib/store'
+import { useStore } from '@/lib/store'
 import { getLocaleFromLanguage } from '@/lib/preferences-format'
 import { normalizeTheme } from '@/lib/themes'
 
