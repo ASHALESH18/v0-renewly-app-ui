@@ -210,7 +210,7 @@ export function LeakReportScreen({
         <motion.div
           initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+          transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="relative rounded-[28px] overflow-hidden"
         >
           <div className="absolute inset-0">
@@ -236,7 +236,7 @@ export function LeakReportScreen({
                   <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
+                    transition={{ delay: 0.25, duration: 0.5 }}
                     className="text-sm font-medium text-gold mb-2 uppercase tracking-wider"
                   >
                     Your Leak Score
@@ -244,7 +244,7 @@ export function LeakReportScreen({
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 }}
+                    transition={{ delay: 0.35, duration: 0.55 }}
                     className={cn(
                       'flex items-center gap-2 px-4 py-2 rounded-full font-semibold',
                       statusConfig.bgColor,
