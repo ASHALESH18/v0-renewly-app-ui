@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useTheme } from 'next-themes'
 import { Check } from 'lucide-react'
-import { useStore } from '@/lib/store'
+import useStore from '@/lib/store'
 import { cn } from '@/lib/utils'
 import {
   THEME_VARIANTS,
