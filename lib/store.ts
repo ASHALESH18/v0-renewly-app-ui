@@ -7,6 +7,7 @@ import { createSubscription, updateSubscription, deleteSubscription } from './su
 import type { ProfileRow, UserSettingsRow } from './supabase/database.types'
 import { mapSubscriptionRowToUI, mapUserSettingsRowToUI } from './supabase/mappers'
 import { calculateMetrics } from './subscription-math'
+import { mutate } from 'swr'
 
 export interface Toast {
   id: string
@@ -317,16 +318,8 @@ const useStore = create<AppState>()(
             status: subscription.status ?? 'active',
           })
 
-          if (result.success && result.data?.[0]) {
-            const newSub: Subscription = {
-              ...subscription,
-              id: result.data[0].id,
-            }
-
-            set((state) => ({
-              subscriptions: [...state.subscriptions, newSub],
-            }))
-
+          if (result.success) {
+            await mutate('/api/subscriptions')
             return { success: true }
           }
 
@@ -342,7 +335,10 @@ const useStore = create<AppState>()(
       },
 
       updateSubscriptionRemote: async (id, updates) => {
-        set({ isSyncingUserData: true, syncError: null })
+        if (result.success) {
+          await mutate('/api/subscriptions')
+          return { success: true }
+        }
 
         try {
           const result = await updateSubscription(id, {
@@ -532,7 +528,7 @@ const useStore = create<AppState>()(
             theme: persistedState?.theme || 'dark',
           }
         }
-        
+
         if (version < 3) {
           // From v2 to v3: clear subscriptions to force fresh load
           // This ensures old persisted subscriptions with bad data shapes don't break the app
@@ -540,7 +536,7 @@ const useStore = create<AppState>()(
             theme: persistedState?.theme || 'dark',
           }
         }
-        
+
         return persistedState
       },
     }

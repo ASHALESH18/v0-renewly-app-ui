@@ -75,7 +75,7 @@ export function DashboardScreen({
   }, [subscriptions])
 
   // Build filter chips dynamically from subscriptions
-  const categories = [...new Set(subscriptions.map(s => s.category))]
+  const categories = [...new Set(subscriptions.map((s) => s.category || 'Other'))]
   const filterChips = [
     { id: 'all', label: 'All', count: subscriptions.length },
     { id: 'upcoming', label: 'Upcoming', count: upcoming.length },
@@ -97,10 +97,13 @@ export function DashboardScreen({
   })
 
   // Filter by search query
-  const displayedSubscriptions = filteredSubscriptions.filter(sub =>
-    sub.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    sub.category.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const displayedSubscriptions = filteredSubscriptions.filter((sub) => {
+    const name = String(sub.name || '').toLowerCase()
+    const category = String(sub.category || 'Other').toLowerCase()
+    const query = searchQuery.toLowerCase()
+
+    return name.includes(query) || category.includes(query)
+  })
 
   return (
     <PageTransition className="min-h-screen bg-transparent">
@@ -488,7 +491,9 @@ function UpcomingCard({
   preferredCurrency,
   preferredLanguage,
 }: UpcomingCardProps) {
-  const daysUntil = getDaysUntil(subscription.renewalDate || '')
+  const daysUntil = subscription.renewalDate
+    ? getDaysUntilRenewal(subscription)
+    : 999
   const isUrgent = daysUntil <= 3
 
   return (
