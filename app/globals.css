@@ -221,91 +221,149 @@ button,
 }
 
 /* ================================================================ */
-/* GLASS THEME — Apple Glass Luxury inspired                         */
+/* GLASS THEME — Apple Glass Luxury                                  */
 /*                                                                   */
-/* Cool blue-lavender-silver atmosphere with warm gold accents.      */
-/* Premium frosted panels, layered depth, and a quiet luminous feel. */
+/* Deep cool navy-violet base with soft blue / lavender / silver     */
+/* atmosphere. Cards and sidebar are TRULY translucent (rgba) so the */
+/* ambient background shines through when combined with the          */
+/* backdrop-filter utilities applied via the rules below.            */
 /*                                                                   */
-/* IMPORTANT: Applied via [data-theme="glass"]. A ThemeSyncEffect    */
-/* also adds the `.dark` class (single-token, safe) so every         */
-/* existing `.dark .xxx` rule keeps working in Glass mode; Glass     */
-/* then overrides what needs to feel distinct.                       */
+/* Applied via `[data-theme="glass"]` on <html>.                     */
+/* `ThemeSyncEffect` also adds the `.dark` class so every existing   */
+/* `.dark .xxx` rule keeps working; Glass then layers its own        */
+/* overrides on top where it needs to feel distinct.                 */
 /* ================================================================ */
 [data-theme="glass"] {
-  /* Base palette — deep cool navy-violet with airy glow */
-  --background: #0F1220;
-  --foreground: #EEF0F8;
-  --card: #1A1D2D;
-  --card-foreground: #EEF0F8;
-  --popover: #1A1D2D;
-  --popover-foreground: #EEF0F8;
+  /* Deep cool navy-violet base */
+  --background: #0B0E1A;
+  --foreground: #ECEEFB;
 
-  /* Champagne gold kept warm and restrained */
+  /* TRUE GLASS: cards, popovers, secondary, muted are semi-transparent */
+  /* so the atmospheric background glows through them.                  */
+  --card: rgba(30, 34, 54, 0.55);
+  --card-foreground: #ECEEFB;
+  --popover: rgba(26, 30, 48, 0.85);
+  --popover-foreground: #ECEEFB;
+
+  /* Restrained warm champagne gold — never dominant */
   --primary: #D4B070;
-  --primary-foreground: #0F1220;
+  --primary-foreground: #0B0E1A;
 
-  --secondary: #1E2236;
-  --secondary-foreground: #EEF0F8;
+  --secondary: rgba(40, 46, 72, 0.55);
+  --secondary-foreground: #ECEEFB;
 
-  --muted: #1E2236;
-  --muted-foreground: #9BA1B8;
+  --muted: rgba(40, 46, 72, 0.45);
+  --muted-foreground: #A8AEC8;
 
   /* Soft lavender-silver accent for depth */
-  --accent: #8B8FB8;
-  --accent-foreground: #0F1220;
+  --accent: rgba(139, 143, 184, 0.20);
+  --accent-foreground: #ECEEFB;
 
   --destructive: #7A3E4A;
   --destructive-foreground: #F6F2EA;
 
-  --border: rgba(180, 190, 230, 0.10);
-  --input: #1E2236;
+  --border: rgba(180, 200, 255, 0.10);
+  --input: rgba(40, 46, 72, 0.55);
   --ring: #D4B070;
 
   --chart-1: #D4B070;
-  --chart-2: #8B8FB8;
-  --chart-3: #6E7AB0;
-  --chart-4: #A8AEC5;
-  --chart-5: #EEF0F8;
+  --chart-2: #8B9FD4;
+  --chart-3: #B094D4;
+  --chart-4: #A8AEC8;
+  --chart-5: #ECEEFB;
 
-  /* Sidebar — slightly deeper than background */
-  --sidebar: #0C0F1C;
-  --sidebar-foreground: #EEF0F8;
+  /* Sidebar — translucent so the ambient atmosphere bleeds through */
+  --sidebar: rgba(14, 17, 30, 0.55);
+  --sidebar-foreground: #ECEEFB;
   --sidebar-primary: #D4B070;
-  --sidebar-primary-foreground: #0F1220;
-  --sidebar-accent: #1A1D2D;
-  --sidebar-accent-foreground: #EEF0F8;
-  --sidebar-border: rgba(180, 190, 230, 0.08);
+  --sidebar-primary-foreground: #0B0E1A;
+  --sidebar-accent: rgba(40, 46, 72, 0.50);
+  --sidebar-accent-foreground: #ECEEFB;
+  --sidebar-border: rgba(180, 200, 255, 0.08);
   --sidebar-ring: #D4B070;
 
-  --hero-vignette: rgba(15, 18, 32, 0.6);
+  --hero-vignette: rgba(11, 14, 26, 0.5);
 
   /* Renewly custom tokens — Glass Luxury */
-  --obsidian: #0F1220;
-  --graphite: #1A1D2D;
-  --slate: #1E2236;
-  --ivory: #EEF0F8;
-  --platinum: #9BA1B8;
+  --obsidian: #0B0E1A;
+  --graphite: rgba(30, 34, 54, 0.55);
+  --slate: rgba(40, 46, 72, 0.55);
+  --ivory: #ECEEFB;
+  --platinum: #A8AEC8;
   --gold: #D4B070;
   --muted-gold: #9A8560;
   --emerald: #3D6B58;
   --crimson: #7A3E4A;
-  /* Cooler, more lavender-tinted glass */
-  --glass: rgba(180, 190, 230, 0.06);
-  --glass-border: rgba(180, 200, 255, 0.12);
+  --glass: rgba(180, 200, 255, 0.06);
+  --glass-border: rgba(180, 200, 255, 0.14);
 
-  /* Premium surface hierarchy — slightly translucent, airier */
-  --surface-base: #0F1220;
-  --surface-elevated: #1A1D2D;
-  --surface-floating: rgba(26, 29, 45, 0.88);
-  --surface-modal: #1E2236;
+  /* Premium surface hierarchy — progressive translucency */
+  --surface-base: #0B0E1A;
+  --surface-elevated: rgba(30, 34, 54, 0.55);
+  --surface-floating: rgba(30, 34, 54, 0.78);
+  --surface-modal: rgba(30, 34, 54, 0.92);
 
-  /* Cool-toned shadows with subtle lavender glow */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
-  --shadow-sm: 0 2px 10px -2px rgba(10, 15, 40, 0.45), 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 10px 28px -8px rgba(10, 15, 40, 0.55), 0 2px 6px -2px rgba(0, 0, 0, 0.22);
-  --shadow-lg: 0 20px 52px -14px rgba(10, 15, 40, 0.6), 0 6px 14px -4px rgba(0, 0, 0, 0.28);
-  --shadow-xl: 0 28px 72px -18px rgba(10, 15, 40, 0.7), 0 10px 22px -6px rgba(0, 0, 0, 0.32);
-  --shadow-glow: 0 0 60px -12px rgba(160, 170, 220, 0.14);
+  /* Cool-toned shadows with a faint lavender glow */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.22);
+  --shadow-sm: 0 2px 10px -2px rgba(8, 12, 32, 0.40), 0 1px 2px rgba(0, 0, 0, 0.18);
+  --shadow-md: 0 10px 28px -8px rgba(8, 12, 32, 0.50), 0 2px 6px -2px rgba(0, 0, 0, 0.20);
+  --shadow-lg: 0 20px 52px -14px rgba(8, 12, 32, 0.55), 0 6px 14px -4px rgba(0, 0, 0, 0.26);
+  --shadow-xl: 0 28px 72px -18px rgba(8, 12, 32, 0.65), 0 10px 22px -6px rgba(0, 0, 0, 0.30);
+  --shadow-glow: 0 0 60px -12px rgba(160, 170, 220, 0.18);
+}
+
+/* ================================================================ */
+/* GLASS THEME — Universal surface frosting                          */
+/*                                                                   */
+/* Because `--card`, `--sidebar`, `--popover` etc. are rgba() in     */
+/* Glass mode, any element using `bg-card` / `bg-sidebar` is         */
+/* automatically translucent. These rules add the `backdrop-filter`  */
+/* so the atmospheric background behind them blurs smoothly into     */
+/* a frosted panel — the actual "glass" effect.                      */
+/*                                                                   */
+/* Performance note: backdrop-filter is GPU-accelerated on modern    */
+/* devices. The saturate() nudge gives glass its luminous quality.   */
+/* ================================================================ */
+[data-theme="glass"] .bg-card,
+[data-theme="glass"] .bg-popover,
+[data-theme="glass"] .bg-secondary,
+[data-theme="glass"] .bg-muted,
+[data-theme="glass"] .bg-sidebar,
+[data-theme="glass"] .bg-sidebar-accent {
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+}
+
+/* Sidebar <aside> uses a hard-coded gradient in SidebarNav for
+   Light/Dark. In Glass we override with a translucent lavender-tinted
+   gradient so the atmosphere bleeds through. */
+[data-theme="glass"] aside {
+  background: linear-gradient(
+    180deg,
+    rgba(22, 25, 42, 0.58) 0%,
+    rgba(14, 17, 30, 0.62) 100%
+  ) !important;
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border-right-color: rgba(180, 200, 255, 0.10) !important;
+  box-shadow:
+    1px 0 0 rgba(180, 200, 255, 0.04) inset,
+    8px 0 32px rgba(8, 12, 32, 0.32) !important;
+}
+
+/* Inputs in Glass: softly frosted, airy border */
+[data-theme="glass"] input,
+[data-theme="glass"] textarea,
+[data-theme="glass"] select {
+  background: rgba(30, 34, 54, 0.45);
+  border-color: rgba(180, 200, 255, 0.14);
+  backdrop-filter: blur(10px) saturate(160%);
+  -webkit-backdrop-filter: blur(10px) saturate(160%);
+}
+
+/* Border utility: in Glass, use the soft lavender border everywhere */
+[data-theme="glass"] .border-border {
+  border-color: rgba(180, 200, 255, 0.10);
 }
 
 @theme inline {
@@ -594,29 +652,74 @@ button,
     var(--shadow-glow);
 }
 
-/* Glass theme: body ambient — soft blue-lavender luminous atmosphere */
-[data-theme="glass"] body::before {
-  content: '';
-  position: fixed;
+/* ================================================================ */
+/* GLASS THEME — Atmospheric ambient layers                          */
+/*                                                                   */
+/* Painted inside the `<AmbientBackground />` component (see         */
+/* `components/ambient-background.tsx`) rather than on body::before, */
+/* so it lives inside the app's `isolate` stacking context and can't */
+/* collide with the sidebar or interactive chrome.                   */
+/*                                                                   */
+/* These two classes are always present in the DOM; visibility is    */
+/* toggled by the active theme attribute.                            */
+/* ================================================================ */
+
+/* Default atmosphere (Light/Dark): subtle gold vignette */
+.ambient-atmosphere-default {
+  position: absolute;
   inset: 0;
-  z-index: 0;
   pointer-events: none;
   background:
+    radial-gradient(ellipse at 20% 50%, rgba(212, 176, 112, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(42, 85, 72, 0.02) 0%, transparent 50%);
+}
+
+[data-theme="glass"] .ambient-atmosphere-default {
+  display: none;
+}
+
+/* Glass atmosphere: soft blue / lavender luminous glow */
+.ambient-atmosphere-glass {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: none;
+  background:
     radial-gradient(
-      ellipse 70% 50% at 18% 20%,
-      rgba(140, 150, 220, 0.14) 0%,
+      ellipse 80% 60% at 15% 12%,
+      rgba(148, 168, 235, 0.34) 0%,
       transparent 55%
     ),
     radial-gradient(
-      ellipse 60% 45% at 82% 78%,
-      rgba(170, 140, 200, 0.10) 0%,
+      ellipse 70% 55% at 85% 82%,
+      rgba(178, 148, 215, 0.24) 0%,
       transparent 55%
+    ),
+    radial-gradient(
+      ellipse 60% 45% at 55% 50%,
+      rgba(130, 155, 200, 0.14) 0%,
+      transparent 60%
     ),
     radial-gradient(
       ellipse 55% 40% at 50% 110%,
       rgba(212, 176, 112, 0.06) 0%,
       transparent 60%
     );
+}
+
+[data-theme="glass"] .ambient-atmosphere-glass {
+  display: block;
+}
+
+/* Subtle film grain for the Glass theme — adds texture without noise */
+[data-theme="glass"] .ambient-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(180, 200, 255, 0.035) 1px, transparent 1px);
+  background-size: 3px 3px;
 }
 
 /* === FLOATING CARD SYSTEM === */

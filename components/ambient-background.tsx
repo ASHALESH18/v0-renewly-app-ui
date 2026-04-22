@@ -1,41 +1,40 @@
-'use client'
-
 /**
- * Static Premium Dark Background
- * 
- * Replaced animated ambient background with a static premium dark background.
- * Removes all full-screen animations (particles, waves, glows, breathe effects)
- * while keeping element-level animations for cards, sheets, and buttons.
- * 
- * This improves perceived speed and smoothness of the app.
+ * AmbientBackground
+ *
+ * Theme-aware static background layer. Lives behind all app chrome
+ * inside the root `relative isolate` stacking context in `app/layout.tsx`,
+ * so it can NEVER sit above interactive UI (sidebar, logo, buttons).
+ *
+ * Three behaviours switched purely via CSS on the `[data-theme]`
+ * attribute (see the `.ambient-atmosphere-*` rules in globals.css):
+ *
+ *  - light / dark: a very subtle gold vignette over `--background`
+ *  - glass:        a luminous blue / lavender atmosphere + soft grain,
+ *                  visible through the translucent cards and sidebar
+ *
+ * Because everything here is rendered as a child of a
+ * `pointer-events-none` wrapper, no layer in this tree can ever
+ * capture a click — which is how we keep the sidebar and logo
+ * fully clickable in all three themes.
  */
 export function AmbientBackground() {
   return (
-    <div 
+    <div
       className="fixed inset-0 z-0 pointer-events-none overflow-hidden"
       aria-hidden="true"
     >
-      {/* Deep graphite base - premium dark background */}
+      {/* 1. Base fill — uses the theme's --background token */}
       <div className="absolute inset-0 bg-background" />
-      
-      {/* Optional very subtle static radial gradient for depth */}
-      <div 
-        className="absolute inset-0"
-        style={{
-          background: 'radial-gradient(ellipse at 20% 50%, rgba(212, 176, 112, 0.03) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(42, 85, 72, 0.02) 0%, transparent 50%)',
-        }}
-      />
-      
-      {/* Subtle texture overlay for premium feel */}
-      <div 
-        className="absolute inset-0 opacity-40"
-        style={{
-          backgroundImage: `
-            radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.02) 1px, transparent 1px)
-          `,
-          backgroundSize: '50px 50px',
-        }}
-      />
+
+      {/* 2. Default ambient (Light/Dark). Hidden under Glass by CSS. */}
+      <div className="ambient-atmosphere-default" />
+
+      {/* 3. Glass ambient — luminous blue/lavender atmosphere.
+             Only visible when [data-theme="glass"]. */}
+      <div className="ambient-atmosphere-glass" />
+
+      {/* 4. Subtle grain — only active in Glass to add premium texture */}
+      <div className="ambient-grain" />
     </div>
   )
 }

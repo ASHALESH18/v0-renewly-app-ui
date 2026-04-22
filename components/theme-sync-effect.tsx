@@ -1,36 +1,52 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
 
 /**
  * ThemeSyncEffect
  *
- * Ensures the `.dark` CSS class is applied correctly alongside the
- * `data-theme` attribute managed by next-themes. This keeps all existing
- * `.dark .xxx` rules in the codebase working for the Glass theme, which
- * uses dark's color base as a foundation and then layers its own
- * `[data-theme="glass"]` overrides on top.
+ * Keeps the `.dark` CSS class on `<html>` in sync with the active theme
+ * so every `.dark .xxx` rule in globals.css continues to apply in both
+ * Dark and Glass modes (Glass uses Dark's color base + its own
+ * `[data-theme="glass"]` overrides).
  *
- * IMPORTANT STABILITY NOTE:
- * Every classList mutation below uses a SINGLE token (no spaces).
- * This avoids the DOMTokenList `InvalidCharacterError` that caused
- * the previous theme experiment to crash.
+ * Stability rules this implementation follows:
  *
- *   - `light` → remove `.dark`
- *   - `dark`  → add `.dark`
- *   - `glass` → add `.dark` (glass uses dark's color base + overrides)
+ *  1. Never toggle the class until next-themes has mounted AND reported
+ *     a concrete theme value. Toggling on a stale/undefined value during
+ *     hydration is what caused the Light → Dark → Light flash.
+ *
+ *  2. Never "default to dark" when theme is undefined — the pre-hydration
+ *     inline script in `app/layout.tsx` has already applied the correct
+ *     class from the cookie/localStorage, so doing nothing is safe.
+ *
+ *  3. Every classList mutation uses a SINGLE token (no spaces), avoiding
+ *     the DOMTokenList `InvalidCharacterError` that previously crashed
+ *     the theme system.
  */
 export function ThemeSyncEffect() {
   const { theme, resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const active = (theme ?? resolvedTheme ?? 'dark') as string
-    const root = document.documentElement
+    setMounted(true)
+  }, [])
 
+  useEffect(() => {
+    if (!mounted) return
+
+    // Prefer the explicit `theme` value, then `resolvedTheme`.
+    // If both are undefined, do nothing — the pre-hydration script
+    // already put the correct class on <html>.
+    const active = (theme ?? resolvedTheme) as string | undefined
+    if (!active) return
+    if (active !== 'light' && active !== 'dark' && active !== 'glass') return
+
+    const root = document.documentElement
     const needsDark = active === 'dark' || active === 'glass'
 
-    // Single-token classList operations only. Never pass a string with a space.
+    // Single-token classList operations only.
     if (needsDark) {
       if (!root.classList.contains('dark')) {
         root.classList.add('dark')
@@ -40,7 +56,7 @@ export function ThemeSyncEffect() {
         root.classList.remove('dark')
       }
     }
-  }, [theme, resolvedTheme])
+  }, [mounted, theme, resolvedTheme])
 
   return null
 }
