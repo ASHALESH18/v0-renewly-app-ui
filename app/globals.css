@@ -220,6 +220,94 @@ button,
   --shadow-glow: 0 0 50px -10px rgba(212, 176, 112, 0.12);
 }
 
+/* ================================================================ */
+/* GLASS THEME — Apple Glass Luxury inspired                         */
+/*                                                                   */
+/* Cool blue-lavender-silver atmosphere with warm gold accents.      */
+/* Premium frosted panels, layered depth, and a quiet luminous feel. */
+/*                                                                   */
+/* IMPORTANT: Applied via [data-theme="glass"]. A ThemeSyncEffect    */
+/* also adds the `.dark` class (single-token, safe) so every         */
+/* existing `.dark .xxx` rule keeps working in Glass mode; Glass     */
+/* then overrides what needs to feel distinct.                       */
+/* ================================================================ */
+[data-theme="glass"] {
+  /* Base palette — deep cool navy-violet with airy glow */
+  --background: #0F1220;
+  --foreground: #EEF0F8;
+  --card: #1A1D2D;
+  --card-foreground: #EEF0F8;
+  --popover: #1A1D2D;
+  --popover-foreground: #EEF0F8;
+
+  /* Champagne gold kept warm and restrained */
+  --primary: #D4B070;
+  --primary-foreground: #0F1220;
+
+  --secondary: #1E2236;
+  --secondary-foreground: #EEF0F8;
+
+  --muted: #1E2236;
+  --muted-foreground: #9BA1B8;
+
+  /* Soft lavender-silver accent for depth */
+  --accent: #8B8FB8;
+  --accent-foreground: #0F1220;
+
+  --destructive: #7A3E4A;
+  --destructive-foreground: #F6F2EA;
+
+  --border: rgba(180, 190, 230, 0.10);
+  --input: #1E2236;
+  --ring: #D4B070;
+
+  --chart-1: #D4B070;
+  --chart-2: #8B8FB8;
+  --chart-3: #6E7AB0;
+  --chart-4: #A8AEC5;
+  --chart-5: #EEF0F8;
+
+  /* Sidebar — slightly deeper than background */
+  --sidebar: #0C0F1C;
+  --sidebar-foreground: #EEF0F8;
+  --sidebar-primary: #D4B070;
+  --sidebar-primary-foreground: #0F1220;
+  --sidebar-accent: #1A1D2D;
+  --sidebar-accent-foreground: #EEF0F8;
+  --sidebar-border: rgba(180, 190, 230, 0.08);
+  --sidebar-ring: #D4B070;
+
+  --hero-vignette: rgba(15, 18, 32, 0.6);
+
+  /* Renewly custom tokens — Glass Luxury */
+  --obsidian: #0F1220;
+  --graphite: #1A1D2D;
+  --slate: #1E2236;
+  --ivory: #EEF0F8;
+  --platinum: #9BA1B8;
+  --gold: #D4B070;
+  --muted-gold: #9A8560;
+  --emerald: #3D6B58;
+  --crimson: #7A3E4A;
+  /* Cooler, more lavender-tinted glass */
+  --glass: rgba(180, 190, 230, 0.06);
+  --glass-border: rgba(180, 200, 255, 0.12);
+
+  /* Premium surface hierarchy — slightly translucent, airier */
+  --surface-base: #0F1220;
+  --surface-elevated: #1A1D2D;
+  --surface-floating: rgba(26, 29, 45, 0.88);
+  --surface-modal: #1E2236;
+
+  /* Cool-toned shadows with subtle lavender glow */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-sm: 0 2px 10px -2px rgba(10, 15, 40, 0.45), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 10px 28px -8px rgba(10, 15, 40, 0.55), 0 2px 6px -2px rgba(0, 0, 0, 0.22);
+  --shadow-lg: 0 20px 52px -14px rgba(10, 15, 40, 0.6), 0 6px 14px -4px rgba(0, 0, 0, 0.28);
+  --shadow-xl: 0 28px 72px -18px rgba(10, 15, 40, 0.7), 0 10px 22px -6px rgba(0, 0, 0, 0.32);
+  --shadow-glow: 0 0 60px -12px rgba(160, 170, 220, 0.14);
+}
+
 @theme inline {
   --font-sans: 'Inter', 'Inter Fallback', system-ui, sans-serif;
   --font-serif: 'Playfair Display', 'Times New Roman', serif;
@@ -418,6 +506,117 @@ button,
 
 .dark .surface-spotlight::before {
   background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(212, 176, 112, 0.06) 0%, transparent 70%);
+}
+
+/* ================================================================ */
+/* GLASS THEME — Apple Glass Luxury surface overrides                */
+/*                                                                   */
+/* These layer over the `.dark` defaults because ThemeSyncEffect     */
+/* applies `.dark` alongside data-theme="glass". We refine glass +   */
+/* cinematic surfaces to feel translucent, lavender-tinted, calm.    */
+/* ================================================================ */
+
+/* Glass theme: strong glass — luminous frosted navigation */
+[data-theme="glass"] .glass-strong {
+  background: rgba(26, 29, 45, 0.72);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(180, 200, 255, 0.10);
+  box-shadow:
+    0 1px 0 rgba(180, 200, 255, 0.08) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.12) inset,
+    0 8px 28px -8px rgba(10, 15, 40, 0.5);
+}
+
+/* Glass theme: premium frosted — hero sections and feature cards */
+[data-theme="glass"] .glass-premium {
+  background: rgba(26, 29, 45, 0.62);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border: 1px solid rgba(180, 200, 255, 0.12);
+  box-shadow:
+    0 1px 0 rgba(180, 200, 255, 0.10) inset,
+    0 24px 64px -18px rgba(10, 15, 40, 0.55),
+    0 0 40px -8px rgba(160, 170, 220, 0.10);
+}
+
+/* Glass theme: subtle — airy light frosting */
+[data-theme="glass"] .glass-subtle {
+  background: rgba(26, 29, 45, 0.48);
+  backdrop-filter: blur(18px) saturate(170%);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  border: 1px solid rgba(180, 200, 255, 0.08);
+}
+
+/* Glass theme: cinematic — layered translucent hero surface */
+[data-theme="glass"] .surface-cinematic {
+  background: linear-gradient(
+    180deg,
+    rgba(30, 35, 55, 0.78) 0%,
+    rgba(18, 22, 38, 0.92) 100%
+  );
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border: 1px solid rgba(180, 200, 255, 0.12);
+  box-shadow:
+    0 1px 0 rgba(180, 200, 255, 0.10) inset,
+    0 44px 88px -22px rgba(8, 12, 32, 0.6),
+    0 22px 44px -12px rgba(10, 15, 40, 0.35),
+    0 0 60px -18px rgba(160, 170, 220, 0.12);
+}
+
+/* Glass theme: spotlight — soft lavender top-glow */
+[data-theme="glass"] .surface-spotlight::before {
+  background: radial-gradient(
+    ellipse 60% 40% at 50% 0%,
+    rgba(160, 170, 220, 0.10) 0%,
+    transparent 72%
+  );
+}
+
+/* Glass theme: floating cards — refined translucent depth */
+[data-theme="glass"] .card-floating {
+  background: rgba(26, 29, 45, 0.80);
+  backdrop-filter: blur(18px) saturate(170%);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  border: 1px solid rgba(180, 200, 255, 0.10);
+  box-shadow:
+    0 1px 0 rgba(180, 200, 255, 0.08) inset,
+    0 18px 44px -14px rgba(8, 12, 32, 0.55),
+    0 6px 16px -6px rgba(10, 15, 40, 0.3);
+}
+
+[data-theme="glass"] .card-floating:hover {
+  box-shadow:
+    0 1px 0 rgba(180, 200, 255, 0.12) inset,
+    0 34px 68px -18px rgba(8, 12, 32, 0.6),
+    0 12px 28px -8px rgba(10, 15, 40, 0.35),
+    var(--shadow-glow);
+}
+
+/* Glass theme: body ambient — soft blue-lavender luminous atmosphere */
+[data-theme="glass"] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse 70% 50% at 18% 20%,
+      rgba(140, 150, 220, 0.14) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 60% 45% at 82% 78%,
+      rgba(170, 140, 200, 0.10) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 55% 40% at 50% 110%,
+      rgba(212, 176, 112, 0.06) 0%,
+      transparent 60%
+    );
 }
 
 /* === FLOATING CARD SYSTEM === */

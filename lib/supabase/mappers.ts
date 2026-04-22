@@ -40,7 +40,7 @@ export function mapUISubscriptionToRow(
 export function mapUserSettingsRowToUI(row: UserSettingsRow) {
   return {
     currencyCode: row.currency_code,
-    theme: row.theme as 'light' | 'dark',
+    theme: row.theme as 'light' | 'dark' | 'glass',
     language: row.language,
     reminderDays: row.reminder_days,
     pushNotifications: row.push_notifications,

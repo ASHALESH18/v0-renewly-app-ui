@@ -89,7 +89,7 @@ export async function changeUserEmail(newEmail: string) {
  */
 export async function updateUserSettings(data: {
   currencyCode?: string
-  theme?: 'light' | 'dark'
+  theme?: 'light' | 'dark' | 'glass'
   language?: string
   reminderDays?: number
   pushNotifications?: boolean

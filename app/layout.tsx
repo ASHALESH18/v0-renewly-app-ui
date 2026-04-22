@@ -5,6 +5,7 @@ import { Inter, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ToastContainer } from '@/components/toast-container'
 import { ThemeProvider } from '@/components/theme-provider'
+import { ThemeSyncEffect } from '@/components/theme-sync-effect'
 import { AmbientBackground } from '@/components/ambient-background'
 import { SubscriptionsProvider } from '@/components/providers/subscriptions-provider'
 import './globals.css'
@@ -121,7 +122,13 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies()
   const cookieTheme = cookieStore.get('renewly-theme')?.value
-  const initialTheme = cookieTheme === 'light' ? 'light' : 'dark'
+  // Normalize theme cookie to one of the 3 supported themes
+  const initialTheme: 'light' | 'dark' | 'glass' =
+    cookieTheme === 'light' ? 'light'
+      : cookieTheme === 'glass' ? 'glass'
+      : 'dark'
+  // Glass shares dark's color base, so it also gets the `dark` class
+  const initialNeedsDarkClass = initialTheme === 'dark' || initialTheme === 'glass'
 
   const schemaData = {
     '@context': 'https://schema.org',
@@ -151,7 +158,8 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={initialTheme === 'dark' ? 'dark' : ''}
+      className={initialNeedsDarkClass ? 'dark' : ''}
+      data-theme={initialTheme}
       suppressHydrationWarning
     >
       <head>
@@ -159,8 +167,14 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
   (function () {
+    // Renewly theme pre-hydration: ensures the correct theme is applied before
+    // React hydrates, preventing flash. Handles 3 themes: 'light' | 'dark' | 'glass'.
+    //
+    // IMPORTANT: Every classList.add/remove call below uses a SINGLE token
+    // (no spaces in any argument). This avoids the DOMTokenList
+    // InvalidCharacterError that caused the previous experiment to crash.
     try {
-      var cookieMatch = document.cookie.match(/(?:^|; )renewly-theme=(light|dark)/);
+      var cookieMatch = document.cookie.match(/(?:^|; )renewly-theme=(light|dark|glass)/);
       var theme = cookieMatch ? cookieMatch[1] : null;
 
       if (!theme) {
@@ -168,29 +182,39 @@ export default async function RootLayout({
       }
 
       if (!theme) {
-        var store = localStorage.getItem('renewly-store');
-        if (store) {
-          var parsed = JSON.parse(store);
-          var state = parsed && parsed.state ? parsed.state : null;
-          theme =
-            (state && state.theme) ||
-            (state && state.notificationSettings && state.notificationSettings.theme) ||
-            'dark';
-        }
+        try {
+          var store = localStorage.getItem('renewly-store');
+          if (store) {
+            var parsed = JSON.parse(store);
+            var state = parsed && parsed.state ? parsed.state : null;
+            theme =
+              (state && state.theme) ||
+              (state && state.notificationSettings && state.notificationSettings.theme) ||
+              null;
+          }
+        } catch (_) { /* ignore parse errors */ }
       }
 
-      theme = theme || 'dark';
+      if (theme !== 'light' && theme !== 'dark' && theme !== 'glass') {
+        theme = 'dark';
+      }
 
       var root = document.documentElement;
-      if (theme === 'light') {
-        root.classList.remove('dark');
+
+      // Mode class — glass shares dark's color base, so both get .dark applied
+      var needsDark = (theme === 'dark' || theme === 'glass');
+      if (needsDark) {
+        root.classList.add('dark');        // single token, safe
       } else {
-        root.classList.add('dark');
+        root.classList.remove('dark');     // single token, safe
       }
 
+      // Variant marker — lets Glass-specific CSS rules override .dark defaults
+      root.setAttribute('data-theme', theme);
       root.dataset.theme = theme;
     } catch (e) {
       document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
       document.documentElement.dataset.theme = 'dark';
     }
   })();
@@ -206,12 +230,14 @@ export default async function RootLayout({
         className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-background min-h-screen overflow-x-hidden`}
       >
         <ThemeProvider
-          attribute="class"
+          attribute="data-theme"
           defaultTheme="dark"
+          themes={['light', 'dark', 'glass']}
           storageKey="renewly-theme"
           enableSystem={false}
           disableTransitionOnChange
         >
+          <ThemeSyncEffect />
           <SubscriptionsProvider>
             <PreferencesBridge />
             <div className="relative isolate min-h-screen overflow-x-hidden">

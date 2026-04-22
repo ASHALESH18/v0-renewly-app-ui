@@ -33,7 +33,12 @@ export interface NotificationSettings {
   leakAlerts: boolean
   reminderDays: number
   currencyCode: string
-  theme: 'light' | 'dark'
+  /**
+   * Renewly theme identifier.
+   * - `light` / `dark` — baseline themes (unchanged).
+   * - `glass`          — premium Apple Glass-inspired variant.
+   */
+  theme: 'light' | 'dark' | 'glass'
   language: string
   biometricEnabled: boolean
   countryCode?: string
@@ -51,7 +56,7 @@ export interface AppState {
   notificationSettings: NotificationSettings
 
   // UI State
-  theme: 'light' | 'dark'
+  theme: 'light' | 'dark' | 'glass'
   toasts: Toast[]
 
   // Loading/Sync State
@@ -87,7 +92,7 @@ export interface AppState {
   updateNotificationSettings: (settings: Partial<NotificationSettings>) => void
 
   // Actions - UI
-  setTheme: (theme: 'light' | 'dark') => void
+  setTheme: (theme: 'light' | 'dark' | 'glass') => void
   addToast: (toast: Omit<Toast, 'id'>) => void
   removeToast: (id: string) => void
 
