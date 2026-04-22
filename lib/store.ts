@@ -7,6 +7,7 @@ import { createSubscription, updateSubscription, deleteSubscription } from './su
 import type { ProfileRow, UserSettingsRow } from './supabase/database.types'
 import { mapSubscriptionRowToUI, mapUserSettingsRowToUI } from './supabase/mappers'
 import { calculateMetrics } from './subscription-math'
+import { mutate } from 'swr'
 
 export interface Toast {
   id: string
@@ -317,21 +318,16 @@ const useStore = create<AppState>()(
             status: subscription.status ?? 'active',
           })
 
-          if (result.success && result.data?.[0]) {
-            const newSub: Subscription = {
-              ...subscription,
-              id: result.data[0].id,
-            }
-
-            set((state) => ({
-              subscriptions: [...state.subscriptions, newSub],
-            }))
-
+          if (result.success) {
+            // Fetch fresh subscriptions from API and replace store
+            await mutate('/api/subscriptions')
+            set({ syncError: null })
             return { success: true }
           }
 
-          set({ syncError: result.error || 'Failed to add subscription' })
-          return { success: false, error: result.error }
+          const error = result.error || 'Failed to add subscription'
+          set({ syncError: error })
+          return { success: false, error }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to add subscription'
           set({ syncError: message })
@@ -357,17 +353,15 @@ const useStore = create<AppState>()(
           })
 
           if (result.success) {
-            set((state) => ({
-              subscriptions: state.subscriptions.map((sub) =>
-                sub.id === id ? { ...sub, ...updates } : sub
-              ),
-            }))
-
+            // Fetch fresh subscriptions from API and replace store
+            await mutate('/api/subscriptions')
+            set({ syncError: null })
             return { success: true }
           }
 
-          set({ syncError: result.error || 'Failed to update subscription' })
-          return { success: false, error: result.error }
+          const error = result.error || 'Failed to update subscription'
+          set({ syncError: error })
+          return { success: false, error }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to update subscription'
           set({ syncError: message })
@@ -383,14 +377,15 @@ const useStore = create<AppState>()(
           const result = await deleteSubscription(id)
 
           if (result.success) {
-            set((state) => ({
-              subscriptions: state.subscriptions.filter(sub => sub.id !== id),
-            }))
+            // Fetch fresh subscriptions from API and replace store
+            await mutate('/api/subscriptions')
+            set({ syncError: null })
             return { success: true }
           }
 
-          set({ syncError: result.error || 'Failed to delete subscription' })
-          return { success: false, error: result.error }
+          const error = result.error || 'Failed to delete subscription'
+          set({ syncError: error })
+          return { success: false, error }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to delete subscription'
           set({ syncError: message })
@@ -532,7 +527,7 @@ const useStore = create<AppState>()(
             theme: persistedState?.theme || 'dark',
           }
         }
-        
+
         if (version < 3) {
           // From v2 to v3: clear subscriptions to force fresh load
           // This ensures old persisted subscriptions with bad data shapes don't break the app
@@ -540,7 +535,7 @@ const useStore = create<AppState>()(
             theme: persistedState?.theme || 'dark',
           }
         }
-        
+
         return persistedState
       },
     }
