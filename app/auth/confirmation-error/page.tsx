@@ -12,7 +12,7 @@ function ConfirmationErrorContent() {
   const searchParams = useSearchParams()
   const errorType = searchParams.get('error') || 'unknown'
   const email = searchParams.get('email') || ''
-  
+
   const [isResending, setIsResending] = useState(false)
   const [resendSuccess, setResendSuccess] = useState(false)
   const [resendError, setResendError] = useState<string | null>(null)
@@ -25,7 +25,7 @@ function ConfirmationErrorContent() {
     },
     invalid: {
       title: 'Invalid link',
-      description: 'This verification link is invalid or has already been used.',
+      description: 'This verification link may already have been opened. Your email may already be verified. Try signing in first, or request a new link below.',
     },
     unknown: {
       title: 'Verification failed',
@@ -76,7 +76,7 @@ function ConfirmationErrorContent() {
           >
             <Mail className="w-8 h-8 text-gold" />
           </motion.div>
-          
+
           <div className="space-y-2">
             <p className="text-ivory">
               A new verification link has been sent to{' '}
@@ -120,7 +120,7 @@ function ConfirmationErrorContent() {
           >
             <AlertCircle className="w-8 h-8 text-red-400" />
           </motion.div>
-          
+
           <p className="text-platinum max-w-sm mx-auto">
             {error.description}
           </p>
