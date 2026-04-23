@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { useTheme } from 'next-themes'
 import { Check } from 'lucide-react'
 import useStore from '@/lib/store'
 import { cn } from '@/lib/utils'
@@ -92,28 +91,26 @@ const THEME_OPTIONS: ThemeOption[] = [
 ]
 
 export function ThemeSelectorCards() {
-  const { setTheme: setNextTheme, theme: currentNextTheme } = useTheme()
   const storeTheme = useStore((s) => s.theme)
   const setStoreTheme = useStore((s) => s.setTheme)
   const updateNotificationSettings = useStore((s) => s.updateNotificationSettings)
 
-  // Prefer the store (persisted) but fall back to next-themes
   const activeTheme = useMemo<ThemeId>(() => {
-    const candidate = (storeTheme ?? currentNextTheme ?? 'dark') as string
-    if (candidate === 'light' || candidate === 'dark' || candidate === 'glass') {
-      return candidate
+    if (storeTheme === 'light' || storeTheme === 'dark' || storeTheme === 'glass') {
+      return storeTheme
     }
     return 'dark'
-  }, [storeTheme, currentNextTheme])
+  }, [storeTheme])
 
   const handleSelect = async (id: ThemeId) => {
     if (id === activeTheme) return
-    setNextTheme(id)
+
     setStoreTheme(id)
+
     try {
       await updateNotificationSettings({ theme: id })
     } catch {
-      /* non-fatal — next-themes + store already applied the UI change */
+      // non-fatal: local store already updated
     }
   }
 
