@@ -1,12 +1,19 @@
 'use client'
 
+import { useState, forwardRef, type ReactNode } from 'react'
 import { motion, type HTMLMotionProps } from 'framer-motion'
-import { forwardRef, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
-import { springs, toggleVariants } from '@/components/motion'
+import {
+  springs,
+  toggleVariants,
+  durations,
+  easings,
+  iconButtonVariants,
+} from '@/components/motion'
 
 /**
- * Premium Toggle Switch with luxury motion
+ * PremiumToggle — refined switch with a confident spring thumb
+ * and a luminous halo when active.
  */
 interface PremiumToggleProps extends HTMLMotionProps<'button'> {
   checked: boolean
@@ -22,35 +29,38 @@ export const PremiumToggle = forwardRef<HTMLButtonElement, PremiumToggleProps>(
         ref={ref}
         onClick={() => !disabled && onChange(!checked)}
         disabled={disabled}
+        type="button"
+        role="switch"
+        aria-checked={checked}
         className={cn(
           'relative inline-flex items-center gap-3 p-2 rounded-lg',
-          'transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
+          'disabled:opacity-50 disabled:cursor-not-allowed',
           className
         )}
+        whileTap={{ scale: 0.985 }}
+        transition={{ duration: 0.12, ease: easings.exit }}
         {...props}
       >
-        {/* Toggle track */}
         <motion.div
           className={cn(
-            'relative w-14 h-8 rounded-full transition-colors',
+            'relative w-14 h-8 rounded-full',
             checked ? 'bg-gold' : 'bg-muted'
           )}
           animate={{ backgroundColor: checked ? '#C7A36A' : '#3a3a3a' }}
+          transition={{ duration: durations.quick, ease: easings.silk }}
         >
-          {/* Toggle thumb */}
           <motion.div
             className="absolute top-1 w-6 h-6 rounded-full bg-obsidian shadow-md"
             variants={toggleVariants}
             animate={checked ? 'on' : 'off'}
-            transition={springs.gentle}
+            transition={springs.snappy}
           />
 
-          {/* Glow effect when active */}
           {checked && (
             <motion.div
-              className="absolute inset-0 rounded-full bg-gold/20 blur-md"
-              animate={{ opacity: [0.5, 0.8, 0.5] }}
-              transition={{ duration: 2, repeat: Infinity }}
+              className="absolute inset-0 rounded-full bg-gold/25 blur-md"
+              animate={{ opacity: [0.35, 0.65, 0.35] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
             />
           )}
         </motion.div>
@@ -63,7 +73,7 @@ export const PremiumToggle = forwardRef<HTMLButtonElement, PremiumToggleProps>(
 PremiumToggle.displayName = 'PremiumToggle'
 
 /**
- * Premium Chip/Badge with luxury entrance
+ * PremiumChip — restrained entrance/exit, confident tap response.
  */
 interface PremiumChipProps extends HTMLMotionProps<'div'> {
   label: string
@@ -83,12 +93,12 @@ export const PremiumChip = forwardRef<HTMLDivElement, PremiumChipProps>(
     return (
       <motion.div
         ref={ref}
-        initial={{ scale: 0.8, opacity: 0 }}
+        initial={{ scale: 0.92, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.8, opacity: 0 }}
+        exit={{ scale: 0.92, opacity: 0 }}
+        transition={{ duration: durations.base, ease: easings.luxury }}
         className={cn(
           'inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium',
-          'transition-all',
           variantClasses[variant],
           className
         )}
@@ -99,8 +109,11 @@ export const PremiumChip = forwardRef<HTMLDivElement, PremiumChipProps>(
           <motion.button
             onClick={onRemove}
             className="ml-1 hover:text-gold transition-colors"
-            whileHover={{ scale: 1.2 }}
-            whileTap={{ scale: 0.9 }}
+            variants={iconButtonVariants}
+            initial="initial"
+            whileHover="hover"
+            whileTap="tap"
+            aria-label={`Remove ${label}`}
           >
             ×
           </motion.button>
@@ -112,7 +125,7 @@ export const PremiumChip = forwardRef<HTMLDivElement, PremiumChipProps>(
 PremiumChip.displayName = 'PremiumChip'
 
 /**
- * Premium Input with focus animation
+ * PremiumInput — subtle focus glow, no distracting motion.
  */
 interface PremiumInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string
@@ -138,7 +151,8 @@ export const PremiumInput = forwardRef<HTMLInputElement, PremiumInputProps>(
             className
           )}
           whileFocus={{
-            boxShadow: '0 0 0 3px rgba(199, 163, 106, 0.1)',
+            boxShadow: '0 0 0 3px rgba(199, 163, 106, 0.12)',
+            transition: { duration: durations.quick, ease: easings.silk },
           }}
           {...props}
         />
@@ -148,6 +162,7 @@ export const PremiumInput = forwardRef<HTMLInputElement, PremiumInputProps>(
             className="text-sm text-red mt-1"
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: durations.quick, ease: easings.silk }}
           >
             {error}
           </motion.p>
@@ -159,7 +174,7 @@ export const PremiumInput = forwardRef<HTMLInputElement, PremiumInputProps>(
 PremiumInput.displayName = 'PremiumInput'
 
 /**
- * Premium Spinner for loading states
+ * PremiumSpinner — restrained linear spinner.
  */
 export function PremiumSpinner() {
   return (
@@ -172,7 +187,7 @@ export function PremiumSpinner() {
 }
 
 /**
- * Premium Notification/Toast motion
+ * PremiumNotification — silk enter/exit, no filter/blur animation.
  */
 interface PremiumNotificationProps {
   message: string
@@ -194,22 +209,22 @@ export function PremiumNotification({
 
   return (
     <motion.div
-      className={cn(
-        'rounded-xl p-4 border backdrop-blur-sm',
-        typeClasses[type]
-      )}
-      initial={{ opacity: 0, y: -20, filter: 'blur(8px)' }}
-      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-      exit={{ opacity: 0, y: -20, filter: 'blur(8px)' }}
-      transition={{ duration: 0.4 }}
+      className={cn('rounded-xl p-4 border backdrop-blur-sm', typeClasses[type])}
+      initial={{ opacity: 0, y: -14, scale: 0.985 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -14, scale: 0.985 }}
+      transition={{ duration: durations.reveal, ease: easings.luxury }}
     >
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium">{message}</p>
         <motion.button
           onClick={onClose}
           className="ml-4 opacity-70 hover:opacity-100 transition-opacity"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
+          variants={iconButtonVariants}
+          initial="initial"
+          whileHover="hover"
+          whileTap="tap"
+          aria-label="Dismiss notification"
         >
           ×
         </motion.button>
@@ -219,7 +234,7 @@ export function PremiumNotification({
 }
 
 /**
- * Premium Accordion item with luxury animation
+ * PremiumAccordionItem — silk height collapse with a gold chevron.
  */
 interface PremiumAccordionItemProps {
   title: string
@@ -232,20 +247,22 @@ export function PremiumAccordionItem({
   children,
   defaultOpen = false,
 }: PremiumAccordionItemProps) {
-  const [isOpen, setIsOpen] = motion.useState(defaultOpen)
+  const [isOpen, setIsOpen] = useState(defaultOpen)
 
   return (
-    <motion.div className="border-b border-border">
+    <div className="border-b border-border">
       <motion.button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setIsOpen((v) => !v)}
+        type="button"
+        aria-expanded={isOpen}
         className="w-full py-4 flex items-center justify-between text-left"
         whileHover={{ paddingLeft: 8 }}
-        transition={springs.gentle}
+        transition={{ duration: durations.quick, ease: easings.luxury }}
       >
         <span className="font-medium text-ivory">{title}</span>
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={springs.gentle}
+          transition={{ duration: durations.base, ease: easings.luxury }}
           className="text-gold"
         >
           ▼
@@ -258,19 +275,17 @@ export function PremiumAccordionItem({
           height: isOpen ? 'auto' : 0,
           opacity: isOpen ? 1 : 0,
         }}
-        transition={springs.gentle}
+        transition={{ duration: durations.reveal, ease: easings.silk }}
         className="overflow-hidden"
       >
-        <div className="pb-4 text-platinum text-sm leading-relaxed">
-          {children}
-        </div>
+        <div className="pb-4 text-platinum text-sm leading-relaxed">{children}</div>
       </motion.div>
-    </motion.div>
+    </div>
   )
 }
 
 /**
- * Premium Slider/Range input
+ * PremiumSlider — smooth fill + thumb response.
  */
 interface PremiumSliderProps {
   value: number
@@ -292,19 +307,16 @@ export function PremiumSlider({
   const percentage = ((value - min) / (max - min)) * 100
 
   return (
-    <motion.div>
+    <div className="w-full">
       {label && <label className="block text-sm font-medium text-platinum mb-2">{label}</label>}
 
-      <motion.div className="relative h-1 rounded-full bg-glass">
-        {/* Progress fill */}
+      <div className="relative h-1 rounded-full bg-glass">
         <motion.div
           className="absolute h-full rounded-full bg-gradient-to-r from-gold to-gold/80"
-          style={{ width: `${percentage}%` }}
           animate={{ width: `${percentage}%` }}
           transition={springs.smooth}
         />
 
-        {/* Range input */}
         <input
           type="range"
           min={min}
@@ -315,18 +327,13 @@ export function PremiumSlider({
           className="absolute w-full h-full opacity-0 cursor-pointer"
         />
 
-        {/* Thumb indicator */}
         <motion.div
           className="absolute top-1/2 w-5 h-5 -translate-y-1/2 rounded-full bg-gold shadow-lg"
-          style={{ left: `${percentage}%` }}
           animate={{ left: `${percentage}%` }}
           transition={springs.smooth}
-          whileHover={{ scale: 1.2 }}
+          whileHover={{ scale: 1.15 }}
         />
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   )
 }
-
-// Fix for useState being used in non-hook context
-import { useState } from 'react'
