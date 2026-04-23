@@ -1,6 +1,17 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
+function isVerificationLinkPossiblyAlreadyUsed(message?: string | null) {
+  const text = (message || '').toLowerCase()
+
+  return (
+    text.includes('expired') ||
+    text.includes('invalid') ||
+    text.includes('used') ||
+    text.includes('otp_expired')
+  )
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
@@ -14,7 +25,15 @@ export async function GET(request: NextRequest) {
 
   // Handle error cases from Supabase (e.g., expired link)
   if (error) {
-    const errorType = errorDescription?.includes('expired') ? 'expired' : 'invalid'
+    const isEmailVerification = type === 'signup' || type === 'email'
+
+    if (isEmailVerification && isVerificationLinkPossiblyAlreadyUsed(verifyError.message)) {
+      return NextResponse.redirect(
+        new URL('/auth/verified?already=1', origin)
+      )
+    }
+
+    const errorType = verifyError.message?.includes('expired') ? 'expired' : 'invalid'
     return NextResponse.redirect(
       new URL(`/auth/confirmation-error?error=${errorType}`, origin)
     )
