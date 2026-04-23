@@ -1,67 +1,96 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { springs } from '@/components/motion'
+import { motion, type Variants } from 'framer-motion'
+import { type ReactNode } from 'react'
+import { durations, easings, springs } from '@/components/motion'
 
+/**
+ * Signature Leak Report score reveal.
+ * Choreographed in four movements:
+ *   1. The shell rises and fades in.
+ *   2. The ambient glow blooms.
+ *   3. The progress ring sweeps in with a silk-ease stroke.
+ *   4. The score counts up and the inner accents settle.
+ * No filter/blur animations — pure transform + opacity for 60fps on mobile.
+ */
 interface LeakScoreRevealProps {
   score: number
   severity: 'low' | 'medium' | 'high' | 'critical'
   isVisible?: boolean
 }
 
-/**
- * Signature Leak Report animation
- * Premium score reveal with radial sweep and luxury feel
- */
 export function LeakScoreReveal({ score, severity, isVisible = true }: LeakScoreRevealProps) {
   const getSeverityColor = (sev: typeof severity) => {
     switch (sev) {
-      case 'critical': return '#FF6B6B'
-      case 'high': return '#FFA500'
-      case 'medium': return '#FFD700'
-      case 'low': return '#90EE90'
-      default: return '#C7A36A'
+      case 'critical':
+        return '#FF6B6B'
+      case 'high':
+        return '#FFA500'
+      case 'medium':
+        return '#FFD700'
+      case 'low':
+        return '#90EE90'
+      default:
+        return '#C7A36A'
     }
   }
 
   const color = getSeverityColor(severity)
+  const circumference = 2 * Math.PI * 75 // r = 75
 
   return (
     <motion.div
       className="relative w-48 h-48 mx-auto"
-      initial={{ opacity: 0, scale: 0.8, filter: 'blur(12px)' }}
-      animate={isVisible ? { opacity: 1, scale: 1, filter: 'blur(0px)' } : {}}
-      transition={{ duration: 0.8, ease: 'easeOut' }}
+      initial={{ opacity: 0, scale: 0.9, y: 12 }}
+      animate={isVisible ? { opacity: 1, scale: 1, y: 0 } : {}}
+      transition={{ duration: durations.hero, ease: easings.silk }}
     >
-      {/* Background circle */}
       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 200">
-        {/* Outer glow */}
         <defs>
           <radialGradient id="leakGlow" cx="50%" cy="50%" r="60%">
-            <stop offset="0%" stopColor={color} stopOpacity="0.2" />
+            <stop offset="0%" stopColor={color} stopOpacity="0.22" />
             <stop offset="100%" stopColor={color} stopOpacity="0" />
           </radialGradient>
-          
-          <filter id="dropshadow">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
-          </filter>
         </defs>
 
-        {/* Background circle */}
-        <circle cx="100" cy="100" r="90" fill="none" stroke="currentColor" strokeWidth="1" className="text-muted opacity-10" />
+        {/* Outer rule */}
+        <motion.circle
+          cx="100"
+          cy="100"
+          r="90"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1"
+          className="text-muted"
+          initial={{ opacity: 0 }}
+          animate={isVisible ? { opacity: 0.12 } : {}}
+          transition={{ delay: 0.1, duration: durations.base, ease: easings.silk }}
+        />
 
-        {/* Animated radial gradient sweep */}
+        {/* Ambient bloom — opacity + scale for a settled luminous feel */}
         <motion.circle
           cx="100"
           cy="100"
           r="90"
           fill="url(#leakGlow)"
-          initial={{ opacity: 0 }}
-          animate={isVisible ? { opacity: 1 } : {}}
-          transition={{ delay: 0.3, duration: 0.6 }}
+          initial={{ opacity: 0, scale: 0.92 }}
+          style={{ transformOrigin: '100px 100px' }}
+          animate={isVisible ? { opacity: 1, scale: 1 } : {}}
+          transition={{ delay: 0.18, duration: durations.cinematic, ease: easings.silk }}
         />
 
-        {/* Progress ring */}
+        {/* Track (muted ring behind the progress) */}
+        <circle
+          cx="100"
+          cy="100"
+          r="75"
+          fill="none"
+          stroke={color}
+          strokeWidth="6"
+          strokeOpacity="0.14"
+        />
+
+        {/* Progress ring — silk sweep */}
         <motion.circle
           cx="100"
           cy="100"
@@ -70,18 +99,24 @@ export function LeakScoreReveal({ score, severity, isVisible = true }: LeakScore
           stroke={color}
           strokeWidth="6"
           strokeLinecap="round"
-          strokeDasharray={`${(score / 100) * 471} 471`}
-          strokeDashoffset="0"
+          strokeDasharray={circumference}
           transform="rotate(-90 100 100)"
-          initial={{ strokeDasharray: '0 471', opacity: 0 }}
-          animate={isVisible ? { opacity: 1 } : {}}
+          initial={{ strokeDashoffset: circumference, opacity: 0 }}
+          animate={
+            isVisible
+              ? {
+                  strokeDashoffset: circumference - (score / 100) * circumference,
+                  opacity: 1,
+                }
+              : {}
+          }
           transition={{
-            strokeDasharray: { delay: 0.4, duration: 1.2, ease: 'easeOut' },
-            opacity: { delay: 0.3, duration: 0.5 },
+            strokeDashoffset: { delay: 0.32, duration: durations.settle + 0.3, ease: easings.silk },
+            opacity: { delay: 0.24, duration: durations.base, ease: easings.silk },
           }}
         />
 
-        {/* Inner accent circle */}
+        {/* Inner accent ring settles after the sweep */}
         <motion.circle
           cx="100"
           cy="100"
@@ -89,43 +124,48 @@ export function LeakScoreReveal({ score, severity, isVisible = true }: LeakScore
           fill="none"
           stroke={color}
           strokeWidth="1"
-          opacity="0.3"
-          initial={{ opacity: 0, r: 55 }}
+          initial={{ opacity: 0, r: 58 }}
           animate={isVisible ? { opacity: 0.3, r: 65 } : {}}
-          transition={{ delay: 0.6, duration: 0.8 }}
+          transition={{ delay: 0.7, duration: durations.cinematic, ease: easings.silk }}
         />
 
-        {/* Pulsing center accent */}
+        {/* Pulsing center — restrained, not noisy */}
         <motion.circle
           cx="100"
           cy="100"
-          r="5"
+          r="4"
           fill={color}
-          initial={{ opacity: 0, r: 0 }}
-          animate={isVisible ? { opacity: [0.4, 0.8, 0.4], r: [0, 8, 0] } : {}}
+          initial={{ opacity: 0, scale: 0 }}
+          style={{ transformOrigin: '100px 100px' }}
+          animate={
+            isVisible
+              ? { opacity: [0.35, 0.7, 0.35], scale: [0.6, 1.4, 0.6] }
+              : {}
+          }
           transition={{
-            opacity: { delay: 0.8, duration: 2, repeat: Infinity },
-            r: { delay: 0.8, duration: 2, repeat: Infinity },
+            delay: 0.9,
+            duration: 2.8,
+            repeat: Infinity,
+            ease: 'easeInOut',
           }}
         />
       </svg>
 
-      {/* Score text - count up animation */}
+      {/* Score label + value */}
       <motion.div
         className="absolute inset-0 flex flex-col items-center justify-center"
-        initial={{ opacity: 0 }}
-        animate={isVisible ? { opacity: 1 } : {}}
-        transition={{ delay: 0.6, duration: 0.5 }}
+        initial={{ opacity: 0, y: 6 }}
+        animate={isVisible ? { opacity: 1, y: 0 } : {}}
+        transition={{ delay: 0.55, duration: durations.cinematic, ease: easings.silk }}
       >
         <motion.span
-          className="text-4xl font-bold"
+          className="text-4xl font-bold tabular-nums"
           style={{ color }}
-          initial={0}
-          animate={isVisible ? score : 0}
-          transition={{ delay: 0.5, duration: 1.5, ease: 'easeOut' }}
+          initial={{ opacity: 0 }}
+          animate={isVisible ? { opacity: 1 } : {}}
+          transition={{ delay: 0.55, duration: durations.base, ease: easings.silk }}
         >
-          {/* @ts-expect-error motion number animation */}
-          {(val) => Math.round(val as number)}
+          {score}
         </motion.span>
         <span className="text-sm text-platinum mt-1">Leak Score</span>
       </motion.div>
@@ -134,7 +174,8 @@ export function LeakScoreReveal({ score, severity, isVisible = true }: LeakScore
 }
 
 /**
- * Insight card reveal animation - cascade effect
+ * Insight card reveal — calm cascading entrance with a luxury accent line.
+ * Uses index-based stagger for a premium rhythm.
  */
 interface InsightCardProps {
   icon: ReactNode
@@ -145,8 +186,6 @@ interface InsightCardProps {
   isVisible?: boolean
 }
 
-import { type ReactNode } from 'react'
-
 export function InsightCardReveal({
   icon,
   title,
@@ -155,33 +194,35 @@ export function InsightCardReveal({
   index,
   isVisible = true,
 }: InsightCardProps) {
+  const base = index * 0.11
+
   return (
     <motion.div
       className="rounded-2xl bg-card border border-border p-6 relative overflow-hidden"
-      initial={{ opacity: 0, y: 20, filter: 'blur(4px)' }}
-      animate={isVisible ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+      initial={{ opacity: 0, y: 20 }}
+      animate={isVisible ? { opacity: 1, y: 0 } : {}}
       transition={{
-        delay: index * 0.12,
-        duration: 0.6,
-        ease: 'easeOut',
+        delay: base,
+        duration: durations.cinematic,
+        ease: easings.silk,
       }}
     >
-      {/* Luxury accent line */}
+      {/* Signature accent line — sweeps in, stays subtle */}
       <motion.div
-        className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-gold to-transparent"
-        initial={{ opacity: 0, scaleX: 0 }}
+        className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent origin-center"
+        initial={{ opacity: 0, scaleX: 0.2 }}
         animate={isVisible ? { opacity: 1, scaleX: 1 } : {}}
-        transition={{ delay: index * 0.12 + 0.3, duration: 0.6 }}
+        transition={{ delay: base + 0.24, duration: durations.cinematic, ease: easings.silk }}
       />
 
       <div className="flex items-start gap-3 mb-4">
         <motion.div
           className="text-gold text-2xl"
-          initial={{ scale: 0, rotate: -45 }}
-          animate={isVisible ? { scale: 1, rotate: 0 } : {}}
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={isVisible ? { scale: 1, opacity: 1 } : {}}
           transition={{
-            delay: index * 0.12 + 0.4,
-            ...springs.gentle,
+            delay: base + 0.32,
+            ...springs.snappy,
           }}
         >
           {icon}
@@ -190,9 +231,9 @@ export function InsightCardReveal({
           <p className="text-sm text-platinum">{title}</p>
           <motion.p
             className="text-2xl font-semibold text-ivory"
-            initial={{ opacity: 0 }}
-            animate={isVisible ? { opacity: 1 } : {}}
-            transition={{ delay: index * 0.12 + 0.5, duration: 0.5 }}
+            initial={{ opacity: 0, y: 6 }}
+            animate={isVisible ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: base + 0.42, duration: durations.reveal, ease: easings.silk }}
           >
             {value}
           </motion.p>
@@ -203,7 +244,7 @@ export function InsightCardReveal({
         className="text-sm text-platinum leading-relaxed"
         initial={{ opacity: 0 }}
         animate={isVisible ? { opacity: 1 } : {}}
-        transition={{ delay: index * 0.12 + 0.6, duration: 0.5 }}
+        transition={{ delay: base + 0.52, duration: durations.base, ease: easings.silk }}
       >
         {description}
       </motion.p>
@@ -212,23 +253,21 @@ export function InsightCardReveal({
 }
 
 /**
- * Full page Leak Report entrance animation
+ * Full-page Leak Report entrance — no blur filters, silk decay, premium rise.
  */
-export const leakReportPageVariants = {
-  initial: { opacity: 0, y: 20, filter: 'blur(8px)' },
+export const leakReportPageVariants: Variants = {
+  initial: { opacity: 0, y: 18 },
   animate: {
     opacity: 1,
     y: 0,
-    filter: 'blur(0px)',
     transition: {
-      duration: 0.6,
-      ease: 'easeOut',
+      duration: durations.hero,
+      ease: easings.silk,
     },
   },
   exit: {
     opacity: 0,
-    y: -20,
-    filter: 'blur(8px)',
-    transition: { duration: 0.3 },
+    y: -12,
+    transition: { duration: durations.quick, ease: easings.exit },
   },
 }

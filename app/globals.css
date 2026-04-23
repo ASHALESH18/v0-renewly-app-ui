@@ -54,6 +54,31 @@ button,
   will-change: auto;
 }
 
+/* === LUXURY MOTION EASING LANGUAGE ===
+ * These CSS custom properties mirror the easing curves exported from
+ * components/motion.tsx so CSS-side transitions share the same feel as
+ * Framer Motion variants. Use via var(--ease-luxury) etc. in any
+ * `transition-timing-function`.
+ */
+:root {
+  --ease-premium: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-entrance: cubic-bezier(0, 0, 0.2, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-refined: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-luxury: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-silk: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-authority: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-gentle: cubic-bezier(0.33, 1, 0.68, 1);
+  --ease-quiet: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --dur-micro: 180ms;
+  --dur-quick: 280ms;
+  --dur-base: 420ms;
+  --dur-reveal: 580ms;
+  --dur-cinematic: 720ms;
+  --dur-hero: 900ms;
+}
+
 /* Touch device optimizations - disable hover effects that cause repaints */
 @media (hover: none) and (pointer: coarse) {
 
@@ -723,8 +748,8 @@ html.dark[data-appearance="glass"] .ambient-grain {
     0 1px 0 rgba(255, 255, 255, 0.5) inset,
     0 16px 40px -12px rgba(120, 90, 50, 0.10),
     0 6px 16px -6px rgba(120, 90, 50, 0.06);
-  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-    box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform var(--dur-base) var(--ease-luxury),
+    box-shadow var(--dur-base) var(--ease-luxury);
 }
 
 .card-floating:hover {
@@ -753,9 +778,10 @@ html.dark[data-appearance="glass"] .ambient-grain {
     var(--shadow-glow);
 }
 
-/* Interactive card - subtle hover lift */
+/* Interactive card - subtle hover lift with luxury curve */
 .card-interactive {
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: transform var(--dur-base) var(--ease-luxury),
+    box-shadow var(--dur-base) var(--ease-luxury);
 }
 
 .card-interactive:hover {
@@ -764,6 +790,7 @@ html.dark[data-appearance="glass"] .ambient-grain {
 
 .card-interactive:active {
   transform: translateY(-1px);
+  transition: transform 140ms var(--ease-exit);
 }
 
 /* === PREMIUM SHADOW SYSTEM === */
@@ -948,7 +975,9 @@ html.dark[data-appearance="glass"] .ambient-grain {
 
 /* Interactive surface states */
 .surface-interactive {
-  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: background-color var(--dur-quick) var(--ease-silk),
+    box-shadow var(--dur-quick) var(--ease-silk),
+    transform var(--dur-quick) var(--ease-luxury);
 }
 
 .surface-interactive:hover {
@@ -957,6 +986,25 @@ html.dark[data-appearance="glass"] .ambient-grain {
 
 .surface-interactive:active {
   transform: scale(0.995);
+  transition: transform 120ms var(--ease-exit);
+}
+
+/* === SIGNATURE ACCENT ANIMATIONS ===
+ * Subtle, restrained breathing for premium accent lines and selected states.
+ * Use sparingly — these are meant to add atmosphere, not noise.
+ */
+@keyframes signature-sheen {
+  0%, 100% {
+    opacity: 0.35;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-signature-sheen {
+  animation: signature-sheen 4.5s ease-in-out infinite;
 }
 
 /* DRAMATIC AMBIENT ANIMATIONS */
@@ -1231,7 +1279,10 @@ html.dark[data-appearance="glass"] .ambient-grain {
   animation: slide-down-fade 0.3s ease-out;
 }
 
-/* Reduced motion support */
+/* Reduced motion support — honor the user globally.
+ * We flatten animations and transitions, and neutralize the luxury lift
+ * transforms so the UI still reads as polished without any movement.
+ */
 @media (prefers-reduced-motion: reduce) {
 
   *,
@@ -1240,6 +1291,15 @@ html.dark[data-appearance="glass"] .ambient-grain {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Neutralize hover lifts — preserve the hover state visually via shadow only */
+  .card-floating:hover,
+  .card-interactive:hover,
+  .surface-interactive:active,
+  .card-interactive:active {
+    transform: none !important;
   }
 }
 
