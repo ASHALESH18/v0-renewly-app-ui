@@ -27,13 +27,13 @@ export async function GET(request: NextRequest) {
   if (error) {
     const isEmailVerification = type === 'signup' || type === 'email'
 
-    if (isEmailVerification && isVerificationLinkPossiblyAlreadyUsed(verifyError.message)) {
+    if (isEmailVerification && isVerificationLinkPossiblyAlreadyUsed(errorDescription || error)) {
       return NextResponse.redirect(
         new URL('/auth/verified?already=1', origin)
       )
     }
 
-    const errorType = verifyError.message?.includes('expired') ? 'expired' : 'invalid'
+    const errorType = errorDescription?.includes('expired') ? 'expired' : 'invalid'
     return NextResponse.redirect(
       new URL(`/auth/confirmation-error?error=${errorType}`, origin)
     )
@@ -75,7 +75,15 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const errorType = message.includes('expired') ? 'expired' : 'invalid'
+    const isEmailVerification = type === 'signup' || type === 'email'
+
+    if (isEmailVerification && isVerificationLinkPossiblyAlreadyUsed(verifyError.message)) {
+      return NextResponse.redirect(
+        new URL('/auth/verified?already=1', origin)
+      )
+    }
+
+    const errorType = verifyError.message?.includes('expired') ? 'expired' : 'invalid'
     return NextResponse.redirect(
       new URL(`/auth/confirmation-error?error=${errorType}`, origin)
     )
@@ -103,6 +111,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Exchange failed - likely expired or invalid token
+    const isEmailVerification = type === 'signup' || type === 'email'
+
+    if (isEmailVerification && isVerificationLinkPossiblyAlreadyUsed(exchangeError.message)) {
+      return NextResponse.redirect(
+        new URL('/auth/verified?already=1', origin)
+      )
+    }
+
     const errorType = exchangeError.message?.includes('expired') ? 'expired' : 'invalid'
     return NextResponse.redirect(
       new URL(`/auth/confirmation-error?error=${errorType}`, origin)
