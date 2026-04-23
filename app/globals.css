@@ -235,82 +235,73 @@ button,
 /* overrides on top where it needs to feel distinct.                 */
 /* ================================================================ */
 html.dark[data-appearance="glass"] {
-  /* Deep cool navy-violet base */
-  --background: #0B0E1A;
-  --foreground: #ECEEFB;
+  --background: #111A30;
+  --foreground: #F7FAFF;
 
-  /* TRUE GLASS: cards, popovers, secondary, muted are semi-transparent */
-  /* so the atmospheric background glows through them.                  */
-  --card: rgba(30, 34, 54, 0.55);
-  --card-foreground: #ECEEFB;
-  --popover: rgba(26, 30, 48, 0.85);
-  --popover-foreground: #ECEEFB;
+  --card: rgba(248, 251, 255, 0.14);
+  --card-foreground: #F7FAFF;
+  --popover: rgba(250, 252, 255, 0.20);
+  --popover-foreground: #F7FAFF;
 
-  /* Restrained warm champagne gold — never dominant */
-  --primary: #D4B070;
-  --primary-foreground: #0B0E1A;
+  --primary: #E2C389;
+  --primary-foreground: #111A30;
 
-  --secondary: rgba(40, 46, 72, 0.55);
-  --secondary-foreground: #ECEEFB;
+  --secondary: rgba(236, 243, 255, 0.12);
+  --secondary-foreground: #F7FAFF;
 
-  --muted: rgba(40, 46, 72, 0.45);
-  --muted-foreground: #A8AEC8;
+  --muted: rgba(236, 243, 255, 0.08);
+  --muted-foreground: #CAD6EB;
 
-  /* Soft lavender-silver accent for depth */
-  --accent: rgba(139, 143, 184, 0.20);
-  --accent-foreground: #ECEEFB;
+  --accent: rgba(200, 216, 255, 0.16);
+  --accent-foreground: #F7FAFF;
 
-  --destructive: #7A3E4A;
-  --destructive-foreground: #F6F2EA;
+  --destructive: #8A4858;
+  --destructive-foreground: #F7FAFF;
 
-  --border: rgba(180, 200, 255, 0.10);
-  --input: rgba(40, 46, 72, 0.55);
-  --ring: #D4B070;
+  --border: rgba(255, 255, 255, 0.20);
+  --input: rgba(246, 250, 255, 0.12);
+  --ring: #E2C389;
 
-  --chart-1: #D4B070;
-  --chart-2: #8B9FD4;
-  --chart-3: #B094D4;
-  --chart-4: #A8AEC8;
-  --chart-5: #ECEEFB;
+  --chart-1: #E2C389;
+  --chart-2: #BFD3FF;
+  --chart-3: #D4C2FF;
+  --chart-4: #DCE6FA;
+  --chart-5: #F7FAFF;
 
-  /* Sidebar — translucent so the ambient atmosphere bleeds through */
-  --sidebar: rgba(14, 17, 30, 0.55);
-  --sidebar-foreground: #ECEEFB;
-  --sidebar-primary: #D4B070;
-  --sidebar-primary-foreground: #0B0E1A;
-  --sidebar-accent: rgba(40, 46, 72, 0.50);
-  --sidebar-accent-foreground: #ECEEFB;
-  --sidebar-border: rgba(180, 200, 255, 0.08);
-  --sidebar-ring: #D4B070;
+  --sidebar: rgba(245, 249, 255, 0.10);
+  --sidebar-foreground: #F7FAFF;
+  --sidebar-primary: #E2C389;
+  --sidebar-primary-foreground: #111A30;
+  --sidebar-accent: rgba(245, 249, 255, 0.12);
+  --sidebar-accent-foreground: #F7FAFF;
+  --sidebar-border: rgba(255, 255, 255, 0.16);
+  --sidebar-ring: #E2C389;
 
-  --hero-vignette: rgba(11, 14, 26, 0.5);
+  --hero-vignette: rgba(17, 26, 48, 0.30);
 
-  /* Renewly custom tokens — Glass Luxury */
-  --obsidian: #0B0E1A;
-  --graphite: rgba(30, 34, 54, 0.55);
-  --slate: rgba(40, 46, 72, 0.55);
-  --ivory: #ECEEFB;
-  --platinum: #A8AEC8;
-  --gold: #D4B070;
-  --muted-gold: #9A8560;
-  --emerald: #3D6B58;
-  --crimson: #7A3E4A;
-  --glass: rgba(180, 200, 255, 0.06);
-  --glass-border: rgba(180, 200, 255, 0.14);
+  --obsidian: #111A30;
+  --graphite: rgba(248, 251, 255, 0.14);
+  --slate: rgba(236, 243, 255, 0.12);
+  --ivory: #F7FAFF;
+  --platinum: #CAD6EB;
+  --gold: #E2C389;
+  --muted-gold: #B69762;
+  --emerald: #4B7366;
+  --crimson: #8A4858;
+  --glass: rgba(255, 255, 255, 0.10);
+  --glass-border: rgba(255, 255, 255, 0.22);
 
-  /* Premium surface hierarchy — progressive translucency */
-  --surface-base: #0B0E1A;
-  --surface-elevated: rgba(30, 34, 54, 0.55);
-  --surface-floating: rgba(30, 34, 54, 0.78);
-  --surface-modal: rgba(30, 34, 54, 0.92);
+  --surface-base: #111A30;
+  --surface-elevated: rgba(248, 251, 255, 0.14);
+  --surface-floating: rgba(248, 251, 255, 0.18);
+  --surface-modal: rgba(250, 252, 255, 0.24);
 
-  /* Cool-toned shadows with a faint lavender glow */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.22);
-  --shadow-sm: 0 2px 10px -2px rgba(8, 12, 32, 0.40), 0 1px 2px rgba(0, 0, 0, 0.18);
-  --shadow-md: 0 10px 28px -8px rgba(8, 12, 32, 0.50), 0 2px 6px -2px rgba(0, 0, 0, 0.20);
-  --shadow-lg: 0 20px 52px -14px rgba(8, 12, 32, 0.55), 0 6px 14px -4px rgba(0, 0, 0, 0.26);
-  --shadow-xl: 0 28px 72px -18px rgba(8, 12, 32, 0.65), 0 10px 22px -6px rgba(0, 0, 0, 0.30);
-  --shadow-glow: 0 0 60px -12px rgba(160, 170, 220, 0.18);
+  --shadow-xs: 0 1px 2px rgba(6, 10, 24, 0.16);
+  --shadow-sm: 0 4px 14px -4px rgba(8, 12, 30, 0.24), 0 1px 2px rgba(0, 0, 0, 0.10);
+  --shadow-md: 0 12px 30px -10px rgba(8, 12, 30, 0.30), 0 2px 6px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 22px 52px -16px rgba(8, 12, 30, 0.34), 0 6px 14px rgba(0, 0, 0, 0.14);
+  --shadow-xl: 0 30px 76px -20px rgba(8, 12, 30, 0.40), 0 10px 22px rgba(0, 0, 0, 0.16);
+  --shadow-glow: 0 0 72px -18px rgba(170, 193, 255, 0.30);
 }
 
 /* ================================================================ */
@@ -340,14 +331,14 @@ html.dark[data-appearance="glass"] .bg-sidebar-accent {
    gradient so the atmosphere bleeds through. */
 html.dark[data-appearance="glass"] aside {
   background: linear-gradient(180deg,
-      rgba(22, 25, 42, 0.58) 0%,
-      rgba(14, 17, 30, 0.62) 100%) !important;
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border-right-color: rgba(180, 200, 255, 0.10) !important;
+      rgba(248, 251, 255, 0.16) 0%,
+      rgba(232, 240, 255, 0.10) 100%) !important;
+  backdrop-filter: blur(30px) saturate(190%);
+  -webkit-backdrop-filter: blur(30px) saturate(190%);
+  border-right-color: rgba(255, 255, 255, 0.18) !important;
   box-shadow:
-    1px 0 0 rgba(180, 200, 255, 0.04) inset,
-    8px 0 32px rgba(8, 12, 32, 0.32) !important;
+    1px 0 0 rgba(255, 255, 255, 0.10) inset,
+    8px 0 32px rgba(12, 18, 38, 0.16) !important;
 }
 
 /* Inputs in Glass: softly frosted, airy border */
@@ -586,64 +577,72 @@ html.dark[data-appearance="glass"] .glass-strong {
 }
 
 /* Glass theme: premium frosted — hero sections and feature cards */
-html.dark[data-appearance="glass"] .glass-premium {
-  background: rgba(26, 29, 45, 0.62);
-  backdrop-filter: blur(32px) saturate(180%);
-  -webkit-backdrop-filter: blur(32px) saturate(180%);
-  border: 1px solid rgba(180, 200, 255, 0.12);
+html.dark[data-appearance="glass"] .glass-strong {
+  background: rgba(248, 251, 255, 0.16);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.24);
   box-shadow:
-    0 1px 0 rgba(180, 200, 255, 0.10) inset,
-    0 24px 64px -18px rgba(10, 15, 40, 0.55),
-    0 0 40px -8px rgba(160, 170, 220, 0.10);
+    0 1px 0 rgba(255, 255, 255, 0.28) inset,
+    0 -1px 0 rgba(180, 200, 255, 0.08) inset,
+    0 12px 36px -12px rgba(10, 16, 36, 0.26);
 }
 
-/* Glass theme: subtle — airy light frosting */
+html.dark[data-appearance="glass"] .glass-premium {
+  background: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.22) 0%,
+      rgba(237, 244, 255, 0.14) 100%);
+  backdrop-filter: blur(34px) saturate(195%);
+  -webkit-backdrop-filter: blur(34px) saturate(195%);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.30) inset,
+    0 24px 64px -18px rgba(10, 16, 36, 0.28),
+    0 0 40px -10px rgba(184, 202, 255, 0.18);
+}
+
 html.dark[data-appearance="glass"] .glass-subtle {
-  background: rgba(26, 29, 45, 0.48);
-  backdrop-filter: blur(18px) saturate(170%);
-  -webkit-backdrop-filter: blur(18px) saturate(170%);
-  border: 1px solid rgba(180, 200, 255, 0.08);
+  background: rgba(248, 251, 255, 0.10);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
-/* Glass theme: cinematic — layered translucent hero surface */
 html.dark[data-appearance="glass"] .surface-cinematic {
   background: linear-gradient(180deg,
-      rgba(30, 35, 55, 0.78) 0%,
-      rgba(18, 22, 38, 0.92) 100%);
-  backdrop-filter: blur(32px) saturate(180%);
-  -webkit-backdrop-filter: blur(32px) saturate(180%);
-  border: 1px solid rgba(180, 200, 255, 0.12);
+      rgba(255, 255, 255, 0.18) 0%,
+      rgba(229, 238, 255, 0.10) 100%);
+  backdrop-filter: blur(34px) saturate(190%);
+  -webkit-backdrop-filter: blur(34px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.24);
   box-shadow:
-    0 1px 0 rgba(180, 200, 255, 0.10) inset,
-    0 44px 88px -22px rgba(8, 12, 32, 0.6),
-    0 22px 44px -12px rgba(10, 15, 40, 0.35),
-    0 0 60px -18px rgba(160, 170, 220, 0.12);
+    0 1px 0 rgba(255, 255, 255, 0.24) inset,
+    0 30px 72px -22px rgba(10, 16, 36, 0.32),
+    0 0 60px -18px rgba(176, 198, 255, 0.16);
 }
 
-/* Glass theme: spotlight — soft lavender top-glow */
 html.dark[data-appearance="glass"] .surface-spotlight::before {
   background: radial-gradient(ellipse 60% 40% at 50% 0%,
-      rgba(160, 170, 220, 0.10) 0%,
+      rgba(214, 226, 255, 0.16) 0%,
       transparent 72%);
 }
 
-/* Glass theme: floating cards — refined translucent depth */
 html.dark[data-appearance="glass"] .card-floating {
-  background: rgba(26, 29, 45, 0.80);
-  backdrop-filter: blur(18px) saturate(170%);
-  -webkit-backdrop-filter: blur(18px) saturate(170%);
-  border: 1px solid rgba(180, 200, 255, 0.10);
+  background: rgba(248, 251, 255, 0.18);
+  backdrop-filter: blur(20px) saturate(185%);
+  -webkit-backdrop-filter: blur(20px) saturate(185%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow:
-    0 1px 0 rgba(180, 200, 255, 0.08) inset,
-    0 18px 44px -14px rgba(8, 12, 32, 0.55),
-    0 6px 16px -6px rgba(10, 15, 40, 0.3);
+    0 1px 0 rgba(255, 255, 255, 0.24) inset,
+    0 18px 44px -14px rgba(10, 16, 36, 0.30),
+    0 6px 16px -6px rgba(10, 16, 36, 0.16);
 }
 
 html.dark[data-appearance="glass"] .card-floating:hover {
   box-shadow:
-    0 1px 0 rgba(180, 200, 255, 0.12) inset,
-    0 34px 68px -18px rgba(8, 12, 32, 0.6),
-    0 12px 28px -8px rgba(10, 15, 40, 0.35),
+    0 1px 0 rgba(255, 255, 255, 0.30) inset,
+    0 34px 68px -18px rgba(10, 16, 36, 0.34),
+    0 12px 28px -8px rgba(10, 16, 36, 0.18),
     var(--shadow-glow);
 }
 
@@ -680,18 +679,22 @@ html.dark[data-appearance="glass"] .ambient-atmosphere-default {
   pointer-events: none;
   display: none;
   background:
-    radial-gradient(ellipse 80% 60% at 15% 12%,
-      rgba(148, 168, 235, 0.34) 0%,
-      transparent 55%),
-    radial-gradient(ellipse 70% 55% at 85% 82%,
-      rgba(178, 148, 215, 0.24) 0%,
-      transparent 55%),
-    radial-gradient(ellipse 60% 45% at 55% 50%,
-      rgba(130, 155, 200, 0.14) 0%,
+    radial-gradient(ellipse 90% 68% at 18% 14%,
+      rgba(186, 206, 255, 0.52) 0%,
+      transparent 56%),
+    radial-gradient(ellipse 78% 58% at 84% 78%,
+      rgba(210, 190, 255, 0.32) 0%,
+      transparent 56%),
+    radial-gradient(ellipse 62% 48% at 52% 48%,
+      rgba(164, 212, 255, 0.20) 0%,
       transparent 60%),
-    radial-gradient(ellipse 55% 40% at 50% 110%,
-      rgba(212, 176, 112, 0.06) 0%,
-      transparent 60%);
+    radial-gradient(ellipse 54% 38% at 50% 112%,
+      rgba(255, 236, 196, 0.10) 0%,
+      transparent 62%),
+    linear-gradient(180deg,
+      #121B31 0%,
+      #10182D 48%,
+      #0F1629 100%);
 }
 
 html.dark[data-appearance="glass"] .ambient-atmosphere-glass {
