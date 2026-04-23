@@ -1,7 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
-function isVerificationLinkPossiblyAlreadyUsed(message?: string | null) {
+function isEmailVerificationType(type?: string | null) {
+  return type === 'signup' || type === 'email'
+}
+
+function looksLikeAlreadyUsedOrPrefetched(message?: string | null) {
   const text = (message || '').toLowerCase()
 
   return (
@@ -12,35 +16,36 @@ function isVerificationLinkPossiblyAlreadyUsed(message?: string | null) {
   )
 }
 
-function isEmailVerificationType(type?: string | null) {
-  return type === 'signup' || type === 'email'
+function getErrorType(message?: string | null) {
+  const text = (message || '').toLowerCase()
+  return text.includes('expired') || text.includes('otp_expired') ? 'expired' : 'invalid'
 }
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
+
   const code = searchParams.get('code')
   const next = searchParams.get('next')
   const error = searchParams.get('error')
   const errorDescription = searchParams.get('error_description')
-
   const type = searchParams.get('type')
   const tokenHash = searchParams.get('token_hash')
 
-  // Handle direct error cases coming from Supabase callback params
+  // Supabase can sometimes return an error even though the verification link
+  // was already consumed by a mail prefetcher/scanner and the email is already verified.
   if (error) {
-    if (isEmailVerificationType(type) && isVerificationLinkPossiblyAlreadyUsed(errorDescription || error)) {
+    if (isEmailVerificationType(type) && looksLikeAlreadyUsedOrPrefetched(errorDescription || error)) {
       return NextResponse.redirect(
         new URL('/auth/verified?already=1', origin)
       )
     }
 
-    const errorType = errorDescription?.toLowerCase().includes('expired') ? 'expired' : 'invalid'
     return NextResponse.redirect(
-      new URL(`/auth/confirmation-error?error=${errorType}`, origin)
+      new URL(`/auth/confirmation-error?error=${getErrorType(errorDescription || error)}`, origin)
     )
   }
 
-  // Handle token_hash verification (email confirmation / OTP-style links)
+  // Email confirmation / OTP-style verification links
   if (tokenHash && type) {
     const supabase = await createClient()
 
@@ -61,19 +66,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL(next || '/app/dashboard', origin))
     }
 
-    if (isEmailVerificationType(type) && isVerificationLinkPossiblyAlreadyUsed(verifyError.message)) {
+    if (isEmailVerificationType(type) && looksLikeAlreadyUsedOrPrefetched(verifyError.message)) {
       return NextResponse.redirect(
         new URL('/auth/verified?already=1', origin)
       )
     }
 
-    const errorType = verifyError.message?.toLowerCase().includes('expired') ? 'expired' : 'invalid'
     return NextResponse.redirect(
-      new URL(`/auth/confirmation-error?error=${errorType}`, origin)
+      new URL(`/auth/confirmation-error?error=${getErrorType(verifyError.message)}`, origin)
     )
   }
 
-  // Handle code exchange (OAuth / PKCE / recovery flows)
+  // PKCE / OAuth / other code-based callbacks
   if (code) {
     const supabase = await createClient()
     const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
@@ -87,19 +91,17 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(new URL('/auth/reset-password', origin))
       }
 
-      const redirectPath = next || '/app/dashboard'
-      return NextResponse.redirect(new URL(redirectPath, origin))
+      return NextResponse.redirect(new URL(next || '/app/dashboard', origin))
     }
 
-    if (isEmailVerificationType(type) && isVerificationLinkPossiblyAlreadyUsed(exchangeError.message)) {
+    if (isEmailVerificationType(type) && looksLikeAlreadyUsedOrPrefetched(exchangeError.message)) {
       return NextResponse.redirect(
         new URL('/auth/verified?already=1', origin)
       )
     }
 
-    const errorType = exchangeError.message?.toLowerCase().includes('expired') ? 'expired' : 'invalid'
     return NextResponse.redirect(
-      new URL(`/auth/confirmation-error?error=${errorType}`, origin)
+      new URL(`/auth/confirmation-error?error=${getErrorType(exchangeError.message)}`, origin)
     )
   }
 

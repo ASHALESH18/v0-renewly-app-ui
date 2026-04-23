@@ -13,13 +13,12 @@ export default function EmailVerifiedPage() {
   const alreadyUsed = searchParams.get('already') === '1'
   const [countdown, setCountdown] = useState(5)
 
-  // Auto-redirect countdown
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(timer)
-          router.push('/app/dashboard')
+          router.push('/auth/sign-in')
           return 0
         }
         return prev - 1
@@ -35,7 +34,6 @@ export default function EmailVerifiedPage() {
       subtitle={alreadyUsed ? 'Your account is already active' : 'Your account is now active'}
     >
       <div className="space-y-8 text-center">
-        {/* Success animation */}
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -43,11 +41,10 @@ export default function EmailVerifiedPage() {
             type: 'spring',
             stiffness: 200,
             damping: 15,
-            delay: 0.1
+            delay: 0.1,
           }}
           className="relative mx-auto w-24 h-24"
         >
-          {/* Outer glow ring */}
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -55,7 +52,6 @@ export default function EmailVerifiedPage() {
             className="absolute inset-0 rounded-full bg-gradient-to-br from-gold/20 to-emerald/20 blur-xl"
           />
 
-          {/* Main circle */}
           <div className="relative w-full h-full rounded-full bg-gradient-to-br from-emerald/20 to-gold/20 border border-emerald/30 flex items-center justify-center">
             <motion.div
               initial={{ scale: 0 }}
@@ -66,7 +62,6 @@ export default function EmailVerifiedPage() {
             </motion.div>
           </div>
 
-          {/* Sparkle decorations */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -77,7 +72,6 @@ export default function EmailVerifiedPage() {
           </motion.div>
         </motion.div>
 
-        {/* Success message */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -89,26 +83,35 @@ export default function EmailVerifiedPage() {
           </h2>
           <p className="text-platinum max-w-sm mx-auto">
             {alreadyUsed
-              ? 'This verification link was already used, but your email is already verified. You can continue to your dashboard.'
-              : 'Your email has been verified successfully. You now have full access to your subscription intelligence dashboard.'}
+              ? 'This verification link was already used, but your email is already verified. Please sign in to continue.'
+              : 'Your email has been verified successfully. Please sign in to continue to your dashboard.'}
           </p>
         </motion.div>
 
-        {/* CTA buttons */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           className="space-y-4"
         >
-          <Link href="/app/dashboard">
+          <Link href="/auth/sign-in">
             <motion.button
               whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(199, 163, 106, 0.2)' }}
               whileTap={{ scale: 0.98 }}
               className="w-full h-12 rounded-xl gold-gradient text-obsidian font-semibold shadow-luxury flex items-center justify-center gap-2 cursor-pointer"
             >
-              Continue to Dashboard
+              Continue to sign in
               <ArrowRight className="w-5 h-5" />
+            </motion.button>
+          </Link>
+
+          <Link href="/">
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              className="w-full h-12 rounded-xl border border-glass-border text-platinum hover:text-ivory transition-colors cursor-pointer"
+            >
+              Back to home
             </motion.button>
           </Link>
 
@@ -118,7 +121,6 @@ export default function EmailVerifiedPage() {
           </p>
         </motion.div>
 
-        {/* Trust indicator */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
