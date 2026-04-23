@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   const next = searchParams.get('next')
   const error = searchParams.get('error')
   const errorDescription = searchParams.get('error_description')
-  
+
   // Supabase email verification parameters
   const type = searchParams.get('type')
   const tokenHash = searchParams.get('token_hash')
@@ -42,7 +42,21 @@ export async function GET(request: NextRequest) {
     }
 
     // Verification failed
-    const errorType = verifyError.message?.includes('expired') ? 'expired' : 'invalid'
+    const message = (verifyError.message || '').toLowerCase()
+    const isEmailVerification = type === 'signup' || type === 'email'
+    const looksAlreadyUsedOrPrefetched =
+      message.includes('expired') ||
+      message.includes('invalid') ||
+      message.includes('used') ||
+      message.includes('otp_expired')
+
+    if (isEmailVerification && looksAlreadyUsedOrPrefetched) {
+      return NextResponse.redirect(
+        new URL('/auth/verified?already=1', origin)
+      )
+    }
+
+    const errorType = message.includes('expired') ? 'expired' : 'invalid'
     return NextResponse.redirect(
       new URL(`/auth/confirmation-error?error=${errorType}`, origin)
     )
@@ -58,12 +72,12 @@ export async function GET(request: NextRequest) {
       if (type === 'signup' || type === 'email') {
         return NextResponse.redirect(new URL('/auth/verified', origin))
       }
-      
+
       // Password recovery flow - redirect to reset password page
       if (type === 'recovery') {
         return NextResponse.redirect(new URL('/auth/reset-password', origin))
       }
-      
+
       // Regular auth callback (OAuth, etc.)
       const redirectPath = next || '/app/dashboard'
       return NextResponse.redirect(new URL(redirectPath, origin))

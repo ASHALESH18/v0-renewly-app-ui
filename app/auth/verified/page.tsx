@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { CheckCircle, ArrowRight, Sparkles } from 'lucide-react'
 import { AuthLayout } from '@/components/auth/auth-layout'
 
 export default function EmailVerifiedPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const alreadyUsed = searchParams.get('already') === '1'
   const [countdown, setCountdown] = useState(5)
 
   // Auto-redirect countdown
@@ -29,19 +31,19 @@ export default function EmailVerifiedPage() {
 
   return (
     <AuthLayout
-      title="Email verified"
-      subtitle="Your account is now active"
+      title={alreadyUsed ? 'Already verified' : 'Email verified'}
+      subtitle={alreadyUsed ? 'Your account is already active' : 'Your account is now active'}
     >
       <div className="space-y-8 text-center">
         {/* Success animation */}
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ 
-            type: 'spring', 
-            stiffness: 200, 
+          transition={{
+            type: 'spring',
+            stiffness: 200,
             damping: 15,
-            delay: 0.1 
+            delay: 0.1
           }}
           className="relative mx-auto w-24 h-24"
         >
@@ -52,7 +54,7 @@ export default function EmailVerifiedPage() {
             transition={{ delay: 0.3, duration: 0.5 }}
             className="absolute inset-0 rounded-full bg-gradient-to-br from-gold/20 to-emerald/20 blur-xl"
           />
-          
+
           {/* Main circle */}
           <div className="relative w-full h-full rounded-full bg-gradient-to-br from-emerald/20 to-gold/20 border border-emerald/30 flex items-center justify-center">
             <motion.div
@@ -63,7 +65,7 @@ export default function EmailVerifiedPage() {
               <CheckCircle className="w-12 h-12 text-emerald" />
             </motion.div>
           </div>
-          
+
           {/* Sparkle decorations */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -83,10 +85,12 @@ export default function EmailVerifiedPage() {
           className="space-y-3"
         >
           <h2 className="text-xl font-semibold text-ivory">
-            Welcome to Renewly
+            {alreadyUsed ? 'You’re all set' : 'Welcome to Renewly'}
           </h2>
           <p className="text-platinum max-w-sm mx-auto">
-            Your email has been verified successfully. You now have full access to your subscription intelligence dashboard.
+            {alreadyUsed
+              ? 'This verification link was already used, but your email is already verified. You can continue to your dashboard.'
+              : 'Your email has been verified successfully. You now have full access to your subscription intelligence dashboard.'}
           </p>
         </motion.div>
 
@@ -107,7 +111,7 @@ export default function EmailVerifiedPage() {
               <ArrowRight className="w-5 h-5" />
             </motion.button>
           </Link>
-          
+
           <p className="text-sm text-platinum">
             Redirecting automatically in{' '}
             <span className="text-gold font-medium">{countdown}s</span>
