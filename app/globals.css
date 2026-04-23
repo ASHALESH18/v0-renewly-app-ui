@@ -56,6 +56,7 @@ button,
 
 /* Touch device optimizations - disable hover effects that cause repaints */
 @media (hover: none) and (pointer: coarse) {
+
   .card-floating:hover,
   .card-interactive:hover {
     transform: none;
@@ -140,13 +141,13 @@ button,
   --glass: rgba(255, 255, 255, 0.88);
   --glass-border: rgba(176, 132, 64, 0.14);
   --hero-vignette: rgba(176, 132, 64, 0.08);
-  
+
   /* Premium surface hierarchy */
   --surface-base: #F8F4EC;
   --surface-elevated: #FFFEFA;
   --surface-floating: rgba(255, 254, 250, 0.95);
   --surface-modal: #FFFFFF;
-  
+
   /* Premium shadows */
   --shadow-xs: 0 1px 2px rgba(120, 90, 50, 0.04);
   --shadow-sm: 0 2px 8px -2px rgba(120, 90, 50, 0.06), 0 1px 2px rgba(0, 0, 0, 0.02);
@@ -204,13 +205,13 @@ button,
   --crimson: #6E353C;
   --glass: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.08);
-  
+
   /* Premium surface hierarchy */
   --surface-base: #08090C;
   --surface-elevated: #111418;
   --surface-floating: rgba(17, 20, 24, 0.96);
   --surface-modal: #15181E;
-  
+
   /* Premium shadows */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-sm: 0 2px 8px -2px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.15);
@@ -228,12 +229,12 @@ button,
 /* ambient background shines through when combined with the          */
 /* backdrop-filter utilities applied via the rules below.            */
 /*                                                                   */
-/* Applied via `[data-theme="glass"]` on <html>.                     */
+/* Applied via `html.dark[data-appearance="glass"]` on <html>.       */
 /* `ThemeSyncEffect` also adds the `.dark` class so every existing   */
 /* `.dark .xxx` rule keeps working; Glass then layers its own        */
 /* overrides on top where it needs to feel distinct.                 */
 /* ================================================================ */
-[data-theme="glass"] {
+html.dark[data-appearance="glass"] {
   /* Deep cool navy-violet base */
   --background: #0B0E1A;
   --foreground: #ECEEFB;
@@ -324,12 +325,12 @@ button,
 /* Performance note: backdrop-filter is GPU-accelerated on modern    */
 /* devices. The saturate() nudge gives glass its luminous quality.   */
 /* ================================================================ */
-[data-theme="glass"] .bg-card,
-[data-theme="glass"] .bg-popover,
-[data-theme="glass"] .bg-secondary,
-[data-theme="glass"] .bg-muted,
-[data-theme="glass"] .bg-sidebar,
-[data-theme="glass"] .bg-sidebar-accent {
+html.dark[data-appearance="glass"] .bg-card,
+html.dark[data-appearance="glass"] .bg-popover,
+html.dark[data-appearance="glass"] .bg-secondary,
+html.dark[data-appearance="glass"] .bg-muted,
+html.dark[data-appearance="glass"] .bg-sidebar,
+html.dark[data-appearance="glass"] .bg-sidebar-accent {
   backdrop-filter: blur(22px) saturate(180%);
   -webkit-backdrop-filter: blur(22px) saturate(180%);
 }
@@ -337,12 +338,10 @@ button,
 /* Sidebar <aside> uses a hard-coded gradient in SidebarNav for
    Light/Dark. In Glass we override with a translucent lavender-tinted
    gradient so the atmosphere bleeds through. */
-[data-theme="glass"] aside {
-  background: linear-gradient(
-    180deg,
-    rgba(22, 25, 42, 0.58) 0%,
-    rgba(14, 17, 30, 0.62) 100%
-  ) !important;
+html.dark[data-appearance="glass"] aside {
+  background: linear-gradient(180deg,
+      rgba(22, 25, 42, 0.58) 0%,
+      rgba(14, 17, 30, 0.62) 100%) !important;
   backdrop-filter: blur(28px) saturate(180%);
   -webkit-backdrop-filter: blur(28px) saturate(180%);
   border-right-color: rgba(180, 200, 255, 0.10) !important;
@@ -352,9 +351,9 @@ button,
 }
 
 /* Inputs in Glass: softly frosted, airy border */
-[data-theme="glass"] input,
-[data-theme="glass"] textarea,
-[data-theme="glass"] select {
+html.dark[data-appearance="glass"] input,
+html.dark[data-appearance="glass"] textarea,
+html.dark[data-appearance="glass"] select {
   background: rgba(30, 34, 54, 0.45);
   border-color: rgba(180, 200, 255, 0.14);
   backdrop-filter: blur(10px) saturate(160%);
@@ -362,7 +361,7 @@ button,
 }
 
 /* Border utility: in Glass, use the soft lavender border everywhere */
-[data-theme="glass"] .border-border {
+html.dark[data-appearance="glass"] .border-border {
   border-color: rgba(180, 200, 255, 0.10);
 }
 
@@ -477,7 +476,7 @@ button,
   backdrop-filter: blur(24px) saturate(200%);
   -webkit-backdrop-filter: blur(24px) saturate(200%);
   border: 1px solid rgba(176, 132, 64, 0.10);
-  box-shadow: 
+  box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.6) inset,
     0 -1px 0 rgba(0, 0, 0, 0.02) inset,
     0 4px 16px -4px rgba(120, 90, 50, 0.06);
@@ -486,7 +485,7 @@ button,
 .dark .glass-strong {
   background: rgba(17, 20, 24, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 
+  box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.04) inset,
     0 4px 20px -4px rgba(0, 0, 0, 0.4);
 }
@@ -497,7 +496,7 @@ button,
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid rgba(176, 132, 64, 0.10);
-  box-shadow: 
+  box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.7) inset,
     0 -1px 0 rgba(0, 0, 0, 0.015) inset,
     0 20px 50px -15px rgba(120, 90, 50, 0.10);
@@ -506,7 +505,7 @@ button,
 .dark .glass-premium {
   background: rgba(17, 20, 24, 0.90);
   border: 1px solid rgba(212, 176, 112, 0.08);
-  box-shadow: 
+  box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.03) inset,
     0 20px 60px -15px rgba(0, 0, 0, 0.45);
 }
@@ -575,7 +574,7 @@ button,
 /* ================================================================ */
 
 /* Glass theme: strong glass — luminous frosted navigation */
-[data-theme="glass"] .glass-strong {
+html.dark[data-appearance="glass"] .glass-strong {
   background: rgba(26, 29, 45, 0.72);
   backdrop-filter: blur(28px) saturate(180%);
   -webkit-backdrop-filter: blur(28px) saturate(180%);
@@ -587,7 +586,7 @@ button,
 }
 
 /* Glass theme: premium frosted — hero sections and feature cards */
-[data-theme="glass"] .glass-premium {
+html.dark[data-appearance="glass"] .glass-premium {
   background: rgba(26, 29, 45, 0.62);
   backdrop-filter: blur(32px) saturate(180%);
   -webkit-backdrop-filter: blur(32px) saturate(180%);
@@ -599,7 +598,7 @@ button,
 }
 
 /* Glass theme: subtle — airy light frosting */
-[data-theme="glass"] .glass-subtle {
+html.dark[data-appearance="glass"] .glass-subtle {
   background: rgba(26, 29, 45, 0.48);
   backdrop-filter: blur(18px) saturate(170%);
   -webkit-backdrop-filter: blur(18px) saturate(170%);
@@ -607,12 +606,10 @@ button,
 }
 
 /* Glass theme: cinematic — layered translucent hero surface */
-[data-theme="glass"] .surface-cinematic {
-  background: linear-gradient(
-    180deg,
-    rgba(30, 35, 55, 0.78) 0%,
-    rgba(18, 22, 38, 0.92) 100%
-  );
+html.dark[data-appearance="glass"] .surface-cinematic {
+  background: linear-gradient(180deg,
+      rgba(30, 35, 55, 0.78) 0%,
+      rgba(18, 22, 38, 0.92) 100%);
   backdrop-filter: blur(32px) saturate(180%);
   -webkit-backdrop-filter: blur(32px) saturate(180%);
   border: 1px solid rgba(180, 200, 255, 0.12);
@@ -624,16 +621,14 @@ button,
 }
 
 /* Glass theme: spotlight — soft lavender top-glow */
-[data-theme="glass"] .surface-spotlight::before {
-  background: radial-gradient(
-    ellipse 60% 40% at 50% 0%,
-    rgba(160, 170, 220, 0.10) 0%,
-    transparent 72%
-  );
+html.dark[data-appearance="glass"] .surface-spotlight::before {
+  background: radial-gradient(ellipse 60% 40% at 50% 0%,
+      rgba(160, 170, 220, 0.10) 0%,
+      transparent 72%);
 }
 
 /* Glass theme: floating cards — refined translucent depth */
-[data-theme="glass"] .card-floating {
+html.dark[data-appearance="glass"] .card-floating {
   background: rgba(26, 29, 45, 0.80);
   backdrop-filter: blur(18px) saturate(170%);
   -webkit-backdrop-filter: blur(18px) saturate(170%);
@@ -644,7 +639,7 @@ button,
     0 6px 16px -6px rgba(10, 15, 40, 0.3);
 }
 
-[data-theme="glass"] .card-floating:hover {
+html.dark[data-appearance="glass"] .card-floating:hover {
   box-shadow:
     0 1px 0 rgba(180, 200, 255, 0.12) inset,
     0 34px 68px -18px rgba(8, 12, 32, 0.6),
@@ -674,7 +669,7 @@ button,
     radial-gradient(ellipse at 80% 80%, rgba(42, 85, 72, 0.02) 0%, transparent 50%);
 }
 
-[data-theme="glass"] .ambient-atmosphere-default {
+html.dark[data-appearance="glass"] .ambient-atmosphere-default {
   display: none;
 }
 
@@ -685,34 +680,26 @@ button,
   pointer-events: none;
   display: none;
   background:
-    radial-gradient(
-      ellipse 80% 60% at 15% 12%,
+    radial-gradient(ellipse 80% 60% at 15% 12%,
       rgba(148, 168, 235, 0.34) 0%,
-      transparent 55%
-    ),
-    radial-gradient(
-      ellipse 70% 55% at 85% 82%,
+      transparent 55%),
+    radial-gradient(ellipse 70% 55% at 85% 82%,
       rgba(178, 148, 215, 0.24) 0%,
-      transparent 55%
-    ),
-    radial-gradient(
-      ellipse 60% 45% at 55% 50%,
+      transparent 55%),
+    radial-gradient(ellipse 60% 45% at 55% 50%,
       rgba(130, 155, 200, 0.14) 0%,
-      transparent 60%
-    ),
-    radial-gradient(
-      ellipse 55% 40% at 50% 110%,
+      transparent 60%),
+    radial-gradient(ellipse 55% 40% at 50% 110%,
       rgba(212, 176, 112, 0.06) 0%,
-      transparent 60%
-    );
+      transparent 60%);
 }
 
-[data-theme="glass"] .ambient-atmosphere-glass {
+html.dark[data-appearance="glass"] .ambient-atmosphere-glass {
   display: block;
 }
 
 /* Subtle film grain for the Glass theme — adds texture without noise */
-[data-theme="glass"] .ambient-grain {
+html.dark[data-appearance="glass"] .ambient-grain {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -733,8 +720,8 @@ button,
     0 1px 0 rgba(255, 255, 255, 0.5) inset,
     0 16px 40px -12px rgba(120, 90, 50, 0.10),
     0 6px 16px -6px rgba(120, 90, 50, 0.06);
-  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
-              box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .card-floating:hover {
@@ -780,7 +767,7 @@ button,
 
 /* Luxury shadow - for primary CTAs and featured elements */
 .shadow-luxury {
-  box-shadow: 
+  box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.15) inset,
     0 16px 40px -8px rgba(176, 132, 64, 0.20),
     0 6px 16px -4px rgba(176, 132, 64, 0.12);
@@ -807,7 +794,7 @@ button,
 }
 
 .dark .shadow-luxury {
-  box-shadow: 
+  box-shadow:
     0 1px 0 rgba(212, 176, 112, 0.10) inset,
     0 16px 40px -8px rgba(0, 0, 0, 0.45),
     0 6px 16px -4px rgba(0, 0, 0, 0.30),
@@ -1259,18 +1246,19 @@ button,
 
 /* MOBILE PERFORMANCE OPTIMIZATIONS */
 @media (max-width: 768px) {
+
   /* Disable all ambient animations on mobile for 60fps scrolling */
   .ambient-wave,
   .ambient-particles,
   .ambient-glow {
     animation: none !important;
   }
-  
+
   /* Reduce blur radii on mobile */
   .ambient-glow {
     filter: blur(60px);
   }
-  
+
   /* Smaller glow areas on mobile */
   .ambient-glow--top {
     width: 20rem;
@@ -1292,7 +1280,7 @@ button,
     right: -2rem;
     opacity: 0.12;
   }
-  
+
   /* Reduce glass blur on mobile Safari */
   .glass,
   .glass-strong,
@@ -1301,18 +1289,18 @@ button,
     backdrop-filter: blur(8px) saturate(120%);
     -webkit-backdrop-filter: blur(8px) saturate(120%);
   }
-  
+
   /* Disable expensive surface effects on mobile */
   .surface-cinematic {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
-  
+
   /* Simpler shadows on mobile */
   .shadow-luxury {
     box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.15);
   }
-  
+
   .dark .shadow-luxury {
     box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.4);
   }
@@ -1320,20 +1308,21 @@ button,
 
 /* REDUCED MOTION - Respect user preferences */
 @media (prefers-reduced-motion: reduce) {
+
   .ambient-wave,
   .ambient-particles,
   .ambient-glow {
     animation: none !important;
   }
-  
+
   .ambient-wave {
     transform: none !important;
   }
-  
+
   .ambient-particles {
     opacity: 0.3;
   }
-  
+
   .dark .ambient-particles {
     opacity: 0.4;
   }
