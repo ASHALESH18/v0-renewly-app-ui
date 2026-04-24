@@ -59,6 +59,10 @@ export interface AppState {
   theme: 'light' | 'dark' | 'glass'
   toasts: Toast[]
 
+  // Paywall State — for subscription limit reached experience
+  subscriptionLimitPaywallOpen: boolean
+  subscriptionLimitPaywallData: { current: number; limit: number } | null
+
   // Loading/Sync State
   isHydratingUserData: boolean
   isSyncingUserData: boolean
@@ -84,7 +88,7 @@ export interface AppState {
   deleteSubscription: (id: string) => void
 
   // Actions - Subscriptions (remote-backed - use these for real data)
-  addSubscriptionRemote: (subscription: Omit<Subscription, 'id'>) => Promise<{ success: boolean; error?: string }>
+  addSubscriptionRemote: (subscription: Omit<Subscription, 'id'>) => Promise<{ success: boolean; error?: string; code?: string; current?: number; limit?: number }>
   updateSubscriptionRemote: (id: string, subscription: Partial<Subscription>) => Promise<{ success: boolean; error?: string }>
   deleteSubscriptionRemote: (id: string) => Promise<{ success: boolean; error?: string }>
 
@@ -95,6 +99,8 @@ export interface AppState {
   setTheme: (theme: 'light' | 'dark' | 'glass') => void
   addToast: (toast: Omit<Toast, 'id'>) => void
   removeToast: (id: string) => void
+  openSubscriptionLimitPaywall: (data: { current: number; limit: number }) => void
+  closeSubscriptionLimitPaywall: () => void
 
   // UI State - Add Subscription Sheet
   isAddSubscriptionSheetOpen: boolean
@@ -129,6 +135,8 @@ const useStore = create<AppState>()(
       },
       theme: 'dark',
       toasts: [],
+      subscriptionLimitPaywallOpen: false,
+      subscriptionLimitPaywallData: null,
       isHydratingUserData: false,
       isSyncingUserData: false,
       hasHydratedFromCloud: false,
@@ -332,7 +340,14 @@ const useStore = create<AppState>()(
 
           const error = result.error || 'Failed to add subscription'
           set({ syncError: error })
-          return { success: false, error }
+          // Pass through error code and metadata for limit-reached errors
+          return { 
+            success: false, 
+            error,
+            code: (result as any)?.code,
+            current: (result as any)?.current,
+            limit: (result as any)?.limit,
+          }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to add subscription'
           set({ syncError: message })
@@ -435,6 +450,10 @@ const useStore = create<AppState>()(
       // Add subscription sheet controls
       openAddSubscriptionSheet: () => set({ isAddSubscriptionSheetOpen: true }),
       closeAddSubscriptionSheet: () => set({ isAddSubscriptionSheetOpen: false }),
+
+      // Subscription limit paywall controls
+      openSubscriptionLimitPaywall: (data) => set({ subscriptionLimitPaywallOpen: true, subscriptionLimitPaywallData: data }),
+      closeSubscriptionLimitPaywall: () => set({ subscriptionLimitPaywallOpen: false, subscriptionLimitPaywallData: null }),
 
       // Refresh plan from server after successful upgrade
       refreshPlanFromServer: async () => {
