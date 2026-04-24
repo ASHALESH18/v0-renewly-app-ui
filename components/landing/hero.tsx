@@ -16,6 +16,7 @@ export function Hero() {
   const [isDemoOpen, setIsDemoOpen] = useState(false)
   const { resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const [appearance, setAppearance] = useState<'standard' | 'glass'>('standard')
   const router = useRouter()
   const { isAuthenticated } = useAuth()
   const [isNavigating, setIsNavigating] = useState(false)
@@ -23,9 +24,110 @@ export function Hero() {
   // Prevent hydration mismatch
   useEffect(() => {
     setMounted(true)
+
+    const root = document.documentElement
+
+    const syncAppearance = () => {
+      setAppearance(root.dataset.appearance === 'glass' ? 'glass' : 'standard')
+    }
+
+    syncAppearance()
+
+    const observer = new MutationObserver(() => {
+      syncAppearance()
+    })
+
+    observer.observe(root, {
+      attributes: true,
+      attributeFilter: ['data-appearance'],
+    })
+
+    return () => observer.disconnect()
   }, [])
 
-  const isDark = mounted ? resolvedTheme === 'dark' : true
+  const isGlass = mounted ? resolvedTheme === 'dark' && appearance === 'glass' : false
+  const isDark = mounted ? resolvedTheme === 'dark' && appearance !== 'glass' : true
+  const isLight = mounted ? resolvedTheme === 'light' : false
+  const phoneTheme = isGlass
+    ? {
+      halo:
+        'radial-gradient(ellipse at center, rgba(186, 206, 255, 0.24) 0%, rgba(210, 190, 255, 0.10) 38%, transparent 72%)',
+      frameBg:
+        'linear-gradient(135deg, rgba(36, 45, 72, 0.95) 0%, rgba(18, 24, 40, 0.98) 55%, rgba(8, 12, 24, 1) 100%)',
+      frameBorder: 'rgba(255,255,255,0.10)',
+      frameShadow:
+        '0 28px 70px -14px rgba(8, 12, 30, 0.45), 0 10px 24px -8px rgba(8, 12, 30, 0.28), 0 0 0 1px rgba(255,255,255,0.08) inset, 0 0 90px rgba(176,198,255,0.14)',
+      notchBg: '#04070D',
+      screenBg:
+        'linear-gradient(180deg, rgba(17,26,48,1) 0%, rgba(13,20,38,1) 48%, rgba(10,16,30,1) 100%)',
+      screenBorder: 'rgba(255,255,255,0.10)',
+      screenShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
+      statusText: '#CAD6EB',
+      primaryText: '#F7FAFF',
+      secondaryText: '#CAD6EB',
+      amountText: '#E2C389',
+      heroCardBg:
+        'linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(237,244,255,0.10) 100%)',
+      heroCardBorder: 'rgba(255,255,255,0.24)',
+      heroCardShadow:
+        '0 12px 32px -10px rgba(10,16,36,0.34), 0 1px 0 rgba(255,255,255,0.20) inset',
+      itemBg: 'rgba(248,251,255,0.12)',
+      itemBorder: 'rgba(255,255,255,0.18)',
+      itemShadow: '0 8px 20px -10px rgba(10,16,36,0.28)',
+    }
+    : isDark
+      ? {
+        halo:
+          'radial-gradient(ellipse at center, rgba(199, 163, 106, 0.12) 0%, rgba(199, 163, 106, 0.04) 40%, transparent 70%)',
+        frameBg:
+          'linear-gradient(135deg, #1A1D24 0%, #0F1115 55%, #0A0C10 100%)',
+        frameBorder: '#2A2F38',
+        frameShadow:
+          '0 25px 60px -12px rgba(0, 0, 0, 0.35), 0 12px 24px -8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05) inset, 0 0 80px rgba(199, 163, 106, 0.08)',
+        notchBg: '#000000',
+        screenBg: '#0A0C10',
+        screenBorder: '#1A1D24',
+        screenShadow: 'none',
+        statusText: '#BCC2CC',
+        primaryText: '#F4EFE7',
+        secondaryText: '#9CA3AF',
+        amountText: '#C7A36A',
+        heroCardBg:
+          'linear-gradient(135deg, #1B2028 0%, #13161C 50%, #1B2028 100%)',
+        heroCardBorder: 'rgba(199, 163, 106, 0.25)',
+        heroCardShadow: '0 4px 12px rgba(0,0,0,0.2)',
+        itemBg: '#1B2028',
+        itemBorder: 'rgba(255,255,255,0.08)',
+        itemShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      }
+      : {
+        halo:
+          'radial-gradient(ellipse at center, rgba(154, 112, 53, 0.12) 0%, rgba(154, 112, 53, 0.04) 40%, transparent 70%)',
+        frameBg:
+          'linear-gradient(180deg, #E8E4DE 0%, #D8D4CE 52%, #C8C4BE 100%)',
+        frameBorder: '#B8B4AE',
+        frameShadow:
+          '0 30px 60px -15px rgba(120, 100, 70, 0.25), 0 15px 30px -10px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.6) inset, inset 0 -2px 6px rgba(0, 0, 0, 0.06), 0 0 80px rgba(154, 112, 53, 0.1)',
+        notchBg: '#1A1A1A',
+        screenBg:
+          'linear-gradient(180deg, #FAF8F5 0%, #F5F3F0 48%, #F0EDE8 100%)',
+        screenBorder: '#DDD8D0',
+        screenShadow:
+          'inset 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 0 0 1px rgba(0, 0, 0, 0.02)',
+        statusText: '#6B7280',
+        primaryText: '#1A1510',
+        secondaryText: '#6B7280',
+        amountText: '#9A7035',
+        heroCardBg:
+          'linear-gradient(135deg, #FFFDF9 0%, #FBF8F3 50%, #F8F5EF 100%)',
+        heroCardBorder: 'rgba(154, 112, 53, 0.20)',
+        heroCardShadow:
+          '0 6px 20px -4px rgba(120, 90, 50, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+        itemBg: 'linear-gradient(90deg, #FFFDF9 0%, #FBF9F5 100%)',
+        itemBorder: '#E8E2D8',
+        itemShadow:
+          '0 2px 8px -2px rgba(120, 90, 50, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)',
+      }
   const { prefersReducedMotion, isMobile, shouldReduceAnimations } = useMotionPreferences()
 
   // Smart CTA handler - consistent with pricing/upgrade flow
@@ -207,8 +309,7 @@ export function Hero() {
           <div
             className="absolute -inset-16 md:-inset-24 rounded-[80px] opacity-50"
             style={{
-              background:
-                'radial-gradient(ellipse at center, rgba(199, 163, 106, 0.12) 0%, rgba(199, 163, 106, 0.04) 40%, transparent 70%)',
+              background: phoneTheme.halo,
             }}
           />
 
@@ -216,40 +317,34 @@ export function Hero() {
           <div className="relative mx-auto w-[280px] md:w-[320px]">
             {/* Premium device frame - adapts to theme with rich shading */}
             <div
-              className={`relative rounded-[40px] p-3 transition-colors duration-300 ${isDark
-                ? 'bg-gradient-to-br from-[#1A1D24] via-[#0F1115] to-[#0A0C10] border border-[#2A2F38]'
-                : 'bg-gradient-to-b from-[#E8E4DE] via-[#D8D4CE] to-[#C8C4BE] border border-[#B8B4AE]'
-                }`}
+              className="relative rounded-[40px] p-3 transition-colors duration-300"
               style={{
-                boxShadow: isDark
-                  ? '0 25px 60px -12px rgba(0, 0, 0, 0.35), 0 12px 24px -8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05) inset, 0 0 80px rgba(199, 163, 106, 0.08)'
-                  : '0 30px 60px -15px rgba(120, 100, 70, 0.25), 0 15px 30px -10px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.6) inset, inset 0 -2px 6px rgba(0, 0, 0, 0.06), 0 0 80px rgba(154, 112, 53, 0.1)',
+                background: phoneTheme.frameBg,
+                border: `1px solid ${phoneTheme.frameBorder}`,
+                boxShadow: phoneTheme.frameShadow,
               }}
             >
               {/* Notch - dynamic island style */}
               <div
-                className={`absolute top-3 left-1/2 -translate-x-1/2 w-24 h-6 rounded-full ${isDark ? 'bg-[#000000]' : 'bg-[#1A1A1A]'
-                  }`}
+                className="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-6 rounded-full"
+                style={{ background: phoneTheme.notchBg }}
               />
 
               {/* Screen - theme-aware app interface with premium depth */}
               <div
-                className={`rounded-[32px] overflow-hidden aspect-[9/19.5] transition-colors duration-300 ${isDark
-                  ? 'bg-[#0A0C10] border border-[#1A1D24]'
-                  : 'bg-gradient-to-b from-[#FAF8F5] via-[#F5F3F0] to-[#F0EDE8] border border-[#DDD8D0]'
-                  }`}
+                className="rounded-[32px] overflow-hidden aspect-[9/19.5] transition-colors duration-300"
                 style={{
-                  boxShadow: isDark
-                    ? 'none'
-                    : 'inset 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 0 0 1px rgba(0, 0, 0, 0.02)',
+                  background: phoneTheme.screenBg,
+                  border: `1px solid ${phoneTheme.screenBorder}`,
+                  boxShadow: phoneTheme.screenShadow,
                 }}
               >
                 {/* App preview content */}
                 <div className="p-4 pt-10 h-full">
                   {/* Status bar - instant render */}
                   <motion.div
-                    className={`flex items-center justify-between text-xs mb-6 ${isDark ? 'text-[#BCC2CC]' : 'text-[#6B7280]'
-                      }`}
+                    className="flex items-center justify-between text-xs mb-6"
+                    style={{ color: phoneTheme.statusText }}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.4, duration: 0.3 }}
@@ -276,7 +371,7 @@ export function Hero() {
                     transition={{ delay: 0.45, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
                   >
                     <div>
-                      <p className={`text-xs ${isDark ? 'text-[#BCC2CC]' : 'text-[#6B7280]'}`}>
+                      <p className="text-xs" style={{ color: phoneTheme.secondaryText }}>
                         Good morning,
                       </p>
                       <p
@@ -295,21 +390,18 @@ export function Hero() {
                     initial={{ opacity: 0, scale: 0.97 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.5, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
-                    className={`rounded-2xl p-4 mb-4 relative overflow-hidden transition-colors duration-300 ${isDark
-                      ? 'bg-gradient-to-br from-[#1B2028] via-[#13161C] to-[#1B2028] border border-[#C7A36A]/25'
-                      : 'bg-gradient-to-br from-[#FFFDF9] via-[#FBF8F3] to-[#F8F5EF] border border-[#9A7035]/20'
-                      }`}
+                    className="rounded-2xl p-4 mb-4 relative overflow-hidden transition-colors duration-300"
                     style={{
-                      boxShadow: isDark
-                        ? '0 4px 12px rgba(0,0,0,0.2)'
-                        : '0 6px 20px -4px rgba(120, 90, 50, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+                      background: phoneTheme.heroCardBg,
+                      border: `1px solid ${phoneTheme.heroCardBorder}`,
+                      boxShadow: phoneTheme.heroCardShadow,
                     }}
                   >
 
-                    <p className={`text-xs mb-1 relative ${isDark ? 'text-[#9CA3AF]' : 'text-[#6B7280]'}`}>
+                    <p className="text-xs mb-1 relative" style={{ color: phoneTheme.secondaryText }}>
                       Monthly recurring
                     </p>
-                    <p className={`text-2xl font-bold relative ${isDark ? 'text-[#C7A36A]' : 'text-[#9A7035]'}`}>
+                    <p className="text-2xl font-bold relative" style={{ color: phoneTheme.amountText }}>
                       ₹7,644
                     </p>
                     <p className="text-xs text-[#34D399] mt-1 relative font-medium">
@@ -333,14 +425,11 @@ export function Hero() {
                           duration: 0.3,
                           ease: [0.25, 0.1, 0.25, 1],
                         }}
-                        className={`flex items-center gap-3 p-3 rounded-xl relative overflow-hidden transition-colors duration-300 ${isDark
-                          ? 'bg-[#1B2028] border border-white/[0.08]'
-                          : 'bg-gradient-to-r from-[#FFFDF9] to-[#FBF9F5] border border-[#E8E2D8]'
-                          }`}
+                        className="flex items-center gap-3 p-3 rounded-xl relative overflow-hidden transition-colors duration-300"
                         style={{
-                          boxShadow: isDark
-                            ? '0 1px 3px rgba(0, 0, 0, 0.1)'
-                            : '0 2px 8px -2px rgba(120, 90, 50, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)',
+                          background: phoneTheme.itemBg,
+                          border: `1px solid ${phoneTheme.itemBorder}`,
+                          boxShadow: phoneTheme.itemShadow,
                         }}
                       >
 
@@ -351,15 +440,17 @@ export function Hero() {
                         </div>
                         <div className="flex-1 relative min-w-0">
                           <p
-                            className={`text-xs font-semibold truncate ${isDark ? 'text-white' : 'text-[#1A1510]'}`}
+                            className="text-xs font-semibold truncate"
+                            style={{ color: phoneTheme.primaryText }}
                           >
                             {sub.name}
                           </p>
-                          <p className={`text-[10px] ${isDark ? 'text-[#9CA3AF]' : 'text-[#6B7280]'}`}>
+                          <p className="text-[10px]"
+                            style={{ color: phoneTheme.secondaryText }}>
                             Renews in {sub.renewsIn}
                           </p>
                         </div>
-                        <p className={`text-sm font-semibold relative ${isDark ? 'text-white' : 'text-[#1A1510]'}`}>
+                        <p className="text-sm font-semibold" style={{ color: phoneTheme.primaryText }}>>
                           ₹{sub.amount}
                         </p>
                       </motion.div>
