@@ -64,7 +64,7 @@ CREATE TRIGGER on_auth_user_created
 CREATE TABLE IF NOT EXISTS public.user_settings (
     user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     currency_code TEXT NOT NULL DEFAULT 'INR',
-    theme TEXT NOT NULL DEFAULT 'dark' CHECK (theme IN ('light', 'dark')),
+    theme TEXT NOT NULL DEFAULT 'dark' CHECK (theme IN ('light', 'dark', 'glass')),
     language TEXT NOT NULL DEFAULT 'en',
     reminder_days INTEGER NOT NULL DEFAULT 3 CHECK (reminder_days > 0 AND reminder_days <= 365),
     push_notifications BOOLEAN NOT NULL DEFAULT TRUE,
