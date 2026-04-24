@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { SubscriptionIcon } from '@/lib/brand-icons'
 import { Button } from '@/components/ui/button'
 import { DatePickerField } from '@/components/date-picker-field'
+import { SubscriptionLimitPaywall } from '@/components/subscription-limit-paywall'
 import useStore from '@/lib/store'
 import { currencies } from '@/lib/locale-utils'
 import type { SubscriptionCategory, BillingCycle } from '@/lib/types'
@@ -69,6 +70,10 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
 
   const addSubscriptionRemote = useStore((state) => state.addSubscriptionRemote)
   const addToast = useStore((state) => state.addToast)
+  const openSubscriptionLimitPaywall = useStore((state) => state.openSubscriptionLimitPaywall)
+  const closeSubscriptionLimitPaywall = useStore((state) => state.closeSubscriptionLimitPaywall)
+  const subscriptionLimitPaywallOpen = useStore((state) => state.subscriptionLimitPaywallOpen)
+  const subscriptionLimitPaywallData = useStore((state) => state.subscriptionLimitPaywallData)
   const notificationSettings = useStore((state) => state.notificationSettings)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -165,6 +170,14 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
 
       onClose()
       resetFormState()
+    } else if (result.code === 'SUBSCRIPTION_LIMIT_REACHED') {
+      // Show premium paywall for subscription limit
+      onClose()
+      if (result.current !== undefined && result.limit !== undefined) {
+        openSubscriptionLimitPaywall({ current: result.current, limit: result.limit })
+      } else {
+        openSubscriptionLimitPaywall({ current: 2, limit: 2 })
+      }
     } else {
       addToast({
         type: 'error',
@@ -538,5 +551,13 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
         </>
       )}
     </AnimatePresence>
+
+    {/* Subscription limit paywall */}
+    <SubscriptionLimitPaywall
+      isOpen={subscriptionLimitPaywallOpen}
+      onClose={closeSubscriptionLimitPaywall}
+      current={subscriptionLimitPaywallData?.current}
+      limit={subscriptionLimitPaywallData?.limit}
+    />
   )
 }
