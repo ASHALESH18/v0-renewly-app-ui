@@ -552,7 +552,6 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
       )}
     </AnimatePresence>
 
-    {/* Subscription limit paywall */}
     <SubscriptionLimitPaywall
       isOpen={subscriptionLimitPaywallOpen}
       onClose={closeSubscriptionLimitPaywall}
