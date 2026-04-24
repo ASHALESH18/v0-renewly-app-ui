@@ -11,6 +11,7 @@ export interface ProfileRow {
   time_zone: string | null
   created_at: string
   updated_at: string
+  avatar_source: 'provider' | 'user' | 'generated' | null
 }
 
 export interface UserSettingsRow {

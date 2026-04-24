@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     }
 
     // Ensure profile and settings exist
-    const profile = await ensureProfile(userId, email)
+    const profile = await ensureProfile(authUser)
     const settings = await ensureUserSettings(userId)
 
     // Get subscriptions

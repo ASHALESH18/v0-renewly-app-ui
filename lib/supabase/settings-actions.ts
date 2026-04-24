@@ -28,6 +28,7 @@ export async function updateUserProfile(data: {
         first_name: data.firstName || null,
         last_name: data.lastName || null,
         avatar_url: data.avatarUrl || null,
+        avatar_source: data.avatarUrl ? 'user' : null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', user.id)
