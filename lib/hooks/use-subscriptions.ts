@@ -213,6 +213,7 @@ export async function updateSubscription(id: string, data: Partial<Subscription>
     }),
   })
 
+
   if (!res.ok) {
     throw new Error('Failed to update subscription')
   }
