@@ -22,9 +22,6 @@ export async function createSubscription(data: {
     const user = await getUser()
     if (!user) throw new Error('Unauthorized')
 
-    const user = await getUser()
-    if (!user) throw new Error('Unauthorized')
-
     const permission = await canAddSubscription()
 
     if (!permission.allowed) {
@@ -61,15 +58,18 @@ export async function createSubscription(data: {
   }
 }
 
-export async function updateSubscription(id: string, data: Partial<{
-  name: string
-  amount: number
-  currency: string
-  billingCycle: string
-  renewalDate: string
-  description: string
-  status: string
-}>) {
+export async function updateSubscription(
+  id: string,
+  data: Partial<{
+    name: string
+    amount: number
+    currency: string
+    billingCycle: string
+    renewalDate: string
+    description: string
+    status: string
+  }>
+) {
   try {
     const user = await getUser()
     if (!user) throw new Error('Unauthorized')

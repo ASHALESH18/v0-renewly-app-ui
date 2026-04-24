@@ -190,12 +190,14 @@ export async function createSubscription(data: Partial<Subscription>) {
     }),
   })
 
+  const payload = await res.json().catch(() => null)
+
   if (!res.ok) {
-    throw new Error('Failed to create subscription')
+    throw new Error(payload?.error || 'Failed to create subscription')
   }
 
   await mutate('/api/subscriptions')
-  return res.json()
+  return payload
 }
 
 export async function updateSubscription(id: string, data: Partial<Subscription>) {
