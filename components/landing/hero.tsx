@@ -450,7 +450,7 @@ export function Hero() {
                             Renews in {sub.renewsIn}
                           </p>
                         </div>
-                        <p className="text-sm font-semibold" style={{ color: phoneTheme.primaryText }}>>
+                        <p className="text-sm font-semibold" style={{ color: phoneTheme.primaryText }}>
                           ₹{sub.amount}
                         </p>
                       </motion.div>
