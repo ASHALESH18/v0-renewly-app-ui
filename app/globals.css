@@ -671,6 +671,20 @@ html.dark[data-appearance="glass"] .card-floating:hover {
     var(--shadow-glow);
 }
 
+html.dark[data-appearance="glass"] .subscription-action-menu {
+  background: rgba(27, 33, 56, 0.92);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 24px 60px -18px rgba(8, 12, 30, 0.45);
+}
+
+html.dark[data-appearance="glass"] .subscription-action-remove {
+  color: rgba(255, 160, 160, 0.98);
+}
+
+html.dark[data-appearance="glass"] .subscription-action-remove:hover {
+  background: rgba(239, 68, 68, 0.14);
+}
+
 /* ================================================================ */
 /* GLASS THEME — Atmospheric ambient layers                          */
 /*                                                                   */
@@ -994,7 +1008,9 @@ html.dark[data-appearance="glass"] .ambient-grain {
  * Use sparingly — these are meant to add atmosphere, not noise.
  */
 @keyframes signature-sheen {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.35;
   }
 
