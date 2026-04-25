@@ -8,6 +8,7 @@ import { ArrowRight, LogOut } from 'lucide-react'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { signOutAndRedirectHome } from '@/lib/auth/sign-out'
 import { RenewlyLogo } from '@/components/renewly-logo'
+import { ProfileAvatar } from '@/components/landing/profile-avatar'
 
 export function LandingHeader() {
   const { user, loading } = useAuth()
@@ -94,6 +95,8 @@ export function LandingHeader() {
                     <ArrowRight className="w-3.5 h-3.5" />
                   </motion.button>
                 </Link>
+
+                <ProfileAvatar />
 
                 <motion.button
                   whileHover={{ scale: isSigningOut ? 1 : 1.01 }}
