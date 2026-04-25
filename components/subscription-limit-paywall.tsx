@@ -3,30 +3,34 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Check, Zap } from 'lucide-react'
+import { Check, Zap, ArrowRight } from 'lucide-react'
 import { PremiumModal, PremiumBottomSheet } from '@/components/premium-modal'
 import { durations, easings } from '@/components/motion'
+import { getPricingForPaywall } from '@/lib/pricing-display'
 
 interface SubscriptionLimitPaywallProps {
   isOpen: boolean
   onClose: () => void
   current?: number
   limit?: number
+  userCurrency?: string
 }
 
 /**
- * Premium paywall for subscription limit reached.
+ * Premium paywall for subscription limit reached (Free plan → Pro upgrade)
  * Desktop: modal, Mobile: bottom sheet
- * Matches Renewly's premium Glass aesthetic
+ * Shows starting price, value proposition, and strong CTAs
  */
 export function SubscriptionLimitPaywall({
   isOpen,
   onClose,
   current = 2,
   limit = 2,
+  userCurrency = 'INR',
 }: SubscriptionLimitPaywallProps) {
   const router = useRouter()
   const [isMobile, setIsMobile] = useState(false)
+  const pricing = getPricingForPaywall(userCurrency)
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -40,14 +44,20 @@ export function SubscriptionLimitPaywall({
     router.push('/app/upgrade?plan=pro')
   }
 
+  const handleComparePlans = () => {
+    onClose()
+    // Route to pricing page which has full plan comparison
+    router.push('/#pricing')
+  }
+
   const benefitsVariants = {
     container: {
       initial: { opacity: 0 },
       animate: {
         opacity: 1,
         transition: {
-          staggerChildren: 0.1,
-          delayChildren: 0.2,
+          staggerChildren: 0.08,
+          delayChildren: 0.15,
         },
       },
     },
@@ -61,10 +71,45 @@ export function SubscriptionLimitPaywall({
     },
   }
 
+  const benefits = [
+    'Unlimited subscriptions',
+    'Smart renewal calendar',
+    'Leak Report & security insights',
+    'Advanced analytics & reports',
+  ]
+
   const content = (
     <div className="space-y-6">
+      {/* Heading with strong value prop */}
+      <div>
+        <h2 className="text-2xl md:text-3xl font-semibold text-foreground mb-2">
+          Unlock unlimited subscriptions
+        </h2>
+        <p className="text-base text-muted-foreground">
+          You&apos;ve reached the {limit} subscription limit on the Free plan. Upgrade to Pro to track unlimited subscriptions and unlock premium features.
+        </p>
+      </div>
+
+      {/* Starting price highlight */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: durations.base, ease: easings.luxury, delay: 0.1 }}
+        className="p-4 rounded-xl bg-gradient-to-r from-gold/10 via-gold/5 to-gold/10 border border-gold/20"
+      >
+        <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium mb-1">
+          Pro Plan Starting Price
+        </p>
+        <p className="text-3xl md:text-4xl font-bold text-foreground">
+          {pricing.symbol}{pricing.amount}
+          <span className="text-lg font-normal text-muted-foreground ml-2">
+            /{pricing.period}
+          </span>
+        </p>
+      </motion.div>
+
       {/* Usage indicator */}
-      <div className="p-4 rounded-xl bg-gold/10 border border-gold/20">
+      <div className="p-4 rounded-xl bg-muted/40 border border-border/50">
         <p className="text-sm text-muted-foreground mb-3">
           <span className="font-semibold text-foreground">{current} / {limit}</span> subscriptions used on Free plan
         </p>
@@ -78,10 +123,10 @@ export function SubscriptionLimitPaywall({
         </div>
       </div>
 
-      {/* Main benefits section */}
+      {/* Premium features section */}
       <div>
         <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
-          Unlock with Pro
+          What you&apos;ll unlock
         </h3>
         <motion.div
           variants={benefitsVariants.container}
@@ -89,12 +134,7 @@ export function SubscriptionLimitPaywall({
           animate="animate"
           className="space-y-3"
         >
-          {[
-            'Unlimited subscriptions',
-            'Smart inbox + automation',
-            'Renewal intelligence & insights',
-            'Priority support',
-          ].map((benefit) => (
+          {benefits.map((benefit) => (
             <motion.div
               key={benefit}
               variants={benefitsVariants.item}
@@ -103,7 +143,7 @@ export function SubscriptionLimitPaywall({
               <div className="w-5 h-5 rounded-full bg-emerald/20 flex items-center justify-center shrink-0 mt-0.5">
                 <Check className="w-3 h-3 text-emerald" />
               </div>
-              <span className="text-sm text-muted-foreground">{benefit}</span>
+              <span className="text-sm text-muted-foreground leading-relaxed">{benefit}</span>
             </motion.div>
           ))}
         </motion.div>
@@ -115,33 +155,32 @@ export function SubscriptionLimitPaywall({
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleUpgrade}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-gold text-obsidian font-semibold shadow-luxury hover:shadow-2xl transition-shadow"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-gold text-obsidian font-semibold shadow-luxury hover:shadow-2xl transition-shadow cursor-pointer"
         >
           <Zap className="w-5 h-5" />
           Upgrade to Pro
         </motion.button>
+
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={onClose}
-          className="w-full px-4 py-3 rounded-xl border border-border text-foreground font-medium hover:bg-muted/50 transition-colors"
+          className="w-full px-4 py-3 rounded-xl border border-border text-foreground font-medium hover:bg-muted/50 transition-colors cursor-pointer"
         >
           Maybe later
         </motion.button>
       </div>
 
-      {/* Optional: comparison link */}
-      <p className="text-xs text-center text-muted-foreground">
-        <button
-          onClick={() => {
-            onClose()
-            router.push('/app/upgrade?plan=pro')
-          }}
-          className="text-gold hover:underline"
-        >
-          Compare plans
-        </button>
-      </p>
+      {/* Compare plans link */}
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={handleComparePlans}
+        className="w-full flex items-center justify-center gap-2 text-gold hover:text-gold/80 font-medium text-sm transition-colors cursor-pointer group"
+      >
+        Compare all plans
+        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+      </motion.button>
     </div>
   )
 
@@ -151,7 +190,7 @@ export function SubscriptionLimitPaywall({
       <PremiumBottomSheet
         isOpen={isOpen}
         onClose={onClose}
-        title="Upgrade to add more subscriptions"
+        title="Upgrade to Pro"
         showCloseButton={true}
       >
         {content}
@@ -163,7 +202,7 @@ export function SubscriptionLimitPaywall({
     <PremiumModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Upgrade to add more subscriptions"
+      title="Upgrade to Pro"
       size="md"
       showCloseButton={true}
     >
