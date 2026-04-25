@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   CreditCard,
   Calendar,
@@ -345,45 +345,45 @@ export function DashboardScreen({
             whileHover={{ y: -2, boxShadow: '0 20px 40px -12px rgba(199, 163, 106, 0.15)' }}
             className="relative rounded-2xl overflow-hidden cursor-pointer group"
           >
-          {/* Gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-gold/8 via-card to-emerald/5 dark:from-gold/10 dark:via-graphite dark:to-emerald/5" />
+            {/* Gradient background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-gold/8 via-card to-emerald/5 dark:from-gold/10 dark:via-graphite dark:to-emerald/5" />
 
-          {/* Animated light sweep */}
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-            initial={{ x: '-100%' }}
-            whileHover={{ x: '100%' }}
-            transition={{ duration: 0.8 }}
-          />
+            {/* Animated light sweep */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+              initial={{ x: '-100%' }}
+              whileHover={{ x: '100%' }}
+              transition={{ duration: 0.8 }}
+            />
 
-          {/* Content */}
-          <div className="relative border border-gold/15 rounded-2xl p-5">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gold/20 to-gold/10 flex items-center justify-center border border-gold/20">
-                  <Zap className="w-6 h-6 text-gold" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="font-semibold text-foreground">AI Insight</p>
-                    <span className="px-2 py-0.5 rounded-full bg-gold/10 text-gold text-[10px] font-medium uppercase tracking-wider">New</span>
+            {/* Content */}
+            <div className="relative border border-gold/15 rounded-2xl p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gold/20 to-gold/10 flex items-center justify-center border border-gold/20">
+                    <Zap className="w-6 h-6 text-gold" />
                   </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
-                    {metrics.leakScore > 0
-                      ? `You could save ${formatMoney(metrics.savingsPotential, preferredCurrency, preferredLanguage)} monthly by reviewing unused subscriptions.`
-                      : 'All your subscriptions are being actively used. Great job!'}
-                  </p>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-semibold text-foreground">AI Insight</p>
+                      <span className="px-2 py-0.5 rounded-full bg-gold/10 text-gold text-[10px] font-medium uppercase tracking-wider">New</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
+                      {metrics.leakScore > 0
+                        ? `You could save ${formatMoney(metrics.savingsPotential, preferredCurrency, preferredLanguage)} monthly by reviewing unused subscriptions.`
+                        : 'All your subscriptions are being actively used. Great job!'}
+                    </p>
+                  </div>
                 </div>
+                <motion.div
+                  className="p-2 rounded-lg bg-gold/10 text-gold group-hover:bg-gold/20 transition-colors"
+                  whileHover={{ x: 2 }}
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </motion.div>
               </div>
-              <motion.div
-                className="p-2 rounded-lg bg-gold/10 text-gold group-hover:bg-gold/20 transition-colors"
-                whileHover={{ x: 2 }}
-              >
-                <ChevronRight className="w-5 h-5" />
-              </motion.div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
         </MotionSection>
 
         {/* Filters section */}
@@ -407,36 +407,36 @@ export function DashboardScreen({
         </div>
 
         {/* Subscriptions list */}
-        <StaggerList className="space-y-3">
-          {displayedSubscriptions.map((subscription, index) => (
-            viewMode === 'cards' ? (
-              <SubscriptionCard
-                key={subscription.id}
-                subscription={subscription}
-                index={index}
-                onClick={() => onSubscriptionSelect?.(subscription)}
-                onEdit={() => onSubscriptionSelect?.(subscription)}
-              />
-            ) : (
+        <motion.div layout className="space-y-3">
+          <AnimatePresence initial={false} mode="popLayout">
+            {displayedSubscriptions.map((subscription, index) => (
               <motion.div
                 key={subscription.id}
-                variants={staggerItem}
-                initial="initial"
-                animate="animate"
-                custom={index}
-                transition={{ ...fastTransition, delay: index * 0.03 }}
-                onClick={() => onSubscriptionSelect?.(subscription)}
-                className="cursor-pointer"
+                layout
+                initial={{ opacity: 0, y: 10, scale: 0.985 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.985 }}
+                transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+                className="will-change-transform"
               >
-                <SubscriptionCardCompact
-                  subscription={subscription}
-                  onClick={() => onSubscriptionSelect?.(subscription)}
-                  onEdit={() => onSubscriptionSelect?.(subscription)}
-                />
+                {viewMode === 'cards' ? (
+                  <SubscriptionCard
+                    subscription={subscription}
+                    index={index}
+                    onClick={() => onSubscriptionSelect?.(subscription)}
+                    onEdit={() => onSubscriptionSelect?.(subscription)}
+                  />
+                ) : (
+                  <SubscriptionCardCompact
+                    subscription={subscription}
+                    onClick={() => onSubscriptionSelect?.(subscription)}
+                    onEdit={() => onSubscriptionSelect?.(subscription)}
+                  />
+                )}
               </motion.div>
-            )
-          ))}
-        </StaggerList>
+            ))}
+          </AnimatePresence>
+        </motion.div>
 
         {displayedSubscriptions.length === 0 && (
           <motion.div
