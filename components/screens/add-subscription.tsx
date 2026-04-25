@@ -24,16 +24,16 @@ interface AddSubscriptionSheetProps {
 
 // Map lowercase categories to typed categories
 const categoryMap: Record<string, SubscriptionCategory> = {
-  'streaming': 'Entertainment',
-  'music': 'Music',
-  'productivity': 'Productivity',
-  'cloud': 'Storage',
-  'fitness': 'Fitness',
-  'news': 'News & Magazines',
-  'gaming': 'Entertainment',
-  'other': 'Other',
-  'entertainment': 'Entertainment',
-  'ai': 'AI & Tools',
+  streaming: 'Entertainment',
+  music: 'Music',
+  productivity: 'Productivity',
+  cloud: 'Storage',
+  fitness: 'Fitness',
+  news: 'News & Magazines',
+  gaming: 'Entertainment',
+  other: 'Other',
+  entertainment: 'Entertainment',
+  ai: 'AI & Tools',
 }
 
 const categories = [
@@ -54,11 +54,19 @@ const billingCycles: { id: BillingCycle; label: string }[] = [
   { id: 'yearly', label: 'Yearly' },
 ]
 
+type AddSubscriptionResult = {
+  success: boolean
+  error?: string
+  code?: string
+  current?: number
+  limit?: number
+}
+
 export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProps) {
   const [step, setStep] = useState<'select' | 'category-services' | 'details'>('select')
   const [searchQuery, setSearchQuery] = useState('')
   const [browseCategoryId, setBrowseCategoryId] = useState<string | null>(null)
-  const { popularServices, isLoading } = usePopularServices()
+  const { popularServices } = usePopularServices()
   const [selectedService, setSelectedService] = useState<any | null>(null)
   const [customName, setCustomName] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<SubscriptionCategory>('Entertainment')
@@ -94,7 +102,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
 
   const currencySymbol = currencySymbolMap[currency] || currency
 
-  const filteredServices = popularServices.filter(service =>
+  const filteredServices = popularServices.filter((service) =>
     service.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
@@ -139,14 +147,14 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
       addToast({
         type: 'error',
         title: 'Missing information',
-        message: 'Please fill in amount and renewal date'
+        message: 'Please fill in amount and renewal date',
       })
       return
     }
 
     setIsSaving(true)
 
-    const result = await addSubscriptionRemote({
+    const rawResult = await addSubscriptionRemote({
       name: selectedService?.name || customName || 'New Subscription',
       category: selectedCategory,
       amount: parseFloat(amount),
@@ -161,18 +169,20 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
 
     setIsSaving(false)
 
+    const result = rawResult as AddSubscriptionResult
+
     if (result.success) {
       addToast({
         type: 'success',
         title: 'Subscription added',
-        message: `${selectedService?.name || customName} has been added to your subscriptions`
+        message: `${selectedService?.name || customName} has been added to your subscriptions`,
       })
 
       onClose()
       resetFormState()
     } else if (result.code === 'SUBSCRIPTION_LIMIT_REACHED') {
-      // Show premium paywall for subscription limit
       onClose()
+
       if (result.current !== undefined && result.limit !== undefined) {
         openSubscriptionLimitPaywall({ current: result.current, limit: result.limit })
       } else {
@@ -182,7 +192,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
       addToast({
         type: 'error',
         title: 'Failed to add subscription',
-        message: result.error || 'Please try again'
+        message: result.error || 'Please try again',
       })
     }
   }
@@ -195,368 +205,370 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
   }
 
   return (
-    <AnimatePresence>
-      {open && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={handleClose}
-            className="fixed inset-0 bg-obsidian/80 backdrop-blur-sm z-50"
-          />
+    <>
+      <AnimatePresence>
+        {open && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={handleClose}
+              className="fixed inset-0 bg-obsidian/80 backdrop-blur-sm z-50"
+            />
 
-          <motion.div
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-            className="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-hidden rounded-t-3xl bg-card"
-          >
-            <div className="flex justify-center pt-3 pb-2">
-              <div className="w-12 h-1.5 rounded-full bg-muted-foreground/30" />
-            </div>
-
-            <div className="flex items-center justify-between px-4 pb-4">
-              <div className="flex items-center gap-3">
-                {(step === 'details' || step === 'category-services') && (
-                  <button
-                    onClick={() => {
-                      if (step === 'details' && browseCategoryId) {
-                        setStep('category-services')
-                      } else {
-                        setStep('select')
-                      }
-                    }}
-                    className="p-2 -ml-2 rounded-full hover:bg-secondary/50 transition-colors"
-                  >
-                    <ChevronRight className="w-5 h-5 text-muted-foreground rotate-180" />
-                  </button>
-                )}
-                <h2 className="text-xl font-semibold text-foreground">
-                  {step === 'select'
-                    ? 'Add Subscription'
-                    : step === 'category-services'
-                      ? 'Browse Services'
-                      : 'Subscription Details'}
-                </h2>
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+              className="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-hidden rounded-t-3xl bg-card"
+            >
+              <div className="flex justify-center pt-3 pb-2">
+                <div className="w-12 h-1.5 rounded-full bg-muted-foreground/30" />
               </div>
-              <button
-                onClick={handleClose}
-                className="p-2 rounded-full hover:bg-secondary/50 transition-colors"
-              >
-                <X className="w-5 h-5 text-muted-foreground" />
-              </button>
-            </div>
 
-            <div className="overflow-y-auto max-h-[calc(90vh-100px)] pb-safe">
-              <AnimatePresence mode="wait">
-                {step === 'select' ? (
-                  <motion.div
-                    key="select"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="px-4 pb-8"
-                  >
-                    <div className="relative mb-6">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <Input
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search services..."
-                        className="pl-12 h-12 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground"
-                      />
-                    </div>
-
-                    <div className="mb-6">
-                      <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                        Popular Services
-                      </h3>
-                      <div className="grid grid-cols-4 gap-3">
-                        {filteredServices.slice(0, 8).map((service) => (
-                          <motion.button
-                            key={service.id}
-                            whileTap={{ scale: 0.95 }}
-                            whileHover={{ scale: 1.02 }}
-                            onClick={() => handleSelectService(service)}
-                            className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-secondary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50 focus:ring-offset-2 focus:ring-offset-background"
-                          >
-                            <SubscriptionIcon
-                              name={service.name}
-                              fallbackColor={service.color}
-                              size="lg"
-                            />
-                            <span className="text-xs text-foreground text-center truncate w-full">
-                              {service.name}
-                            </span>
-                          </motion.button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="mb-6">
-                      <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                        Browse by Category
-                      </h3>
-                      <div className="grid grid-cols-2 gap-3">
-                        {categories.map((category) => {
-                          const IconComponent = category.icon
-                          return (
-                            <motion.button
-                              key={category.id}
-                              whileTap={{ scale: 0.98 }}
-                              whileHover={{ scale: 1.02 }}
-                              onClick={() => handleBrowseCategory(category.id)}
-                              className="flex items-center gap-3 p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50 focus:ring-offset-2 focus:ring-offset-background"
-                            >
-                              <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">
-                                <IconComponent className="w-5 h-5 text-gold" />
-                              </div>
-                              <span className="text-foreground font-medium">{category.label}</span>
-                            </motion.button>
-                          )
-                        })}
-                      </div>
-                    </div>
-
-                    <motion.button
-                      whileTap={{ scale: 0.98 }}
-                      whileHover={{ scale: 1.02 }}
-                      onClick={handleCreateCustom}
-                      className="w-full flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-dashed border-gold/30 text-gold hover:bg-gold/5 hover:border-gold/60 transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50 focus:ring-offset-2 focus:ring-offset-background"
+              <div className="flex items-center justify-between px-4 pb-4">
+                <div className="flex items-center gap-3">
+                  {(step === 'details' || step === 'category-services') && (
+                    <button
+                      onClick={() => {
+                        if (step === 'details' && browseCategoryId) {
+                          setStep('category-services')
+                        } else {
+                          setStep('select')
+                        }
+                      }}
+                      className="p-2 -ml-2 rounded-full hover:bg-secondary/50 transition-colors"
                     >
-                      <Plus className="w-5 h-5" />
-                      <span className="font-medium">Add Custom Subscription</span>
-                    </motion.button>
-                  </motion.div>
-                ) : step === 'category-services' ? (
-                  <motion.div
-                    key="category-services"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    className="px-4 pb-8"
-                  >
-                    {browseCategoryId && (
-                      <div>
-                        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
-                          {categories.find(c => c.id === browseCategoryId)?.label || 'Services'}
+                      <ChevronRight className="w-5 h-5 text-muted-foreground rotate-180" />
+                    </button>
+                  )}
+                  <h2 className="text-xl font-semibold text-foreground">
+                    {step === 'select'
+                      ? 'Add Subscription'
+                      : step === 'category-services'
+                        ? 'Browse Services'
+                        : 'Subscription Details'}
+                  </h2>
+                </div>
+                <button
+                  onClick={handleClose}
+                  className="p-2 rounded-full hover:bg-secondary/50 transition-colors"
+                >
+                  <X className="w-5 h-5 text-muted-foreground" />
+                </button>
+              </div>
+
+              <div className="overflow-y-auto max-h-[calc(90vh-100px)] pb-safe">
+                <AnimatePresence mode="wait">
+                  {step === 'select' ? (
+                    <motion.div
+                      key="select"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="px-4 pb-8"
+                    >
+                      <div className="relative mb-6">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <Input
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder="Search services..."
+                          className="pl-12 h-12 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground"
+                        />
+                      </div>
+
+                      <div className="mb-6">
+                        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                          Popular Services
                         </h3>
                         <div className="grid grid-cols-4 gap-3">
-                          {popularServices
-                            .filter(service =>
-                              service.category === browseCategoryId ||
-                              (browseCategoryId === 'entertainment' &&
-                                (service.category === 'entertainment' ||
-                                  service.category === 'streaming' ||
-                                  service.category === 'gaming'))
-                            )
-                            .map((service) => (
-                              <motion.button
-                                key={service.id}
-                                whileTap={{ scale: 0.95 }}
-                                whileHover={{ scale: 1.02 }}
-                                onClick={() => handleSelectService(service)}
-                                className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-secondary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50 focus:ring-offset-2 focus:ring-offset-background"
-                              >
-                                <SubscriptionIcon
-                                  name={service.name}
-                                  fallbackColor={service.color}
-                                  size="lg"
-                                />
-                                <span className="text-xs text-foreground text-center truncate w-full">
-                                  {service.name}
-                                </span>
-                              </motion.button>
-                            ))}
-                        </div>
-                      </div>
-                    )}
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="details"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    className="px-4 pb-8 space-y-6"
-                  >
-                    {selectedService && (
-                      <div className="flex items-center gap-4 p-4 rounded-xl bg-secondary/50">
-                        <SubscriptionIcon
-                          name={selectedService.name}
-                          fallbackColor={selectedService.color}
-                          size="lg"
-                        />
-                        <div>
-                          <h3 className="text-lg font-semibold text-foreground">{selectedService.name}</h3>
-                          <p className="text-sm text-muted-foreground capitalize">{selectedService.category}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {!selectedService && (
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                          Service Name
-                        </label>
-                        <Input
-                          value={customName}
-                          onChange={(e) => setCustomName(e.target.value)}
-                          placeholder="e.g., My Subscription"
-                          className="h-12 bg-secondary border-0 rounded-xl text-foreground"
-                        />
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                        Amount & Currency
-                      </label>
-                      <div className="flex gap-3">
-                        <div className="relative flex-1">
-                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-semibold text-muted-foreground pointer-events-none">
-                            {currencySymbol}
-                          </span>
-                          <Input
-                            type="number"
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            placeholder="0.00"
-                            className="pl-12 h-12 bg-secondary border-0 rounded-xl text-foreground text-lg font-semibold"
-                          />
-                        </div>
-                        <select
-                          value={currency}
-                          onChange={(e) => setCurrency(e.target.value)}
-                          className="h-12 px-3 bg-secondary border-0 rounded-xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all"
-                        >
-                          {currencies.map((curr) => (
-                            <option key={curr.code} value={curr.code}>
-                              {curr.code}
-                            </option>
+                          {filteredServices.slice(0, 8).map((service) => (
+                            <motion.button
+                              key={service.id}
+                              whileTap={{ scale: 0.95 }}
+                              whileHover={{ scale: 1.02 }}
+                              onClick={() => handleSelectService(service)}
+                              className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-secondary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50 focus:ring-offset-2 focus:ring-offset-background"
+                            >
+                              <SubscriptionIcon
+                                name={service.name}
+                                fallbackColor={service.color}
+                                size="lg"
+                              />
+                              <span className="text-xs text-foreground text-center truncate w-full">
+                                {service.name}
+                              </span>
+                            </motion.button>
                           ))}
-                        </select>
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Selected: {currencies.find(c => c.code === currency)?.name}
-                      </p>
-                    </div>
 
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                        Billing Cycle
-                      </label>
-                      <div className="grid grid-cols-4 gap-2">
-                        {billingCycles.map((cycle) => (
-                          <button
-                            key={cycle.id}
-                            onClick={() => setSelectedCycle(cycle.id)}
-                            className={cn(
-                              "py-3 rounded-xl text-sm font-medium transition-all",
-                              selectedCycle === cycle.id
-                                ? "bg-gold text-obsidian"
-                                : "bg-secondary text-muted-foreground hover:text-foreground"
-                            )}
-                          >
-                            {cycle.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <DatePickerField
-                      label="Next Billing Date"
-                      value={nextBilling}
-                      onChange={setNextBilling}
-                      locale={
-                        notificationSettings?.language === 'es'
-                          ? 'es-ES'
-                          : notificationSettings?.language === 'fr'
-                            ? 'fr-FR'
-                            : 'en-IN'
-                      }
-                      placeholder="Select renewal date"
-                    />
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                        Notes
-                      </label>
-                      <textarea
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        placeholder="Add comments, account details, billing notes, or reminder context"
-                        rows={4}
-                        className="w-full px-4 py-3 rounded-xl bg-secondary border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors resize-none"
-                      />
-                    </div>
-
-                    {!selectedService && (
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                          Category
-                        </label>
-                        <div className="grid grid-cols-4 gap-2">
-                          {categories.slice(0, 4).map((cat) => {
-                            const mappedCategory = categoryMap[cat.id] || 'Other'
-                            const IconComponent = cat.icon
+                      <div className="mb-6">
+                        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                          Browse by Category
+                        </h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          {categories.map((category) => {
+                            const IconComponent = category.icon
                             return (
-                              <button
-                                key={cat.id}
-                                onClick={() => setSelectedCategory(mappedCategory)}
-                                className={cn(
-                                  "py-3 rounded-xl text-sm font-medium transition-all flex flex-col items-center gap-1",
-                                  selectedCategory === mappedCategory
-                                    ? "bg-gold text-obsidian"
-                                    : "bg-secondary text-muted-foreground hover:text-foreground"
-                                )}
+                              <motion.button
+                                key={category.id}
+                                whileTap={{ scale: 0.98 }}
+                                whileHover={{ scale: 1.02 }}
+                                onClick={() => handleBrowseCategory(category.id)}
+                                className="flex items-center gap-3 p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50 focus:ring-offset-2 focus:ring-offset-background"
                               >
-                                <IconComponent className="w-5 h-5" />
-                                <span className="text-xs">{cat.label}</span>
-                              </button>
+                                <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">
+                                  <IconComponent className="w-5 h-5 text-gold" />
+                                </div>
+                                <span className="text-foreground font-medium">{category.label}</span>
+                              </motion.button>
                             )
                           })}
                         </div>
                       </div>
-                    )}
 
-                    <Button
-                      onClick={handleSave}
-                      disabled={isSaving}
-                      className="w-full h-14 rounded-xl bg-gold hover:bg-gold/90 text-obsidian font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      <motion.button
+                        whileTap={{ scale: 0.98 }}
+                        whileHover={{ scale: 1.02 }}
+                        onClick={handleCreateCustom}
+                        className="w-full flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-dashed border-gold/30 text-gold hover:bg-gold/5 hover:border-gold/60 transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50 focus:ring-offset-2 focus:ring-offset-background"
+                      >
+                        <Plus className="w-5 h-5" />
+                        <span className="font-medium">Add Custom Subscription</span>
+                      </motion.button>
+                    </motion.div>
+                  ) : step === 'category-services' ? (
+                    <motion.div
+                      key="category-services"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="px-4 pb-8"
                     >
-                      {isSaving ? (
-                        <>
-                          <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                            className="w-5 h-5 mr-2 border-2 border-obsidian/30 border-t-obsidian rounded-full"
-                          />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Check className="w-5 h-5 mr-2" />
-                          Save Subscription
-                        </>
+                      {browseCategoryId && (
+                        <div>
+                          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
+                            {categories.find((c) => c.id === browseCategoryId)?.label || 'Services'}
+                          </h3>
+                          <div className="grid grid-cols-4 gap-3">
+                            {popularServices
+                              .filter((service) =>
+                                service.category === browseCategoryId ||
+                                (browseCategoryId === 'entertainment' &&
+                                  (service.category === 'entertainment' ||
+                                    service.category === 'streaming' ||
+                                    service.category === 'gaming'))
+                              )
+                              .map((service) => (
+                                <motion.button
+                                  key={service.id}
+                                  whileTap={{ scale: 0.95 }}
+                                  whileHover={{ scale: 1.02 }}
+                                  onClick={() => handleSelectService(service)}
+                                  className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-secondary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50 focus:ring-offset-2 focus:ring-offset-background"
+                                >
+                                  <SubscriptionIcon
+                                    name={service.name}
+                                    fallbackColor={service.color}
+                                    size="lg"
+                                  />
+                                  <span className="text-xs text-foreground text-center truncate w-full">
+                                    {service.name}
+                                  </span>
+                                </motion.button>
+                              ))}
+                          </div>
+                        </div>
                       )}
-                    </Button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="details"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="px-4 pb-8 space-y-6"
+                    >
+                      {selectedService && (
+                        <div className="flex items-center gap-4 p-4 rounded-xl bg-secondary/50">
+                          <SubscriptionIcon
+                            name={selectedService.name}
+                            fallbackColor={selectedService.color}
+                            size="lg"
+                          />
+                          <div>
+                            <h3 className="text-lg font-semibold text-foreground">{selectedService.name}</h3>
+                            <p className="text-sm text-muted-foreground capitalize">{selectedService.category}</p>
+                          </div>
+                        </div>
+                      )}
 
-    <SubscriptionLimitPaywall
-      isOpen={subscriptionLimitPaywallOpen}
-      onClose={closeSubscriptionLimitPaywall}
-      current={subscriptionLimitPaywallData?.current}
-      limit={subscriptionLimitPaywallData?.limit}
-    />
+                      {!selectedService && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                            Service Name
+                          </label>
+                          <Input
+                            value={customName}
+                            onChange={(e) => setCustomName(e.target.value)}
+                            placeholder="e.g., My Subscription"
+                            className="h-12 bg-secondary border-0 rounded-xl text-foreground"
+                          />
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                          Amount & Currency
+                        </label>
+                        <div className="flex gap-3">
+                          <div className="relative flex-1">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-semibold text-muted-foreground pointer-events-none">
+                              {currencySymbol}
+                            </span>
+                            <Input
+                              type="number"
+                              value={amount}
+                              onChange={(e) => setAmount(e.target.value)}
+                              placeholder="0.00"
+                              className="pl-12 h-12 bg-secondary border-0 rounded-xl text-foreground text-lg font-semibold"
+                            />
+                          </div>
+                          <select
+                            value={currency}
+                            onChange={(e) => setCurrency(e.target.value)}
+                            className="h-12 px-3 bg-secondary border-0 rounded-xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all"
+                          >
+                            {currencies.map((curr) => (
+                              <option key={curr.code} value={curr.code}>
+                                {curr.code}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Selected: {currencies.find((c) => c.code === currency)?.name}
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                          Billing Cycle
+                        </label>
+                        <div className="grid grid-cols-4 gap-2">
+                          {billingCycles.map((cycle) => (
+                            <button
+                              key={cycle.id}
+                              onClick={() => setSelectedCycle(cycle.id)}
+                              className={cn(
+                                "py-3 rounded-xl text-sm font-medium transition-all",
+                                selectedCycle === cycle.id
+                                  ? "bg-gold text-obsidian"
+                                  : "bg-secondary text-muted-foreground hover:text-foreground"
+                              )}
+                            >
+                              {cycle.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <DatePickerField
+                        label="Next Billing Date"
+                        value={nextBilling}
+                        onChange={setNextBilling}
+                        locale={
+                          notificationSettings?.language === 'es'
+                            ? 'es-ES'
+                            : notificationSettings?.language === 'fr'
+                              ? 'fr-FR'
+                              : 'en-IN'
+                        }
+                        placeholder="Select renewal date"
+                      />
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                          Notes
+                        </label>
+                        <textarea
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          placeholder="Add comments, account details, billing notes, or reminder context"
+                          rows={4}
+                          className="w-full px-4 py-3 rounded-xl bg-secondary border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors resize-none"
+                        />
+                      </div>
+
+                      {!selectedService && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                            Category
+                          </label>
+                          <div className="grid grid-cols-4 gap-2">
+                            {categories.slice(0, 4).map((cat) => {
+                              const mappedCategory = categoryMap[cat.id] || 'Other'
+                              const IconComponent = cat.icon
+                              return (
+                                <button
+                                  key={cat.id}
+                                  onClick={() => setSelectedCategory(mappedCategory)}
+                                  className={cn(
+                                    "py-3 rounded-xl text-sm font-medium transition-all flex flex-col items-center gap-1",
+                                    selectedCategory === mappedCategory
+                                      ? "bg-gold text-obsidian"
+                                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                                  )}
+                                >
+                                  <IconComponent className="w-5 h-5" />
+                                  <span className="text-xs">{cat.label}</span>
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      <Button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="w-full h-14 rounded-xl bg-gold hover:bg-gold/90 text-obsidian font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSaving ? (
+                          <>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                              className="w-5 h-5 mr-2 border-2 border-obsidian/30 border-t-obsidian rounded-full"
+                            />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Check className="w-5 h-5 mr-2" />
+                            Save Subscription
+                          </>
+                        )}
+                      </Button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <SubscriptionLimitPaywall
+        isOpen={subscriptionLimitPaywallOpen}
+        onClose={closeSubscriptionLimitPaywall}
+        current={subscriptionLimitPaywallData?.current}
+        limit={subscriptionLimitPaywallData?.limit}
+      />
+    </>
   )
 }
