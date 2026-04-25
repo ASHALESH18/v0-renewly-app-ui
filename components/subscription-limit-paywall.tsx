@@ -41,13 +41,15 @@ export function SubscriptionLimitPaywall({
 
   const handleUpgrade = () => {
     onClose()
-    router.push('/app/upgrade?plan=pro')
+    // Route to upgrade page WITHOUT plan preselection so user can see all options
+    router.push('/app/upgrade')
   }
 
   const handleComparePlans = () => {
     onClose()
-    // Route to pricing page which has full plan comparison
-    router.push('/#pricing')
+    // Route to full upgrade flow to see all plans (same destination as Upgrade button)
+    // User will see plan selection/comparison interface
+    router.push('/app/upgrade')
   }
 
   const benefitsVariants = {
