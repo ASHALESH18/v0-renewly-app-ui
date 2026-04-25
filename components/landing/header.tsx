@@ -85,6 +85,8 @@ export function LandingHeader() {
               <div className="w-28 h-9 rounded-lg bg-muted/40 animate-pulse" />
             ) : user ? (
               <>
+                <ProfileAvatar />
+
                 <Link href="/app/dashboard">
                   <motion.button
                     whileHover={{ scale: 1.015 }}
@@ -95,8 +97,6 @@ export function LandingHeader() {
                     <ArrowRight className="w-3.5 h-3.5" />
                   </motion.button>
                 </Link>
-
-                <ProfileAvatar />
 
                 <motion.button
                   whileHover={{ scale: isSigningOut ? 1 : 1.01 }}
