@@ -2,12 +2,132 @@
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { mutate } from 'swr'
+import { mutate as mutateSWR } from 'swr'
 import type { Subscription } from './types'
-import { createSubscription, updateSubscription, deleteSubscription } from './supabase/subscriptions-actions'
 import type { ProfileRow, UserSettingsRow } from './supabase/database.types'
 import { mapSubscriptionRowToUI, mapUserSettingsRowToUI } from './supabase/mappers'
 import { calculateMetrics } from './subscription-math'
-import { mutate as mutateSWR } from 'swr'
+
+const SUBSCRIPTIONS_SWR_KEY = '/api/subscriptions'
+
+let subscriptionsRevalidateTimer: ReturnType<typeof window.setTimeout> | null = null
+
+type SubscriptionMutationResult<T = unknown> = {
+  success: boolean
+  data?: T
+  error?: string
+  code?: string
+  current?: number
+  limit?: number
+}
+
+function scheduleSubscriptionsRevalidate() {
+  if (typeof window === 'undefined') return
+
+  if (subscriptionsRevalidateTimer) {
+    window.clearTimeout(subscriptionsRevalidateTimer)
+  }
+
+  subscriptionsRevalidateTimer = window.setTimeout(() => {
+    void mutateSWR(SUBSCRIPTIONS_SWR_KEY)
+  }, 350)
+}
+
+async function readJsonSafe(response: Response) {
+  try {
+    return await response.json()
+  } catch {
+    return null
+  }
+}
+
+async function createSubscriptionRequest(payload: {
+  name: string
+  category: string
+  amount: number
+  currency: string
+  billing_cycle: string
+  renewal_date?: string
+  description?: string
+  status?: string
+}): Promise<SubscriptionMutationResult<Record<string, unknown>>> {
+  const response = await fetch('/api/subscriptions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+
+  const json = await readJsonSafe(response)
+
+  if (!response.ok) {
+    return {
+      success: false,
+      error: json?.error || 'Failed to add subscription',
+      code: json?.code,
+      current: json?.current,
+      limit: json?.limit,
+    }
+  }
+
+  return {
+    success: true,
+    data: json?.subscription,
+  }
+}
+
+async function updateSubscriptionRequest(
+  id: string,
+  payload: {
+    name?: string
+    category?: string
+    amount?: number
+    currency?: string
+    billing_cycle?: string
+    renewal_date?: string
+    description?: string
+    status?: string
+  }
+): Promise<SubscriptionMutationResult<Record<string, unknown>>> {
+  const response = await fetch(`/api/subscriptions/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+
+  const json = await readJsonSafe(response)
+
+  if (!response.ok) {
+    return {
+      success: false,
+      error: json?.error || 'Failed to update subscription',
+    }
+  }
+
+  return {
+    success: true,
+    data: json?.subscription,
+  }
+}
+
+async function deleteSubscriptionRequest(
+  id: string
+): Promise<SubscriptionMutationResult> {
+  const response = await fetch(`/api/subscriptions/${id}`, {
+    method: 'DELETE',
+  })
+
+  const json = await readJsonSafe(response)
+
+  if (!response.ok) {
+    return {
+      success: false,
+      error: json?.error || 'Failed to delete subscription',
+    }
+  }
+
+  return { success: true }
+}
 
 export interface Toast {
   id: string
@@ -336,42 +456,34 @@ const useStore = create<AppState>()(
         set({ isSyncingUserData: true, syncError: null })
 
         try {
-          const result = await createSubscription({
+          const result = await createSubscriptionRequest({
             name: subscription.name,
             category: subscription.category,
             amount: subscription.amount,
             currency: subscription.currency || 'INR',
-            billingCycle: subscription.billingCycle,
-            renewalDate: subscription.renewalDate,
+            billing_cycle: subscription.billingCycle,
+            renewal_date: subscription.renewalDate,
             description: subscription.description,
             status: subscription.status ?? 'active',
           })
 
-          if (result.success && result.data?.[0]) {
-            const insertedRow = result.data[0]
-
-            const newSub: Subscription = {
-              ...subscription,
-              id: insertedRow.id,
-            }
+          if (result.success && result.data) {
+            const createdSubscription = mapSubscriptionRowToUI(result.data as any)
 
             const nextSubscriptions = [
-              newSub,
-              ...get().subscriptions.filter((s) => s.id !== newSub.id),
+              createdSubscription,
+              ...get().subscriptions.filter((s) => s.id !== createdSubscription.id),
             ]
 
-            // 1. Update Zustand from a single source of truth
             set({ subscriptions: nextSubscriptions })
 
-            // 2. Push the exact same snapshot into SWR cache
             await mutateSWR(
               SUBSCRIPTIONS_SWR_KEY,
               { subscriptions: nextSubscriptions },
               false
             )
 
-            // 3. Background revalidation after a short delay
-            queueSubscriptionsRevalidate()
+            scheduleSubscriptionsRevalidate()
 
             return { success: true }
           }
@@ -381,9 +493,9 @@ const useStore = create<AppState>()(
           return {
             success: false,
             error: result.error,
-            code: (result as any).code,
-            current: (result as any).current,
-            limit: (result as any).limit,
+            code: result.code,
+            current: result.current,
+            limit: result.limit,
           }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to add subscription'
@@ -398,11 +510,11 @@ const useStore = create<AppState>()(
         set({ isSyncingUserData: true, syncError: null })
 
         try {
-          const result = await updateSubscription(id, {
+          const result = await updateSubscriptionRequest(id, {
             name: updates.name,
             amount: updates.amount,
-            billingCycle: updates.billingCycle,
-            renewalDate: updates.renewalDate,
+            billing_cycle: updates.billingCycle,
+            renewal_date: updates.renewalDate,
             description: updates.description,
             status: updates.status,
             currency: updates.currency,
@@ -410,8 +522,18 @@ const useStore = create<AppState>()(
           })
 
           if (result.success) {
+            const updatedFromServer = result.data
+              ? mapSubscriptionRowToUI(result.data as any)
+              : null
+
             const nextSubscriptions = get().subscriptions.map((sub) =>
-              sub.id === id ? { ...sub, ...updates } : sub
+              sub.id === id
+                ? {
+                  ...sub,
+                  ...updates,
+                  ...(updatedFromServer || {}),
+                }
+                : sub
             )
 
             set({ subscriptions: nextSubscriptions })
@@ -422,7 +544,7 @@ const useStore = create<AppState>()(
               false
             )
 
-            queueSubscriptionsRevalidate()
+            scheduleSubscriptionsRevalidate()
 
             return { success: true }
           }
@@ -442,7 +564,7 @@ const useStore = create<AppState>()(
         set({ isSyncingUserData: true, syncError: null })
 
         try {
-          const result = await deleteSubscription(id)
+          const result = await deleteSubscriptionRequest(id)
 
           if (result.success) {
             const nextSubscriptions = get().subscriptions.filter((sub) => sub.id !== id)
@@ -455,7 +577,7 @@ const useStore = create<AppState>()(
               false
             )
 
-            queueSubscriptionsRevalidate()
+            scheduleSubscriptionsRevalidate()
 
             return { success: true }
           }
