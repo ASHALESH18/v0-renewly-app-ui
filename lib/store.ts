@@ -8,6 +8,7 @@ import type { ProfileRow, UserSettingsRow } from './supabase/database.types'
 import { mapSubscriptionRowToUI, mapUserSettingsRowToUI } from './supabase/mappers'
 import { calculateMetrics } from './subscription-math'
 import { mutate } from 'swr'
+import { mutate as mutateSWR } from 'swr'
 
 export interface Toast {
   id: string
@@ -331,23 +332,42 @@ const useStore = create<AppState>()(
             status: subscription.status ?? 'active',
           })
 
-          if (result.success) {
-            // Fetch fresh subscriptions from API and replace store
-            await mutate('/api/subscriptions')
-            set({ syncError: null })
+          if (result.success && result.data?.[0]) {
+            const insertedRow = result.data[0]
+
+            const newSub: Subscription = {
+              ...subscription,
+              id: insertedRow.id,
+            }
+
+            // 1. Update Zustand immediately
+            set((state) => ({
+              subscriptions: [newSub, ...state.subscriptions.filter((s) => s.id !== newSub.id)],
+            }))
+
+            // 2. Update SWR cache immediately so stale API data does not overwrite store
+            await mutateSWR(
+              '/api/subscriptions',
+              (current: any) => {
+                const currentSubs = Array.isArray(current?.subscriptions) ? current.subscriptions : []
+                return {
+                  subscriptions: [
+                    insertedRow,
+                    ...currentSubs.filter((s: any) => s.id !== insertedRow.id),
+                  ],
+                }
+              },
+              false
+            )
+
+            // 3. Revalidate in background
+            await mutateSWR('/api/subscriptions')
+
             return { success: true }
           }
 
-          const error = result.error || 'Failed to add subscription'
-          set({ syncError: error })
-          // Pass through error code and metadata for limit-reached errors
-          return { 
-            success: false, 
-            error,
-            code: (result as any)?.code,
-            current: (result as any)?.current,
-            limit: (result as any)?.limit,
-          }
+          set({ syncError: result.error || 'Failed to add subscription' })
+          return { success: false, error: result.error }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to add subscription'
           set({ syncError: message })
@@ -373,15 +393,47 @@ const useStore = create<AppState>()(
           })
 
           if (result.success) {
-            // Fetch fresh subscriptions from API and replace store
-            await mutate('/api/subscriptions')
-            set({ syncError: null })
+            // 1. Update Zustand immediately
+            set((state) => ({
+              subscriptions: state.subscriptions.map((sub) =>
+                sub.id === id ? { ...sub, ...updates } : sub
+              ),
+            }))
+
+            // 2. Update SWR cache immediately
+            await mutateSWR(
+              '/api/subscriptions',
+              (current: any) => {
+                const currentSubs = Array.isArray(current?.subscriptions) ? current.subscriptions : []
+                return {
+                  subscriptions: currentSubs.map((s: any) =>
+                    s.id === id
+                      ? {
+                        ...s,
+                        name: updates.name ?? s.name,
+                        amount: updates.amount ?? s.amount,
+                        currency: updates.currency ?? s.currency,
+                        category: updates.category ?? s.category,
+                        billing_cycle: updates.billingCycle ?? s.billing_cycle,
+                        renewal_date: updates.renewalDate ?? s.renewal_date,
+                        description: updates.description ?? s.description,
+                        status: updates.status ?? s.status,
+                      }
+                      : s
+                  ),
+                }
+              },
+              false
+            )
+
+            // 3. Revalidate in background
+            await mutateSWR('/api/subscriptions')
+
             return { success: true }
           }
 
-          const error = result.error || 'Failed to update subscription'
-          set({ syncError: error })
-          return { success: false, error }
+          set({ syncError: result.error || 'Failed to update subscription' })
+          return { success: false, error: result.error }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to update subscription'
           set({ syncError: message })
@@ -393,19 +445,36 @@ const useStore = create<AppState>()(
 
       deleteSubscriptionRemote: async (id) => {
         set({ isSyncingUserData: true, syncError: null })
+
         try {
           const result = await deleteSubscription(id)
 
           if (result.success) {
-            // Fetch fresh subscriptions from API and replace store
-            await mutate('/api/subscriptions')
-            set({ syncError: null })
+            // 1. Update Zustand immediately
+            set((state) => ({
+              subscriptions: state.subscriptions.filter((sub) => sub.id !== id),
+            }))
+
+            // 2. Update SWR cache immediately
+            await mutateSWR(
+              '/api/subscriptions',
+              (current: any) => {
+                const currentSubs = Array.isArray(current?.subscriptions) ? current.subscriptions : []
+                return {
+                  subscriptions: currentSubs.filter((s: any) => s.id !== id),
+                }
+              },
+              false
+            )
+
+            // 3. Revalidate in background
+            await mutateSWR('/api/subscriptions')
+
             return { success: true }
           }
 
-          const error = result.error || 'Failed to delete subscription'
-          set({ syncError: error })
-          return { success: false, error }
+          set({ syncError: result.error || 'Failed to delete subscription' })
+          return { success: false, error: result.error }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to delete subscription'
           set({ syncError: message })

@@ -43,39 +43,34 @@ export function SubscriptionCard({
       custom={index}
       transition={{ ...springs.gentle, delay: index * 0.05 }}
       onClick={onClick}
-      className="cursor-pointer group"
+      className="group relative cursor-pointer overflow-visible"
     >
       <motion.div
         variants={cardLift}
-        whileHover={{ 
-          y: -5, 
-        }}
-        className="relative overflow-hidden rounded-2xl bg-card/95 backdrop-blur-xl border border-border/70 p-5 shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:border-gold/12"
+        whileHover={{ y: -5 }}
+        className="relative overflow-visible rounded-2xl bg-card/95 backdrop-blur-xl border border-border/70 p-5 shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:border-gold/12"
       >
-        {/* Colored accent line at top - refined */}
         <motion.div
-          className="absolute top-0 left-0 right-0 h-0.5"
-          style={{ 
-            background: `linear-gradient(90deg, ${subscription.color || '#B08440'} 0%, ${subscription.color || '#B08440'}50 60%, transparent 100%)` 
+          className="pointer-events-none absolute top-0 left-0 right-0 h-0.5"
+          style={{
+            background: `linear-gradient(90deg, ${subscription.color || '#B08440'} 0%, ${subscription.color || '#B08440'}50 60%, transparent 100%)`,
           }}
           initial={{ scaleX: 0, originX: 0 }}
           whileHover={{ scaleX: 1 }}
           transition={{ duration: 0.35 }}
         />
 
-        {/* Subtle ambient glow on hover */}
         <motion.div
-          className="absolute -inset-2 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          style={{ 
-            background: `radial-gradient(circle at top left, ${subscription.color || '#B08440'}10 0%, transparent 50%)` 
+          className="pointer-events-none absolute -inset-2 rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          style={{
+            background: `radial-gradient(circle at top left, ${subscription.color || '#B08440'}10 0%, transparent 50%)`,
           }}
         />
 
         <div className="relative z-10 flex items-start gap-4">
-          {/* Icon with subtle glow */}
-          <div className="relative">
+          <div className="relative shrink-0">
             <motion.div
-              className="absolute -inset-1 rounded-xl blur-md opacity-0 group-hover:opacity-40 transition-opacity duration-300"
+              className="absolute -inset-1 rounded-xl blur-md opacity-0 transition-opacity duration-300 group-hover:opacity-40"
               style={{ backgroundColor: subscription.color || '#B08440' }}
             />
             <div className="relative">
@@ -87,10 +82,10 @@ export function SubscriptionCard({
             </div>
           </div>
 
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h3 className="font-semibold text-foreground truncate group-hover:text-gold transition-colors">
+                <h3 className="truncate font-semibold text-foreground transition-colors group-hover:text-gold">
                   {subscription.name}
                 </h3>
                 <p className="text-sm text-muted-foreground">
@@ -99,7 +94,7 @@ export function SubscriptionCard({
               </div>
 
               <div
-                className="p-1.5 rounded-lg cursor-pointer opacity-60 group-hover:opacity-100 transition-opacity"
+                className="relative z-30 shrink-0 rounded-lg p-1.5 opacity-70 transition-opacity group-hover:opacity-100"
                 onClick={(e) => e.stopPropagation()}
               >
                 <SubscriptionActions subscription={subscription} onEdit={onEdit} />
@@ -107,7 +102,7 @@ export function SubscriptionCard({
             </div>
 
             <div className="mt-3 flex items-baseline gap-1">
-              <span className="text-xl font-bold text-foreground tracking-tight">
+              <span className="text-xl font-bold tracking-tight text-foreground">
                 {subscription.currency}
                 {Number(subscription.amount || 0).toLocaleString('en-IN')}
               </span>
@@ -117,34 +112,36 @@ export function SubscriptionCard({
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-              <div className={cn(
-                'flex items-center gap-1.5 px-2 py-1 rounded-full',
-                isUrgent 
-                  ? 'bg-crimson/10 text-crimson' 
-                  : 'bg-muted/50 text-muted-foreground'
-              )}>
-                <Calendar className="w-3.5 h-3.5" />
+              <div
+                className={cn(
+                  'flex items-center gap-1.5 rounded-full px-2 py-1',
+                  isUrgent
+                    ? 'bg-crimson/10 text-crimson'
+                    : 'bg-muted/50 text-muted-foreground'
+                )}
+              >
+                <Calendar className="h-3.5 w-3.5" />
                 <span>
-                  {isUrgent
-                    ? daysUntilRenewal === 0
-                      ? 'Due Today'
-                      : `${daysUntilRenewal}d left`
-                    : subscription.renewalDate
-                      ? formatDate(subscription.renewalDate)
-                      : 'N/A'}
+                  {subscription.renewalDate
+                    ? isUrgent
+                      ? daysUntilRenewal === 0
+                        ? 'Due Today'
+                        : `${daysUntilRenewal}d left`
+                      : formatDate(subscription.renewalDate)
+                    : 'N/A'}
                 </span>
               </div>
 
               {subscription.status === 'paused' && (
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-gold/10 text-gold">
-                  <RefreshCw className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-1.5 rounded-full bg-gold/10 px-2 py-1 text-gold">
+                  <RefreshCw className="h-3.5 w-3.5" />
                   <span>Paused</span>
                 </div>
               )}
 
               {subscription.status === 'unused' && (
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 text-muted-foreground">
-                  <Users className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-1.5 rounded-full bg-muted/50 px-2 py-1 text-muted-foreground">
+                  <Users className="h-3.5 w-3.5" />
                   <span>Unused</span>
                 </div>
               )}
@@ -171,34 +168,40 @@ export function SubscriptionCardCompact({
       whileHover={{ scale: 1.01, x: 4 }}
       whileTap={{ scale: 0.99 }}
       onClick={onClick}
-      className="flex items-center gap-4 p-4 rounded-xl bg-card border border-border cursor-pointer"
+      className="relative overflow-visible cursor-pointer rounded-xl border border-border bg-card p-4"
     >
-      <SubscriptionIcon
-        name={subscription.name}
-        fallbackColor={subscription.color}
-        size="md"
-      />
+      <div className="flex items-center gap-4">
+        <SubscriptionIcon
+          name={subscription.name}
+          fallbackColor={subscription.color}
+          size="md"
+        />
 
-      <div className="flex-1 min-w-0">
-        <p className="font-medium text-foreground truncate">{subscription.name}</p>
-        <p className="text-xs text-muted-foreground">{subscription.category}</p>
-      </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-medium text-foreground">{subscription.name}</p>
+          <p className="text-xs text-muted-foreground">{subscription.category}</p>
+        </div>
 
-      <div className="text-right shrink-0">
-        <p className="font-semibold text-foreground">
-          {subscription.currency}
-          {Number(subscription.amount || 0).toLocaleString('en-IN')}
-        </p>
-        <p className={cn('text-xs', isUrgent ? 'text-crimson' : 'text-muted-foreground')}>
-          {daysUntilRenewal === 0 ? 'Due today' : `${daysUntilRenewal}d left`}
-        </p>
-      </div>
+        <div className="shrink-0 text-right">
+          <p className="font-semibold text-foreground">
+            {subscription.currency}
+            {Number(subscription.amount || 0).toLocaleString('en-IN')}
+          </p>
+          <p className={cn('text-xs', isUrgent ? 'text-crimson' : 'text-muted-foreground')}>
+            {subscription.renewalDate
+              ? daysUntilRenewal === 0
+                ? 'Due today'
+                : `${daysUntilRenewal}d left`
+              : 'N/A'}
+          </p>
+        </div>
 
-      <div
-        className="shrink-0 p-1 rounded-lg cursor-pointer"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <SubscriptionActions subscription={subscription} onEdit={onEdit} />
+        <div
+          className="relative z-30 shrink-0 rounded-lg p-1"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <SubscriptionActions subscription={subscription} onEdit={onEdit} />
+        </div>
       </div>
     </motion.div>
   )
