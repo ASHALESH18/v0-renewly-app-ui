@@ -13,17 +13,31 @@ interface SubscriptionActionsProps {
 
 export function SubscriptionActions({ subscription, onEdit }: SubscriptionActionsProps) {
   const [showMenu, setShowMenu] = useState(false)
-  const deleteSubscription = useStore((state) => state.deleteSubscription)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const deleteSubscriptionRemote = useStore((state) => state.deleteSubscriptionRemote)
   const addToast = useStore((state) => state.addToast)
 
-  const handleDelete = () => {
-    deleteSubscription(subscription.id)
-    addToast({
-      type: 'success',
-      title: `${subscription.name} removed`,
-      message: 'Subscription deleted successfully.',
-    })
-    setShowMenu(false)
+  const handleDelete = async () => {
+    setIsDeleting(true)
+
+    const result = await deleteSubscriptionRemote(subscription.id)
+
+    if (result.success) {
+      addToast({
+        type: 'success',
+        title: `${subscription.name} removed`,
+        message: 'Subscription deleted successfully.',
+      })
+      setShowMenu(false)
+    } else {
+      addToast({
+        type: 'error',
+        title: 'Failed to delete',
+        message: result.error || 'Could not delete subscription. Please try again.',
+      })
+    }
+
+    setIsDeleting(false)
   }
 
   return (
@@ -33,6 +47,7 @@ export function SubscriptionActions({ subscription, onEdit }: SubscriptionAction
         onClick={() => setShowMenu((prev) => !prev)}
         className="p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer"
         type="button"
+        disabled={isDeleting}
       >
         <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
       </motion.button>
@@ -52,7 +67,7 @@ export function SubscriptionActions({ subscription, onEdit }: SubscriptionAction
               initial={{ opacity: 0, scale: 0.95, y: -8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -8 }}
-              className="absolute right-0 top-full mt-2 z-50 w-52 glass rounded-xl p-2 space-y-1 shadow-luxury"
+              className="absolute right-0 top-full mt-2 z-50 min-w-56 glass rounded-xl p-2 space-y-1 shadow-luxury"
             >
               {onEdit && (
                 <button
@@ -61,9 +76,9 @@ export function SubscriptionActions({ subscription, onEdit }: SubscriptionAction
                     onEdit()
                     setShowMenu(false)
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-secondary/50 transition-colors text-foreground text-sm cursor-pointer"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-secondary/60 transition-colors text-foreground text-sm cursor-pointer whitespace-nowrap"
                 >
-                  <Edit2 className="w-4 h-4" />
+                  <Edit2 className="w-4 h-4 shrink-0" />
                   Edit Subscription
                 </button>
               )}
@@ -73,10 +88,11 @@ export function SubscriptionActions({ subscription, onEdit }: SubscriptionAction
               <button
                 type="button"
                 onClick={handleDelete}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-crimson/10 transition-colors text-crimson text-sm cursor-pointer"
+                disabled={isDeleting}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-destructive/15 transition-colors text-destructive text-sm cursor-pointer whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Trash2 className="w-4 h-4" />
-                Remove Subscription
+                <Trash2 className="w-4 h-4 shrink-0" />
+                {isDeleting ? 'Removing...' : 'Remove Subscription'}
               </button>
             </motion.div>
           </>
