@@ -2,36 +2,22 @@
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { mutate } from 'swr'
 import { mutate as mutateSWR } from 'swr'
 import type { Subscription } from './types'
-import type { ProfileRow, UserSettingsRow } from './supabase/database.types'
 import { mapSubscriptionRowToUI, mapUserSettingsRowToUI } from './supabase/mappers'
 import { calculateMetrics } from './subscription-math'
 
 const SUBSCRIPTIONS_SWR_KEY = '/api/subscriptions'
 
-let subscriptionsRevalidateTimer: ReturnType<typeof window.setTimeout> | null = null
+type SubscriptionApiRecord = Record<string, unknown>
 
 type SubscriptionMutationResult<T = unknown> = {
   success: boolean
-  data?: T
+  data?: T | null
   error?: string
   code?: string
   current?: number
   limit?: number
-}
-
-function scheduleSubscriptionsRevalidate() {
-  if (typeof window === 'undefined') return
-
-  if (subscriptionsRevalidateTimer) {
-    window.clearTimeout(subscriptionsRevalidateTimer)
-  }
-
-  subscriptionsRevalidateTimer = window.setTimeout(() => {
-    void mutateSWR(SUBSCRIPTIONS_SWR_KEY)
-  }, 350)
 }
 
 async function readJsonSafe(response: Response) {
@@ -51,7 +37,7 @@ async function createSubscriptionRequest(payload: {
   renewal_date?: string
   description?: string
   status?: string
-}): Promise<SubscriptionMutationResult<Record<string, unknown>>> {
+}): Promise<SubscriptionMutationResult<SubscriptionApiRecord>> {
   const response = await fetch('/api/subscriptions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -72,7 +58,7 @@ async function createSubscriptionRequest(payload: {
 
   return {
     success: true,
-    data: json?.subscription,
+    data: json?.subscription ?? null,
   }
 }
 
@@ -88,7 +74,7 @@ async function updateSubscriptionRequest(
     description?: string
     status?: string
   }
-): Promise<SubscriptionMutationResult<Record<string, unknown>>> {
+): Promise<SubscriptionMutationResult<SubscriptionApiRecord>> {
   const response = await fetch(`/api/subscriptions/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -106,13 +92,11 @@ async function updateSubscriptionRequest(
 
   return {
     success: true,
-    data: json?.subscription,
+    data: json?.subscription ?? null,
   }
 }
 
-async function deleteSubscriptionRequest(
-  id: string
-): Promise<SubscriptionMutationResult> {
+async function deleteSubscriptionRequest(id: string): Promise<SubscriptionMutationResult> {
   const response = await fetch(`/api/subscriptions/${id}`, {
     method: 'DELETE',
   })
@@ -136,22 +120,6 @@ export interface Toast {
   message?: string
 }
 
-const SUBSCRIPTIONS_SWR_KEY = '/api/subscriptions'
-
-let subscriptionsRevalidateTimer: ReturnType<typeof window.setTimeout> | null = null
-
-function queueSubscriptionsRevalidate() {
-  if (typeof window === 'undefined') return
-
-  if (subscriptionsRevalidateTimer) {
-    window.clearTimeout(subscriptionsRevalidateTimer)
-  }
-
-  subscriptionsRevalidateTimer = window.setTimeout(() => {
-    void mutateSWR(SUBSCRIPTIONS_SWR_KEY)
-  }, 900)
-}
-
 export interface UserProfile {
   email: string
   name: string
@@ -160,7 +128,7 @@ export interface UserProfile {
   locale?: string
   timeZone?: string
   avatarSeed?: string
-  avatarUrl?: string // Persisted avatar URL from database
+  avatarUrl?: string
 }
 
 export interface NotificationSettings {
@@ -169,92 +137,83 @@ export interface NotificationSettings {
   leakAlerts: boolean
   reminderDays: number
   currencyCode: string
-  /**
-   * Renewly theme identifier.
-   * - `light` / `dark` — baseline themes (unchanged).
-   * - `glass`          — premium Apple Glass-inspired variant.
-   */
   theme: 'light' | 'dark' | 'glass'
   language: string
   biometricEnabled: boolean
   countryCode?: string
   locale?: string
+  timeZone?: string
 }
 
 export interface AppState {
-  // Auth & User State
   currentUserId: string | null
   currentUserEmail: string | null
   userProfile: UserProfile | null
 
-  // Cloud Data
   subscriptions: Subscription[]
   notificationSettings: NotificationSettings
 
-  // UI State
   theme: 'light' | 'dark' | 'glass'
   toasts: Toast[]
 
-  // Paywall State — for subscription limit reached experience
   subscriptionLimitPaywallOpen: boolean
   subscriptionLimitPaywallData: { current: number; limit: number } | null
 
-  // Loading/Sync State
   isHydratingUserData: boolean
   isSyncingUserData: boolean
   hasHydratedFromCloud: boolean
   syncError: string | null
   hasMigratedLocalData: boolean
 
-  // Actions - Auth
   setCurrentUser: (userId: string | null, email: string | null) => void
   setUserProfile: (profile: UserProfile | null) => void
   resetUserScopedState: () => void
   clearUserData: () => void
 
-  // Actions - Cloud Data
   hydrateAuthenticatedUserData: (userId: string, email: string) => Promise<void>
   migrateLocalDataToSupabaseOnce: (userId: string) => Promise<void>
   loadSubscriptionsFromSupabase: (subscriptions: Subscription[]) => void
   setSubscriptions: (subscriptions: Subscription[]) => void
 
-  // Actions - Subscriptions (local only - for optimistic updates)
   addSubscription: (subscription: Omit<Subscription, 'id'>) => void
   updateSubscription: (id: string, subscription: Partial<Subscription>) => void
   deleteSubscription: (id: string) => void
 
-  // Actions - Subscriptions (remote-backed - use these for real data)
-  addSubscriptionRemote: (subscription: Omit<Subscription, 'id'>) => Promise<{ success: boolean; error?: string; code?: string; current?: number; limit?: number }>
-  updateSubscriptionRemote: (id: string, subscription: Partial<Subscription>) => Promise<{ success: boolean; error?: string }>
+  addSubscriptionRemote: (
+    subscription: Omit<Subscription, 'id'>
+  ) => Promise<{ success: boolean; error?: string; code?: string; current?: number; limit?: number }>
+  updateSubscriptionRemote: (
+    id: string,
+    subscription: Partial<Subscription>
+  ) => Promise<{ success: boolean; error?: string }>
   deleteSubscriptionRemote: (id: string) => Promise<{ success: boolean; error?: string }>
 
-  // Actions - Settings
   updateNotificationSettings: (settings: Partial<NotificationSettings>) => void
 
-  // Actions - UI
   setTheme: (theme: 'light' | 'dark' | 'glass') => void
   addToast: (toast: Omit<Toast, 'id'>) => void
   removeToast: (id: string) => void
   openSubscriptionLimitPaywall: (data: { current: number; limit: number }) => void
   closeSubscriptionLimitPaywall: () => void
 
-  // UI State - Add Subscription Sheet
   isAddSubscriptionSheetOpen: boolean
   openAddSubscriptionSheet: () => void
   closeAddSubscriptionSheet: () => void
 
-  // Actions - Plan Management
   refreshPlanFromServer: () => Promise<void>
   updatePlanLocally: (plan: 'free' | 'pro' | 'family' | 'enterprise') => void
+  updateUserProfileRemote: (profileData: {
+    firstName?: string
+    lastName?: string
+    avatarUrl?: string
+  }) => Promise<{ success: boolean; error?: string }>
 
-  // Derived Selectors
   getMetrics: () => ReturnType<typeof calculateMetrics>
 }
 
 const useStore = create<AppState>()(
   persist(
     (set, get) => ({
-      // Initial State
       currentUserId: null,
       currentUserEmail: null,
       userProfile: null,
@@ -280,67 +239,64 @@ const useStore = create<AppState>()(
       hasMigratedLocalData: false,
       isAddSubscriptionSheetOpen: false,
 
-      // Set current authenticated user
-      setCurrentUser: (userId, email) => set({
-        currentUserId: userId,
-        currentUserEmail: email,
-      }),
+      setCurrentUser: (userId, email) =>
+        set({
+          currentUserId: userId,
+          currentUserEmail: email,
+        }),
 
-      // Set user profile from Supabase
       setUserProfile: (profile) => set({ userProfile: profile }),
 
-      // Reset all user-scoped state when user changes or logs out
-      resetUserScopedState: () => set({
-        subscriptions: [],
-        userProfile: null,
-        isHydratingUserData: false,
-        hasHydratedFromCloud: false,
-        hasMigratedLocalData: false,
-        syncError: null,
-      }),
+      resetUserScopedState: () =>
+        set({
+          subscriptions: [],
+          userProfile: null,
+          isHydratingUserData: false,
+          hasHydratedFromCloud: false,
+          hasMigratedLocalData: false,
+          syncError: null,
+        }),
 
-      // Clear all user data on sign out
-      clearUserData: () => set({
-        currentUserId: null,
-        currentUserEmail: null,
-        subscriptions: [],
-        userProfile: null,
-        isHydratingUserData: false,
-        hasHydratedFromCloud: false,
-        hasMigratedLocalData: false,
-        syncError: null,
-      }),
+      clearUserData: () =>
+        set({
+          currentUserId: null,
+          currentUserEmail: null,
+          subscriptions: [],
+          userProfile: null,
+          isHydratingUserData: false,
+          hasHydratedFromCloud: false,
+          hasMigratedLocalData: false,
+          syncError: null,
+        }),
 
-      // Main hydration function for authenticated users
       hydrateAuthenticatedUserData: async (userId, email) => {
         const state = get()
 
-        // Prevent concurrent hydration calls - if already hydrating, skip
-        if (state.isHydratingUserData) {
-          return
-        }
+        if (state.isHydratingUserData) return
 
-        // Prevent cross-user data leakage: if user ID changed, reset state
         if (state.currentUserId && state.currentUserId !== userId) {
           set({ isHydratingUserData: true, syncError: null })
           get().resetUserScopedState()
         }
 
         if (state.hasHydratedFromCloud && state.currentUserId === userId) {
-          return // Already hydrated for this user
+          return
         }
 
-        set({ isHydratingUserData: true, syncError: null, currentUserId: userId, currentUserEmail: email })
+        set({
+          isHydratingUserData: true,
+          syncError: null,
+          currentUserId: userId,
+          currentUserEmail: email,
+        })
 
         try {
-          // Fetch user data from Supabase
           const response = await fetch('/api/hydrate-user-data', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId, email }),
           })
 
-          // If endpoint doesn't exist or fails, continue with existing state
           if (!response.ok) {
             console.warn('[v0] Hydration endpoint not available, using default state')
             set({ hasHydratedFromCloud: true })
@@ -349,8 +305,8 @@ const useStore = create<AppState>()(
 
           const { profile, settings, subscriptions, shouldMigrate } = await response.json()
 
-          // Set settings first to get timezone
           let savedTimeZone: string | undefined
+
           if (settings) {
             const uiSettings = mapUserSettingsRowToUI(settings)
             savedTimeZone = uiSettings.timeZone
@@ -360,14 +316,11 @@ const useStore = create<AppState>()(
             })
           }
 
-          // Set profile with all persisted fields including timezone
           if (profile) {
-            // Build full name from first/last or use full_name
             const fullName =
-              [profile.first_name, profile.last_name]
-                .filter(Boolean)
-                .join(' ')
-                .trim() || profile.full_name || email.split('@')[0]
+              [profile.first_name, profile.last_name].filter(Boolean).join(' ').trim() ||
+              profile.full_name ||
+              email.split('@')[0]
 
             set({
               userProfile: {
@@ -375,34 +328,32 @@ const useStore = create<AppState>()(
                 email: profile.email,
                 plan: profile.plan,
                 avatarUrl: profile.avatar_url || undefined,
-                // Use timezone from settings (single source of truth)
                 timeZone: savedTimeZone || profile.time_zone || undefined,
               },
             })
           }
 
-          // Set subscriptions
-          const uiSubscriptions = subscriptions.map(mapSubscriptionRowToUI)
-          set({ subscriptions: uiSubscriptions })
+          const uiSubscriptions = Array.isArray(subscriptions)
+            ? subscriptions.map(mapSubscriptionRowToUI)
+            : []
 
-          // Mark as hydrated
+          set({ subscriptions: uiSubscriptions })
+          void mutateSWR(SUBSCRIPTIONS_SWR_KEY, { subscriptions: uiSubscriptions }, false)
+
           set({ hasHydratedFromCloud: true })
 
-          // Trigger one-time migration if needed
           if (shouldMigrate) {
             await get().migrateLocalDataToSupabaseOnce(userId)
           }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Hydration failed'
           console.warn('[v0] Hydration error (non-critical):', message)
-          // Don't set sync error - hydration is optional during initial load
           set({ hasHydratedFromCloud: true })
         } finally {
           set({ isHydratingUserData: false })
         }
       },
 
-      // One-time migration of local data to Supabase
       migrateLocalDataToSupabaseOnce: async (userId) => {
         const state = get()
         if (state.hasMigratedLocalData) return
@@ -416,7 +367,6 @@ const useStore = create<AppState>()(
 
           if (response.ok) {
             set({ hasMigratedLocalData: true })
-            // Re-hydrate to get migrated data
             await get().hydrateAuthenticatedUserData(userId, state.currentUserEmail || '')
           }
         } catch (error) {
@@ -424,34 +374,39 @@ const useStore = create<AppState>()(
         }
       },
 
-      // Load subscriptions from Supabase
-      loadSubscriptionsFromSupabase: (subscriptions) => set({ subscriptions }),
+      loadSubscriptionsFromSupabase: (subscriptions) => {
+        set({ subscriptions })
+        void mutateSWR(SUBSCRIPTIONS_SWR_KEY, { subscriptions }, false)
+      },
 
-      // Set subscriptions directly (used by useSubscriptions hook to sync API data)
-      setSubscriptions: (subscriptions) => set({ subscriptions }),
+      setSubscriptions: (subscriptions) => {
+        set({ subscriptions })
+        void mutateSWR(SUBSCRIPTIONS_SWR_KEY, { subscriptions }, false)
+      },
 
-      // Local subscription actions (these will be synced to Supabase via API)
-      addSubscription: (subscription) => set((state) => ({
-        subscriptions: [
-          ...state.subscriptions,
-          {
-            ...subscription,
-            id: Date.now().toString(),
-          },
-        ],
-      })),
+      addSubscription: (subscription) =>
+        set((state) => ({
+          subscriptions: [
+            ...state.subscriptions,
+            {
+              ...subscription,
+              id: Date.now().toString(),
+            },
+          ],
+        })),
 
-      updateSubscription: (id, updates) => set((state) => ({
-        subscriptions: state.subscriptions.map(sub =>
-          sub.id === id ? { ...sub, ...updates } : sub
-        ),
-      })),
+      updateSubscription: (id, updates) =>
+        set((state) => ({
+          subscriptions: state.subscriptions.map((sub) =>
+            sub.id === id ? { ...sub, ...updates } : sub
+          ),
+        })),
 
-      deleteSubscription: (id) => set((state) => ({
-        subscriptions: state.subscriptions.filter(sub => sub.id !== id),
-      })),
+      deleteSubscription: (id) =>
+        set((state) => ({
+          subscriptions: state.subscriptions.filter((sub) => sub.id !== id),
+        })),
 
-      // Remote-backed subscription actions
       addSubscriptionRemote: async (subscription) => {
         set({ isSyncingUserData: true, syncError: null })
 
@@ -476,14 +431,7 @@ const useStore = create<AppState>()(
             ]
 
             set({ subscriptions: nextSubscriptions })
-
-            await mutateSWR(
-              SUBSCRIPTIONS_SWR_KEY,
-              { subscriptions: nextSubscriptions },
-              false
-            )
-
-            scheduleSubscriptionsRevalidate()
+            await mutateSWR(SUBSCRIPTIONS_SWR_KEY, { subscriptions: nextSubscriptions }, false)
 
             return { success: true }
           }
@@ -537,14 +485,7 @@ const useStore = create<AppState>()(
             )
 
             set({ subscriptions: nextSubscriptions })
-
-            await mutateSWR(
-              SUBSCRIPTIONS_SWR_KEY,
-              { subscriptions: nextSubscriptions },
-              false
-            )
-
-            scheduleSubscriptionsRevalidate()
+            await mutateSWR(SUBSCRIPTIONS_SWR_KEY, { subscriptions: nextSubscriptions }, false)
 
             return { success: true }
           }
@@ -570,14 +511,7 @@ const useStore = create<AppState>()(
             const nextSubscriptions = get().subscriptions.filter((sub) => sub.id !== id)
 
             set({ subscriptions: nextSubscriptions })
-
-            await mutateSWR(
-              SUBSCRIPTIONS_SWR_KEY,
-              { subscriptions: nextSubscriptions },
-              false
-            )
-
-            scheduleSubscriptionsRevalidate()
+            await mutateSWR(SUBSCRIPTIONS_SWR_KEY, { subscriptions: nextSubscriptions }, false)
 
             return { success: true }
           }
@@ -594,13 +528,11 @@ const useStore = create<AppState>()(
       },
 
       updateNotificationSettings: async (settings) => {
-        // Update local state immediately for optimistic UI
         set((state) => ({
           notificationSettings: { ...state.notificationSettings, ...settings },
           theme: settings.theme ?? state.theme,
         }))
 
-        // Persist to Supabase in background
         try {
           const { updateUserSettings } = await import('@/lib/supabase/settings-actions')
           const result = await updateUserSettings({
@@ -616,7 +548,6 @@ const useStore = create<AppState>()(
 
           if (!result.success) {
             console.warn('[v0] Failed to persist notification settings:', result.error)
-            // Optionally revert local state on failure
           }
         } catch (error) {
           console.error('[v0] Error persisting notification settings:', error)
@@ -625,15 +556,21 @@ const useStore = create<AppState>()(
 
       setTheme: (theme) => set({ theme }),
 
-      // Add subscription sheet controls
       openAddSubscriptionSheet: () => set({ isAddSubscriptionSheetOpen: true }),
       closeAddSubscriptionSheet: () => set({ isAddSubscriptionSheetOpen: false }),
 
-      // Subscription limit paywall controls
-      openSubscriptionLimitPaywall: (data) => set({ subscriptionLimitPaywallOpen: true, subscriptionLimitPaywallData: data }),
-      closeSubscriptionLimitPaywall: () => set({ subscriptionLimitPaywallOpen: false, subscriptionLimitPaywallData: null }),
+      openSubscriptionLimitPaywall: (data) =>
+        set({
+          subscriptionLimitPaywallOpen: true,
+          subscriptionLimitPaywallData: data,
+        }),
 
-      // Refresh plan from server after successful upgrade
+      closeSubscriptionLimitPaywall: () =>
+        set({
+          subscriptionLimitPaywallOpen: false,
+          subscriptionLimitPaywallData: null,
+        }),
+
       refreshPlanFromServer: async () => {
         const state = get()
         if (!state.currentUserId) return
@@ -655,7 +592,6 @@ const useStore = create<AppState>()(
         }
       },
 
-      // Update plan locally (for optimistic UI after payment success)
       updatePlanLocally: (plan) => {
         set((state) => ({
           userProfile: state.userProfile
@@ -664,23 +600,27 @@ const useStore = create<AppState>()(
         }))
       },
 
-      // Update user profile with Supabase persistence
-      updateUserProfileRemote: async (profileData: {
-        firstName?: string
-        lastName?: string
-        avatarUrl?: string
-      }) => {
-        // Update local state immediately for optimistic UI
-        set((state) => ({
-          userProfile: state.userProfile ? {
-            ...state.userProfile,
-            first_name: profileData.firstName || state.userProfile.first_name,
-            last_name: profileData.lastName || state.userProfile.last_name,
-            avatar_url: profileData.avatarUrl || state.userProfile.avatar_url,
-          } : null,
-        }))
+      updateUserProfileRemote: async (profileData) => {
+        const currentProfile = get().userProfile
 
-        // Persist to Supabase in background
+        if (currentProfile) {
+          const existingParts = currentProfile.name.trim().split(/\s+/).filter(Boolean)
+          const existingFirst = existingParts[0] || ''
+          const existingLast = existingParts.slice(1).join(' ')
+
+          const nextFirst = profileData.firstName ?? existingFirst
+          const nextLast = profileData.lastName ?? existingLast
+          const nextName = [nextFirst, nextLast].filter(Boolean).join(' ').trim() || currentProfile.name
+
+          set({
+            userProfile: {
+              ...currentProfile,
+              name: nextName,
+              avatarUrl: profileData.avatarUrl ?? currentProfile.avatarUrl,
+            },
+          })
+        }
+
         try {
           const { updateUserProfile } = await import('@/lib/supabase/settings-actions')
           const result = await updateUserProfile(profileData)
@@ -689,6 +629,7 @@ const useStore = create<AppState>()(
             console.warn('[v0] Failed to persist profile changes:', result.error)
             return { success: false, error: result.error }
           }
+
           return { success: true }
         } catch (error) {
           console.error('[v0] Error persisting profile:', error)
@@ -696,43 +637,39 @@ const useStore = create<AppState>()(
         }
       },
 
-      addToast: (toast) => set((state) => {
-        const id = Date.now().toString()
-        // Auto-remove after 4 seconds
-        setTimeout(() => {
-          get().removeToast(id)
-        }, 4000)
-        return {
-          toasts: [...state.toasts, { ...toast, id }],
-        }
-      }),
+      addToast: (toast) =>
+        set((state) => {
+          const id = Date.now().toString()
+          setTimeout(() => {
+            get().removeToast(id)
+          }, 4000)
 
-      removeToast: (id) => set((state) => ({
-        toasts: state.toasts.filter(t => t.id !== id),
-      })),
+          return {
+            toasts: [...state.toasts, { ...toast, id }],
+          }
+        }),
 
-      // Derived selector for metrics
+      removeToast: (id) =>
+        set((state) => ({
+          toasts: state.toasts.filter((t) => t.id !== id),
+        })),
+
       getMetrics: () => calculateMetrics(get().subscriptions),
     }),
     {
       name: 'renewly-store',
       version: 3,
-      // Only persist non-cloud-dependent state
       partialize: (state) => ({
         theme: state.theme,
       }),
       migrate: (persistedState: any, version: number) => {
-        // Handle version migrations
         if (version < 2) {
-          // From v1 to v2: clear cloud-dependent state
           return {
             theme: persistedState?.theme || 'dark',
           }
         }
 
         if (version < 3) {
-          // From v2 to v3: clear subscriptions to force fresh load
-          // This ensures old persisted subscriptions with bad data shapes don't break the app
           return {
             theme: persistedState?.theme || 'dark',
           }
@@ -745,11 +682,6 @@ const useStore = create<AppState>()(
 )
 
 export default useStore
-
-/**
- * Store Selector Functions
- * These are used by components to derive data from the store
- */
 
 export function selectMetrics(state: AppState) {
   return state.getMetrics()
