@@ -7,7 +7,6 @@ import { createSubscription, updateSubscription, deleteSubscription } from './su
 import type { ProfileRow, UserSettingsRow } from './supabase/database.types'
 import { mapSubscriptionRowToUI, mapUserSettingsRowToUI } from './supabase/mappers'
 import { calculateMetrics } from './subscription-math'
-import { mutate } from 'swr'
 import { mutate as mutateSWR } from 'swr'
 
 export interface Toast {
@@ -15,6 +14,22 @@ export interface Toast {
   type: 'success' | 'error' | 'info'
   title: string
   message?: string
+}
+
+const SUBSCRIPTIONS_SWR_KEY = '/api/subscriptions'
+
+let subscriptionsRevalidateTimer: ReturnType<typeof window.setTimeout> | null = null
+
+function queueSubscriptionsRevalidate() {
+  if (typeof window === 'undefined') return
+
+  if (subscriptionsRevalidateTimer) {
+    window.clearTimeout(subscriptionsRevalidateTimer)
+  }
+
+  subscriptionsRevalidateTimer = window.setTimeout(() => {
+    void mutateSWR(SUBSCRIPTIONS_SWR_KEY)
+  }, 900)
 }
 
 export interface UserProfile {
@@ -340,34 +355,36 @@ const useStore = create<AppState>()(
               id: insertedRow.id,
             }
 
-            // 1. Update Zustand immediately
-            set((state) => ({
-              subscriptions: [newSub, ...state.subscriptions.filter((s) => s.id !== newSub.id)],
-            }))
+            const nextSubscriptions = [
+              newSub,
+              ...get().subscriptions.filter((s) => s.id !== newSub.id),
+            ]
 
-            // 2. Update SWR cache immediately so stale API data does not overwrite store
+            // 1. Update Zustand from a single source of truth
+            set({ subscriptions: nextSubscriptions })
+
+            // 2. Push the exact same snapshot into SWR cache
             await mutateSWR(
-              '/api/subscriptions',
-              (current: any) => {
-                const currentSubs = Array.isArray(current?.subscriptions) ? current.subscriptions : []
-                return {
-                  subscriptions: [
-                    insertedRow,
-                    ...currentSubs.filter((s: any) => s.id !== insertedRow.id),
-                  ],
-                }
-              },
+              SUBSCRIPTIONS_SWR_KEY,
+              { subscriptions: nextSubscriptions },
               false
             )
 
-            // 3. Revalidate in background
-            await mutateSWR('/api/subscriptions')
+            // 3. Background revalidation after a short delay
+            queueSubscriptionsRevalidate()
 
             return { success: true }
           }
 
           set({ syncError: result.error || 'Failed to add subscription' })
-          return { success: false, error: result.error }
+
+          return {
+            success: false,
+            error: result.error,
+            code: (result as any).code,
+            current: (result as any).current,
+            limit: (result as any).limit,
+          }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to add subscription'
           set({ syncError: message })
@@ -393,41 +410,19 @@ const useStore = create<AppState>()(
           })
 
           if (result.success) {
-            // 1. Update Zustand immediately
-            set((state) => ({
-              subscriptions: state.subscriptions.map((sub) =>
-                sub.id === id ? { ...sub, ...updates } : sub
-              ),
-            }))
+            const nextSubscriptions = get().subscriptions.map((sub) =>
+              sub.id === id ? { ...sub, ...updates } : sub
+            )
 
-            // 2. Update SWR cache immediately
+            set({ subscriptions: nextSubscriptions })
+
             await mutateSWR(
-              '/api/subscriptions',
-              (current: any) => {
-                const currentSubs = Array.isArray(current?.subscriptions) ? current.subscriptions : []
-                return {
-                  subscriptions: currentSubs.map((s: any) =>
-                    s.id === id
-                      ? {
-                        ...s,
-                        name: updates.name ?? s.name,
-                        amount: updates.amount ?? s.amount,
-                        currency: updates.currency ?? s.currency,
-                        category: updates.category ?? s.category,
-                        billing_cycle: updates.billingCycle ?? s.billing_cycle,
-                        renewal_date: updates.renewalDate ?? s.renewal_date,
-                        description: updates.description ?? s.description,
-                        status: updates.status ?? s.status,
-                      }
-                      : s
-                  ),
-                }
-              },
+              SUBSCRIPTIONS_SWR_KEY,
+              { subscriptions: nextSubscriptions },
               false
             )
 
-            // 3. Revalidate in background
-            await mutateSWR('/api/subscriptions')
+            queueSubscriptionsRevalidate()
 
             return { success: true }
           }
@@ -450,25 +445,17 @@ const useStore = create<AppState>()(
           const result = await deleteSubscription(id)
 
           if (result.success) {
-            // 1. Update Zustand immediately
-            set((state) => ({
-              subscriptions: state.subscriptions.filter((sub) => sub.id !== id),
-            }))
+            const nextSubscriptions = get().subscriptions.filter((sub) => sub.id !== id)
 
-            // 2. Update SWR cache immediately
+            set({ subscriptions: nextSubscriptions })
+
             await mutateSWR(
-              '/api/subscriptions',
-              (current: any) => {
-                const currentSubs = Array.isArray(current?.subscriptions) ? current.subscriptions : []
-                return {
-                  subscriptions: currentSubs.filter((s: any) => s.id !== id),
-                }
-              },
+              SUBSCRIPTIONS_SWR_KEY,
+              { subscriptions: nextSubscriptions },
               false
             )
 
-            // 3. Revalidate in background
-            await mutateSWR('/api/subscriptions')
+            queueSubscriptionsRevalidate()
 
             return { success: true }
           }

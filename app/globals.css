@@ -671,18 +671,33 @@ html.dark[data-appearance="glass"] .card-floating:hover {
     var(--shadow-glow);
 }
 
+.subscription-action-menu {
+  width: 272px;
+  min-width: 272px;
+}
+
+.subscription-action-remove {
+  color: rgb(190 24 93);
+}
+
+.dark .subscription-action-remove {
+  color: rgb(253 164 175);
+}
+
 html.dark[data-appearance="glass"] .subscription-action-menu {
-  background: rgba(27, 33, 56, 0.92);
-  border-color: rgba(255, 255, 255, 0.14);
-  box-shadow: 0 24px 60px -18px rgba(8, 12, 30, 0.45);
+  background: rgba(36, 44, 73, 0.96);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 24px 60px -18px rgba(8, 12, 30, 0.45),
+    0 1px 0 rgba(255, 255, 255, 0.08) inset;
 }
 
 html.dark[data-appearance="glass"] .subscription-action-remove {
-  color: rgba(255, 160, 160, 0.98);
+  color: rgba(255, 186, 194, 0.98);
 }
 
 html.dark[data-appearance="glass"] .subscription-action-remove:hover {
-  background: rgba(239, 68, 68, 0.14);
+  background: rgba(239, 68, 68, 0.18);
 }
 
 /* ================================================================ */

@@ -14,19 +14,18 @@ interface SubscriptionActionsProps {
 export function SubscriptionActions({ subscription, onEdit }: SubscriptionActionsProps) {
   const [showMenu, setShowMenu] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const deleteSubscription = useStore((state) => state.deleteSubscription)
+
   const deleteSubscriptionRemote = useStore((state) => state.deleteSubscriptionRemote)
   const addToast = useStore((state) => state.addToast)
 
   const handleDelete = async () => {
+    if (isDeleting) return
+
     setIsDeleting(true)
 
     const result = await deleteSubscriptionRemote(subscription.id)
 
     if (result.success) {
-      // Immediately remove from store for instant UI update
-      deleteSubscription(subscription.id)
-      
       addToast({
         type: 'success',
         title: `${subscription.name} removed`,
@@ -48,12 +47,15 @@ export function SubscriptionActions({ subscription, onEdit }: SubscriptionAction
     <div className="relative">
       <motion.button
         whileTap={{ scale: 0.95 }}
-        onClick={() => setShowMenu((prev) => !prev)}
-        className="p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation()
+          setShowMenu((prev) => !prev)
+        }}
+        className="rounded-lg p-2 transition-colors hover:bg-muted cursor-pointer"
         type="button"
         disabled={isDeleting}
       >
-        <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+        <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
       </motion.button>
 
       <AnimatePresence>
@@ -68,34 +70,39 @@ export function SubscriptionActions({ subscription, onEdit }: SubscriptionAction
             />
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -8 }}
+              initial={{ opacity: 0, scale: 0.96, y: -8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -8 }}
-              className="absolute right-0 top-full mt-2 z-50 w-64 glass rounded-xl p-2 space-y-1 shadow-luxury border border-border/50"
+              exit={{ opacity: 0, scale: 0.96, y: -8 }}
+              transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
+              className="subscription-action-menu absolute right-0 top-full mt-2 z-50 min-w-[272px] overflow-hidden rounded-2xl border border-border/60 bg-card/95 p-1.5 shadow-elevated backdrop-blur-xl"
             >
               {onEdit && (
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation()
                     onEdit()
                     setShowMenu(false)
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-secondary/70 transition-colors text-foreground text-sm cursor-pointer"
+                  className="flex w-full items-center gap-3 whitespace-nowrap rounded-xl px-4 py-3 text-left text-sm text-foreground transition-colors hover:bg-secondary/70 cursor-pointer"
                 >
-                  <Edit2 className="w-4 h-4 shrink-0" />
+                  <Edit2 className="h-4 w-4 shrink-0" />
                   <span>Edit Subscription</span>
                 </button>
               )}
 
-              <div className="h-px bg-border/60 my-1" />
+              <div className="my-1 h-px bg-border/60" />
 
               <button
                 type="button"
-                onClick={handleDelete}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  void handleDelete()
+                }}
                 disabled={isDeleting}
-                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-destructive/20 transition-colors text-destructive font-medium text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="subscription-action-remove flex w-full items-center gap-3 whitespace-nowrap rounded-xl px-4 py-3 text-left text-sm font-medium text-rose-600 transition-colors hover:bg-rose-500/10 dark:text-rose-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Trash2 className="w-4 h-4 shrink-0" />
+                <Trash2 className="h-4 w-4 shrink-0" />
                 <span>{isDeleting ? 'Removing...' : 'Remove Subscription'}</span>
               </button>
             </motion.div>
