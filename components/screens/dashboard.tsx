@@ -407,6 +407,7 @@ export function DashboardScreen({
         </div>
 
         {/* Subscriptions list */}
+        {/* Subscriptions list */}
         <motion.div layout className="space-y-3">
           <AnimatePresence initial={false} mode="popLayout">
             {displayedSubscriptions.map((subscription, index) => (
