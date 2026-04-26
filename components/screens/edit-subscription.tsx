@@ -4,7 +4,8 @@ import React, { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   X, Check,
-  Tv, Music, Briefcase, Cloud, Dumbbell, Newspaper, Gamepad2, Package
+  Tv, Music, Briefcase, Cloud, Dumbbell, Newspaper, Gamepad2, Package,
+  Sparkles, Home, Wallet, ShoppingBag, GraduationCap, Shield, Plug,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -22,30 +23,44 @@ interface EditSubscriptionModalProps {
   subscription: Subscription | null
 }
 
-// Map lowercase categories to typed categories (unique mappings)
+// Map lowercase catalog categories to typed canonical categories (unique mappings)
 const categoryMap: Record<string, SubscriptionCategory> = {
   streaming: 'Streaming',
   music: 'Music',
   productivity: 'Productivity',
   cloud: 'Cloud & Storage',
+  ai: 'AI & Tools',
   fitness: 'Fitness',
   news: 'News & Media',
   gaming: 'Gaming',
-  other: 'Other',
-  entertainment: 'Streaming', // Map entertainment services to Streaming
-  ai: 'AI & Tools',
   utilities: 'Utilities',
   homeservices: 'Home Services',
+  finance: 'Finance',
+  shopping: 'Shopping',
+  education: 'Education',
+  security: 'Security',
+  other: 'Other',
+  // Legacy/auxiliary mappings
+  entertainment: 'Streaming',
+  food: 'Shopping',
+  learning: 'Education',
 }
 
 const categories = [
   { id: 'streaming', label: 'Streaming', icon: Tv },
   { id: 'music', label: 'Music', icon: Music },
+  { id: 'ai', label: 'AI & Tools', icon: Sparkles },
   { id: 'productivity', label: 'Productivity', icon: Briefcase },
   { id: 'cloud', label: 'Cloud & Storage', icon: Cloud },
   { id: 'fitness', label: 'Fitness', icon: Dumbbell },
   { id: 'news', label: 'News & Media', icon: Newspaper },
   { id: 'gaming', label: 'Gaming', icon: Gamepad2 },
+  { id: 'utilities', label: 'Utilities', icon: Plug },
+  { id: 'homeservices', label: 'Home Services', icon: Home },
+  { id: 'finance', label: 'Finance', icon: Wallet },
+  { id: 'shopping', label: 'Shopping', icon: ShoppingBag },
+  { id: 'education', label: 'Education', icon: GraduationCap },
+  { id: 'security', label: 'Security', icon: Shield },
   { id: 'other', label: 'Other', icon: Package },
 ]
 
@@ -88,8 +103,12 @@ export function EditSubscriptionModal({ open, onClose, subscription }: EditSubsc
     if (subscription && open) {
       setName(subscription.name || '')
       
-      // Determine if category is a known category or custom
-      const knownCategories = ['Streaming', 'Music', 'Productivity', 'Cloud & Storage', 'Fitness', 'News & Media', 'Gaming', 'AI & Tools', 'Utilities', 'Home Services', 'Other']
+      // Determine if category is a known canonical category or custom
+      const knownCategories = [
+        'Streaming', 'Music', 'Productivity', 'Cloud & Storage', 'AI & Tools',
+        'Fitness', 'News & Media', 'Gaming', 'Utilities', 'Home Services',
+        'Finance', 'Shopping', 'Education', 'Security', 'Other',
+      ]
       const isKnownCategory = knownCategories.includes(subscription.category)
       
       if (isKnownCategory) {
