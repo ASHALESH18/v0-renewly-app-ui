@@ -23,18 +23,20 @@ interface AddSubscriptionSheetProps {
   onClose: () => void
 }
 
-// Map lowercase categories to typed categories
+// Map lowercase categories to typed categories (unique mappings)
 const categoryMap: Record<string, SubscriptionCategory> = {
-  streaming: 'Entertainment',
+  streaming: 'Streaming',
   music: 'Music',
   productivity: 'Productivity',
-  cloud: 'Storage',
+  cloud: 'Cloud & Storage',
   fitness: 'Fitness',
-  news: 'News & Magazines',
-  gaming: 'Entertainment',
+  news: 'News & Media',
+  gaming: 'Gaming',
   other: 'Other',
-  entertainment: 'Entertainment',
+  entertainment: 'Streaming', // Map entertainment services to Streaming
   ai: 'AI & Tools',
+  utilities: 'Utilities',
+  homeservices: 'Home Services',
 }
 
 const categories = [
@@ -70,7 +72,8 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
   const { popularServices } = usePopularServices()
   const [selectedService, setSelectedService] = useState<any | null>(null)
   const [customName, setCustomName] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<SubscriptionCategory>('Other')
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('other') // Store UI category id
+  const [customCategory, setCustomCategory] = useState('') // Store custom category text
   const [selectedCycle, setSelectedCycle] = useState<BillingCycle>('monthly')
   const [amount, setAmount] = useState('')
   const [currency, setCurrency] = useState('INR')
@@ -129,7 +132,8 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
     setSelectedFilterCategory('all')
     setSelectedService(null)
     setCustomName('')
-    setSelectedCategory('Other')
+    setSelectedCategoryId('other')
+    setCustomCategory('')
     setSelectedCycle('monthly')
     setAmount('')
     setCurrency(defaultCurrency)
@@ -140,8 +144,10 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
 
   const handleSelectService = (service: any) => {
     setSelectedService(service)
-    const mappedCategory = categoryMap[service.category.toLowerCase()] || 'Other'
-    setSelectedCategory(mappedCategory as SubscriptionCategory)
+    // Find the category id that matches this service
+    const categoryId = categories.find(c => categoryMap[c.id] === categoryMap[service.category.toLowerCase()])?.id || 'other'
+    setSelectedCategoryId(categoryId)
+    setCustomCategory('') // Clear custom category when selecting known service
     setAmount('')
     setCurrency(defaultCurrency)
     setDescription('')
@@ -150,20 +156,27 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
 
   const handleCreateCustom = () => {
     setSelectedService(null)
-    setSelectedCategory('Other')
+    setSelectedCategoryId('other')
+    setCustomCategory('')
     setCurrency(defaultCurrency)
     setDescription('')
     setStep('details')
   }
 
   const handleSave = async () => {
+    // Determine final category value
+    const baseCategory = categoryMap[selectedCategoryId] || 'Other'
+    const finalCategory = selectedCategoryId === 'other' && customCategory.trim() 
+      ? customCategory.trim() 
+      : baseCategory
+
     // Validate form
     const errors = validateSubscriptionForm({
       serviceName: !selectedService ? customName : undefined,
       amount,
       billingCycle: selectedCycle,
       renewalDate: nextBilling,
-      category: selectedCategory,
+      category: finalCategory,
       isCustom: !selectedService,
     })
 
@@ -192,7 +205,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
 
     const rawResult = await addSubscriptionRemote({
       name: selectedService?.name || customName || 'New Subscription',
-      category: selectedCategory,
+      category: finalCategory,
       amount: parseFloat(amount),
       currency,
       billingCycle: selectedCycle,
@@ -572,20 +585,19 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                         </label>
                         <div ref={categoryRef} className="grid grid-cols-4 gap-2">
                           {categories.map((cat) => {
-                            const mappedCategory = categoryMap[cat.id] || 'Other'
                             const IconComponent = cat.icon
                             return (
                               <button
                                 key={cat.id}
                                 onClick={() => {
-                                  setSelectedCategory(mappedCategory as SubscriptionCategory)
+                                  setSelectedCategoryId(cat.id)
                                   if (validationErrors.category) {
                                     setValidationErrors({ ...validationErrors, category: undefined })
                                   }
                                 }}
                                 className={cn(
                                   "py-3 rounded-xl text-sm font-medium transition-all flex flex-col items-center gap-1",
-                                  selectedCategory === mappedCategory
+                                  selectedCategoryId === cat.id
                                     ? "bg-gold text-obsidian"
                                     : "bg-secondary text-muted-foreground hover:text-foreground"
                                 )}
@@ -604,6 +616,29 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                           >
                             {validationErrors.category}
                           </motion.p>
+                        )}
+
+                        {/* Custom Category Input - Show only when Other is selected */}
+                        {selectedCategoryId === 'other' && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            className="space-y-2 mt-4"
+                          >
+                            <label className="text-sm font-medium text-muted-foreground block">
+                              Custom Category
+                            </label>
+                            <Input
+                              value={customCategory}
+                              onChange={(e) => setCustomCategory(e.target.value)}
+                              placeholder="e.g., Rent, RO Service, Appliance AMC"
+                              className="h-12 bg-secondary border-transparent rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-gold/50 transition-colors"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Optional. Leave blank to save as "Other".
+                            </p>
+                          </motion.div>
                         )}
                       </div>
 
