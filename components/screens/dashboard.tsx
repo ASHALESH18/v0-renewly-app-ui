@@ -15,6 +15,7 @@ import {
 import { Header, SearchOverlay } from '@/components/header'
 import { MetricCard } from '@/components/metric-card'
 import { SubscriptionCard, SubscriptionCardCompact } from '@/components/subscription-card'
+import { SubscriptionIcon } from '@/lib/brand-icons'
 import { FilterChips, SegmentedControl } from '@/components/filter-chips'
 import { PageTransition, StaggerList, staggerItem, viewportFadeInUp } from '@/components/motion'
 import { MotionSection, MotionSectionItem } from '@/components/motion-section'
@@ -512,12 +513,11 @@ function UpcomingCard({
     >
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-semibold shrink-0"
-            style={{ backgroundColor: subscription.color || '#7c6a46' }}
-          >
-            {subscription.logo || subscription.name.charAt(0)}
-          </div>
+          <SubscriptionIcon
+            name={subscription.name}
+            fallbackColor={subscription.color}
+            size="md"
+          />
 
           <div className="min-w-0">
             <p className="font-medium text-foreground truncate">{subscription.name}</p>
