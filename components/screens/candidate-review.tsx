@@ -46,14 +46,20 @@ const billingCycleOptions: { value: BillingCycle | 'unknown'; label: string }[] 
 
 // Category options
 const categoryOptions: SubscriptionCategory[] = [
-  'Entertainment',
+  'Streaming',
   'Music',
   'Productivity',
-  'Storage',
+  'Cloud & Storage',
   'AI & Tools',
   'Fitness',
-  'News & Magazines',
-  'Office',
+  'News & Media',
+  'Gaming',
+  'Utilities',
+  'Services',
+  'Finance',
+  'Shopping',
+  'Education',
+  'Security',
   'Other',
 ]
 
@@ -90,8 +96,8 @@ function EvidenceItem({ evidence }: { evidence: CandidateEvidence }) {
         <span className={cn(
           'px-2 py-0.5 rounded-full text-xs font-medium',
           evidence.confidence >= 90 ? 'bg-emerald/15 text-emerald' :
-          evidence.confidence >= 70 ? 'bg-gold/15 text-gold' :
-          'bg-crimson/15 text-crimson'
+            evidence.confidence >= 70 ? 'bg-gold/15 text-gold' :
+              'bg-crimson/15 text-crimson'
         )}>
           {evidence.confidence}%
         </span>
@@ -265,16 +271,16 @@ export function CandidateReviewSheet({
                         <p className="text-sm font-medium text-foreground">Detection Confidence</p>
                         <p className="text-xs text-muted-foreground">
                           {candidate.confidenceLevel === 'high' ? 'High confidence detection' :
-                           candidate.confidenceLevel === 'medium' ? 'Medium confidence - review recommended' :
-                           'Low confidence - manual review required'}
+                            candidate.confidenceLevel === 'medium' ? 'Medium confidence - review recommended' :
+                              'Low confidence - manual review required'}
                         </p>
                       </div>
                     </div>
                     <div className={cn(
                       'px-3 py-1.5 rounded-xl text-sm font-semibold',
                       candidate.confidenceLevel === 'high' ? 'bg-emerald/15 text-emerald' :
-                      candidate.confidenceLevel === 'medium' ? 'bg-gold/15 text-gold' :
-                      'bg-crimson/15 text-crimson'
+                        candidate.confidenceLevel === 'medium' ? 'bg-gold/15 text-gold' :
+                          'bg-crimson/15 text-crimson'
                     )}>
                       {candidate.confidenceScore}%
                     </div>
@@ -287,7 +293,7 @@ export function CandidateReviewSheet({
                       <div>
                         <p className="text-sm font-medium text-foreground">Possible Duplicate Detected</p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          This may be a duplicate of <span className="text-foreground font-medium">{candidate.possibleDuplicateName}</span>. 
+                          This may be a duplicate of <span className="text-foreground font-medium">{candidate.possibleDuplicateName}</span>.
                           Review carefully before adding.
                         </p>
                       </div>

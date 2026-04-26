@@ -46,17 +46,22 @@ const billingCycles: { id: BillingCycle; label: string }[] = [
 ]
 
 const categories: { id: SubscriptionCategory; label: string }[] = [
-  { id: 'Entertainment', label: 'Entertainment' },
+  { id: 'Streaming', label: 'Streaming' },
   { id: 'Music', label: 'Music' },
-  { id: 'Productivity', label: 'Productivity' },
-  { id: 'Storage', label: 'Storage' },
   { id: 'AI & Tools', label: 'AI & Tools' },
+  { id: 'Productivity', label: 'Productivity' },
+  { id: 'Cloud & Storage', label: 'Cloud & Storage' },
   { id: 'Fitness', label: 'Fitness' },
-  { id: 'News & Magazines', label: 'News & Magazines' },
-  { id: 'Office', label: 'Office' },
+  { id: 'News & Media', label: 'News & Media' },
+  { id: 'Gaming', label: 'Gaming' },
+  { id: 'Utilities', label: 'Utilities' },
+  { id: 'Services', label: 'Services' },
+  { id: 'Finance', label: 'Finance' },
+  { id: 'Shopping', label: 'Shopping' },
+  { id: 'Education', label: 'Education' },
+  { id: 'Security', label: 'Security' },
   { id: 'Other', label: 'Other' },
 ]
-
 export function SubscriptionDetailSheet({
   subscription,
   open,

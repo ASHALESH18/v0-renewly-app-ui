@@ -36,6 +36,7 @@ const categoryMap: Record<string, SubscriptionCategory> = {
   gaming: 'Gaming',
   utilities: 'Utilities',
   services: 'Services',
+  homeservices: 'Services', // legacy catalog id
   finance: 'Finance',
   shopping: 'Shopping',
   education: 'Education',
@@ -45,7 +46,6 @@ const categoryMap: Record<string, SubscriptionCategory> = {
   entertainment: 'Streaming',
   food: 'Shopping',
   learning: 'Education',
-  homeservices: 'Services', // Backward compatibility
 }
 
 const categories = [
@@ -65,6 +65,31 @@ const categories = [
   { id: 'security', label: 'Security', icon: Shield },
   { id: 'other', label: 'Other', icon: Package },
 ]
+
+const categoryFilterOptions = [
+  { id: 'all', label: 'All' },
+  ...categories.map((category) => ({ id: category.id, label: category.label })),
+]
+
+function resolveCategoryId(category?: string): string {
+  const normalized = String(category || '')
+    .toLowerCase()
+    .replace(/&/g, '')
+    .replace(/[^a-z0-9]/g, '')
+
+  if (!normalized) return 'other'
+  if (normalized === 'homeservices' || normalized === 'services') return 'services'
+  if (normalized === 'cloudstorage' || normalized === 'storage') return 'cloud'
+  if (normalized === 'newsmedia' || normalized === 'newsmagazines') return 'news'
+  if (normalized === 'aitools') return 'ai'
+
+  const direct = categories.find((categoryItem) => categoryItem.id === normalized)
+  if (direct) return direct.id
+
+  const canonical = categoryMap[normalized]
+  const mapped = categories.find((categoryItem) => categoryMap[categoryItem.id] === canonical)
+  return mapped?.id || 'other'
+}
 
 const billingCycles: { id: BillingCycle; label: string }[] = [
   { id: 'weekly', label: 'Weekly' },
@@ -147,6 +172,12 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
     return matchesSearch && matchesCategory
   })
 
+  const hasActiveSearchOrCategoryFilter =
+    searchQuery.trim().length > 0 || selectedFilterCategory !== 'all'
+  const servicesToShow = hasActiveSearchOrCategoryFilter
+    ? filteredServices
+    : filteredServices.slice(0, 12)
+
   const resetFormState = () => {
     setStep('select')
     setSearchQuery('')
@@ -166,7 +197,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
   const handleSelectService = (service: any) => {
     setSelectedService(service)
     // Find the category id that matches this service
-    const categoryId = categories.find(c => categoryMap[c.id] === categoryMap[service.category.toLowerCase()])?.id || 'other'
+    const categoryId = resolveCategoryId(service.category)
     setSelectedCategoryId(categoryId)
     setCustomCategory('') // Clear custom category when selecting known service
     setAmount('')
@@ -187,8 +218,8 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
   const handleSave = async () => {
     // Determine final category value
     const baseCategory = categoryMap[selectedCategoryId] || 'Other'
-    const finalCategory = selectedCategoryId === 'other' && customCategory.trim() 
-      ? customCategory.trim() 
+    const finalCategory = selectedCategoryId === 'other' && customCategory.trim()
+      ? customCategory.trim()
       : baseCategory
 
     // Validate form
@@ -204,7 +235,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
     // If there are errors, show them and focus first invalid field
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors)
-      
+
       // Focus the first invalid field
       const firstInvalidField = getFirstInvalidField(errors)
       if (firstInvalidField === 'serviceName' && serviceNameRef.current) {
@@ -216,7 +247,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
       } else if (firstInvalidField === 'category' && categoryRef.current) {
         categoryRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
       }
-      
+
       return
     }
 
@@ -344,16 +375,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
 
                       {/* Compact Category Filter - Chips */}
                       <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
-                        {[
-                          { id: 'all', label: 'All' },
-                          { id: 'entertainment', label: 'Entertainment' },
-                          { id: 'music', label: 'Music' },
-                          { id: 'productivity', label: 'Productivity' },
-                          { id: 'cloud', label: 'Storage' },
-                          { id: 'fitness', label: 'Fitness' },
-                          { id: 'news', label: 'News' },
-                          { id: 'other', label: 'Other' },
-                        ].map((cat) => (
+                        {categoryFilterOptions.map((cat) => (
                           <motion.button
                             key={cat.id}
                             whileTap={{ scale: 0.95 }}
@@ -372,14 +394,11 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
 
                       <div className="mb-6">
                         <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                          {selectedFilterCategory === 'all' ? 'Popular Services' : 'Services'}
+                          {selectedFilterCategory === 'all' ? 'Popular Services' : categoryFilterOptions.find((c) => c.id === selectedFilterCategory)?.label || 'Services'}
                         </h3>
                         {filteredServices.length > 0 ? (
                           <div className="grid grid-cols-4 gap-3">
-                            {(searchQuery.trim() || selectedFilterCategory !== 'all' 
-                              ? filteredServices 
-                              : filteredServices.slice(0, 12)
-                            ).map((service) => (
+                            {servicesToShow.map((service) => (
                               <motion.button
                                 key={service.id}
                                 whileTap={{ scale: 0.95 }}
@@ -401,7 +420,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                         ) : (
                           <div className="py-8 text-center">
                             <p className="text-sm text-muted-foreground mb-3">
-                              No services found in {selectedFilterCategory === 'all' ? 'this category' : categories.find(c => c.id === selectedFilterCategory)?.label}
+                              No services found in {selectedFilterCategory === 'all' ? 'this category' : categoryFilterOptions.find(c => c.id === selectedFilterCategory)?.label}
                             </p>
                             <motion.button
                               whileTap={{ scale: 0.98 }}
@@ -425,9 +444,9 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                         <Plus className="w-5 h-5" />
                         <span className="font-medium">Add Custom Subscription</span>
                       </motion.button>
-                      </motion.div>
-                    ) : (
-                      <motion.div
+                    </motion.div>
+                  ) : (
+                    <motion.div
                       key="details"
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
