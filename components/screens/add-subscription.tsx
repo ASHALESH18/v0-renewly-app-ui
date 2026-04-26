@@ -35,7 +35,7 @@ const categoryMap: Record<string, SubscriptionCategory> = {
   news: 'News & Media',
   gaming: 'Gaming',
   utilities: 'Utilities',
-  homeservices: 'Home Services',
+  services: 'Services',
   finance: 'Finance',
   shopping: 'Shopping',
   education: 'Education',
@@ -45,6 +45,7 @@ const categoryMap: Record<string, SubscriptionCategory> = {
   entertainment: 'Streaming',
   food: 'Shopping',
   learning: 'Education',
+  homeservices: 'Services', // Backward compatibility
 }
 
 const categories = [
@@ -57,7 +58,7 @@ const categories = [
   { id: 'news', label: 'News & Media', icon: Newspaper },
   { id: 'gaming', label: 'Gaming', icon: Gamepad2 },
   { id: 'utilities', label: 'Utilities', icon: Plug },
-  { id: 'homeservices', label: 'Home Services', icon: Home },
+  { id: 'services', label: 'Services', icon: Home },
   { id: 'finance', label: 'Finance', icon: Wallet },
   { id: 'shopping', label: 'Shopping', icon: ShoppingBag },
   { id: 'education', label: 'Education', icon: GraduationCap },
@@ -375,7 +376,10 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                         </h3>
                         {filteredServices.length > 0 ? (
                           <div className="grid grid-cols-4 gap-3">
-                            {filteredServices.slice(0, 12).map((service) => (
+                            {(searchQuery.trim() || selectedFilterCategory !== 'all' 
+                              ? filteredServices 
+                              : filteredServices.slice(0, 12)
+                            ).map((service) => (
                               <motion.button
                                 key={service.id}
                                 whileTap={{ scale: 0.95 }}

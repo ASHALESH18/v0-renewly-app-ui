@@ -34,7 +34,7 @@ const categoryMap: Record<string, SubscriptionCategory> = {
   news: 'News & Media',
   gaming: 'Gaming',
   utilities: 'Utilities',
-  homeservices: 'Home Services',
+  services: 'Services',
   finance: 'Finance',
   shopping: 'Shopping',
   education: 'Education',
@@ -44,6 +44,7 @@ const categoryMap: Record<string, SubscriptionCategory> = {
   entertainment: 'Streaming',
   food: 'Shopping',
   learning: 'Education',
+  homeservices: 'Services', // Backward compatibility
 }
 
 const categories = [
@@ -56,7 +57,7 @@ const categories = [
   { id: 'news', label: 'News & Media', icon: Newspaper },
   { id: 'gaming', label: 'Gaming', icon: Gamepad2 },
   { id: 'utilities', label: 'Utilities', icon: Plug },
-  { id: 'homeservices', label: 'Home Services', icon: Home },
+  { id: 'services', label: 'Services', icon: Home },
   { id: 'finance', label: 'Finance', icon: Wallet },
   { id: 'shopping', label: 'Shopping', icon: ShoppingBag },
   { id: 'education', label: 'Education', icon: GraduationCap },
@@ -106,7 +107,7 @@ export function EditSubscriptionModal({ open, onClose, subscription }: EditSubsc
       // Determine if category is a known canonical category or custom
       const knownCategories = [
         'Streaming', 'Music', 'Productivity', 'Cloud & Storage', 'AI & Tools',
-        'Fitness', 'News & Media', 'Gaming', 'Utilities', 'Home Services',
+        'Fitness', 'News & Media', 'Gaming', 'Utilities', 'Services',
         'Finance', 'Shopping', 'Education', 'Security', 'Other',
       ]
       const isKnownCategory = knownCategories.includes(subscription.category)

@@ -10,7 +10,7 @@ export type SubscriptionCategory =
   | 'News & Media'
   | 'Gaming'
   | 'Utilities'
-  | 'Home Services'
+  | 'Services'
   | 'Finance'
   | 'Shopping'
   | 'Education'
