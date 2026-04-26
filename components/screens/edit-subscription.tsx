@@ -22,18 +22,20 @@ interface EditSubscriptionModalProps {
   subscription: Subscription | null
 }
 
-// Map lowercase categories to typed categories
+// Map lowercase categories to typed categories (unique mappings)
 const categoryMap: Record<string, SubscriptionCategory> = {
-  streaming: 'Entertainment',
+  streaming: 'Streaming',
   music: 'Music',
   productivity: 'Productivity',
-  cloud: 'Storage',
+  cloud: 'Cloud & Storage',
   fitness: 'Fitness',
-  news: 'News & Magazines',
-  gaming: 'Entertainment',
+  news: 'News & Media',
+  gaming: 'Gaming',
   other: 'Other',
-  entertainment: 'Entertainment',
+  entertainment: 'Streaming', // Map entertainment services to Streaming
   ai: 'AI & Tools',
+  utilities: 'Utilities',
+  homeservices: 'Home Services',
 }
 
 const categories = [
@@ -61,7 +63,8 @@ type EditSubscriptionResult = {
 
 export function EditSubscriptionModal({ open, onClose, subscription }: EditSubscriptionModalProps) {
   const [name, setName] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<SubscriptionCategory>('Other')
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('other')
+  const [customCategory, setCustomCategory] = useState('')
   const [selectedCycle, setSelectedCycle] = useState<BillingCycle>('monthly')
   const [amount, setAmount] = useState('')
   const [currency, setCurrency] = useState('INR')
@@ -84,7 +87,22 @@ export function EditSubscriptionModal({ open, onClose, subscription }: EditSubsc
   React.useEffect(() => {
     if (subscription && open) {
       setName(subscription.name || '')
-      setSelectedCategory(subscription.category as SubscriptionCategory)
+      
+      // Determine if category is a known category or custom
+      const knownCategories = ['Streaming', 'Music', 'Productivity', 'Cloud & Storage', 'Fitness', 'News & Media', 'Gaming', 'AI & Tools', 'Utilities', 'Home Services', 'Other']
+      const isKnownCategory = knownCategories.includes(subscription.category)
+      
+      if (isKnownCategory) {
+        // Find the category id that maps to this category
+        const categoryId = categories.find(c => categoryMap[c.id] === subscription.category)?.id || 'other'
+        setSelectedCategoryId(categoryId)
+        setCustomCategory('')
+      } else {
+        // Custom category
+        setSelectedCategoryId('other')
+        setCustomCategory(subscription.category)
+      }
+      
       setSelectedCycle(subscription.billingCycle as BillingCycle)
       setAmount(subscription.amount.toString())
       setCurrency(subscription.currency || 'INR')
@@ -111,13 +129,19 @@ export function EditSubscriptionModal({ open, onClose, subscription }: EditSubsc
   const handleSave = async () => {
     if (!subscription) return
 
+    // Determine final category value
+    const baseCategory = categoryMap[selectedCategoryId] || 'Other'
+    const finalCategory = selectedCategoryId === 'other' && customCategory.trim() 
+      ? customCategory.trim() 
+      : baseCategory
+
     // Validate form
     const errors = validateSubscriptionForm({
       serviceName: name,
       amount,
       billingCycle: selectedCycle,
       renewalDate: nextBilling,
-      category: selectedCategory,
+      category: finalCategory,
       isCustom: true, // Treat as custom since name is editable
     })
 
@@ -144,7 +168,7 @@ export function EditSubscriptionModal({ open, onClose, subscription }: EditSubsc
 
     const rawResult = await updateSubscriptionRemote(subscription.id, {
       name,
-      category: selectedCategory,
+      category: finalCategory,
       amount: parseFloat(amount),
       currency,
       billingCycle: selectedCycle,
@@ -390,20 +414,19 @@ export function EditSubscriptionModal({ open, onClose, subscription }: EditSubsc
                 </label>
                 <div ref={categoryRef} className="grid grid-cols-4 gap-2">
                   {categories.map((cat) => {
-                    const mappedCategory = categoryMap[cat.id] || 'Other'
                     const IconComponent = cat.icon
                     return (
                       <button
                         key={cat.id}
                         onClick={() => {
-                          setSelectedCategory(mappedCategory as SubscriptionCategory)
+                          setSelectedCategoryId(cat.id)
                           if (validationErrors.category) {
                             setValidationErrors({ ...validationErrors, category: undefined })
                           }
                         }}
                         className={cn(
                           'py-3 rounded-xl text-sm font-medium transition-all flex flex-col items-center gap-1',
-                          selectedCategory === mappedCategory
+                          selectedCategoryId === cat.id
                             ? 'bg-gold text-obsidian'
                             : 'bg-secondary text-muted-foreground hover:text-foreground'
                         )}
@@ -422,6 +445,29 @@ export function EditSubscriptionModal({ open, onClose, subscription }: EditSubsc
                   >
                     {validationErrors.category}
                   </motion.p>
+                )}
+
+                {/* Custom Category Input - Show only when Other is selected */}
+                {selectedCategoryId === 'other' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    className="space-y-2 mt-4"
+                  >
+                    <label className="text-sm font-medium text-muted-foreground block">
+                      Custom Category
+                    </label>
+                    <Input
+                      value={customCategory}
+                      onChange={(e) => setCustomCategory(e.target.value)}
+                      placeholder="e.g., Rent, RO Service, Appliance AMC"
+                      className="h-12 bg-secondary border-transparent rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-gold/50 transition-colors"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Optional. Leave blank to save as "Other".
+                    </p>
+                  </motion.div>
                 )}
               </div>
 

@@ -1,15 +1,18 @@
 export type SubscriptionStatus = 'active' | 'paused' | 'unused' | 'cancelled'
 export type BillingCycle = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly'
 export type SubscriptionCategory = 
-  | 'Entertainment' 
+  | 'Streaming'
   | 'Music' 
   | 'Productivity' 
-  | 'Storage' 
+  | 'Cloud & Storage' 
   | 'AI & Tools' 
   | 'Fitness'
-  | 'News & Magazines'
-  | 'Office'
+  | 'News & Media'
+  | 'Gaming'
+  | 'Utilities'
+  | 'Home Services'
   | 'Other'
+  | string // Allow custom categories
 
 export interface Subscription {
   id: string
