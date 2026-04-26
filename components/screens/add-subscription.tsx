@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   X, Search, Plus, ChevronRight, Check,
@@ -15,6 +15,7 @@ import { DatePickerField } from '@/components/date-picker-field'
 import { SubscriptionLimitPaywall } from '@/components/subscription-limit-paywall'
 import useStore from '@/lib/store'
 import { currencies } from '@/lib/locale-utils'
+import { validateSubscriptionForm, getFirstInvalidField, type SubscriptionValidationErrors } from '@/lib/validation'
 import type { SubscriptionCategory, BillingCycle } from '@/lib/types'
 
 interface AddSubscriptionSheetProps {
@@ -75,6 +76,15 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
   const [currency, setCurrency] = useState('INR')
   const [nextBilling, setNextBilling] = useState('')
   const [description, setDescription] = useState('')
+  const [validationErrors, setValidationErrors] = useState<SubscriptionValidationErrors>({})
+  const [isSaving, setIsSaving] = useState(false)
+
+  // Refs for field focus on validation error
+  const serviceNameRef = useRef<HTMLInputElement>(null)
+  const amountRef = useRef<HTMLInputElement>(null)
+  const cycleRef = useRef<HTMLSelectElement>(null)
+  const dateRef = useRef<HTMLInputElement>(null)
+  const categoryRef = useRef<HTMLDivElement>(null)
 
   const addSubscriptionRemote = useStore((state) => state.addSubscriptionRemote)
   const addToast = useStore((state) => state.addToast)
@@ -83,7 +93,6 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
   const subscriptionLimitPaywallOpen = useStore((state) => state.subscriptionLimitPaywallOpen)
   const subscriptionLimitPaywallData = useStore((state) => state.subscriptionLimitPaywallData)
   const notificationSettings = useStore((state) => state.notificationSettings)
-  const [isSaving, setIsSaving] = useState(false)
 
   // Use user's preferred currency from settings, fallback to INR
   const defaultCurrency = notificationSettings?.currencyCode || 'INR'
@@ -126,6 +135,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
     setCurrency(defaultCurrency)
     setNextBilling('')
     setDescription('')
+    setValidationErrors({})
   }
 
   const handleSelectService = (service: any) => {
@@ -147,15 +157,37 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
   }
 
   const handleSave = async () => {
-    if (!amount || !nextBilling) {
-      addToast({
-        type: 'error',
-        title: 'Missing information',
-        message: 'Please fill in amount and renewal date',
-      })
+    // Validate form
+    const errors = validateSubscriptionForm({
+      serviceName: !selectedService ? customName : undefined,
+      amount,
+      billingCycle: selectedCycle,
+      renewalDate: nextBilling,
+      category: selectedCategory,
+      isCustom: !selectedService,
+    })
+
+    // If there are errors, show them and focus first invalid field
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors)
+      
+      // Focus the first invalid field
+      const firstInvalidField = getFirstInvalidField(errors)
+      if (firstInvalidField === 'serviceName' && serviceNameRef.current) {
+        serviceNameRef.current.focus()
+      } else if (firstInvalidField === 'amount' && amountRef.current) {
+        amountRef.current.focus()
+      } else if (firstInvalidField === 'renewalDate' && dateRef.current) {
+        dateRef.current.focus()
+      } else if (firstInvalidField === 'category' && categoryRef.current) {
+        categoryRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      }
+      
       return
     }
 
+    // Clear validation errors on successful validation
+    setValidationErrors({})
     setIsSaving(true)
 
     const rawResult = await addSubscriptionRemote({
@@ -380,16 +412,36 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                       )}
 
                       {!selectedService && (
-                        <div>
+                        <div className="space-y-2">
                           <label className="text-sm font-medium text-muted-foreground mb-2 block">
                             Service Name
                           </label>
                           <Input
+                            ref={serviceNameRef}
                             value={customName}
-                            onChange={(e) => setCustomName(e.target.value)}
+                            onChange={(e) => {
+                              setCustomName(e.target.value)
+                              if (validationErrors.serviceName) {
+                                setValidationErrors({ ...validationErrors, serviceName: undefined })
+                              }
+                            }}
                             placeholder="e.g., My Subscription"
-                            className="h-12 bg-secondary border-0 rounded-xl text-foreground"
+                            className={cn(
+                              'h-12 bg-secondary border rounded-xl text-foreground transition-colors',
+                              validationErrors.serviceName
+                                ? 'border-red-500/50 bg-red-500/5 focus:ring-red-500/50'
+                                : 'border-transparent focus:ring-gold/50'
+                            )}
                           />
+                          {validationErrors.serviceName && (
+                            <motion.p
+                              initial={{ opacity: 0, y: -4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="text-xs text-red-600 dark:text-red-400"
+                            >
+                              {validationErrors.serviceName}
+                            </motion.p>
+                          )}
                         </div>
                       )}
 
@@ -403,17 +455,28 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                               {currencySymbol}
                             </span>
                             <Input
+                              ref={amountRef}
                               type="number"
                               value={amount}
-                              onChange={(e) => setAmount(e.target.value)}
+                              onChange={(e) => {
+                                setAmount(e.target.value)
+                                if (validationErrors.amount) {
+                                  setValidationErrors({ ...validationErrors, amount: undefined })
+                                }
+                              }}
                               placeholder="0.00"
-                              className="pl-12 h-12 bg-secondary border-0 rounded-xl text-foreground text-lg font-semibold"
+                              className={cn(
+                                'pl-12 h-12 bg-secondary border rounded-xl text-foreground text-lg font-semibold transition-colors',
+                                validationErrors.amount
+                                  ? 'border-red-500/50 bg-red-500/5 focus:ring-red-500/50'
+                                  : 'border-transparent focus:ring-gold/50'
+                              )}
                             />
                           </div>
                           <select
                             value={currency}
                             onChange={(e) => setCurrency(e.target.value)}
-                            className="h-12 px-3 bg-secondary border-0 rounded-xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all"
+                            className="h-12 px-3 bg-secondary border border-transparent rounded-xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all"
                           >
                             {currencies.map((curr) => (
                               <option key={curr.code} value={curr.code}>
@@ -422,12 +485,21 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                             ))}
                           </select>
                         </div>
+                        {validationErrors.amount && (
+                          <motion.p
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-xs text-red-600 dark:text-red-400"
+                          >
+                            {validationErrors.amount}
+                          </motion.p>
+                        )}
                         <p className="text-xs text-muted-foreground">
                           Selected: {currencies.find((c) => c.code === currency)?.name}
                         </p>
                       </div>
 
-                      <div>
+                      <div className="space-y-2">
                         <label className="text-sm font-medium text-muted-foreground mb-2 block">
                           Billing Cycle
                         </label>
@@ -435,7 +507,12 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                           {billingCycles.map((cycle) => (
                             <button
                               key={cycle.id}
-                              onClick={() => setSelectedCycle(cycle.id)}
+                              onClick={() => {
+                                setSelectedCycle(cycle.id)
+                                if (validationErrors.billingCycle) {
+                                  setValidationErrors({ ...validationErrors, billingCycle: undefined })
+                                }
+                              }}
                               className={cn(
                                 "py-3 rounded-xl text-sm font-medium transition-all",
                                 selectedCycle === cycle.id
@@ -447,35 +524,65 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                             </button>
                           ))}
                         </div>
+                        {validationErrors.billingCycle && (
+                          <motion.p
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-xs text-red-600 dark:text-red-400"
+                          >
+                            {validationErrors.billingCycle}
+                          </motion.p>
+                        )}
                       </div>
 
-                      <DatePickerField
-                        label="Next Billing Date"
-                        value={nextBilling}
-                        onChange={setNextBilling}
-                        locale={
-                          notificationSettings?.language === 'es'
-                            ? 'es-ES'
-                            : notificationSettings?.language === 'fr'
-                              ? 'fr-FR'
-                              : 'en-IN'
-                        }
-                        placeholder="Select renewal date"
-                      />
+                      <div className="space-y-2">
+                        <DatePickerField
+                          label="Next Billing Date"
+                          value={nextBilling}
+                          onChange={(date) => {
+                            setNextBilling(date)
+                            if (validationErrors.renewalDate) {
+                              setValidationErrors({ ...validationErrors, renewalDate: undefined })
+                            }
+                          }}
+                          locale={
+                            notificationSettings?.language === 'es'
+                              ? 'es-ES'
+                              : notificationSettings?.language === 'fr'
+                                ? 'fr-FR'
+                                : 'en-IN'
+                          }
+                          placeholder="Select renewal date"
+                        />
+                        {validationErrors.renewalDate && (
+                          <motion.p
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-xs text-red-600 dark:text-red-400"
+                          >
+                            {validationErrors.renewalDate}
+                          </motion.p>
+                        )}
+                      </div>
 
                       {/* Category Field - Now for all subscriptions */}
-                      <div>
+                      <div className="space-y-2">
                         <label className="text-sm font-medium text-muted-foreground mb-2 block">
                           Category
                         </label>
-                        <div className="grid grid-cols-4 gap-2">
+                        <div ref={categoryRef} className="grid grid-cols-4 gap-2">
                           {categories.map((cat) => {
                             const mappedCategory = categoryMap[cat.id] || 'Other'
                             const IconComponent = cat.icon
                             return (
                               <button
                                 key={cat.id}
-                                onClick={() => setSelectedCategory(mappedCategory as SubscriptionCategory)}
+                                onClick={() => {
+                                  setSelectedCategory(mappedCategory as SubscriptionCategory)
+                                  if (validationErrors.category) {
+                                    setValidationErrors({ ...validationErrors, category: undefined })
+                                  }
+                                }}
                                 className={cn(
                                   "py-3 rounded-xl text-sm font-medium transition-all flex flex-col items-center gap-1",
                                   selectedCategory === mappedCategory
@@ -489,6 +596,15 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                             )
                           })}
                         </div>
+                        {validationErrors.category && (
+                          <motion.p
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-xs text-red-600 dark:text-red-400"
+                          >
+                            {validationErrors.category}
+                          </motion.p>
+                        )}
                       </div>
 
                       <div className="space-y-2">
