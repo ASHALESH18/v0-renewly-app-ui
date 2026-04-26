@@ -16,7 +16,7 @@ export interface PlanSheetProps {
 
 export function PlanSelectionSheet({ onClose, currentPlan = 'free' }: PlanSheetProps) {
   const plans = getAllPlans()
-  const [showComparison, setShowComparison] = useState(false)
+  const [showComparison, setShowComparison] = useState(true)  // Default to comparison view
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
 
   // If showing comparison view
@@ -426,7 +426,7 @@ function MutedCross() {
   )
 }
 
-// Plan Comparison View Component
+// Plan Comparison View Component - NOW THE DEFAULT COMPARISON PAGE
 function PlanComparisonView({
   onBack,
   currentPlan
@@ -434,135 +434,253 @@ function PlanComparisonView({
   onBack: () => void
   currentPlan: string
 }) {
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
   const plans = getAllPlans()
+  const router = useRouter()
+  const { isAuthenticated } = useAuth()
+
+  // Handle plan selection
+  const handleSelectPlan = (planId: string) => {
+    if (planId === currentPlan) return
+    setSelectedPlan(planId)
+  }
+
+  // Handle CTA click based on selected plan
+  const handleCTA = async () => {
+    if (!selectedPlan) return
+    
+    if (selectedPlan === 'enterprise') {
+      setSelectedPlan('enterprise')
+      return
+    }
+
+    const destination = getUpgradeDestination(selectedPlan as 'pro' | 'family', isAuthenticated)
+    router.push(destination)
+  }
+
+  const selectedPlanObj = plans.find(p => p.id === selectedPlan)
+  const showCTA = selectedPlan && selectedPlan !== currentPlan
 
   // Feature comparison matrix
   const featureMatrix = [
-    { name: 'Subscriptions', free: 'Up to 2', pro: 'Unlimited', family: 'Unlimited', enterprise: 'Unlimited' },
-    { name: 'Analytics Dashboard', free: false, pro: true, family: true, enterprise: true },
-    { name: 'Leak Report', free: false, pro: true, family: true, enterprise: true },
-    { name: 'Multi-currency', free: false, pro: true, family: true, enterprise: true },
-    { name: 'Renewal Calendar', free: 'Basic', pro: 'Smart', family: 'Shared', enterprise: 'Shared' },
+    { name: 'Subscription limit', free: 'Up to 2', pro: 'Unlimited', family: 'Unlimited', enterprise: 'Unlimited' },
+    { name: 'Smart inbox', free: false, pro: true, family: true, enterprise: true },
+    { name: 'Advanced analytics', free: false, pro: true, family: true, enterprise: true },
+    { name: 'Signature Leak Report', free: false, pro: true, family: true, enterprise: true },
+    { name: 'Renewal calendar', free: 'Basic', pro: 'Smart', family: 'Shared', enterprise: 'Shared' },
+    { name: 'Automations', free: false, pro: true, family: true, enterprise: true },
     { name: 'Export (CSV/JSON)', free: false, pro: true, family: true, enterprise: true },
-    { name: 'Family Members', free: '-', pro: '-', family: 'Up to 4', enterprise: 'Unlimited' },
-    { name: 'Shared Dashboard', free: false, pro: false, family: true, enterprise: true },
-    { name: 'Team Analytics', free: false, pro: false, family: false, enterprise: true },
-    { name: 'Admin Controls', free: false, pro: false, family: false, enterprise: true },
-    { name: 'Audit Logs', free: false, pro: false, family: false, enterprise: true },
-    { name: 'Priority Support', free: false, pro: true, family: true, enterprise: 'Dedicated' },
+    { name: 'Multi-user support', free: false, pro: false, family: 'Up to 4', enterprise: 'Unlimited' },
+    { name: 'Shared dashboard', free: false, pro: false, family: true, enterprise: true },
+    { name: 'Admin controls', free: false, pro: false, family: 'Limited', enterprise: true },
+    { name: 'Team analytics', free: false, pro: false, family: false, enterprise: true },
+    { name: 'Audit logs', free: false, pro: false, family: false, enterprise: true },
+    { name: 'Priority support', free: false, pro: true, family: true, enterprise: 'Dedicated' },
   ]
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={springs.gentle}
-      className="space-y-4"
+      className="space-y-8"
     >
-      {/* Header with back button */}
-      <div className="flex items-center gap-3 pb-2">
-        <button
-          onClick={onBack}
-          className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-gold/50 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </button>
-        <h3 className="text-lg font-semibold text-foreground">Plan Comparison</h3>
+      {/* Premium Header */}
+      <div className="text-center space-y-2">
+        <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+          Simple, transparent pricing
+        </h2>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
+          Choose the perfect plan for your subscription management needs. All plans include a 14-day free trial.
+        </p>
       </div>
 
-      {/* Comparison Table */}
-      <div className="overflow-x-auto -mx-2 px-2">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b-2 border-border">
-              <th className="text-left py-3 px-2 font-medium text-muted-foreground">Feature</th>
-              {plans.map((plan) => (
-                <th
-                  key={plan.id}
-                  className={`text-center py-3 px-2 font-semibold ${
-                    plan.id === currentPlan 
-                      ? 'text-gold' 
-                      : 'text-foreground'
-                  }`}
-                >
-                  <span className="block">{plan.name}</span>
-                  {plan.id === currentPlan && (
-                    <span className="block text-[10px] font-medium text-emerald bg-emerald/10 rounded-full px-2 py-0.5 mt-1 mx-auto w-fit">
-                      Current
-                    </span>
-                  )}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {/* Price Row */}
-            <tr className="border-b border-border/50 bg-gold/5">
-              <td className="py-3 px-2 font-semibold text-foreground">Price</td>
-              {plans.map((plan) => (
-                <td key={plan.id} className="text-center py-3 px-2">
-                  {plan.price !== null ? (
-                    <span className="font-bold text-foreground">
-                      ₹{plan.price}
-                      <span className="font-normal text-muted-foreground text-xs">
-                        /{plan.period === 'forever' ? '' : plan.period?.slice(0, 2)}
-                      </span>
-                    </span>
-                  ) : (
-                    <span className="text-gold font-semibold">Custom</span>
-                  )}
-                </td>
-              ))}
-            </tr>
+      {/* Plan Cards - Premium Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {plans.slice(1).map((plan) => {
+          const isSelected = selectedPlan === plan.id
+          const isCurrentPlan = currentPlan === plan.id
+          const isPopular = plan.badge === 'popular'
 
-            {/* Feature Rows */}
-            {featureMatrix.map((feature, idx) => (
-              <tr 
-                key={feature.name} 
-                className={`border-b border-border/20 transition-colors hover:bg-muted/30 ${
-                  idx % 2 === 0 ? 'bg-transparent' : 'bg-muted/10'
-                }`}
-              >
-                <td className="py-3 px-2 text-foreground/80 font-medium">{feature.name}</td>
-                {(['free', 'pro', 'family', 'enterprise'] as const).map((planId) => {
-                  const value = feature[planId]
-                  return (
-                    <td key={planId} className="text-center py-3 px-2">
-                      {typeof value === 'boolean' ? (
-                        value ? <PremiumCheck /> : <MutedCross />
-                      ) : (
-                        <span className={`text-xs font-medium ${
-                          value === '-' 
-                            ? 'text-muted-foreground/40' 
-                            : value === 'Unlimited' || value === 'Dedicated'
-                              ? 'text-emerald font-semibold'
-                              : 'text-foreground'
-                        }`}>
-                          {value}
+          return (
+            <motion.div
+              key={plan.id}
+              whileHover={!isSelected && !isCurrentPlan ? { y: -4 } : {}}
+              whileTap={!isCurrentPlan ? { scale: 0.98 } : {}}
+              onClick={() => handleSelectPlan(plan.id)}
+              className={`relative p-6 rounded-2xl border-2 transition-all cursor-pointer ${
+                isSelected
+                  ? 'border-gold bg-gold/10'
+                  : isCurrentPlan
+                    ? 'border-emerald/30 bg-emerald/10'
+                    : 'border-border hover:border-gold/50'
+              } ${isPopular ? 'md:ring-2 ring-gold/20' : ''}`}
+            >
+              {/* Popular badge */}
+              {isPopular && (
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gold/20 text-gold text-xs font-semibold">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Most Popular
+                  </span>
+                </div>
+              )}
+
+              {/* Current badge */}
+              {isCurrentPlan && (
+                <div className="mb-4">
+                  <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald/20 text-emerald text-xs font-medium">
+                    Your current plan
+                  </span>
+                </div>
+              )}
+
+              {/* Plan name & description */}
+              <h3 className="text-xl md:text-2xl font-bold text-foreground mb-1">{plan.name}</h3>
+              <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
+
+              {/* Pricing */}
+              <div className="mb-6">
+                {plan.price !== null ? (
+                  <>
+                    <div className="flex items-baseline gap-1">
+                      {plan.originalPrice && (
+                        <span className="text-sm text-muted-foreground/50 line-through">
+                          ₹{plan.originalPrice.toLocaleString('en-IN')}
                         </span>
                       )}
-                    </td>
-                  )
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                      <span className="text-3xl font-bold text-foreground">
+                        ₹{plan.price.toLocaleString('en-IN')}
+                      </span>
+                      <span className="text-sm text-muted-foreground">/{plan.period}</span>
+                    </div>
+                    {plan.savings && (
+                      <p className="text-sm text-emerald font-medium mt-2">
+                        Save ₹{plan.savings.toLocaleString('en-IN')}/month
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-2xl font-bold text-gold">{plan.priceText}</div>
+                )}
+              </div>
+
+              {/* Features list */}
+              <div className="space-y-3 mb-6">
+                {plan.features.map((feature) => (
+                  <div key={feature} className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-emerald shrink-0 mt-0.5" />
+                    <span className="text-sm text-foreground/90">{feature}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Selection indicator */}
+              {isSelected && (
+                <div className="mb-4 p-2 rounded-lg bg-gold/20 border border-gold/30 text-center">
+                  <span className="text-xs font-semibold text-gold">Selected</span>
+                </div>
+              )}
+            </motion.div>
+          )
+        })}
       </div>
 
-      {/* CTA */}
-      <div className="pt-4 border-t border-border">
-        <p className="text-xs text-center text-muted-foreground mb-3">
-          All paid plans include a 14-day free trial
-        </p>
-        <button
-          onClick={onBack}
-          className="w-full py-3 rounded-xl bg-gold text-obsidian font-semibold hover:bg-gold/90 transition-colors"
-        >
-          Choose a Plan
-        </button>
+      {/* Comparison Table Section */}
+      <div className="pt-8 border-t border-border">
+        <h3 className="text-2xl font-bold text-foreground mb-6 text-center">Detailed Comparison</h3>
+        
+        <div className="overflow-x-auto -mx-4 px-4">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b-2 border-border">
+                <th className="text-left py-3 px-2 font-semibold text-foreground">Feature</th>
+                {plans.slice(1).map((plan) => (
+                  <th
+                    key={plan.id}
+                    className="text-center py-3 px-2 font-semibold text-foreground"
+                  >
+                    {plan.name}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {featureMatrix.map((feature, idx) => (
+                <tr
+                  key={feature.name}
+                  className={`border-b border-border/50 transition-colors ${
+                    idx % 2 === 0 ? 'bg-transparent' : 'bg-muted/5'
+                  }`}
+                >
+                  <td className="py-3 px-2 font-medium text-foreground/80">{feature.name}</td>
+                  {(['pro', 'family', 'enterprise'] as const).map((planId) => {
+                    const value = feature[planId]
+                    return (
+                      <td key={planId} className="text-center py-3 px-2">
+                        {typeof value === 'boolean' ? (
+                          value ? <PremiumCheck /> : <MutedCross />
+                        ) : (
+                          <span
+                            className={`text-xs font-medium ${
+                              value === '-'
+                                ? 'text-muted-foreground/40'
+                                : value === 'Unlimited' || value === 'Dedicated'
+                                  ? 'text-emerald font-semibold'
+                                  : 'text-foreground'
+                            }`}
+                          >
+                            {value}
+                          </span>
+                        )}
+                      </td>
+                    )
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      {/* CTA Section */}
+      {showCTA && selectedPlanObj && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col gap-3 pt-6 border-t border-border"
+        >
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleCTA}
+            className="w-full py-3.5 rounded-xl bg-gold text-obsidian font-semibold hover:bg-gold/90 transition-colors flex items-center justify-center gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            {selectedPlanObj.id === 'enterprise' ? 'Contact Sales' : `Continue with ${selectedPlanObj.name}`}
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setSelectedPlan(null)}
+            className="w-full py-3 rounded-xl border border-border text-foreground font-medium hover:bg-muted/50 transition-colors"
+          >
+            Back to Plans
+          </motion.button>
+        </motion.div>
+      )}
+
+      {/* Back to Dashboard for free users */}
+      {!showCTA && (
+        <div className="flex flex-col gap-3 pt-6 border-t border-border">
+          <button
+            onClick={onBack}
+            className="w-full py-3 rounded-xl border border-border text-foreground font-medium hover:bg-muted/50 transition-colors"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      )}
     </motion.div>
   )
 }
