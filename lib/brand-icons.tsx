@@ -974,6 +974,124 @@ export function getSupportedBrands(): string[] {
   return Object.values(brandMap).map((b) => b.displayName)
 }
 
+function getBadgeTextClass(label: string) {
+  if (label.length <= 2) return 'text-sm'
+  if (label.length <= 4) return 'text-[11px]'
+  if (label.length <= 6) return 'text-[9px]'
+  return 'text-[8px]'
+}
+
+function getBrandBadgeText(serviceName: string, displayName: string) {
+  const normalized = normalizeServiceName(serviceName)
+
+  const explicitLabels: Record<string, string> = {
+    netflix: 'N',
+    spotify: 'SP',
+    youtube: 'YT',
+    'youtube premium': 'YT',
+    'youtube music': 'YT',
+    disney: 'D+',
+    'disney+': 'D+',
+    'disney plus': 'D+',
+    'amazon prime': 'Prime',
+    'amazon prime video': 'Prime',
+    'prime video': 'Prime',
+    amazon: 'Amazon',
+    hbo: 'HBO',
+    'hbo max': 'Max',
+    hbomax: 'Max',
+    max: 'Max',
+    hulu: 'Hulu',
+    peacock: 'Peacock',
+    paramount: 'P+',
+    'paramount+': 'P+',
+    'apple music': 'Music',
+    'apple tv': 'TV+',
+    'apple tv+': 'TV+',
+    'apple tv plus': 'TV+',
+    icloud: 'iCloud',
+    'icloud+': 'iCloud',
+    'google one': 'G1',
+    'google drive': 'Drive',
+    'google workspace': 'GWS',
+    'microsoft 365': 'M365',
+    onedrive: '1Drive',
+    dropbox: 'Dropbox',
+    notion: 'Notion',
+    slack: 'Slack',
+    zoom: 'Zoom',
+    chatgpt: 'GPT',
+    claude: 'Claude',
+    perplexity: 'PPLX',
+    'gemini advanced': 'Gemini',
+    gemini: 'Gemini',
+    'github copilot': 'Copilot',
+    copilot: 'Copilot',
+    github: 'GitHub',
+    figma: 'Figma',
+    canva: 'Canva',
+    adobe: 'Adobe',
+    'adobe creative cloud': 'Adobe',
+    grammarly: 'Gram',
+    'disney hotstar': 'Hotstar',
+    hotstar: 'Hotstar',
+    'disney+ hotstar': 'Hotstar',
+    jiocinema: 'Jio',
+    sonyliv: 'Sony',
+    zee5: 'Zee5',
+    'sun nxt': 'Sun',
+    aha: 'Aha',
+    hoichoi: 'Hoi',
+    'eros now': 'Eros',
+    rentomojo: 'Rento',
+    furlenco: 'Furl',
+    'ro service': 'RO',
+    'water purifier amc': 'RO',
+    'wifi broadband': 'WiFi',
+    'wi fi broadband': 'WiFi',
+    broadband: 'WiFi',
+    'credit card autopay': 'AutoPay',
+    'sofa rental': 'Sofa',
+    'furniture rental': 'Rent',
+    'tv subscription': 'TV',
+    'ac amc': 'AC',
+    'fridge amc': 'Fridge',
+    'washing machine amc': 'Wash',
+    'playstation plus': 'PS+',
+    playstation: 'PS',
+    'xbox game pass': 'Xbox',
+    xbox: 'Xbox',
+    'nintendo switch online': 'NSO',
+    nintendo: 'NSO',
+    nordvpn: 'Nord',
+    expressvpn: 'Express',
+    surfshark: 'Surf',
+    '1password': '1Pass',
+    bitwarden: 'BW',
+    lastpass: 'LP',
+  }
+
+  if (explicitLabels[normalized]) return explicitLabels[normalized]
+
+  const normalizedDisplay = normalizeServiceName(displayName)
+  if (explicitLabels[normalizedDisplay]) return explicitLabels[normalizedDisplay]
+
+  const compactDisplay = displayName.replace(/\s+/g, ' ').trim()
+  if (compactDisplay.length <= 6) return compactDisplay
+
+  const words = compactDisplay
+    .replace(/[+]/g, ' plus ')
+    .split(/[\s/&.-]+/)
+    .filter(Boolean)
+
+  if (words.length === 1) return words[0].slice(0, 6)
+
+  return words
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() || '')
+    .join('') || '?'
+}
+
 function getReadableTextColor(backgroundColor?: string) {
   const fallback = '#FFFFFF'
   if (!backgroundColor || !backgroundColor.startsWith('#')) return fallback
@@ -1058,21 +1176,23 @@ export function SubscriptionIcon({
     lg: 'w-12 h-12',
   }
 
-  const iconSizeClasses = {
-    sm: 'w-4 h-4',
-    md: 'w-5 h-5',
-    lg: 'w-6 h-6',
-  }
-
   if (brandConfig) {
+    const badgeText = getBrandBadgeText(name, brandConfig.displayName)
+    const textColor = brandConfig.textColor || getReadableTextColor(brandConfig.color)
+
     return (
       <div
-        className={`${sizeClasses[size]} rounded-2xl flex items-center justify-center shrink-0 shadow-sm ring-1 ring-white/20`}
+        className={`${sizeClasses[size]} rounded-2xl flex items-center justify-center shrink-0 shadow-sm ring-1 ring-white/20 overflow-hidden`}
         style={{ backgroundColor: brandConfig.color }}
+        aria-label={`${brandConfig.displayName} icon`}
+        title={brandConfig.displayName}
       >
-        <div className={`${iconSizeClasses[size]} flex items-center justify-center`} style={{ color: brandConfig.textColor || '#FFFFFF' }}>
-          {brandConfig.icon}
-        </div>
+        <span
+          className={`${getBadgeTextClass(badgeText)} max-w-full px-1 text-center font-black leading-none tracking-tight`}
+          style={{ color: textColor }}
+        >
+          {badgeText}
+        </span>
       </div>
     )
   }
