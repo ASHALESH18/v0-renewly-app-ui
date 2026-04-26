@@ -1,16 +1,17 @@
 export type SubscriptionStatus = 'active' | 'paused' | 'unused' | 'cancelled'
 export type BillingCycle = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly'
-export type SubscriptionCategory = 
+export type SubscriptionCategory =
   | 'Streaming'
-  | 'Music' 
-  | 'Productivity' 
-  | 'Cloud & Storage' 
-  | 'AI & Tools' 
+  | 'Music'
+  | 'Productivity'
+  | 'Cloud & Storage'
+  | 'AI & Tools'
   | 'Fitness'
   | 'News & Media'
   | 'Gaming'
   | 'Utilities'
   | 'Services'
+  | 'Home Services' // legacy
   | 'Finance'
   | 'Shopping'
   | 'Education'

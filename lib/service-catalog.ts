@@ -5,8 +5,8 @@
  * - Add Subscription flow (search, grid, filtering)
  * - /api/subscriptions/popular route
  *
- * Lowercase `category` values map to canonical SubscriptionCategory via categoryMap
- * in the Add/Edit Subscription components.
+ * Lowercase `category` values map to canonical SubscriptionCategory.
+ * Use `services` for real-world recurring services such as RO/AMC/rentals/autopay.
  *
  * `aliases` are used for search (common names, abbreviations, related keywords).
  * `region` is informational and does NOT affect filtering.
@@ -185,7 +185,7 @@ export const SERVICE_CATALOG: CatalogService[] = [
   { id: 'electricity-addon', name: 'Electricity Add-on', category: 'utilities', color: '#FBBF24', aliases: ['power', 'electric bill'], region: 'GLOBAL' },
   { id: 'lpg-service', name: 'LPG Service', category: 'utilities', color: '#0EA5E9', aliases: ['cooking gas', 'gas cylinder'], region: 'IN' },
 
-  // ────────────────── Services (Real-world recurring services) ──────────────────
+  // ────────────────── Services / recurring real-world services ──────────────────
   { id: 'rentomojo', name: 'Rentomojo', category: 'services', color: '#FF5F1F', aliases: ['rent', 'furniture rental'], region: 'IN' },
   { id: 'furlenco', name: 'Furlenco', category: 'services', color: '#1A1A1A', aliases: ['furniture rental', 'rent'], region: 'IN' },
   { id: 'urban-company', name: 'Urban Company', category: 'services', color: '#7C2AE8', aliases: ['urbanclap', 'urban clap', 'home services'], region: 'IN' },
@@ -201,13 +201,17 @@ export const SERVICE_CATALOG: CatalogService[] = [
   { id: 'cloud-cctv', name: 'Cloud CCTV Storage', category: 'services', color: '#475569', aliases: ['cctv', 'security camera'], region: 'GLOBAL' },
   { id: 'milk-delivery', name: 'Milk Delivery', category: 'services', color: '#F8FAFC', aliases: ['country delight', 'milk basket', 'milk'], region: 'IN' },
   { id: 'newspaper-delivery', name: 'Newspaper Delivery', category: 'services', color: '#1F2937', aliases: ['newspaper'], region: 'GLOBAL' },
-  { id: 'sofa-rental', name: 'Sofa Rental', category: 'services', color: '#D97706', aliases: ['sofa'], region: 'IN' },
-  { id: 'furniture-rental', name: 'Furniture Rental', category: 'services', color: '#CA8A04', aliases: ['furniture'], region: 'IN' },
-  { id: 'home-cleaning', name: 'Home Cleaning', category: 'services', color: '#6366F1', aliases: ['cleaning service'], region: 'GLOBAL' },
-  { id: 'maid-service', name: 'Maid / Cook Service', category: 'services', color: '#8B5CF6', aliases: ['maid', 'cook', 'home help'], region: 'IN' },
-  { id: 'society-maintenance', name: 'Society Maintenance', category: 'services', color: '#0369A1', aliases: ['maintenance fee', 'society'], region: 'IN' },
-  { id: 'car-wash', name: 'Car Wash', category: 'services', color: '#EC4899', aliases: ['car cleaning'], region: 'GLOBAL' },
-  { id: 'lpg-service', name: 'LPG Service', category: 'services', color: '#0EA5E9', aliases: ['cooking gas', 'gas cylinder'], region: 'IN' },
+
+  { id: 'sofa-rental', name: 'Sofa Rental', category: 'services', color: '#8B5A2B', aliases: ['sofa', 'couch rental', 'furniture rental'], region: 'GLOBAL' },
+  { id: 'furniture-rental', name: 'Furniture Rental', category: 'services', color: '#A16207', aliases: ['furniture', 'rent furniture', 'sofa rental'], region: 'GLOBAL' },
+  { id: 'tv-subscription', name: 'TV Subscription', category: 'services', color: '#2563EB', aliases: ['tv', 'cable tv', 'set top box', 'dth', 'television'], region: 'GLOBAL' },
+  { id: 'wifi-broadband', name: 'WiFi / Broadband', category: 'services', color: '#0EA5E9', aliases: ['wifi', 'wi-fi', 'internet', 'broadband', 'router'], region: 'GLOBAL' },
+  { id: 'credit-card-autopay', name: 'Credit Card Autopay', category: 'services', color: '#334155', aliases: ['autopay', 'credit card', 'card autopay', 'standing instruction'], region: 'GLOBAL' },
+  { id: 'maid-service', name: 'Maid Service', category: 'services', color: '#EC4899', aliases: ['maid', 'house help', 'cleaning help'], region: 'GLOBAL' },
+  { id: 'cook-service', name: 'Cook Service', category: 'services', color: '#F97316', aliases: ['cook', 'chef', 'home cook'], region: 'GLOBAL' },
+  { id: 'society-maintenance', name: 'Society Maintenance', category: 'services', color: '#64748B', aliases: ['maintenance', 'housing society', 'apartment maintenance'], region: 'IN' },
+  { id: 'car-wash', name: 'Car Wash', category: 'services', color: '#06B6D4', aliases: ['car cleaning', 'vehicle wash'], region: 'GLOBAL' },
+  { id: 'appliance-protection-plan', name: 'Appliance Protection Plan', category: 'services', color: '#7C3AED', aliases: ['appliance warranty', 'extended warranty', 'protection plan'], region: 'GLOBAL' },
 
   // ────────────────── Shopping ──────────────────
   { id: 'amazon-prime', name: 'Amazon Prime', category: 'shopping', color: '#00A8E1', aliases: ['prime', 'prime membership'], region: 'GLOBAL' },
@@ -218,9 +222,6 @@ export const SERVICE_CATALOG: CatalogService[] = [
   { id: 'flipkart-plus', name: 'Flipkart Plus', category: 'shopping', color: '#2874F0', aliases: ['flipkart'], region: 'IN' },
   { id: 'swiggy-one', name: 'Swiggy One', category: 'shopping', color: '#F1511B', aliases: ['swiggy'], region: 'IN' },
   { id: 'zomato-gold', name: 'Zomato Gold', category: 'shopping', color: '#EF4F5F', aliases: ['zomato'], region: 'IN' },
-  { id: 'instacart', name: 'Instacart', category: 'shopping', color: '#26C485', aliases: ['instant delivery', 'grocery'], region: 'US' },
-  { id: 'blinkit', name: 'Blinkit', category: 'shopping', color: '#FFC100', aliases: ['blinkit delivery', 'instant delivery'], region: 'IN' },
-  { id: 'instamart', name: 'Instamart', category: 'shopping', color: '#4285F4', aliases: ['instant delivery', 'grocery'], region: 'IN' },
 ]
 
 /**
