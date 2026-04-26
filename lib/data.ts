@@ -18,13 +18,16 @@ export interface Subscription {
   notes?: string
 }
 
-export type SubscriptionCategory = 
+export type SubscriptionCategory =
+  | 'Streaming'
   | 'Entertainment'
   | 'Productivity'
+  | 'Cloud & Storage'
   | 'Storage'
   | 'Music'
   | 'Fitness'
   | 'Utilities'
+  | 'Services'
   | 'AI & Tools'
   | 'News & Media'
   | 'Shopping'

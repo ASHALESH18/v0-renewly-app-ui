@@ -49,19 +49,32 @@ function normalizeSubscription(sub: Record<string, unknown>): Subscription | nul
 
     const categoryRaw = sub.category ?? 'Other'
     const validCategories: SubscriptionCategory[] = [
-      'Entertainment',
+      'Streaming',
+      'Entertainment', // legacy
       'Music',
       'Productivity',
-      'Storage',
+      'Cloud & Storage',
+      'Storage', // legacy
       'AI & Tools',
       'Fitness',
-      'News & Magazines',
-      'Office',
+      'News & Media',
+      'News & Magazines', // legacy
+      'Gaming',
+      'Utilities',
+      'Services',
+      'Home Services', // legacy
+      'Finance',
+      'Shopping',
+      'Education',
+      'Security',
+      'Office', // legacy
       'Other',
     ]
     const category = validCategories.includes(categoryRaw as SubscriptionCategory)
       ? (categoryRaw as SubscriptionCategory)
-      : 'Other'
+      : typeof categoryRaw === 'string' && categoryRaw.trim()
+        ? (categoryRaw.trim() as SubscriptionCategory)
+        : 'Other'
 
     const currency = String(sub.currency ?? 'INR')
 

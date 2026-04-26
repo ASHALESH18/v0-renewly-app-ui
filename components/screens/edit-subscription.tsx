@@ -34,7 +34,8 @@ const categoryMap: Record<string, SubscriptionCategory> = {
   news: 'News & Media',
   gaming: 'Gaming',
   utilities: 'Utilities',
-  homeservices: 'Home Services',
+  services: 'Services',
+  homeservices: 'Services', // legacy
   finance: 'Finance',
   shopping: 'Shopping',
   education: 'Education',
@@ -56,13 +57,33 @@ const categories = [
   { id: 'news', label: 'News & Media', icon: Newspaper },
   { id: 'gaming', label: 'Gaming', icon: Gamepad2 },
   { id: 'utilities', label: 'Utilities', icon: Plug },
-  { id: 'homeservices', label: 'Home Services', icon: Home },
+  { id: 'services', label: 'Services', icon: Home },
   { id: 'finance', label: 'Finance', icon: Wallet },
   { id: 'shopping', label: 'Shopping', icon: ShoppingBag },
   { id: 'education', label: 'Education', icon: GraduationCap },
   { id: 'security', label: 'Security', icon: Shield },
   { id: 'other', label: 'Other', icon: Package },
 ]
+
+function resolveCategoryId(category?: string): string {
+  const normalized = String(category || '')
+    .toLowerCase()
+    .replace(/&/g, '')
+    .replace(/[^a-z0-9]/g, '')
+
+  if (!normalized) return 'other'
+  if (normalized === 'homeservices' || normalized === 'services') return 'services'
+  if (normalized === 'cloudstorage' || normalized === 'storage') return 'cloud'
+  if (normalized === 'newsmedia' || normalized === 'newsmagazines') return 'news'
+  if (normalized === 'aitools') return 'ai'
+
+  const direct = categories.find((categoryItem) => categoryItem.id === normalized)
+  if (direct) return direct.id
+
+  const canonical = categoryMap[normalized]
+  const mapped = categories.find((categoryItem) => categoryMap[categoryItem.id] === canonical)
+  return mapped?.id || 'other'
+}
 
 const billingCycles: { id: BillingCycle; label: string }[] = [
   { id: 'weekly', label: 'Weekly' },
@@ -102,18 +123,18 @@ export function EditSubscriptionModal({ open, onClose, subscription }: EditSubsc
   React.useEffect(() => {
     if (subscription && open) {
       setName(subscription.name || '')
-      
+
       // Determine if category is a known canonical category or custom
       const knownCategories = [
         'Streaming', 'Music', 'Productivity', 'Cloud & Storage', 'AI & Tools',
-        'Fitness', 'News & Media', 'Gaming', 'Utilities', 'Home Services',
+        'Fitness', 'News & Media', 'Gaming', 'Utilities', 'Services', 'Home Services',
         'Finance', 'Shopping', 'Education', 'Security', 'Other',
       ]
       const isKnownCategory = knownCategories.includes(subscription.category)
-      
+
       if (isKnownCategory) {
         // Find the category id that maps to this category
-        const categoryId = categories.find(c => categoryMap[c.id] === subscription.category)?.id || 'other'
+        const categoryId = resolveCategoryId(subscription.category)
         setSelectedCategoryId(categoryId)
         setCustomCategory('')
       } else {
@@ -121,7 +142,7 @@ export function EditSubscriptionModal({ open, onClose, subscription }: EditSubsc
         setSelectedCategoryId('other')
         setCustomCategory(subscription.category)
       }
-      
+
       setSelectedCycle(subscription.billingCycle as BillingCycle)
       setAmount(subscription.amount.toString())
       setCurrency(subscription.currency || 'INR')
@@ -150,8 +171,8 @@ export function EditSubscriptionModal({ open, onClose, subscription }: EditSubsc
 
     // Determine final category value
     const baseCategory = categoryMap[selectedCategoryId] || 'Other'
-    const finalCategory = selectedCategoryId === 'other' && customCategory.trim() 
-      ? customCategory.trim() 
+    const finalCategory = selectedCategoryId === 'other' && customCategory.trim()
+      ? customCategory.trim()
       : baseCategory
 
     // Validate form
