@@ -4,7 +4,8 @@ import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   X, Search, Plus, ChevronRight, Check,
-  Tv, Music, Briefcase, Cloud, Dumbbell, Newspaper, Gamepad2, Package
+  Tv, Music, Briefcase, Cloud, Dumbbell, Newspaper, Gamepad2, Package,
+  Sparkles, Home, Wallet, ShoppingBag, GraduationCap, Shield, Plug,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { usePopularServices } from '@/lib/hooks/use-remote-data'
@@ -23,30 +24,44 @@ interface AddSubscriptionSheetProps {
   onClose: () => void
 }
 
-// Map lowercase categories to typed categories (unique mappings)
+// Map lowercase catalog categories to typed canonical categories (unique mappings)
 const categoryMap: Record<string, SubscriptionCategory> = {
   streaming: 'Streaming',
   music: 'Music',
   productivity: 'Productivity',
   cloud: 'Cloud & Storage',
+  ai: 'AI & Tools',
   fitness: 'Fitness',
   news: 'News & Media',
   gaming: 'Gaming',
-  other: 'Other',
-  entertainment: 'Streaming', // Map entertainment services to Streaming
-  ai: 'AI & Tools',
   utilities: 'Utilities',
   homeservices: 'Home Services',
+  finance: 'Finance',
+  shopping: 'Shopping',
+  education: 'Education',
+  security: 'Security',
+  other: 'Other',
+  // Legacy/auxiliary mappings
+  entertainment: 'Streaming',
+  food: 'Shopping',
+  learning: 'Education',
 }
 
 const categories = [
   { id: 'streaming', label: 'Streaming', icon: Tv },
   { id: 'music', label: 'Music', icon: Music },
+  { id: 'ai', label: 'AI & Tools', icon: Sparkles },
   { id: 'productivity', label: 'Productivity', icon: Briefcase },
   { id: 'cloud', label: 'Cloud & Storage', icon: Cloud },
   { id: 'fitness', label: 'Fitness', icon: Dumbbell },
   { id: 'news', label: 'News & Media', icon: Newspaper },
   { id: 'gaming', label: 'Gaming', icon: Gamepad2 },
+  { id: 'utilities', label: 'Utilities', icon: Plug },
+  { id: 'homeservices', label: 'Home Services', icon: Home },
+  { id: 'finance', label: 'Finance', icon: Wallet },
+  { id: 'shopping', label: 'Shopping', icon: ShoppingBag },
+  { id: 'education', label: 'Education', icon: GraduationCap },
+  { id: 'security', label: 'Security', icon: Shield },
   { id: 'other', label: 'Other', icon: Package },
 ]
 
@@ -114,15 +129,20 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
 
   const currencySymbol = currencySymbolMap[currency] || currency
 
-  // Filter services by search and selected category
-  const filteredServices = popularServices.filter((service) => {
-    const matchesSearch = service.name.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedFilterCategory === 'all' || 
-      service.category.toLowerCase() === selectedFilterCategory ||
-      (selectedFilterCategory === 'entertainment' &&
-        (service.category === 'entertainment' ||
-          service.category === 'streaming' ||
-          service.category === 'gaming'))
+  // Filter services by search (name + aliases + category) and selected filter category
+  const filteredServices = popularServices.filter((service: any) => {
+    const query = searchQuery.trim().toLowerCase()
+    const matchesSearch =
+      !query ||
+      service.name.toLowerCase().includes(query) ||
+      service.category?.toLowerCase().includes(query) ||
+      (Array.isArray(service.aliases) &&
+        service.aliases.some((a: string) => a.toLowerCase().includes(query)))
+
+    const matchesCategory =
+      selectedFilterCategory === 'all' ||
+      service.category?.toLowerCase() === selectedFilterCategory
+
     return matchesSearch && matchesCategory
   })
 

@@ -11,6 +11,10 @@ export type SubscriptionCategory =
   | 'Gaming'
   | 'Utilities'
   | 'Home Services'
+  | 'Finance'
+  | 'Shopping'
+  | 'Education'
+  | 'Security'
   | 'Other'
   | string // Allow custom categories
 

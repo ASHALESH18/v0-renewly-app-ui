@@ -811,6 +811,71 @@ const brandMap: Record<string, BrandConfig> = {
     color: '#EF4F5F',
     textColor: '#FFFFFF',
   },
+
+  // Catalog aliases mapped to existing brand icons
+  'amazon prime video': {
+    name: 'amazon prime video',
+    displayName: 'Amazon Prime Video',
+    icon: <AmazonIcon />,
+    color: '#00A8E1',
+    textColor: '#FFFFFF',
+  },
+  'amazon music': {
+    name: 'amazon music',
+    displayName: 'Amazon Music',
+    icon: <AmazonIcon />,
+    color: '#00A8E1',
+    textColor: '#FFFFFF',
+  },
+  audible: {
+    name: 'audible',
+    displayName: 'Audible',
+    icon: <AmazonIcon />,
+    color: '#F8991C',
+    textColor: '#FFFFFF',
+  },
+  'kindle unlimited': {
+    name: 'kindle unlimited',
+    displayName: 'Kindle Unlimited',
+    icon: <AmazonIcon />,
+    color: '#232F3E',
+    textColor: '#FFFFFF',
+  },
+  max: {
+    name: 'max',
+    displayName: 'Max',
+    icon: <HBOIcon />,
+    color: '#0046FE',
+    textColor: '#FFFFFF',
+  },
+  'apple tv plus': {
+    name: 'apple tv plus',
+    displayName: 'Apple TV+',
+    icon: <AppleIcon />,
+    color: '#000000',
+    textColor: '#FFFFFF',
+  },
+  'microsoft copilot': {
+    name: 'microsoft copilot',
+    displayName: 'Microsoft Copilot',
+    icon: <MicrosoftIcon />,
+    color: '#0078D4',
+    textColor: '#FFFFFF',
+  },
+  copilot: {
+    name: 'copilot',
+    displayName: 'Microsoft Copilot',
+    icon: <MicrosoftIcon />,
+    color: '#0078D4',
+    textColor: '#FFFFFF',
+  },
+  gitlab: {
+    name: 'gitlab',
+    displayName: 'GitLab',
+    icon: <GitHubIcon />,
+    color: '#FC6D26',
+    textColor: '#FFFFFF',
+  },
 }
 
 /**
