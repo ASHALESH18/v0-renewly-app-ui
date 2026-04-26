@@ -63,13 +63,13 @@ type AddSubscriptionResult = {
 }
 
 export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProps) {
-  const [step, setStep] = useState<'select' | 'category-services' | 'details'>('select')
+  const [step, setStep] = useState<'select' | 'details'>('select')
   const [searchQuery, setSearchQuery] = useState('')
-  const [browseCategoryId, setBrowseCategoryId] = useState<string | null>(null)
+  const [selectedFilterCategory, setSelectedFilterCategory] = useState<string>('all')
   const { popularServices } = usePopularServices()
   const [selectedService, setSelectedService] = useState<any | null>(null)
   const [customName, setCustomName] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<SubscriptionCategory>('Entertainment')
+  const [selectedCategory, setSelectedCategory] = useState<SubscriptionCategory>('Other')
   const [selectedCycle, setSelectedCycle] = useState<BillingCycle>('monthly')
   const [amount, setAmount] = useState('')
   const [currency, setCurrency] = useState('INR')
@@ -102,27 +102,30 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
 
   const currencySymbol = currencySymbolMap[currency] || currency
 
-  const filteredServices = popularServices.filter((service) =>
-    service.name.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  // Filter services by search and selected category
+  const filteredServices = popularServices.filter((service) => {
+    const matchesSearch = service.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesCategory = selectedFilterCategory === 'all' || 
+      service.category.toLowerCase() === selectedFilterCategory ||
+      (selectedFilterCategory === 'entertainment' &&
+        (service.category === 'entertainment' ||
+          service.category === 'streaming' ||
+          service.category === 'gaming'))
+    return matchesSearch && matchesCategory
+  })
 
   const resetFormState = () => {
     setStep('select')
     setSearchQuery('')
-    setBrowseCategoryId(null)
+    setSelectedFilterCategory('all')
     setSelectedService(null)
     setCustomName('')
-    setSelectedCategory('Entertainment')
+    setSelectedCategory('Other')
     setSelectedCycle('monthly')
     setAmount('')
     setCurrency(defaultCurrency)
     setNextBilling('')
     setDescription('')
-  }
-
-  const handleBrowseCategory = (categoryId: string) => {
-    setBrowseCategoryId(categoryId)
-    setStep('category-services')
   }
 
   const handleSelectService = (service: any) => {
@@ -137,6 +140,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
 
   const handleCreateCustom = () => {
     setSelectedService(null)
+    setSelectedCategory('Other')
     setCurrency(defaultCurrency)
     setDescription('')
     setStep('details')
@@ -230,15 +234,9 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
 
               <div className="flex items-center justify-between px-4 pb-4">
                 <div className="flex items-center gap-3">
-                  {(step === 'details' || step === 'category-services') && (
+                  {step === 'details' && (
                     <button
-                      onClick={() => {
-                        if (step === 'details' && browseCategoryId) {
-                          setStep('category-services')
-                        } else {
-                          setStep('select')
-                        }
-                      }}
+                      onClick={() => setStep('select')}
                       className="p-2 -ml-2 rounded-full hover:bg-secondary/50 transition-colors"
                     >
                       <ChevronRight className="w-5 h-5 text-muted-foreground rotate-180" />
@@ -247,9 +245,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                   <h2 className="text-xl font-semibold text-foreground">
                     {step === 'select'
                       ? 'Add Subscription'
-                      : step === 'category-services'
-                        ? 'Browse Services'
-                        : 'Subscription Details'}
+                      : 'Subscription Details'}
                   </h2>
                 </div>
                 <button
@@ -275,60 +271,80 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                         <Input
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder="Search services..."
+                          placeholder="Search subscriptions, apps, services…"
                           className="pl-12 h-12 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground"
                         />
                       </div>
 
-                      <div className="mb-6">
-                        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                          Popular Services
-                        </h3>
-                        <div className="grid grid-cols-4 gap-3">
-                          {filteredServices.slice(0, 8).map((service) => (
-                            <motion.button
-                              key={service.id}
-                              whileTap={{ scale: 0.95 }}
-                              whileHover={{ scale: 1.02 }}
-                              onClick={() => handleSelectService(service)}
-                              className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-secondary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50 focus:ring-offset-2 focus:ring-offset-background"
-                            >
-                              <SubscriptionIcon
-                                name={service.name}
-                                fallbackColor={service.color}
-                                size="lg"
-                              />
-                              <span className="text-xs text-foreground text-center truncate w-full">
-                                {service.name}
-                              </span>
-                            </motion.button>
-                          ))}
-                        </div>
+                      {/* Compact Category Filter - Chips */}
+                      <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
+                        {[
+                          { id: 'all', label: 'All' },
+                          { id: 'entertainment', label: 'Entertainment' },
+                          { id: 'music', label: 'Music' },
+                          { id: 'productivity', label: 'Productivity' },
+                          { id: 'cloud', label: 'Storage' },
+                          { id: 'fitness', label: 'Fitness' },
+                          { id: 'news', label: 'News' },
+                          { id: 'other', label: 'Other' },
+                        ].map((cat) => (
+                          <motion.button
+                            key={cat.id}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setSelectedFilterCategory(cat.id)}
+                            className={cn(
+                              'px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all',
+                              selectedFilterCategory === cat.id
+                                ? 'bg-gold text-obsidian'
+                                : 'bg-secondary text-foreground hover:bg-secondary/80'
+                            )}
+                          >
+                            {cat.label}
+                          </motion.button>
+                        ))}
                       </div>
 
                       <div className="mb-6">
                         <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                          Browse by Category
+                          {selectedFilterCategory === 'all' ? 'Popular Services' : 'Services'}
                         </h3>
-                        <div className="grid grid-cols-2 gap-3">
-                          {categories.map((category) => {
-                            const IconComponent = category.icon
-                            return (
+                        {filteredServices.length > 0 ? (
+                          <div className="grid grid-cols-4 gap-3">
+                            {filteredServices.slice(0, 12).map((service) => (
                               <motion.button
-                                key={category.id}
-                                whileTap={{ scale: 0.98 }}
+                                key={service.id}
+                                whileTap={{ scale: 0.95 }}
                                 whileHover={{ scale: 1.02 }}
-                                onClick={() => handleBrowseCategory(category.id)}
-                                className="flex items-center gap-3 p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50 focus:ring-offset-2 focus:ring-offset-background"
+                                onClick={() => handleSelectService(service)}
+                                className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-secondary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50 focus:ring-offset-2 focus:ring-offset-background"
                               >
-                                <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">
-                                  <IconComponent className="w-5 h-5 text-gold" />
-                                </div>
-                                <span className="text-foreground font-medium">{category.label}</span>
+                                <SubscriptionIcon
+                                  name={service.name}
+                                  fallbackColor={service.color}
+                                  size="lg"
+                                />
+                                <span className="text-xs text-foreground text-center truncate w-full">
+                                  {service.name}
+                                </span>
                               </motion.button>
-                            )
-                          })}
-                        </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="py-8 text-center">
+                            <p className="text-sm text-muted-foreground mb-3">
+                              No services found in {selectedFilterCategory === 'all' ? 'this category' : categories.find(c => c.id === selectedFilterCategory)?.label}
+                            </p>
+                            <motion.button
+                              whileTap={{ scale: 0.98 }}
+                              whileHover={{ scale: 1.02 }}
+                              onClick={handleCreateCustom}
+                              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/5 transition-colors cursor-pointer"
+                            >
+                              <Plus className="w-4 h-4" />
+                              <span className="text-sm font-medium">Add as custom</span>
+                            </motion.button>
+                          </div>
+                        )}
                       </div>
 
                       <motion.button
@@ -340,53 +356,9 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                         <Plus className="w-5 h-5" />
                         <span className="font-medium">Add Custom Subscription</span>
                       </motion.button>
-                    </motion.div>
-                  ) : step === 'category-services' ? (
-                    <motion.div
-                      key="category-services"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      className="px-4 pb-8"
-                    >
-                      {browseCategoryId && (
-                        <div>
-                          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
-                            {categories.find((c) => c.id === browseCategoryId)?.label || 'Services'}
-                          </h3>
-                          <div className="grid grid-cols-4 gap-3">
-                            {popularServices
-                              .filter((service) =>
-                                service.category === browseCategoryId ||
-                                (browseCategoryId === 'entertainment' &&
-                                  (service.category === 'entertainment' ||
-                                    service.category === 'streaming' ||
-                                    service.category === 'gaming'))
-                              )
-                              .map((service) => (
-                                <motion.button
-                                  key={service.id}
-                                  whileTap={{ scale: 0.95 }}
-                                  whileHover={{ scale: 1.02 }}
-                                  onClick={() => handleSelectService(service)}
-                                  className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-secondary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50 focus:ring-offset-2 focus:ring-offset-background"
-                                >
-                                  <SubscriptionIcon
-                                    name={service.name}
-                                    fallbackColor={service.color}
-                                    size="lg"
-                                  />
-                                  <span className="text-xs text-foreground text-center truncate w-full">
-                                    {service.name}
-                                  </span>
-                                </motion.button>
-                              ))}
-                          </div>
-                        </div>
-                      )}
-                    </motion.div>
-                  ) : (
-                    <motion.div
+                      </motion.div>
+                    ) : (
+                      <motion.div
                       key="details"
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -491,6 +463,34 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                         placeholder="Select renewal date"
                       />
 
+                      {/* Category Field - Now for all subscriptions */}
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                          Category
+                        </label>
+                        <div className="grid grid-cols-4 gap-2">
+                          {categories.map((cat) => {
+                            const mappedCategory = categoryMap[cat.id] || 'Other'
+                            const IconComponent = cat.icon
+                            return (
+                              <button
+                                key={cat.id}
+                                onClick={() => setSelectedCategory(mappedCategory as SubscriptionCategory)}
+                                className={cn(
+                                  "py-3 rounded-xl text-sm font-medium transition-all flex flex-col items-center gap-1",
+                                  selectedCategory === mappedCategory
+                                    ? "bg-gold text-obsidian"
+                                    : "bg-secondary text-muted-foreground hover:text-foreground"
+                                )}
+                              >
+                                <IconComponent className="w-5 h-5" />
+                                <span className="text-xs text-center leading-tight">{cat.label}</span>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-muted-foreground mb-2 block">
                           Notes
@@ -503,35 +503,6 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                           className="w-full px-4 py-3 rounded-xl bg-secondary border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors resize-none"
                         />
                       </div>
-
-                      {!selectedService && (
-                        <div>
-                          <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                            Category
-                          </label>
-                          <div className="grid grid-cols-4 gap-2">
-                            {categories.slice(0, 4).map((cat) => {
-                              const mappedCategory = categoryMap[cat.id] || 'Other'
-                              const IconComponent = cat.icon
-                              return (
-                                <button
-                                  key={cat.id}
-                                  onClick={() => setSelectedCategory(mappedCategory)}
-                                  className={cn(
-                                    "py-3 rounded-xl text-sm font-medium transition-all flex flex-col items-center gap-1",
-                                    selectedCategory === mappedCategory
-                                      ? "bg-gold text-obsidian"
-                                      : "bg-secondary text-muted-foreground hover:text-foreground"
-                                  )}
-                                >
-                                  <IconComponent className="w-5 h-5" />
-                                  <span className="text-xs">{cat.label}</span>
-                                </button>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      )}
 
                       <Button
                         onClick={handleSave}
