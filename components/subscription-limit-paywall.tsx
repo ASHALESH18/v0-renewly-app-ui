@@ -7,30 +7,33 @@ import { Zap } from 'lucide-react'
 import { PremiumModal, PremiumBottomSheet } from '@/components/premium-modal'
 import { durations, easings } from '@/components/motion'
 import { getPricingForPaywall } from '@/lib/pricing-display'
+import useStore from '@/lib/store'
+import type { PlanCurrency } from '@/lib/plans'
 
 interface SubscriptionLimitPaywallProps {
   isOpen: boolean
   onClose: () => void
   current?: number
   limit?: number
-  userCurrency?: string
 }
 
 /**
  * Premium paywall for subscription limit reached (Free plan → Pro upgrade)
  * Desktop: modal, Mobile: bottom sheet
  * Shows starting price, value proposition, and strong CTAs
+ * Uses user's selected currency from settings
  */
 export function SubscriptionLimitPaywall({
   isOpen,
   onClose,
   current = 2,
   limit = 2,
-  userCurrency = 'INR',
 }: SubscriptionLimitPaywallProps) {
   const router = useRouter()
   const [isMobile, setIsMobile] = useState(false)
-  const pricing = getPricingForPaywall(userCurrency)
+  const notificationSettings = useStore((state) => state.notificationSettings)
+  const userCurrency = (notificationSettings?.currencyCode || 'INR') as PlanCurrency
+  const pricing = getPricingForPaywall('pro', userCurrency)
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -68,16 +71,17 @@ export function SubscriptionLimitPaywall({
           Pro Plan starts at
         </p>
         <p className="text-3xl md:text-4xl font-bold text-foreground">
-          {pricing.symbol}{pricing.amount}
-          <span className="text-lg font-normal text-muted-foreground ml-2">
-            /{pricing.period}
-          </span>
+          {pricing.symbol}{pricing.amount !== null ? pricing.amount.toLocaleString('en-US', { maximumFractionDigits: 2 }) : 'Custom'}
+          {pricing.amount !== null && (
+            <span className="text-lg font-normal text-muted-foreground ml-2">
+              /{pricing.period}
+            </span>
+          )}
         </p>
       </motion.div>
 
       {/* Usage indicator - minimal */}
       <div className="p-3 rounded-lg bg-muted/40 border border-border/50">
-        <p className="text-xs text-muted-foreground">
           <span className="font-semibold text-foreground">{current} / {limit}</span> subscriptions used on Free plan
         </p>
       </div>

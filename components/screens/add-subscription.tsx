@@ -107,6 +107,11 @@ type AddSubscriptionResult = {
 }
 
 export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProps) {
+  const notificationSettings = useStore((state) => state.notificationSettings)
+  
+  // Use user's preferred currency from settings, fallback to INR
+  const defaultCurrency = notificationSettings?.currencyCode || 'INR'
+  
   const [step, setStep] = useState<'select' | 'details'>('select')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilterCategory, setSelectedFilterCategory] = useState<string>('all')
@@ -117,7 +122,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
   const [customCategory, setCustomCategory] = useState('') // Store custom category text
   const [selectedCycle, setSelectedCycle] = useState<BillingCycle>('monthly')
   const [amount, setAmount] = useState('')
-  const [currency, setCurrency] = useState('INR')
+  const [currency, setCurrency] = useState(defaultCurrency)
   const [nextBilling, setNextBilling] = useState('')
   const [description, setDescription] = useState('')
   const [validationErrors, setValidationErrors] = useState<SubscriptionValidationErrors>({})
@@ -136,10 +141,6 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
   const closeSubscriptionLimitPaywall = useStore((state) => state.closeSubscriptionLimitPaywall)
   const subscriptionLimitPaywallOpen = useStore((state) => state.subscriptionLimitPaywallOpen)
   const subscriptionLimitPaywallData = useStore((state) => state.subscriptionLimitPaywallData)
-  const notificationSettings = useStore((state) => state.notificationSettings)
-
-  // Use user's preferred currency from settings, fallback to INR
-  const defaultCurrency = notificationSettings?.currencyCode || 'INR'
 
   const currencySymbolMap: Record<string, string> = {
     INR: '₹',

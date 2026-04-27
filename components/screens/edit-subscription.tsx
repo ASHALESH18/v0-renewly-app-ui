@@ -98,12 +98,15 @@ type EditSubscriptionResult = {
 }
 
 export function EditSubscriptionModal({ open, onClose, subscription }: EditSubscriptionModalProps) {
+  const notificationSettings = useStore((state) => state.notificationSettings)
+  const defaultCurrency = notificationSettings?.currencyCode || 'INR'
+  
   const [name, setName] = useState('')
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('other')
   const [customCategory, setCustomCategory] = useState('')
   const [selectedCycle, setSelectedCycle] = useState<BillingCycle>('monthly')
   const [amount, setAmount] = useState('')
-  const [currency, setCurrency] = useState('INR')
+  const [currency, setCurrency] = useState(defaultCurrency)
   const [nextBilling, setNextBilling] = useState('')
   const [description, setDescription] = useState('')
   const [validationErrors, setValidationErrors] = useState<SubscriptionValidationErrors>({})
@@ -127,7 +130,7 @@ export function EditSubscriptionModal({ open, onClose, subscription }: EditSubsc
       // Determine if category is a known canonical category or custom
       const knownCategories = [
         'Streaming', 'Music', 'Productivity', 'Cloud & Storage', 'AI & Tools',
-        'Fitness', 'News & Media', 'Gaming', 'Utilities', 'Services', 'Home Services',
+        'Fitness', 'News & Media', 'Gaming', 'Utilities', 'Services',
         'Finance', 'Shopping', 'Education', 'Security', 'Other',
       ]
       const isKnownCategory = knownCategories.includes(subscription.category)
@@ -145,12 +148,13 @@ export function EditSubscriptionModal({ open, onClose, subscription }: EditSubsc
 
       setSelectedCycle(subscription.billingCycle as BillingCycle)
       setAmount(subscription.amount.toString())
-      setCurrency(subscription.currency || 'INR')
+      // Preserve subscription's currency if it exists, otherwise use app default
+      setCurrency(subscription.currency || defaultCurrency)
       setNextBilling(subscription.renewalDate || '')
       setDescription(subscription.description || '')
       setValidationErrors({})
     }
-  }, [subscription, open])
+  }, [subscription, open, defaultCurrency])
 
   const currencySymbolMap: Record<string, string> = {
     INR: '₹',
