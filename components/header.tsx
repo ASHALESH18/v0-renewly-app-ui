@@ -219,7 +219,7 @@ export function Header({
 
         <div className="flex items-center gap-2">
           {showSearch && (
-            <HeaderButton onClick={onSearchClick}>
+            <HeaderButton onClick={onSearchClick} ariaLabel="Open search">
               <Search className="w-5 h-5" />
             </HeaderButton>
           )}
@@ -409,14 +409,16 @@ interface HeaderButtonProps {
   children: React.ReactNode
   onClick?: () => void
   badge?: number
+  ariaLabel?: string
 }
 
-function HeaderButton({ children, onClick, badge }: HeaderButtonProps) {
+function HeaderButton({ children, onClick, badge, ariaLabel }: HeaderButtonProps) {
   return (
     <motion.button
       whileHover={{ scale: 1.08, y: -2 }}
       whileTap={{ scale: 0.92 }}
       onClick={onClick}
+      aria-label={ariaLabel}
       className="relative w-11 h-11 rounded-2xl border border-gold/20 bg-[radial-gradient(circle_at_top,rgba(199,163,106,0.15),rgba(255,255,255,0.03))] flex items-center justify-center text-foreground/80 hover:text-gold hover:border-gold/40 hover:bg-gold/15 hover:shadow-[0_8px_24px_-8px_rgba(199,163,106,0.25)] transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50 group"
     >
       {/* Glow effect on hover */}
@@ -444,6 +446,19 @@ export function SearchOverlay({
   searchQuery,
   onSearchChange,
 }: SearchOverlayProps) {
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
 
   return (
@@ -451,9 +466,10 @@ export function SearchOverlay({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      onClick={onClose}
       className="fixed inset-0 z-50 bg-background/95 backdrop-blur-xl"
     >
-      <div className="p-4">
+      <div className="p-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-3">
           <div className="flex-1 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
