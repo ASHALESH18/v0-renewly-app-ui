@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { BottomNav, SidebarNav } from '@/components/bottom-nav'
 import { AddSubscriptionSheet } from '@/components/screens/add-subscription'
 import { SubscriptionDetailSheet } from '@/components/screens/subscription-detail'
+import { BrowserPushOnboarding } from '@/components/browser-push-onboarding'
 import { CinematicPageTransition } from '@/components/motion'
 import useStore from '@/lib/store'
 import { createClient } from '@/lib/supabase/client'
@@ -206,6 +207,9 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
           setSelectedSubscription(null)
         }}
       />
+
+      {/* Browser push onboarding popup */}
+      <BrowserPushOnboarding />
     </div>
   )
 }

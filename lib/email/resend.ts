@@ -5,7 +5,9 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Renewly <noreply@renewly.app>'
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Renewly <contact@renewly.in>'
+const REPLY_TO_EMAIL = 'contact@renewly.in'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.renewly.in'
 
 /**
  * Helper to format subscription amount with currency symbol
@@ -31,15 +33,17 @@ export async function sendPasswordChangedEmail(
 ): Promise<{ success: boolean; error?: string }> {
   if (!resend) {
     console.log('[v0] Resend not configured, skipping password change email')
-    return { success: true } // Graceful degradation
+    return { success: false, error: 'Email service not configured' }
   }
 
   try {
     const { error } = await resend.emails.send({
       from: FROM_EMAIL,
+      replyTo: REPLY_TO_EMAIL,
       to,
       subject: 'Your Renewly password was changed',
       html: passwordChangedTemplate(userName),
+      text: `Hi ${userName},\n\nYour password was recently changed. If this wasn't you, please reset your password immediately.\n\nRenewly Team`,
     })
 
     if (error) {
@@ -65,7 +69,7 @@ export async function sendSecurityAlertEmail(
 ): Promise<{ success: boolean; error?: string }> {
   if (!resend) {
     console.log('[v0] Resend not configured, skipping security alert email')
-    return { success: true }
+    return { success: false, error: 'Email service not configured' }
   }
 
   const subjects: Record<typeof alertType, string> = {
@@ -78,9 +82,11 @@ export async function sendSecurityAlertEmail(
   try {
     const { error } = await resend.emails.send({
       from: FROM_EMAIL,
+      replyTo: REPLY_TO_EMAIL,
       to,
       subject: subjects[alertType],
       html: securityAlertTemplate(userName, alertType, metadata),
+      text: securityAlertTextTemplate(userName, alertType, metadata),
     })
 
     if (error) {
@@ -110,9 +116,11 @@ export async function sendEmailVerificationCode(
   try {
     const { error } = await resend.emails.send({
       from: FROM_EMAIL,
+      replyTo: REPLY_TO_EMAIL,
       to,
       subject: `${code} is your Renewly verification code`,
       html: emailVerificationTemplate(code),
+      text: `Your verification code is: ${code}`,
     })
 
     if (error) {
@@ -136,15 +144,17 @@ export async function sendWelcomeEmail(
 ): Promise<{ success: boolean; error?: string }> {
   if (!resend) {
     console.log('[v0] Resend not configured, skipping welcome email')
-    return { success: true } // Graceful degradation
+    return { success: false, error: 'Email service not configured' }
   }
 
   try {
     const { error } = await resend.emails.send({
       from: FROM_EMAIL,
+      replyTo: REPLY_TO_EMAIL,
       to,
       subject: 'Welcome to Renewly',
       html: welcomeTemplate(userName),
+      text: welcomeTemplateText(userName),
     })
 
     if (error) {
@@ -167,19 +177,22 @@ export async function sendSubscriptionReminderEmail(
   userName: string,
   subscriptionName: string,
   renewalDate: string,
-  amount: string
+  amount: string,
+  billingCycle?: string
 ): Promise<{ success: boolean; error?: string }> {
   if (!resend) {
     console.log('[v0] Resend not configured, skipping reminder email')
-    return { success: true }
+    return { success: false, error: 'Email service not configured' }
   }
 
   try {
     const { error } = await resend.emails.send({
       from: FROM_EMAIL,
+      replyTo: REPLY_TO_EMAIL,
       to,
-      subject: `Reminder: ${subscriptionName} renews on ${renewalDate}`,
-      html: subscriptionReminderTemplate(userName, subscriptionName, renewalDate, amount),
+      subject: `Renewal reminder: ${subscriptionName} renews soon`,
+      html: subscriptionReminderTemplate(userName, subscriptionName, renewalDate, amount, billingCycle),
+      text: subscriptionReminderTextTemplate(subscriptionName, renewalDate, amount, billingCycle),
     })
 
     if (error) {
@@ -190,6 +203,48 @@ export async function sendSubscriptionReminderEmail(
     return { success: true }
   } catch (err) {
     console.error('[v0] Failed to send reminder email:', err)
+    return { success: false, error: (err as Error).message }
+  }
+}
+
+/**
+ * Send weekly summary email
+ */
+export async function sendWeeklySummaryEmail(
+  to: string,
+  userName: string,
+  summaryData: {
+    monthlySpend: string
+    activeSubscriptionCount: number
+    upcomingRenewals7Days: number
+    upcomingRenewals30Days: number
+    potentialSavings: string
+    topCategory: string
+  }
+): Promise<{ success: boolean; error?: string }> {
+  if (!resend) {
+    console.log('[v0] Resend not configured, skipping weekly summary email')
+    return { success: false, error: 'Email service not configured' }
+  }
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      replyTo: REPLY_TO_EMAIL,
+      to,
+      subject: 'Your weekly Renewly summary',
+      html: weeklySummaryTemplate(userName, summaryData),
+      text: weeklySummaryTextTemplate(summaryData),
+    })
+
+    if (error) {
+      console.error('[v0] Resend error:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error('[v0] Failed to send weekly summary email:', err)
     return { success: false, error: (err as Error).message }
   }
 }
