@@ -100,20 +100,25 @@ export function formatCurrencyAmount(
   const absValue = Math.abs(Number(value) || 0)
   const maximumFractionDigits =
     options.maximumFractionDigits ?? (absValue >= 100 || code === 'INR' ? 0 : currencyFractionDigits(code))
+  const symbol = getCurrencySymbol(code)
+  const numericValue = Number(value) || 0
 
   try {
-    return new Intl.NumberFormat(getLocaleForCurrency(code, language), {
-      style: 'currency',
-      currency: code,
-      currencyDisplay: 'narrowSymbol',
+    // Use Intl.NumberFormat only for number formatting (no currency symbol)
+    const formatted = new Intl.NumberFormat(getLocaleForCurrency(code, language), {
       notation: options.compact ? 'compact' : 'standard',
       minimumFractionDigits: 0,
       maximumFractionDigits,
-    }).format(Number(value) || 0)
+    }).format(numericValue)
+
+    // Always prefix with our custom symbol to ensure consistent display
+    return `${symbol}${formatted}`
   } catch {
-    return `${getCurrencySymbol(code)}${(Number(value) || 0).toLocaleString('en-US', {
+    // Fallback: manual formatting if Intl fails
+    const formatted = (numericValue).toLocaleString('en-US', {
       maximumFractionDigits,
-    })}`
+    })
+    return `${symbol}${formatted}`
   }
 }
 
