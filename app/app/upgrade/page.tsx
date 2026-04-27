@@ -109,10 +109,7 @@ function UpgradeContent() {
     [plans, selectedPlanId]
   )
 
-  const selectedPricing = getPlanPricing(selectedPlan.id, selectedCurrency)
   const inrPricing = getPlanPricing(selectedPlan.id, 'INR')
-  const selectedOriginal = getOriginalPrice(selectedPlan, selectedCurrency)
-  const selectedSavings = getSavings(selectedPlan, selectedCurrency)
   const canUseRazorpay = billingStatus.configured && inrPricing && inrPricing.amount !== null
 
   const handleSelectPlan = (planId: string) => {
@@ -383,7 +380,7 @@ function UpgradeContent() {
 
         <div className="rounded-2xl border border-gold/20 bg-gold/8 p-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
+            <div className="flex-1">
               <p className="text-sm text-muted-foreground">Selected plan</p>
               <p className="text-xl font-semibold text-foreground">{selectedPlan.name}</p>
               <div className="mt-2 space-y-1">
@@ -396,9 +393,8 @@ function UpgradeContent() {
                   </p>
                 )}
               </div>
-            </div>
               {!canUseRazorpay && selectedPlanId !== 'enterprise' && (
-                <p className="mt-2 flex items-center gap-2 text-sm text-orange-500">
+                <p className="mt-3 flex items-center gap-2 text-sm text-orange-500">
                   <AlertCircle className="h-4 w-4" />
                   Razorpay keys are not configured yet.
                 </p>
