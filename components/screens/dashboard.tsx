@@ -277,8 +277,10 @@ export function DashboardScreen({
                 </div>
               </div>
               <motion.button
+                onClick={() => onNavigateTab?.('leak-report')}
                 whileHover={{ scale: 1.02, x: 2 }}
                 whileTap={{ scale: 0.98 }}
+                aria-label="View subscription leak report"
                 className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-gold/10 text-gold text-sm font-medium border border-gold/20 hover:bg-gold/15 transition-colors cursor-pointer"
               >
                 View Report
@@ -330,7 +332,7 @@ export function DashboardScreen({
             initial={{ opacity: 0, y: 24 }}
             transition={{ duration: 0.65, ease: 'easeOut' }}
             whileHover={{ y: -2, boxShadow: '0 20px 40px -12px rgba(199, 163, 106, 0.15)' }}
-            className="relative rounded-2xl overflow-hidden cursor-pointer group"
+            className="relative rounded-2xl overflow-hidden group"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-gold/8 via-card to-emerald/5 dark:from-gold/10 dark:via-graphite dark:to-emerald/5" />
 
@@ -439,7 +441,10 @@ export function DashboardScreen({
               <h2 className="text-lg font-semibold text-foreground">
                 Upcoming Renewals
               </h2>
-              <button className="text-sm text-gold font-medium cursor-pointer hover:text-gold/80 transition-colors">
+              <button 
+                onClick={() => onNavigateTab?.('calendar')}
+                className="text-sm text-gold font-medium cursor-pointer hover:text-gold/80 transition-colors"
+              >
                 View all
               </button>
             </div>
