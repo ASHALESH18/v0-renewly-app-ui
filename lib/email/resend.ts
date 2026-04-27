@@ -7,6 +7,7 @@ const resend = process.env.RESEND_API_KEY
 
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Renewly <contact@renewly.in>'
 const REPLY_TO_EMAIL = 'contact@renewly.in'
+const CONTACT_INBOX_EMAIL = process.env.CONTACT_INBOX_EMAIL || 'contact@renewly.in'
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.renewly.in'
 
 /**
@@ -430,6 +431,8 @@ function weeklySummaryTemplate(
 </html>
 `
 }
+
+function welcomeTemplate(userName: string): string {
   const appStoreUrl = process.env.NEXT_PUBLIC_APP_STORE_URL
   const playStoreUrl = process.env.NEXT_PUBLIC_PLAY_STORE_URL
   const hasRatingButtons = appStoreUrl || playStoreUrl
