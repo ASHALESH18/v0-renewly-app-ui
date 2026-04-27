@@ -290,7 +290,12 @@ export function SettingsScreen() {
 
   // Toggle handlers that properly await async store updates
   const handleTogglePushNotifications = async () => {
-    await updateNotificationSettings({ pushNotifications: !notificationSettings.pushNotifications })
+    // Push notifications not yet configured - show info message instead
+    addToast({
+      type: 'info',
+      title: 'Push notifications coming soon',
+      message: 'Push notifications are not yet configured. Email reminders are available now.',
+    })
   }
 
   const handleToggleEmailNotifications = async () => {
@@ -380,8 +385,9 @@ export function SettingsScreen() {
           <SettingsToggle
             icon={Bell}
             label="Push Notifications"
-            description="Renewal reminders"
-            checked={notificationSettings.pushNotifications}
+            description="Coming soon"
+            checked={false}
+            disabled={true}
             onToggle={handleTogglePushNotifications}
           />
           <SettingsToggle
@@ -415,8 +421,15 @@ export function SettingsScreen() {
           <SettingsItem
             icon={Smartphone}
             label="Phone Number"
-            description="Add your phone number"
-            onClick={() => setActiveSheet('phone')}
+            description="Coming soon"
+            onClick={() => {
+              addToast({
+                type: 'info',
+                title: 'Phone reminders coming soon',
+                message: 'Phone number settings are not available yet. Email reminders are working now.',
+              })
+            }}
+            disabled={true}
           />
           <BiometricSettingsItem />
         </SettingsSection>
@@ -904,20 +917,28 @@ function SettingsToggle({
   description,
   checked,
   onToggle,
+  disabled = false,
 }: {
   icon: React.ElementType
   label: string
   description?: string
   checked: boolean
   onToggle: () => void | Promise<void>
+  disabled?: boolean
 }) {
   return (
     <button
       type="button"
+      disabled={disabled}
       onClick={() => {
-        void onToggle()
+        if (!disabled) void onToggle()
       }}
-      className="w-full flex items-center gap-4 p-4 hover:bg-secondary/30 transition-colors text-left cursor-pointer"
+      className={cn(
+        "w-full flex items-center gap-4 p-4 transition-colors text-left",
+        disabled
+          ? "opacity-60 cursor-not-allowed bg-muted/10"
+          : "hover:bg-secondary/30 cursor-pointer"
+      )}
     >
       <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
         <Icon className="w-5 h-5 text-foreground" />

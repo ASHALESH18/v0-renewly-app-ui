@@ -2,6 +2,8 @@ import { getUser } from '@/lib/supabase/server'
 import { getProfile, ensureProfile } from '@/lib/supabase/repositories/profile'
 import { getUserSettings, ensureUserSettings } from '@/lib/supabase/repositories/settings'
 import { getUserSubscriptions, countUserSubscriptions } from '@/lib/supabase/repositories/subscriptions'
+import { sendWelcomeEmail } from '@/lib/email/resend'
+import { createClient } from '@supabase/supabase-js'
 
 /**
  * GET /api/hydrate-user-data
@@ -55,6 +57,35 @@ export async function POST(request: Request) {
 
     // Check if we should migrate local data (empty remote subscriptions)
     const shouldMigrate = subscriptions.length === 0
+
+    // Send welcome email if not already sent
+    if (profile && !profile.welcome_email_sent_at) {
+      try {
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+
+        // Try to send welcome email
+        const userName = email.split('@')[0]
+        const emailResult = await sendWelcomeEmail(email, userName)
+
+        if (emailResult.success) {
+          // Mark welcome email as sent
+          await supabase
+            .from('profiles')
+            .update({ welcome_email_sent_at: new Date().toISOString() })
+            .eq('id', userId)
+
+          console.log(`[v0] Welcome email sent to ${email}`)
+        } else {
+          console.warn(`[v0] Welcome email failed for ${email}: ${emailResult.error}`)
+        }
+      } catch (err) {
+        console.error('[v0] Error sending welcome email:', err)
+        // Don't fail the hydration if email fails - graceful degradation
+      }
+    }
 
     return Response.json({
       profile,

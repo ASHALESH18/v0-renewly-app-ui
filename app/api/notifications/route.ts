@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getUserSubscriptions } from '@/lib/supabase/repositories/subscriptions'
+import { formatCurrencyAmount } from '@/lib/currency'
 import type { NotificationStateRow, SubscriptionRow } from '@/lib/supabase/database.types'
 
 interface Notification {
@@ -54,6 +55,9 @@ function buildNotifications(subscriptions: SubscriptionRow[]): Notification[] {
       (renewalDate.getTime() - today.getTime()) / DAY_MS
     )
 
+    // Format the amount with currency
+    const formattedAmount = formatCurrencyAmount(sub.amount, sub.currency)
+
     // Generate notifications for upcoming renewals within 7 days
     if (daysUntilRenewal >= 0 && daysUntilRenewal <= 7) {
       if (daysUntilRenewal === 0) {
@@ -61,7 +65,7 @@ function buildNotifications(subscriptions: SubscriptionRow[]): Notification[] {
           id: `today-${sub.id}`,
           type: 'alert',
           title: 'Renewal Today',
-          message: `${sub.name} is being renewed today for ${sub.currency}${sub.amount}`,
+          message: `${sub.name} is being renewed today for ${formattedAmount}`,
           date: today.toISOString(),
           read: false,
           subscriptionId: sub.id,
@@ -71,7 +75,7 @@ function buildNotifications(subscriptions: SubscriptionRow[]): Notification[] {
           id: `reminder-1-${sub.id}`,
           type: 'alert',
           title: 'Renewal Tomorrow',
-          message: `${sub.name} renews tomorrow - ${sub.currency}${sub.amount} will be charged`,
+          message: `${sub.name} renews tomorrow - ${formattedAmount} will be charged`,
           date: today.toISOString(),
           read: false,
           subscriptionId: sub.id,
@@ -81,7 +85,7 @@ function buildNotifications(subscriptions: SubscriptionRow[]): Notification[] {
           id: `reminder-${daysUntilRenewal}-${sub.id}`,
           type: 'reminder',
           title: 'Upcoming Renewal',
-          message: `${sub.name} renews in ${daysUntilRenewal} days (${sub.currency}${sub.amount})`,
+          message: `${sub.name} renews in ${daysUntilRenewal} days (${formattedAmount})`,
           date: today.toISOString(),
           read: false,
           subscriptionId: sub.id,
@@ -92,7 +96,7 @@ function buildNotifications(subscriptions: SubscriptionRow[]): Notification[] {
           id: `upcoming-${daysUntilRenewal}-${sub.id}`,
           type: 'info',
           title: 'Upcoming Renewal',
-          message: `${sub.name} renews in ${daysUntilRenewal} days (${sub.currency}${sub.amount})`,
+          message: `${sub.name} renews in ${daysUntilRenewal} days (${formattedAmount})`,
           date: today.toISOString(),
           read: false,
           subscriptionId: sub.id,

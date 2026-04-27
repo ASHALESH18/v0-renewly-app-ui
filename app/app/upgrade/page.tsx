@@ -82,17 +82,26 @@ function UpgradeContent() {
   const initialPlan = plans.some((plan) => plan.id === requestedPlan) ? requestedPlan : 'pro'
   const [selectedPlanId, setSelectedPlanId] = useState<PaidPlanId>(initialPlan as PaidPlanId)
   const [step, setStep] = useState<UpgradeStep>(requestedPlan === 'enterprise' ? 'enterprise-contact' : 'select-plan')
-  const [qaOverrideEnabled, setQaOverrideEnabled] = useState(false)
+  const [qaStatus, setQaStatus] = useState<{ enabled: boolean; currentPlan: string | null; emailAllowed: boolean } | null>(null)
   const [qaLoading, setQaLoading] = useState(false)
 
   useEffect(() => {
     clearUpgradeIntent()
-    // Detect if QA override is enabled
-    const isDevOrPreview = process.env.NODE_ENV === 'development' || 
-                           (typeof window !== 'undefined' && 
-                            (window.location.hostname.includes('vercel.app') || 
-                             window.location.hostname.includes('localhost')))
-    setQaOverrideEnabled(isDevOrPreview)
+    
+    // Fetch QA status from server
+    const fetchQaStatus = async () => {
+      try {
+        const res = await fetch('/api/qa/plan-override/status')
+        if (res.ok) {
+          const data = await res.json()
+          setQaStatus(data)
+        }
+      } catch (err) {
+        console.error('[v0] Failed to fetch QA status:', err)
+      }
+    }
+    
+    fetchQaStatus()
   }, [])
 
   const selectedPlan = useMemo(
@@ -101,9 +110,10 @@ function UpgradeContent() {
   )
 
   const selectedPricing = getPlanPricing(selectedPlan.id, selectedCurrency)
+  const inrPricing = getPlanPricing(selectedPlan.id, 'INR')
   const selectedOriginal = getOriginalPrice(selectedPlan, selectedCurrency)
   const selectedSavings = getSavings(selectedPlan, selectedCurrency)
-  const canUseRazorpay = selectedCurrency === 'INR' && billingStatus.configured
+  const canUseRazorpay = billingStatus.configured && inrPricing && inrPricing.amount !== null
 
   const handleSelectPlan = (planId: string) => {
     const id = planId as PaidPlanId
@@ -121,29 +131,21 @@ function UpgradeContent() {
       return
     }
 
-    if (!canUseRazorpay) {
-      if (selectedCurrency !== 'INR') {
-        addToast({
-          type: 'info',
-          title: 'Checkout available in INR only',
-          message:
-            'Checkout is currently available in INR only. You can still test premium access using QA mode in preview.',
-        })
-      } else if (!billingStatus.configured) {
-        addToast({
-          type: 'info',
-          title: 'Payment not configured',
-          message:
-            'Razorpay test/live keys are not configured yet. Please check back soon.',
-        })
-      } else {
-        addToast({
-          type: 'info',
-          title: 'Payment setup in progress',
-          message:
-            'Payment system is being configured. Please check back soon.',
-        })
-      }
+    if (!billingStatus.configured) {
+      addToast({
+        type: 'info',
+        title: 'Payment not configured',
+        message: 'Razorpay keys are not configured yet. Please check back soon.',
+      })
+      return
+    }
+
+    if (!inrPricing || inrPricing.amount === null) {
+      addToast({
+        type: 'info',
+        title: 'Plan not available',
+        message: 'This plan is not available for checkout right now. Please try again later.',
+      })
       return
     }
 
@@ -321,7 +323,7 @@ function UpgradeContent() {
           })}
         </div>
 
-        {qaOverrideEnabled && (
+        {qaStatus?.enabled && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -336,14 +338,14 @@ function UpgradeContent() {
               </span>
             </div>
             <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
-              Current plan: <span className="font-semibold capitalize">{currentPlan}</span>
+              Current plan: <span className="font-semibold capitalize">{qaStatus.currentPlan || 'unknown'}</span>
             </p>
             <div className="flex flex-wrap gap-2">
               {['free', 'pro', 'family'].map((plan) => (
                 <button
                   key={plan}
                   onClick={() => handleQaPlanOverride(plan as 'free' | 'pro' | 'family')}
-                  disabled={qaLoading || currentPlan === plan}
+                  disabled={qaLoading || qaStatus.currentPlan === plan}
                   className="text-sm px-3 py-1.5 rounded-lg bg-amber-400/20 text-amber-700 hover:bg-amber-400/40 dark:bg-amber-900/40 dark:text-amber-300 dark:hover:bg-amber-900/60 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium capitalize"
                 >
                   {qaLoading ? 'Setting...' : `Set ${plan}`}
@@ -383,18 +385,28 @@ function UpgradeContent() {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Selected plan</p>
-              <p className="text-xl font-semibold text-foreground">{selectedPlan.name} — {formatPlanPrice(selectedPlan, selectedCurrency)}</p>
+              <p className="text-xl font-semibold text-foreground">{selectedPlan.name}</p>
+              <div className="mt-2 space-y-1">
+                <p className="text-sm text-muted-foreground">
+                  Display price: {formatPlanPrice(selectedPlan, selectedCurrency)}
+                </p>
+                {selectedCurrency !== 'INR' && (
+                  <p className="text-sm text-muted-foreground">
+                    Checkout in INR: {inrPricing && inrPricing.amount !== null ? `₹${inrPricing.amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}/month` : 'Contact sales'}
+                  </p>
+                )}
+              </div>
+            </div>
               {!canUseRazorpay && selectedPlanId !== 'enterprise' && (
                 <p className="mt-2 flex items-center gap-2 text-sm text-orange-500">
                   <AlertCircle className="h-4 w-4" />
-                  {selectedCurrency === 'INR'
-                    ? 'Payment setup is in progress.'
-                    : `Checkout for ${selectedCurrency} is being configured.`}
+                  Razorpay keys are not configured yet.
                 </p>
               )}
             </div>
             <button
               onClick={handleContinue}
+              disabled={!canUseRazorpay && selectedPlanId !== 'enterprise'}
               className="flex min-w-[220px] items-center justify-center gap-2 rounded-xl bg-gold px-5 py-3.5 font-semibold text-obsidian shadow-luxury disabled:cursor-not-allowed disabled:opacity-60"
               type="button"
             >
@@ -403,7 +415,7 @@ function UpgradeContent() {
               ) : (
                 <CreditCard className="h-5 w-5" />
               )}
-              {selectedPlanId === 'enterprise' ? 'Contact Sales' : `Continue with ${selectedPlan.name}`}
+              {selectedPlanId === 'enterprise' ? 'Contact Sales' : `Continue — ${inrPricing && inrPricing.amount !== null ? `₹${inrPricing.amount}/month` : 'Contact Sales'}`}
             </button>
           </div>
           <div className="mt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
