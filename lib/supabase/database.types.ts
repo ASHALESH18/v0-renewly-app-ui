@@ -28,6 +28,7 @@ export interface UserSettingsRow {
   email_notifications: boolean
   leak_alerts: boolean
   biometric_enabled: boolean
+  push_prompt_seen_at: string | null
   created_at: string
   updated_at: string
 }
@@ -47,6 +48,19 @@ export interface SubscriptionRow {
   color: string | null
   created_at: string
   updated_at: string
+}
+
+export interface NotificationDeliveryRow {
+  id: string
+  user_id: string
+  subscription_id: string | null
+  channel: 'email' | 'push' | 'in_app'
+  notification_type: string
+  reminder_date: string | null
+  summary_week_start: string | null
+  unique_key: string
+  sent_at: string
+  created_at: string
 }
 
 export interface NotificationStateRow {

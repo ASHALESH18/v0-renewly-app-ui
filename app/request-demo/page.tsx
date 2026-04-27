@@ -17,15 +17,42 @@ export default function RequestDemoPage() {
     focus: '',
   })
   const [submitted, setSubmitted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Demo request submitted:', formData)
-    setSubmitted(true)
-    setTimeout(() => {
-      setSubmitted(false)
-      setFormData({ name: '', email: '', company: '', preferredDate: '', preferredTime: '', focus: '' })
-    }, 3000)
+    setErrorMessage(null)
+    setSuccessMessage(null)
+    setIsLoading(true)
+
+    try {
+      const response = await fetch('/api/public/request-demo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setSuccessMessage(`Thanks — we received your demo request. We'll contact you at ${formData.email} shortly.`)
+        setSubmitted(true)
+        setFormData({ name: '', email: '', company: '', preferredDate: '', preferredTime: '', focus: '' })
+        setTimeout(() => {
+          setSubmitted(false)
+          setSuccessMessage(null)
+        }, 5000)
+      } else {
+        setErrorMessage(result.message || 'We couldn\'t submit your request right now. Please email contact@renewly.in.')
+      }
+    } catch (error) {
+      console.error('[v0] Failed to submit demo request:', error)
+      setErrorMessage('We couldn\'t submit your request right now. Please email contact@renewly.in.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -73,9 +100,7 @@ export default function RequestDemoPage() {
                 </div>
               </div>
               <h3 className="text-2xl font-semibold text-ivory mb-2">Demo Scheduled!</h3>
-              <p className="text-platinum mb-6">
-                We've received your request. A member of our team will reach out shortly to confirm the demo details.
-              </p>
+              <p className="text-platinum mb-4">{successMessage}</p>
               <div className="bg-gold/10 border border-gold/30 rounded-xl p-4 text-left">
                 <p className="text-sm text-platinum mb-2">
                   <span className="font-medium text-gold">Demo Details:</span>
@@ -87,6 +112,16 @@ export default function RequestDemoPage() {
             </motion.div>
           ) : (
             <>
+              {/* Error Message */}
+              {errorMessage && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl"
+                >
+                  <p className="text-sm text-red-400">{errorMessage}</p>
+                </motion.div>
+              )}
               {/* Demo Info */}
               <div className="grid md:grid-cols-2 gap-6 mb-8 pb-8 border-b border-glass-border">
                 <div className="flex gap-4">
@@ -213,9 +248,10 @@ export default function RequestDemoPage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  className="w-full py-3 rounded-xl gold-gradient text-obsidian font-semibold shadow-luxury transition-all"
+                  disabled={isLoading}
+                  className="w-full py-3 rounded-xl gold-gradient text-obsidian font-semibold shadow-luxury transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Schedule My Demo
+                  {isLoading ? 'Submitting...' : 'Request Demo'}
                 </motion.button>
               </form>
             </>
