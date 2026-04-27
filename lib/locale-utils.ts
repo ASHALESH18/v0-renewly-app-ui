@@ -105,9 +105,9 @@ export const currencies = [
   { code: 'EUR', name: 'Euro', symbol: '€' },
   { code: 'GBP', name: 'British Pound', symbol: '£' },
   { code: 'AED', name: 'UAE Dirham', symbol: 'د.إ' },
-  { code: 'SGD', name: 'Singapore Dollar', symbol: '$' },
-  { code: 'CAD', name: 'Canadian Dollar', symbol: '$' },
-  { code: 'AUD', name: 'Australian Dollar', symbol: '$' },
+  { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$' },
+  { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
+  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
   { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
 ]
 

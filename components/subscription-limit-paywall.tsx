@@ -64,7 +64,7 @@ export function SubscriptionLimitPaywall({
           Pro Plan starts at
         </p>
         <p className="text-3xl font-bold text-foreground md:text-4xl">
-          {pricing.amount !== null ? `${pricing.symbol}${pricing.amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}` : 'Custom'}
+          {pricing.amount !== null ? `${pricing.symbol}${pricing.amount.toLocaleString('en-US', { maximumFractionDigits: 2 })} ${pricing.currency}` : 'Custom'}
           {pricing.amount !== null && (
             <span className="ml-2 text-lg font-normal text-muted-foreground">
               /{pricing.period}
