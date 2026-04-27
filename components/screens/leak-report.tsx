@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { formatMoney } from '@/lib/preferences-format'
+import { formatMoney, formatSubscriptionMoney } from '@/lib/preferences-format'
+import { useExchangeRates } from '@/lib/hooks/use-exchange-rates'
+import { calculateMetrics, toMonthlyAmount } from '@/lib/subscription-math'
 import {
   Share2,
   Download,
@@ -39,21 +41,18 @@ export function LeakReportScreen({
   const notificationSettings = useStore((state) => state.notificationSettings)
   const preferredLanguage = notificationSettings.language || 'en'
   const preferredCurrency = notificationSettings.currencyCode || 'INR'
+  const { rates } = useExchangeRates()
 
   // Memoize metrics calculation to prevent infinite loop
   const metrics = useMemo(() => {
-    const totalMonthly = subscriptions.reduce((sum, sub) => sum + (sub.price || sub.amount || 0), 0)
-    const totalYearly = totalMonthly * 12
-    const savingsPotential = subscriptions
-      .filter(sub => sub.status === 'unused')
-      .reduce((sum, sub) => sum + (sub.price || sub.amount || 0), 0)
+    const calculated = calculateMetrics(subscriptions, preferredCurrency, rates)
 
     return {
-      totalMonthly: totalMonthly || 0,
-      totalYearly: totalYearly || 0,
-      savingsPotential: savingsPotential || 0
+      totalMonthly: calculated.totalMonthlySpend,
+      totalYearly: calculated.totalYearlySpend,
+      savingsPotential: calculated.savingsPotential,
     }
-  }, [subscriptions])
+  }, [subscriptions, preferredCurrency, rates])
 
   // Calculate leak data
   const leakData = (() => {
@@ -63,9 +62,10 @@ export function LeakReportScreen({
     let overallScore = 100
 
     subscriptions.forEach(sub => {
-      categories[sub.category] = (categories[sub.category] || 0) + (sub.price || 0)
-      if ((sub.price || 0) > mostExpensiveAmount) {
-        mostExpensiveAmount = sub.price || 0
+      const monthlyAmount = toMonthlyAmount(sub, preferredCurrency, rates)
+      categories[sub.category] = (categories[sub.category] || 0) + monthlyAmount
+      if (monthlyAmount > mostExpensiveAmount) {
+        mostExpensiveAmount = monthlyAmount
         mostExpensiveCategory = sub.category
       }
       if (sub.status === 'unused') overallScore -= 20
@@ -79,13 +79,13 @@ export function LeakReportScreen({
       categorySpending: Object.entries(categories).map(([category, amount]) => ({
         category,
         amount,
-        percentage: subscriptions.length > 0
-          ? (amount / subscriptions.reduce((sum, s) => sum + (s.price || 0), 0)) * 100
+        percentage: metrics.totalMonthly > 0
+          ? (amount / metrics.totalMonthly) * 100
           : 0,
       })),
       mostExpensiveCategory,
       unusedSubscriptionsCount: unusedSubscriptions.length,
-      potentialSavings: unusedSubscriptions.reduce((sum, sub) => sum + (sub.price || 0), 0),
+      potentialSavings: unusedSubscriptions.reduce((sum, sub) => sum + toMonthlyAmount(sub, preferredCurrency, rates), 0),
     }
   })()
 
@@ -131,7 +131,7 @@ export function LeakReportScreen({
 
   const categorySpends = subscriptions.reduce((acc, sub) => {
     if (sub.status === 'active') {
-      const monthlyAmount = sub.billingCycle === 'yearly' ? sub.amount / 12 : sub.amount
+      const monthlyAmount = toMonthlyAmount(sub, preferredCurrency, rates)
       acc[sub.category] = (acc[sub.category] || 0) + monthlyAmount
     }
     return acc
@@ -157,7 +157,7 @@ export function LeakReportScreen({
 
   const handleShare = async () => {
     try {
-      const shareText = `Renewly Leak Report: My subscription leak score is ${leakData.overallScore}/100. Monthly spend: ₹${metrics.totalMonthly}. Annual projected: ₹${metrics.totalYearly}. Potential savings: ₹${metrics.savingsPotential}`
+      const shareText = `Renewly Leak Report: My subscription leak score is ${leakData.overallScore}/100. Monthly spend: ${formatMoney(metrics.totalMonthly, preferredCurrency, preferredLanguage)}. Annual projected: ${formatMoney(metrics.totalYearly, preferredCurrency, preferredLanguage)}. Potential savings: ${formatMoney(metrics.savingsPotential, preferredCurrency, preferredLanguage)}`
 
       if (navigator.share) {
         await navigator.share({
@@ -300,8 +300,8 @@ export function LeakReportScreen({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <MetricCard
                   label="Monthly Recurring"
-                  value={`₹${metrics.totalMonthly.toLocaleString('en-IN')}`}
-                  icon="₹"
+                  value={formatMoney(metrics.totalMonthly, preferredCurrency, preferredLanguage)}
+                  icon="💳"
                   delay={0.5}
                 />
                 <MetricCard
@@ -448,7 +448,7 @@ export function LeakReportScreen({
                     <p className="text-xs text-muted-foreground">Unused • {sub.category}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-crimson">₹{sub.amount.toLocaleString('en-IN')}</p>
+                    <p className="font-semibold text-crimson">{formatSubscriptionMoney(sub, preferredCurrency, preferredLanguage, rates)}</p>
                     <p className="text-xs text-muted-foreground">per month</p>
                   </div>
                   <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
@@ -491,7 +491,7 @@ export function LeakReportScreen({
                         <p className="text-xs text-muted-foreground">{daysUntil}d remaining</p>
                       </div>
                     </div>
-                    <span className="text-sm font-semibold text-gold">₹{sub.amount.toLocaleString('en-IN')}</span>
+                    <span className="text-sm font-semibold text-gold">{formatSubscriptionMoney(sub, preferredCurrency, preferredLanguage, rates)}</span>
                   </motion.div>
                 )
               })}

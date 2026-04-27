@@ -47,6 +47,8 @@ export function mapUserSettingsRowToUI(row: UserSettingsRow) {
     emailNotifications: row.email_notifications,
     leakAlerts: row.leak_alerts,
     biometricEnabled: row.biometric_enabled,
+    countryCode: row.country_code || undefined,
+    locale: row.locale || undefined,
     timeZone: row.time_zone || undefined, // Include timezone from settings
   }
 }
@@ -65,5 +67,8 @@ export function mapUISettingsToRow(
     email_notifications: settings.emailNotifications,
     leak_alerts: settings.leakAlerts,
     biometric_enabled: settings.biometricEnabled,
+    country_code: settings.countryCode || null,
+    locale: settings.locale || null,
+    time_zone: settings.timeZone || null,
   }
 }

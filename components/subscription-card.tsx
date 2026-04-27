@@ -7,6 +7,9 @@ import type { Subscription } from '@/lib/types'
 import { cardLift, springs, staggerItem } from './motion'
 import { SubscriptionActions } from './subscription-actions'
 import { SubscriptionIcon } from '@/lib/brand-icons'
+import useStore from '@/lib/store'
+import { useExchangeRates } from '@/lib/hooks/use-exchange-rates'
+import { formatSubscriptionMoney } from '@/lib/preferences-format'
 
 interface SubscriptionCardProps {
   subscription: Subscription
@@ -32,6 +35,11 @@ export function SubscriptionCard({
     : 0
   const isUrgent = daysUntilRenewal <= 3
   const billingLabel = getBillingLabel(subscription.billingCycle)
+  const notificationSettings = useStore((state) => state.notificationSettings)
+  const preferredCurrency = notificationSettings.currencyCode || 'INR'
+  const preferredLanguage = notificationSettings.language || 'en'
+  const { rates } = useExchangeRates()
+  const displayAmount = formatSubscriptionMoney(subscription, preferredCurrency, preferredLanguage, rates)
 
   return (
     <motion.div
@@ -103,8 +111,7 @@ export function SubscriptionCard({
 
             <div className="mt-3 flex items-baseline gap-1">
               <span className="text-xl font-bold tracking-tight text-foreground">
-                {subscription.currency}
-                {Number(subscription.amount || 0).toLocaleString('en-IN')}
+                {displayAmount}
               </span>
               <span className="text-sm text-muted-foreground">
                 /{billingLabel}
@@ -162,6 +169,11 @@ export function SubscriptionCardCompact({
     ? getDaysUntilRenewal(subscription.renewalDate)
     : 0
   const isUrgent = daysUntilRenewal <= 3
+  const notificationSettings = useStore((state) => state.notificationSettings)
+  const preferredCurrency = notificationSettings.currencyCode || 'INR'
+  const preferredLanguage = notificationSettings.language || 'en'
+  const { rates } = useExchangeRates()
+  const displayAmount = formatSubscriptionMoney(subscription, preferredCurrency, preferredLanguage, rates)
 
   return (
     <motion.div
@@ -184,8 +196,7 @@ export function SubscriptionCardCompact({
 
         <div className="shrink-0 text-right">
           <p className="font-semibold text-foreground">
-            {subscription.currency}
-            {Number(subscription.amount || 0).toLocaleString('en-IN')}
+            {displayAmount}
           </p>
           <p className={cn('text-xs', isUrgent ? 'text-crimson' : 'text-muted-foreground')}>
             {subscription.renewalDate

@@ -5,18 +5,22 @@ import { useRef, useEffect, useState } from 'react'
 import { AlertTriangle, TrendingDown, Sparkles } from 'lucide-react'
 import { springs, ProgressRing, useMotionPreferences } from '../motion'
 import { getLeakStatusConfig } from '@/lib/leak-status-config'
+import useStore from '@/lib/store'
+import { useExchangeRates } from '@/lib/hooks/use-exchange-rates'
+import { convertCurrency, getCurrencySymbol } from '@/lib/currency'
+import { formatMoneyFromCurrency } from '@/lib/preferences-format'
 
 // Animated number counter component - optimized for mobile
-function AnimatedNumber({ 
-  value, 
-  prefix = '', 
+function AnimatedNumber({
+  value,
+  prefix = '',
   suffix = '',
   isInView,
   delay = 0,
   duration = 1.2,
   className = '',
   skipAnimation = false
-}: { 
+}: {
   value: number
   prefix?: string
   suffix?: string
@@ -27,8 +31,8 @@ function AnimatedNumber({
   skipAnimation?: boolean
 }) {
   const [hasAnimated, setHasAnimated] = useState(false)
-  const springValue = useSpring(0, { 
-    stiffness: 50, 
+  const springValue = useSpring(0, {
+    stiffness: 50,
     damping: 20,
     duration: duration
   })
@@ -41,7 +45,7 @@ function AnimatedNumber({
       setDisplay(value)
       return
     }
-    
+
     if (isInView && !hasAnimated) {
       const timeout = setTimeout(() => {
         springValue.set(value)
@@ -69,6 +73,14 @@ export function LeakPreview() {
   // Use amount instead of margin for better scroll timing
   const isInView = useInView(ref, { once: true, amount: 0.25 })
   const { shouldReduceAnimations } = useMotionPreferences()
+  const notificationSettings = useStore((state) => state.notificationSettings)
+  const preferredCurrency = notificationSettings.currencyCode || 'INR'
+  const preferredLanguage = notificationSettings.language || 'en'
+  const { rates } = useExchangeRates()
+  const currencySymbol = getCurrencySymbol(preferredCurrency)
+  const monthlyRecurring = convertCurrency(7644, 'INR', preferredCurrency, rates)
+  const yearlyProjected = convertCurrency(91728, 'INR', preferredCurrency, rates)
+  const possibleSavings = convertCurrency(2398, 'INR', preferredCurrency, rates)
 
   return (
     <section ref={ref} className="py-24 lg:py-32 px-4 bg-secondary dark:bg-obsidian relative overflow-hidden">
@@ -87,14 +99,14 @@ export function LeakPreview() {
               <Sparkles className="w-4 h-4" />
               Signature Feature
             </div>
-            
+
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground tracking-tight mb-6">
               The
               <span className="text-gold-gradient font-serif italic"> Leak Report</span>
             </h2>
-            
+
             <p className="text-lg text-platinum leading-relaxed mb-8">
-              A comprehensive analysis of your subscription portfolio. Discover hidden charges, 
+              A comprehensive analysis of your subscription portfolio. Discover hidden charges,
               unused services, and opportunities to reclaim your money with our signature feature.
             </p>
 
@@ -134,7 +146,7 @@ export function LeakPreview() {
             <div className="relative rounded-3xl bg-gradient-to-br from-card via-secondary to-card dark:from-graphite dark:via-slate dark:to-graphite border border-gold/20 p-6 md:p-8 shadow-luxury overflow-hidden">
               {/* Gold accent line */}
               <div className="absolute top-0 left-0 right-0 h-1 gold-gradient" />
-              
+
               {/* Header */}
               <div className="flex items-start justify-between mb-8">
                 <div>
@@ -156,15 +168,15 @@ export function LeakPreview() {
                 <div className="relative">
                   <ProgressRing progress={72} size={160} strokeWidth={10} />
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <motion.div 
+                    <motion.div
                       className="text-4xl font-semibold text-gold"
                       initial={{ opacity: 0, scale: 0.5 }}
                       animate={isInView ? { opacity: 1, scale: 1 } : {}}
                       transition={{ delay: 0.3, ...springs.bouncy }}
                     >
-                      <AnimatedNumber 
-                        value={72} 
-                        isInView={isInView} 
+                      <AnimatedNumber
+                        value={72}
+                        isInView={isInView}
                         delay={0.4}
                         duration={1}
                         skipAnimation={shouldReduceAnimations}
@@ -180,10 +192,10 @@ export function LeakPreview() {
                 <div className="p-4 rounded-xl bg-muted dark:bg-obsidian/50 border border-glass-border">
                   <p className="text-xs text-platinum mb-1">Monthly Recurring</p>
                   <p className="text-xl font-semibold text-foreground">
-                    <AnimatedNumber 
-                      value={7644} 
-                      prefix="₹"
-                      isInView={isInView} 
+                    <AnimatedNumber
+                      value={monthlyRecurring}
+                      prefix={currencySymbol}
+                      isInView={isInView}
                       delay={0.5}
                       skipAnimation={shouldReduceAnimations}
                     />
@@ -192,10 +204,10 @@ export function LeakPreview() {
                 <div className="p-4 rounded-xl bg-muted dark:bg-obsidian/50 border border-glass-border">
                   <p className="text-xs text-platinum mb-1">Yearly Projected</p>
                   <p className="text-xl font-semibold text-foreground">
-                    <AnimatedNumber 
-                      value={91728} 
-                      prefix="₹"
-                      isInView={isInView} 
+                    <AnimatedNumber
+                      value={yearlyProjected}
+                      prefix={currencySymbol}
+                      isInView={isInView}
                       delay={0.6}
                       skipAnimation={shouldReduceAnimations}
                     />
@@ -204,9 +216,9 @@ export function LeakPreview() {
                 <div className="p-4 rounded-xl bg-muted dark:bg-obsidian/50 border border-glass-border">
                   <p className="text-xs text-platinum mb-1">Active Subscriptions</p>
                   <p className="text-xl font-semibold text-foreground">
-                    <AnimatedNumber 
-                      value={9} 
-                      isInView={isInView} 
+                    <AnimatedNumber
+                      value={9}
+                      isInView={isInView}
                       delay={0.7}
                       duration={0.8}
                       skipAnimation={shouldReduceAnimations}
@@ -216,10 +228,10 @@ export function LeakPreview() {
                 <div className="p-4 rounded-xl bg-emerald/10 border border-emerald/20">
                   <p className="text-xs text-emerald mb-1">Possible Savings</p>
                   <p className="text-xl font-semibold text-emerald">
-                    <AnimatedNumber 
-                      value={2398} 
-                      prefix="₹"
-                      isInView={isInView} 
+                    <AnimatedNumber
+                      value={possibleSavings}
+                      prefix={currencySymbol}
+                      isInView={isInView}
                       delay={0.8}
                       skipAnimation={shouldReduceAnimations}
                     />
@@ -234,8 +246,8 @@ export function LeakPreview() {
                   <div>
                     <p className="text-sm text-foreground font-medium mb-1">AI Insight</p>
                     <p className="text-xs text-platinum">
-                      You have 2 music streaming services with overlapping features. 
-                      Consider keeping only Spotify to save ₹99/month.
+                      You have 2 music streaming services with overlapping features.
+                      Consider keeping only Spotify to save {formatMoneyFromCurrency(99, 'INR', preferredCurrency, preferredLanguage, rates)}/month.
                     </p>
                   </div>
                 </div>

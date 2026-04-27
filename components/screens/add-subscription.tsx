@@ -16,6 +16,7 @@ import { DatePickerField } from '@/components/date-picker-field'
 import { SubscriptionLimitPaywall } from '@/components/subscription-limit-paywall'
 import useStore from '@/lib/store'
 import { currencies } from '@/lib/locale-utils'
+import { getCurrencySymbol } from '@/lib/currency'
 import { validateSubscriptionForm, getFirstInvalidField, type SubscriptionValidationErrors } from '@/lib/validation'
 import type { SubscriptionCategory, BillingCycle } from '@/lib/types'
 
@@ -108,10 +109,10 @@ type AddSubscriptionResult = {
 
 export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProps) {
   const notificationSettings = useStore((state) => state.notificationSettings)
-  
+
   // Use user's preferred currency from settings, fallback to INR
   const defaultCurrency = notificationSettings?.currencyCode || 'INR'
-  
+
   const [step, setStep] = useState<'select' | 'details'>('select')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilterCategory, setSelectedFilterCategory] = useState<string>('all')
@@ -141,20 +142,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
   const closeSubscriptionLimitPaywall = useStore((state) => state.closeSubscriptionLimitPaywall)
   const subscriptionLimitPaywallOpen = useStore((state) => state.subscriptionLimitPaywallOpen)
   const subscriptionLimitPaywallData = useStore((state) => state.subscriptionLimitPaywallData)
-
-  const currencySymbolMap: Record<string, string> = {
-    INR: '₹',
-    USD: '$',
-    EUR: '€',
-    GBP: '£',
-    JPY: '¥',
-    CNY: '¥',
-    AUD: 'A$',
-    CAD: 'C$',
-    SGD: 'S$',
-  }
-
-  const currencySymbol = currencySymbolMap[currency] || currency
+  const currencySymbol = getCurrencySymbol(currency)
 
   // Filter services by search (name + aliases + category) and selected filter category
   const filteredServices = popularServices.filter((service: any) => {

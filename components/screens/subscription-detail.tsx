@@ -23,6 +23,9 @@ import type {
   BillingCycle,
 } from '@/lib/types'
 import { SubscriptionIcon } from '@/lib/brand-icons'
+import { useExchangeRates } from '@/lib/hooks/use-exchange-rates'
+import { getCurrencySymbol } from '@/lib/currency'
+import { formatSubscriptionMoney } from '@/lib/preferences-format'
 
 interface SubscriptionDetailSheetProps {
   subscription: Subscription | null
@@ -76,6 +79,10 @@ export function SubscriptionDetailSheet({
   const updateSubscriptionRemote = useStore((state) => state.updateSubscriptionRemote)
   const deleteSubscriptionRemote = useStore((state) => state.deleteSubscriptionRemote)
   const addToast = useStore((state) => state.addToast)
+  const notificationSettings = useStore((state) => state.notificationSettings)
+  const preferredCurrency = notificationSettings.currencyCode || 'INR'
+  const preferredLanguage = notificationSettings.language || 'en'
+  const { rates } = useExchangeRates()
 
   useEffect(() => {
     if (open) {
@@ -92,6 +99,10 @@ export function SubscriptionDetailSheet({
   }, [subscription, open])
 
   const displaySubscription = formData || subscription
+  const displayedAmount = displaySubscription
+    ? formatSubscriptionMoney(displaySubscription, preferredCurrency, preferredLanguage, rates)
+    : ''
+  const editAmountSymbol = getCurrencySymbol(formData?.currency || preferredCurrency)
 
   const handleSave = async () => {
     if (!subscription || !formData || isSaving) return
@@ -261,7 +272,7 @@ export function SubscriptionDetailSheet({
 
                       <div>
                         <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                          Amount ({displaySubscription.currency || '₹'})
+                          Amount ({editAmountSymbol})
                         </label>
                         <Input
                           type="number"
@@ -404,8 +415,7 @@ export function SubscriptionDetailSheet({
                         <div className="p-4 rounded-xl bg-secondary/50">
                           <p className="text-sm text-muted-foreground mb-1">Amount</p>
                           <p className="text-2xl font-semibold text-gold">
-                            {(displaySubscription.currency || '₹')}
-                            {Number(displaySubscription.amount || 0).toLocaleString('en-IN')}
+                            {displayedAmount}
                           </p>
                         </div>
                         <div className="p-4 rounded-xl bg-secondary/50">

@@ -10,6 +10,9 @@ import { useTheme } from 'next-themes'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { getStartedDestination } from '@/lib/upgrade-flow'
+import useStore from '@/lib/store'
+import { useExchangeRates } from '@/lib/hooks/use-exchange-rates'
+import { formatMoneyFromCurrency } from '@/lib/preferences-format'
 
 export function Hero() {
   const ref = useRef(null)
@@ -20,6 +23,10 @@ export function Hero() {
   const router = useRouter()
   const { isAuthenticated } = useAuth()
   const [isNavigating, setIsNavigating] = useState(false)
+  const notificationSettings = useStore((state) => state.notificationSettings)
+  const preferredCurrency = notificationSettings.currencyCode || 'INR'
+  const preferredLanguage = notificationSettings.language || 'en'
+  const { rates } = useExchangeRates()
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -402,7 +409,7 @@ export function Hero() {
                       Monthly recurring
                     </p>
                     <p className="text-2xl font-bold relative" style={{ color: phoneTheme.amountText }}>
-                      ₹7,644
+                      {formatMoneyFromCurrency(7644, 'INR', preferredCurrency, preferredLanguage, rates)}
                     </p>
                     <p className="text-xs text-[#34D399] mt-1 relative font-medium">
                       ↓ 12% vs last month
@@ -412,9 +419,9 @@ export function Hero() {
                   {/* Subscription cards - cascade reveal with real brand icons */}
                   <div className="space-y-2.5">
                     {[
-                      { name: 'Netflix', color: '#E50914', amount: '649', renewsIn: '3d' },
-                      { name: 'Spotify', color: '#1DB954', amount: '119', renewsIn: '7d' },
-                      { name: 'ChatGPT', color: '#10A37F', amount: '1,680', renewsIn: '12d' },
+                      { name: 'Netflix', color: '#E50914', amount: 649, renewsIn: '3d' },
+                      { name: 'Spotify', color: '#1DB954', amount: 119, renewsIn: '7d' },
+                      { name: 'ChatGPT', color: '#10A37F', amount: 1680, renewsIn: '12d' },
                     ].map((sub, i) => (
                       <motion.div
                         key={sub.name}
@@ -451,7 +458,7 @@ export function Hero() {
                           </p>
                         </div>
                         <p className="text-sm font-semibold" style={{ color: phoneTheme.primaryText }}>
-                          ₹{sub.amount}
+                          {formatMoneyFromCurrency(sub.amount, 'INR', preferredCurrency, preferredLanguage, rates)}
                         </p>
                       </motion.div>
                     ))}

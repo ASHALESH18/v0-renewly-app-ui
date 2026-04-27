@@ -1,13 +1,41 @@
 // Shared subscription calculation helpers
 
 import type { Subscription } from '@/lib/types'
+import {
+  FALLBACK_INR_RATES,
+  convertCurrency,
+  normalizeCurrencyCode,
+  type ExchangeRates,
+} from '@/lib/currency'
+
+function getAmountInCurrency(
+  subscription: Subscription,
+  targetCurrency?: string,
+  rates: ExchangeRates = FALLBACK_INR_RATES
+): number {
+  const amount = Number(subscription.amount) || 0
+  if (amount < 0 || !isFinite(amount)) return 0
+
+  if (!targetCurrency) return amount
+
+  return convertCurrency(
+    amount,
+    subscription.currency || targetCurrency,
+    targetCurrency,
+    rates
+  )
+}
 
 /**
- * Safely convert subscription to monthly amount
- * Returns 0 if amount is invalid or missing
+ * Safely convert subscription to monthly amount.
+ * If targetCurrency is provided, the amount is converted from the subscription currency first.
  */
-export function toMonthlyAmount(subscription: Subscription): number {
-  const amount = Number(subscription.amount) || 0
+export function toMonthlyAmount(
+  subscription: Subscription,
+  targetCurrency?: string,
+  rates: ExchangeRates = FALLBACK_INR_RATES
+): number {
+  const amount = getAmountInCurrency(subscription, targetCurrency, rates)
   if (amount < 0 || !isFinite(amount)) return 0
 
   switch (subscription.billingCycle) {
@@ -26,8 +54,12 @@ export function toMonthlyAmount(subscription: Subscription): number {
   }
 }
 
-export function toYearlyAmount(subscription: Subscription): number {
-  return toMonthlyAmount(subscription) * 12
+export function toYearlyAmount(
+  subscription: Subscription,
+  targetCurrency?: string,
+  rates: ExchangeRates = FALLBACK_INR_RATES
+): number {
+  return toMonthlyAmount(subscription, targetCurrency, rates) * 12
 }
 
 /**
@@ -38,17 +70,16 @@ export function getDaysUntilRenewal(subscription: Subscription): number {
   if (!subscription.renewalDate || typeof subscription.renewalDate !== 'string') {
     return -1
   }
-  
+
   try {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const renewalDate = new Date(subscription.renewalDate)
-    
-    // Check if date is valid
+
     if (isNaN(renewalDate.getTime())) {
       return -1
     }
-    
+
     renewalDate.setHours(0, 0, 0, 0)
     const diffTime = renewalDate.getTime() - today.getTime()
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
@@ -95,7 +126,9 @@ export function getUpcomingRenewals(subscriptions: Subscription[], days = 30): S
 }
 
 export function buildCategoryBreakdown(
-  subscriptions: Subscription[]
+  subscriptions: Subscription[],
+  targetCurrency?: string,
+  rates: ExchangeRates = FALLBACK_INR_RATES
 ): Record<string, { count: number; monthly: number; yearly: number }> {
   const breakdown: Record<string, { count: number; monthly: number; yearly: number }> = {}
 
@@ -105,8 +138,8 @@ export function buildCategoryBreakdown(
       breakdown[sub.category] = { count: 0, monthly: 0, yearly: 0 }
     }
     breakdown[sub.category].count++
-    breakdown[sub.category].monthly += toMonthlyAmount(sub)
-    breakdown[sub.category].yearly += toYearlyAmount(sub)
+    breakdown[sub.category].monthly += toMonthlyAmount(sub, targetCurrency, rates)
+    breakdown[sub.category].yearly += toYearlyAmount(sub, targetCurrency, rates)
   })
 
   return breakdown
@@ -114,7 +147,9 @@ export function buildCategoryBreakdown(
 
 export function buildProjectedSpendTrend(
   subscriptions: Subscription[],
-  months = 12
+  months = 12,
+  targetCurrency?: string,
+  rates: ExchangeRates = FALLBACK_INR_RATES
 ): Array<{ month: string; amount: number }> {
   const today = new Date()
   const trend = []
@@ -122,11 +157,11 @@ export function buildProjectedSpendTrend(
   for (let i = 0; i < months; i++) {
     const date = new Date(today.getFullYear(), today.getMonth() + i, 1)
     const monthLabel = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
-    
+
     let monthlySpend = 0
     subscriptions.forEach(sub => {
       if (sub.status === 'cancelled') return
-      monthlySpend += toMonthlyAmount(sub)
+      monthlySpend += toMonthlyAmount(sub, targetCurrency, rates)
     })
 
     trend.push({ month: monthLabel, amount: monthlySpend })
@@ -136,20 +171,31 @@ export function buildProjectedSpendTrend(
 }
 
 /**
- * Calculate comprehensive subscription metrics
- * Safely handles edge cases and invalid data
+ * Calculate comprehensive subscription metrics.
+ * Pass targetCurrency + rates to get correctly converted dashboard totals.
  */
-export function calculateMetrics(subscriptions: Subscription[]) {
+export function calculateMetrics(
+  subscriptions: Subscription[],
+  targetCurrency?: string,
+  rates: ExchangeRates = FALLBACK_INR_RATES
+) {
+  const displayCurrency = targetCurrency ? normalizeCurrencyCode(targetCurrency) : undefined
   const activeSubscriptions = subscriptions.filter(sub => sub.status === 'active')
   const unusedSubscriptions = subscriptions.filter(sub => sub.status === 'unused')
   const pausedSubscriptions = subscriptions.filter(sub => sub.status === 'paused')
 
   const totalMonthlySpend = subscriptions
     .filter(sub => sub.status !== 'cancelled')
-    .reduce((sum, sub) => sum + toMonthlyAmount(sub), 0)
+    .reduce((sum, sub) => sum + toMonthlyAmount(sub, displayCurrency, rates), 0)
 
-  const unusedMonthlySpend = unusedSubscriptions.reduce((sum, sub) => sum + toMonthlyAmount(sub), 0)
-  const pausedMonthlySpend = pausedSubscriptions.reduce((sum, sub) => sum + toMonthlyAmount(sub), 0)
+  const unusedMonthlySpend = unusedSubscriptions.reduce(
+    (sum, sub) => sum + toMonthlyAmount(sub, displayCurrency, rates),
+    0
+  )
+  const pausedMonthlySpend = pausedSubscriptions.reduce(
+    (sum, sub) => sum + toMonthlyAmount(sub, displayCurrency, rates),
+    0
+  )
 
   const leakScore = Math.min(100, Math.max(0, 100 - unusedSubscriptions.length * 10 - pausedSubscriptions.length * 5))
 
