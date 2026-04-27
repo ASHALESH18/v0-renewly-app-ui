@@ -31,6 +31,48 @@ const viewSegments = [
   { id: 'list', label: 'List' },
 ]
 
+// Helper functions for formatting
+function getBillingLabel(cycle: string): string {
+  switch (cycle) {
+    case 'daily':
+      return 'day'
+    case 'weekly':
+      return 'wk'
+    case 'monthly':
+      return 'mo'
+    case 'quarterly':
+      return 'qtr'
+    case 'yearly':
+      return 'yr'
+    default:
+      return 'mo'
+  }
+}
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  if (Number.isNaN(date.getTime())) return 'N/A'
+  return date.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+  })
+}
+
+function getRenewalLabel(renewalDate: string | null | undefined): string {
+  if (!renewalDate) return 'N/A'
+  
+  try {
+    const daysUntil = getDaysUntilRenewal({ renewalDate } as any)
+    if (daysUntil < 0) return `Renews ${formatDate(renewalDate)}`
+    if (daysUntil === 0) return 'Due today'
+    if (daysUntil === 1) return '1 day left'
+    if (daysUntil <= 30) return `${daysUntil} days left`
+    return `Renews ${formatDate(renewalDate)}`
+  } catch {
+    return 'N/A'
+  }
+}
+
 export function DashboardScreen({
   onSubscriptionSelect,
   onNavigateTab,
@@ -102,25 +144,37 @@ export function DashboardScreen({
     if (!searchQuery.trim()) return []
 
     const query = searchQuery.toLowerCase()
-    return subscriptions
-      .filter((sub) => {
-        const name = String(sub.name || '').toLowerCase()
-        const category = String(sub.category || 'Other').toLowerCase()
-        const description = String(sub.description || '').toLowerCase()
+    
+    // Filter and categorize matches
+    const startsWith: typeof searchResults = []
+    const includes: typeof searchResults = []
+    const categoryMatches: typeof searchResults = []
 
-        return (
-          name.includes(query) ||
-          category.includes(query) ||
-          description.includes(query)
-        )
-      })
-      .map((sub) => ({
-        id: sub.id,
-        title: sub.name || 'Unknown',
-        subtitle: sub.category || 'Other',
-        meta: formatSubscriptionMoney(sub.amount, sub.currency) + (sub.billingCycle ? `/${sub.billingCycle}` : ''),
-      }))
-  }, [searchQuery, subscriptions])
+    subscriptions.forEach((sub) => {
+      const name = String(sub.name || '').toLowerCase()
+      const category = String(sub.category || 'Other').toLowerCase()
+      const description = String(sub.description || '').toLowerCase()
+
+      // Determine match type
+      if (name.startsWith(query)) {
+        startsWith.push(sub)
+      } else if (name.includes(query) || description.includes(query)) {
+        includes.push(sub)
+      } else if (category.includes(query)) {
+        categoryMatches.push(sub)
+      }
+    })
+
+    // Combine results: startsWith first, then includes, then category matches
+    const allMatches = [...startsWith, ...includes, ...categoryMatches]
+
+    return allMatches.map((sub) => ({
+      id: sub.id,
+      title: sub.name || 'Unknown',
+      subtitle: sub.category || 'Other',
+      meta: `${formatSubscriptionMoney(sub, preferredCurrency, preferredLanguage, rates)}/${getBillingLabel(sub.billingCycle || 'monthly')} · ${getRenewalLabel(sub.renewalDate)}`,
+    }))
+  }, [searchQuery, subscriptions, preferredCurrency, preferredLanguage, rates])
 
   return (
     <PageTransition className="min-h-screen bg-transparent">
