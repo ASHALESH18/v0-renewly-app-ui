@@ -12,6 +12,8 @@ export interface PlanCapabilities {
   canShareFamily: boolean
   canUseSSOEnterprise: boolean
   prioritySupport: boolean
+  includedFamilyMembers?: number // 0 for non-family plans, 4 for family
+  extraFamilyMemberPriceINR?: number // 0 for non-family plans, 99 for family
 }
 
 export const planCapabilities: Record<PlanType, PlanCapabilities> = {
@@ -24,6 +26,8 @@ export const planCapabilities: Record<PlanType, PlanCapabilities> = {
     canShareFamily: false,
     canUseSSOEnterprise: false,
     prioritySupport: false,
+    includedFamilyMembers: 0,
+    extraFamilyMemberPriceINR: 0,
   },
   pro: {
     maxSubscriptions: -1, // Unlimited
@@ -34,6 +38,8 @@ export const planCapabilities: Record<PlanType, PlanCapabilities> = {
     canShareFamily: false,
     canUseSSOEnterprise: false,
     prioritySupport: true,
+    includedFamilyMembers: 0,
+    extraFamilyMemberPriceINR: 0,
   },
   family: {
     maxSubscriptions: -1, // Unlimited
@@ -44,6 +50,8 @@ export const planCapabilities: Record<PlanType, PlanCapabilities> = {
     canShareFamily: true,
     canUseSSOEnterprise: false,
     prioritySupport: true,
+    includedFamilyMembers: 4,
+    extraFamilyMemberPriceINR: 99,
   },
   enterprise: {
     maxSubscriptions: -1, // Unlimited
@@ -54,6 +62,8 @@ export const planCapabilities: Record<PlanType, PlanCapabilities> = {
     canShareFamily: true,
     canUseSSOEnterprise: true,
     prioritySupport: true,
+    includedFamilyMembers: 4,
+    extraFamilyMemberPriceINR: 99,
   },
 }
 
