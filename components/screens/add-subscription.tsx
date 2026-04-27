@@ -323,7 +323,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                   {step === 'details' && (
                     <button
                       onClick={() => setStep('select')}
-                      className="p-2 -ml-2 rounded-full hover:bg-secondary/50 transition-colors"
+                      className="p-2 -ml-2 rounded-full hover:bg-secondary/50 transition-colors cursor-pointer"
                     >
                       <ChevronRight className="w-5 h-5 text-muted-foreground rotate-180" />
                     </button>
@@ -336,7 +336,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                 </div>
                 <button
                   onClick={handleClose}
-                  className="p-2 rounded-full hover:bg-secondary/50 transition-colors"
+                  className="p-2 rounded-full hover:bg-secondary/50 transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5 text-muted-foreground" />
                 </button>
@@ -370,7 +370,7 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                             whileTap={{ scale: 0.95 }}
                             onClick={() => setSelectedFilterCategory(cat.id)}
                             className={cn(
-                              'px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all',
+                              'px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all cursor-pointer',
                               selectedFilterCategory === cat.id
                                 ? 'bg-gold text-obsidian'
                                 : 'bg-secondary text-foreground hover:bg-secondary/80'

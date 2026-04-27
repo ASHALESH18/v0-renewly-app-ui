@@ -651,7 +651,7 @@ export function SettingsScreen() {
           </p>
           <button
             onClick={() => handleExport('csv')}
-            className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors"
+            className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors cursor-pointer"
           >
             <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
               <Download className="w-5 h-5 text-foreground" />
@@ -663,7 +663,7 @@ export function SettingsScreen() {
           </button>
           <button
             onClick={() => handleExport('json')}
-            className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors"
+            className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors cursor-pointer"
           >
             <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
               <FileJson className="w-5 h-5 text-foreground" />
@@ -676,7 +676,7 @@ export function SettingsScreen() {
           <button
             onClick={() => handleExport('account')}
             disabled={isExportingAccount}
-            className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
               {isExportingAccount ? (
@@ -720,7 +720,7 @@ export function SettingsScreen() {
                   setShowPlanSheet(true)
                   setActiveSheet(null)
                 }}
-                className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors"
+                className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
               >
                 View Upgrade Options
               </button>
@@ -754,7 +754,7 @@ export function SettingsScreen() {
                 setActiveSheet(null)
               }}
               className={cn(
-                "w-full flex items-center justify-between p-4 rounded-xl transition-colors",
+                "w-full flex items-center justify-between p-4 rounded-xl transition-colors cursor-pointer",
                 notificationSettings.currencyCode === currency.code
                   ? "bg-gold/10 text-gold border border-gold/30"
                   : "bg-muted hover:bg-secondary"
@@ -802,7 +802,7 @@ export function SettingsScreen() {
                   setActiveSheet(null)
                 }}
                 className={cn(
-                  "w-full flex items-center justify-between p-4 rounded-xl transition-colors",
+                  "w-full flex items-center justify-between p-4 rounded-xl transition-colors cursor-pointer",
                   notificationSettings.language === lang.code
                     ? "bg-gold/10 text-gold border border-gold/30"
                     : "bg-muted hover:bg-secondary"
