@@ -10,6 +10,10 @@ import { useCalendarEvents } from '@/lib/hooks/use-remote-data'
 import { SubscriptionIcon } from '@/lib/brand-icons'
 import { cn } from '@/lib/utils'
 import { CalendarSkeleton } from '@/components/skeletons'
+import useStore from '@/lib/store'
+import { useExchangeRates } from '@/lib/hooks/use-exchange-rates'
+import { formatMoney, formatSubscriptionMoney } from '@/lib/preferences-format'
+import { convertSubscriptionAmount } from '@/lib/currency'
 
 // Fast transition for responsive feel
 const fastTransition = { duration: 0.2, ease: [0.32, 0.72, 0, 1] }
@@ -63,7 +67,7 @@ function normalizeEvents(input: unknown): CalendarEventItem[] {
           id: String(sub?.id ?? `${event?.date ?? 'unknown'}-${index}`),
           name: String(sub?.name ?? 'Unknown'),
           amount: Number(sub?.amount ?? 0),
-          currency: String(sub?.currency ?? '₹'),
+          currency: String(sub?.currency ?? 'INR'),
           category: String(sub?.category ?? 'Other'),
           logo: typeof sub?.logo === 'string' ? sub.logo : null,
           color: typeof sub?.color === 'string' ? sub.color : null,
@@ -108,6 +112,10 @@ export function CalendarScreen() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   const { calendarEvents, isLoading, error } = useCalendarEvents()
+  const notificationSettings = useStore((state) => state.notificationSettings)
+  const preferredCurrency = notificationSettings.currencyCode || 'INR'
+  const preferredLanguage = notificationSettings.language || 'en'
+  const { rates } = useExchangeRates()
 
   const events = useMemo<CalendarEventItem[]>(
     () => normalizeEvents(calendarEvents),
@@ -405,8 +413,14 @@ export function CalendarScreen() {
               </div>
 
               <span className="text-sm font-semibold text-foreground whitespace-nowrap">
-                {(selectedEvent.subscriptions[0]?.currency || '₹') +
-                  Number(selectedEvent.totalAmount || 0).toLocaleString('en-IN')}
+                {formatMoney(
+                  selectedEvent.subscriptions.reduce(
+                    (sum, sub) => sum + convertSubscriptionAmount(sub, preferredCurrency, rates),
+                    0
+                  ),
+                  preferredCurrency,
+                  preferredLanguage
+                )}
               </span>
             </div>
 
@@ -432,7 +446,7 @@ export function CalendarScreen() {
                   </div>
 
                   <span className="font-semibold text-foreground whitespace-nowrap">
-                    {(sub.currency || '₹') + Number(sub.amount || 0).toLocaleString('en-IN')}
+                    {formatSubscriptionMoney(sub, preferredCurrency, preferredLanguage, rates)}
                   </span>
                 </div>
               ))}
@@ -495,7 +509,7 @@ export function CalendarScreen() {
                           </div>
 
                           <span className="font-semibold text-foreground whitespace-nowrap">
-                            {(sub.currency || '₹') + Number(sub.amount || 0).toLocaleString('en-IN')}
+                            {formatSubscriptionMoney(sub, preferredCurrency, preferredLanguage, rates)}
                           </span>
                         </div>
                       ))}

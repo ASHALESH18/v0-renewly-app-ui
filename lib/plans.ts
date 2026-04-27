@@ -80,7 +80,7 @@ export const plans: Plan[] = [
     priceINR: { amount: 299, period: 'month', originalAmount: 499, savings: 200 },
     priceUSD: { amount: 8.99, period: 'month', originalAmount: 14.99, savings: 6 },
     priceEUR: { amount: 8.99, period: 'month', originalAmount: 14.99, savings: 6 },
-    extraNote: '+₹99/member/month after 4 members',
+    extraNote: 'Additional members after 4 members',
     features: [
       'Everything in Pro',
       'Up to 4 family members',
@@ -141,7 +141,7 @@ export function getPlanPricing(id: PlanType, currency: PlanCurrency = 'INR'): Pl
 
   const key = `price${currency}` as const
   const pricing = plan[key]
-  
+
   // Fallback to USD if currency not supported
   if (!pricing && currency !== 'USD') {
     return plan.priceUSD
@@ -173,7 +173,7 @@ export function formatPlan(id: PlanType, currency: PlanCurrency = 'INR'): string
     USD: '$',
     EUR: '€',
   }
-  
+
   const symbol = symbols[currency]
   return `${name} (${symbol}${pricing.amount}/${pricing.period})`
 }
@@ -197,7 +197,7 @@ export function getPriceString(plan: Plan, currency: PlanCurrency = 'INR'): stri
     USD: '$',
     EUR: '€',
   }
-  
+
   const symbol = symbols[currency]
   return `${symbol}${pricing.amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
 }

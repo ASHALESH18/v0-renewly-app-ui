@@ -20,10 +20,10 @@ import { PageTransition, StaggerList, staggerItem } from '@/components/motion'
 import { MotionSection } from '@/components/motion-section'
 import useStore from '@/lib/store'
 import { cn } from '@/lib/utils'
-import { useCountUp } from '@/lib/hooks/use-count-up'
 import type { Subscription } from '@/lib/types'
-import { formatMoney, formatNumberForLocale, getCurrencySymbol } from '@/lib/preferences-format'
+import { formatMoney, formatSubscriptionMoney } from '@/lib/preferences-format'
 import { calculateMetrics, getUpcomingRenewals, getDaysUntilRenewal } from '@/lib/subscription-math'
+import { useExchangeRates } from '@/lib/hooks/use-exchange-rates'
 import { SubscriptionIcon } from '@/lib/brand-icons'
 
 const viewSegments = [
@@ -51,10 +51,10 @@ export function DashboardScreen({
   const notificationSettings = useStore((state) => state.notificationSettings)
   const preferredLanguage = notificationSettings.language || 'en'
   const preferredCurrency = notificationSettings.currencyCode || 'INR'
-  const currencySymbol = getCurrencySymbol(preferredCurrency, preferredLanguage)
+  const { rates } = useExchangeRates()
 
   const metrics = useMemo(() => {
-    const m = calculateMetrics(subscriptions)
+    const m = calculateMetrics(subscriptions, preferredCurrency, rates)
 
     return {
       totalMonthly: m.totalMonthlySpend,
@@ -63,7 +63,7 @@ export function DashboardScreen({
       savingsPotential: m.savingsPotential,
       leakScore: m.leakScore,
     }
-  }, [subscriptions])
+  }, [subscriptions, preferredCurrency, rates])
 
   const upcoming = useMemo(() => {
     return getUpcomingRenewals(subscriptions, 30)
@@ -162,8 +162,7 @@ export function DashboardScreen({
                   <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">Monthly Spend</p>
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl md:text-4xl font-semibold text-gold tracking-tight">
-                      {currencySymbol}
-                      <AnimatedNumber value={Math.round(metrics.totalMonthly)} language={preferredLanguage} />
+                      {formatMoney(metrics.totalMonthly, preferredCurrency, preferredLanguage)}
                     </span>
                   </div>
                   <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald/8 border border-emerald/15 text-emerald text-xs">
@@ -187,8 +186,7 @@ export function DashboardScreen({
                 <div className="relative">
                   <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">Annual Projected</p>
                   <p className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight">
-                    {currencySymbol}
-                    <AnimatedNumber value={Math.round(metrics.totalYearly)} language={preferredLanguage} />
+                    {formatMoney(metrics.totalYearly, preferredCurrency, preferredLanguage)}
                   </p>
                   <p className="mt-3 text-xs text-muted-foreground">Based on current spend</p>
                 </div>
@@ -208,8 +206,7 @@ export function DashboardScreen({
                 <div className="relative">
                   <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">Potential Savings</p>
                   <p className="text-2xl md:text-3xl font-semibold text-emerald tracking-tight">
-                    {currencySymbol}
-                    <AnimatedNumber value={Math.round(metrics.savingsPotential)} language={preferredLanguage} />
+                    {formatMoney(metrics.savingsPotential, preferredCurrency, preferredLanguage)}
                     <span className="text-sm text-muted-foreground ml-1">/mo</span>
                   </p>
                   <p className="mt-3 text-xs text-emerald font-medium">Review unused subscriptions</p>
@@ -287,8 +284,7 @@ export function DashboardScreen({
         <StaggerList className="grid grid-cols-2 gap-4">
           <MetricCard
             title="Monthly Recurring"
-            value={Math.round(metrics.totalMonthly)}
-            prefix={currencySymbol}
+            value={formatMoney(metrics.totalMonthly, preferredCurrency, preferredLanguage)}
             change={-12}
             changeLabel="vs last month"
             icon={CreditCard}
@@ -297,8 +293,7 @@ export function DashboardScreen({
           />
           <MetricCard
             title="Yearly Projected"
-            value={Math.round(metrics.totalYearly)}
-            prefix={currencySymbol}
+            value={formatMoney(metrics.totalYearly, preferredCurrency, preferredLanguage)}
             icon={Calendar}
             iconColor="#2E5E52"
             index={1}
@@ -313,8 +308,7 @@ export function DashboardScreen({
           />
           <MetricCard
             title="Possible Savings"
-            value={Math.round(metrics.savingsPotential)}
-            prefix={currencySymbol}
+            value={formatMoney(metrics.savingsPotential, preferredCurrency, preferredLanguage)}
             suffix="/mo"
             icon={TrendingDown}
             iconColor="#2E5E52"
@@ -451,6 +445,7 @@ export function DashboardScreen({
                   index={index}
                   preferredCurrency={preferredCurrency}
                   preferredLanguage={preferredLanguage}
+                  rates={rates}
                 />
               ))}
             </div>
@@ -466,6 +461,7 @@ interface UpcomingCardProps {
   index: number
   preferredCurrency: string
   preferredLanguage: string
+  rates: import('@/lib/currency').ExchangeRates
 }
 
 function UpcomingCard({
@@ -473,6 +469,7 @@ function UpcomingCard({
   index,
   preferredCurrency,
   preferredLanguage,
+  rates,
 }: UpcomingCardProps) {
   const daysUntil = subscription.renewalDate
     ? getDaysUntilRenewal(subscription)
@@ -506,23 +503,9 @@ function UpcomingCard({
         </div>
 
         <span className="font-semibold text-foreground whitespace-nowrap">
-          {formatMoney(
-            subscription.amount,
-            subscription.currency || preferredCurrency,
-            preferredLanguage
-          )}
+          {formatSubscriptionMoney(subscription, preferredCurrency, preferredLanguage, rates)}
         </span>
       </div>
     </motion.div>
   )
-}
-
-interface AnimatedNumberProps {
-  value: number
-  language?: string
-}
-
-function AnimatedNumber({ value, language = 'en' }: AnimatedNumberProps) {
-  const displayValue = useCountUp(value, 1500, 0)
-  return <>{formatNumberForLocale(displayValue, language)}</>
 }

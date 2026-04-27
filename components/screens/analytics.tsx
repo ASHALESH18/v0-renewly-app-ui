@@ -27,7 +27,9 @@ import { PageTransition } from '@/components/motion'
 import { SegmentedControl } from '@/components/filter-chips'
 import { useAnalyticsData } from '@/lib/hooks/use-remote-data'
 import useStore from '@/lib/store'
-import { formatMoney } from '@/lib/preferences-format'
+import { formatMoney, formatSubscriptionMoney } from '@/lib/preferences-format'
+import { useExchangeRates } from '@/lib/hooks/use-exchange-rates'
+import { buildCategoryBreakdown, buildProjectedSpendTrend, toMonthlyAmount } from '@/lib/subscription-math'
 import { AnalyticsSkeleton } from '@/components/skeletons'
 
 const timeSegments = [
@@ -57,11 +59,11 @@ function MetricCard({
   icon: React.ComponentType<{ className?: string }>
 }) {
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 30, scale: 0.95 }}
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      whileHover={{ 
-        y: -8, 
+      whileHover={{
+        y: -8,
         boxShadow: '0 32px 64px -16px rgba(199, 163, 106, 0.25), 0 0 0 1px rgba(199, 163, 106, 0.15), 0 0 60px -20px rgba(199, 163, 106, 0.15)'
       }}
       transition={{ duration: 0.7 }}
@@ -69,17 +71,17 @@ function MetricCard({
       className="relative rounded-3xl border border-gold/15 bg-card/90 backdrop-blur-2xl p-7 shadow-card overflow-hidden group"
     >
       {/* DRAMATIC: Multi-layer ambient glow on hover */}
-      <motion.div 
+      <motion.div
         className="absolute -inset-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
         style={{ background: 'radial-gradient(circle at top right, rgba(199, 163, 106, 0.2) 0%, transparent 60%)' }}
       />
-      <motion.div 
+      <motion.div
         className="absolute -inset-4 opacity-0 group-hover:opacity-60 transition-opacity duration-700 pointer-events-none"
         style={{ background: 'radial-gradient(circle at bottom left, rgba(199, 163, 106, 0.1) 0%, transparent 50%)' }}
       />
-      
+
       {/* Animated top highlight line */}
-      <motion.div 
+      <motion.div
         className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent"
         animate={{ opacity: [0.3, 0.6, 0.3] }}
         transition={{ duration: 3, repeat: Infinity }}
@@ -93,8 +95,8 @@ function MetricCard({
           {trend ? (
             <div
               className={`mt-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${trend.positive
-                  ? 'bg-emerald/15 text-emerald border border-emerald/25'
-                  : 'bg-crimson/15 text-crimson border border-crimson/25'
+                ? 'bg-emerald/15 text-emerald border border-emerald/25'
+                : 'bg-crimson/15 text-crimson border border-crimson/25'
                 }`}
             >
               {trend.positive ? (
@@ -131,15 +133,22 @@ export function AnalyticsScreen({
 
   const preferredLanguage = notificationSettings.language || 'en'
   const preferredCurrency = notificationSettings.currencyCode || 'INR'
+  const { rates } = useExchangeRates()
 
   useEffect(() => {
     setIsMounted(true)
   }, [])
 
+  const localSpendData = useMemo(
+    () => buildProjectedSpendTrend(subscriptions, 12, preferredCurrency, rates),
+    [subscriptions, preferredCurrency, rates]
+  )
+
   const filteredSpendData = useMemo(() => {
     const count = timeRange === '3m' ? 3 : timeRange === '6m' ? 6 : 12
-    return monthlySpendData.slice(-count)
-  }, [monthlySpendData, timeRange])
+    const source = localSpendData.length ? localSpendData : monthlySpendData
+    return source.slice(-count)
+  }, [localSpendData, monthlySpendData, timeRange])
 
   const totalSpend = useMemo(
     () => filteredSpendData.reduce((sum: number, item: any) => sum + (item.amount || 0), 0),
@@ -161,23 +170,37 @@ export function AnalyticsScreen({
   }, [filteredSpendData])
 
   const pieData = useMemo(() => {
-    const total = categoryBreakdown.reduce(
-      (sum: number, item: any) => sum + (item.value || 0),
-      0
-    )
+    const breakdown = buildCategoryBreakdown(subscriptions, preferredCurrency, rates)
+    const entries = Object.entries(breakdown)
+    const total = entries.reduce((sum, [, item]) => sum + (item.monthly || 0), 0)
 
-    return categoryBreakdown.map((item: any, index: number) => ({
-      ...item,
-      name: item.name || item.category || 'Other',
-      value: item.value || 0,
-      percentage: total ? Math.round(((item.value || 0) / total) * 100) : 0,
-      color: item.color || COLORS[index % COLORS.length],
+    if (!entries.length && categoryBreakdown.length) {
+      const apiTotal = categoryBreakdown.reduce(
+        (sum: number, item: any) => sum + (item.value || 0),
+        0
+      )
+      return categoryBreakdown.map((item: any, index: number) => ({
+        ...item,
+        name: item.name || item.category || 'Other',
+        value: item.value || 0,
+        percentage: apiTotal ? Math.round(((item.value || 0) / apiTotal) * 100) : 0,
+        color: item.color || COLORS[index % COLORS.length],
+      }))
+    }
+
+    return entries.map(([category, item], index) => ({
+      name: category,
+      value: item.monthly || 0,
+      percentage: total ? Math.round(((item.monthly || 0) / total) * 100) : 0,
+      color: COLORS[index % COLORS.length],
     }))
-  }, [categoryBreakdown])
+  }, [subscriptions, preferredCurrency, rates, categoryBreakdown])
 
   const highestSpend = useMemo(() => {
-    return [...subscriptions].sort((a, b) => b.amount - a.amount).slice(0, 5)
-  }, [subscriptions])
+    return [...subscriptions]
+      .sort((a, b) => toMonthlyAmount(b, preferredCurrency, rates) - toMonthlyAmount(a, preferredCurrency, rates))
+      .slice(0, 5)
+  }, [subscriptions, preferredCurrency, rates])
 
   if (!isMounted || isLoading) {
     return (
@@ -409,10 +432,11 @@ export function AnalyticsScreen({
 
                     <div className="text-right">
                       <p className="font-medium text-foreground">
-                        {formatMoney(
-                          sub.amount,
-                          sub.currency || preferredCurrency,
-                          preferredLanguage
+                        {formatSubscriptionMoney(
+                          sub,
+                          preferredCurrency,
+                          preferredLanguage,
+                          rates
                         )}
                       </p>
                       <p className="text-xs text-muted-foreground">

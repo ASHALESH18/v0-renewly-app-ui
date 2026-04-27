@@ -1,14 +1,13 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
-import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
+import { useRouter } from 'next/navigation'
 import { Zap } from 'lucide-react'
 import { PremiumModal, PremiumBottomSheet } from '@/components/premium-modal'
 import { durations, easings } from '@/components/motion'
-import { getPricingForPaywall } from '@/lib/pricing-display'
+import { getPricingForPaywall, getEffectiveCurrency } from '@/lib/pricing-display'
 import useStore from '@/lib/store'
-import type { PlanCurrency } from '@/lib/plans'
 
 interface SubscriptionLimitPaywallProps {
   isOpen: boolean
@@ -17,12 +16,6 @@ interface SubscriptionLimitPaywallProps {
   limit?: number
 }
 
-/**
- * Premium paywall for subscription limit reached (Free plan → Pro upgrade)
- * Desktop: modal, Mobile: bottom sheet
- * Shows starting price, value proposition, and strong CTAs
- * Uses user's selected currency from settings
- */
 export function SubscriptionLimitPaywall({
   isOpen,
   onClose,
@@ -32,7 +25,10 @@ export function SubscriptionLimitPaywall({
   const router = useRouter()
   const [isMobile, setIsMobile] = useState(false)
   const notificationSettings = useStore((state) => state.notificationSettings)
-  const userCurrency = (notificationSettings?.currencyCode || 'INR') as PlanCurrency
+  const userCurrency = getEffectiveCurrency(
+    notificationSettings?.currencyCode,
+    notificationSettings?.locale
+  )
   const pricing = getPricingForPaywall('pro', userCurrency)
 
   useEffect(() => {
@@ -44,57 +40,54 @@ export function SubscriptionLimitPaywall({
 
   const handleUpgrade = () => {
     onClose()
-    // Route to upgrade page to see all plans and comparison
     router.push('/app/upgrade')
   }
 
   const content = (
     <div className="space-y-5">
-      {/* Heading with strong value prop */}
       <div>
-        <h2 className="text-2xl md:text-3xl font-semibold text-foreground mb-2">
+        <h2 className="mb-2 text-2xl font-semibold text-foreground md:text-3xl">
           Unlock unlimited subscriptions
         </h2>
-        <p className="text-sm text-muted-foreground leading-relaxed">
+        <p className="text-sm leading-relaxed text-muted-foreground">
           You&apos;ve reached the limit on the Free plan. Upgrade now to track unlimited subscriptions and get premium features.
         </p>
       </div>
 
-      {/* Starting price highlight */}
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: durations.base, ease: easings.luxury, delay: 0.1 }}
-        className="p-4 rounded-xl bg-gradient-to-r from-gold/10 via-gold/5 to-gold/10 border border-gold/20"
+        className="rounded-xl border border-gold/20 bg-gradient-to-r from-gold/10 via-gold/5 to-gold/10 p-4"
       >
-        <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium mb-1">
+        <p className="mb-1 text-xs font-medium uppercase tracking-widest text-muted-foreground">
           Pro Plan starts at
         </p>
-        <p className="text-3xl md:text-4xl font-bold text-foreground">
-          {pricing.symbol}{pricing.amount !== null ? pricing.amount.toLocaleString('en-US', { maximumFractionDigits: 2 }) : 'Custom'}
+        <p className="text-3xl font-bold text-foreground md:text-4xl">
+          {pricing.amount !== null ? `${pricing.symbol}${pricing.amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}` : 'Custom'}
           {pricing.amount !== null && (
-            <span className="text-lg font-normal text-muted-foreground ml-2">
+            <span className="ml-2 text-lg font-normal text-muted-foreground">
               /{pricing.period}
             </span>
           )}
         </p>
       </motion.div>
 
-      {/* Usage indicator - minimal */}
-      <div className="p-3 rounded-lg bg-muted/40 border border-border/50">
+      <div className="rounded-lg border border-border/50 bg-muted/40 p-3 text-sm text-muted-foreground">
+        <p>
           <span className="font-semibold text-foreground">{current} / {limit}</span> subscriptions used on Free plan
         </p>
       </div>
 
-      {/* CTA buttons */}
       <div className="flex flex-col gap-3 pt-2">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleUpgrade}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-gold text-obsidian font-semibold shadow-luxury hover:shadow-2xl transition-shadow cursor-pointer"
+          className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gold px-4 py-3.5 font-semibold text-obsidian shadow-luxury transition-shadow hover:shadow-2xl"
+          type="button"
         >
-          <Zap className="w-5 h-5" />
+          <Zap className="h-5 w-5" />
           Upgrade to Pro
         </motion.button>
 
@@ -102,7 +95,8 @@ export function SubscriptionLimitPaywall({
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={onClose}
-          className="w-full px-4 py-3 rounded-xl border border-border text-foreground font-medium hover:bg-muted/50 transition-colors cursor-pointer"
+          className="w-full cursor-pointer rounded-xl border border-border px-4 py-3 font-medium text-foreground transition-colors hover:bg-muted/50"
+          type="button"
         >
           Maybe later
         </motion.button>
@@ -110,14 +104,13 @@ export function SubscriptionLimitPaywall({
     </div>
   )
 
-  // On mobile, use bottom sheet; on desktop, use modal
   if (isMobile) {
     return (
       <PremiumBottomSheet
         isOpen={isOpen}
         onClose={onClose}
         title="Upgrade to Pro"
-        showCloseButton={true}
+        showCloseButton
       >
         {content}
       </PremiumBottomSheet>
@@ -130,7 +123,7 @@ export function SubscriptionLimitPaywall({
       onClose={onClose}
       title="Upgrade to Pro"
       size="md"
-      showCloseButton={true}
+      showCloseButton
     >
       {content}
     </PremiumModal>

@@ -6,6 +6,7 @@ import { mutate as mutateSWR } from 'swr'
 import type { Subscription } from './types'
 import { mapSubscriptionRowToUI, mapUserSettingsRowToUI } from './supabase/mappers'
 import { calculateMetrics } from './subscription-math'
+import { getCurrencyFromCountry, getCurrencyFromLocale } from './currency'
 
 const SUBSCRIPTIONS_SWR_KEY = '/api/subscriptions'
 
@@ -211,6 +212,11 @@ export interface AppState {
   getMetrics: () => ReturnType<typeof calculateMetrics>
 }
 
+function inferInitialCurrency(): string {
+  if (typeof navigator === 'undefined') return 'INR'
+  return getCurrencyFromLocale(navigator.language || navigator.languages?.[0])
+}
+
 const useStore = create<AppState>()(
   persist(
     (set, get) => ({
@@ -223,7 +229,7 @@ const useStore = create<AppState>()(
         emailNotifications: true,
         leakAlerts: true,
         reminderDays: 3,
-        currencyCode: 'INR',
+        currencyCode: inferInitialCurrency(),
         theme: 'dark',
         language: 'en',
         biometricEnabled: false,
@@ -310,8 +316,9 @@ const useStore = create<AppState>()(
           if (settings) {
             const uiSettings = mapUserSettingsRowToUI(settings)
             savedTimeZone = uiSettings.timeZone
+            const inferredCurrency = uiSettings.currencyCode || getCurrencyFromCountry(profile?.country_code) || getCurrencyFromLocale(uiSettings.locale)
             set({
-              notificationSettings: uiSettings,
+              notificationSettings: { ...uiSettings, currencyCode: inferredCurrency },
               theme: uiSettings.theme || get().theme,
             })
           }
@@ -415,7 +422,7 @@ const useStore = create<AppState>()(
             name: subscription.name,
             category: subscription.category,
             amount: subscription.amount,
-            currency: subscription.currency || 'INR',
+            currency: subscription.currency || get().notificationSettings.currencyCode || 'INR',
             billing_cycle: subscription.billingCycle,
             renewal_date: subscription.renewalDate,
             description: subscription.description,

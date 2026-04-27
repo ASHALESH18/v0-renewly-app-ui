@@ -5,6 +5,8 @@ import { X, Zap, Check } from 'lucide-react'
 import { useState } from 'react'
 import Link from 'next/link'
 import { springs } from '@/lib/motion'
+import useStore from '@/lib/store'
+import { getPricingForPaywall, getEffectiveCurrency } from '@/lib/pricing-display'
 
 export interface UpgradePromptProps {
   isOpen: boolean
@@ -22,6 +24,14 @@ export function UpgradePrompt({
   maxLimit,
 }: UpgradePromptProps) {
   const [selectedPlan, setSelectedPlan] = useState<'pro' | 'family'>('pro')
+  const notificationSettings = useStore((state) => state.notificationSettings)
+  const selectedCurrency = getEffectiveCurrency(notificationSettings?.currencyCode, notificationSettings?.locale)
+  const proPricing = getPricingForPaywall('pro', selectedCurrency)
+  const familyPricing = getPricingForPaywall('family', selectedCurrency)
+  const formatPromptPrice = (pricing: typeof proPricing) => {
+    if (pricing.amount === null) return pricing.displayText
+    return `${pricing.symbol}${pricing.amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}/${pricing.period}`
+  }
 
   const getReasonText = () => {
     switch (reason) {
@@ -91,14 +101,13 @@ export function UpgradePrompt({
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 }}
                   onClick={() => setSelectedPlan('pro')}
-                  className={`p-6 rounded-xl border-2 cursor-pointer transition-all ${
-                    selectedPlan === 'pro'
+                  className={`p-6 rounded-xl border-2 cursor-pointer transition-all ${selectedPlan === 'pro'
                       ? 'border-gold bg-gold/5'
                       : 'border-glass-border hover:border-gold/50'
-                  }`}
+                    }`}
                 >
                   <h3 className="text-lg font-semibold text-ivory mb-2">Pro</h3>
-                  <p className="text-sm text-gold mb-4 font-medium">₹149/month</p>
+                  <p className="text-sm text-gold mb-4 font-medium">{formatPromptPrice(proPricing)}</p>
                   <ul className="space-y-2">
                     {[
                       'Unlimited subscriptions',
@@ -120,17 +129,16 @@ export function UpgradePrompt({
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 }}
                   onClick={() => setSelectedPlan('family')}
-                  className={`p-6 rounded-xl border-2 cursor-pointer transition-all ${
-                    selectedPlan === 'family'
+                  className={`p-6 rounded-xl border-2 cursor-pointer transition-all ${selectedPlan === 'family'
                       ? 'border-gold bg-gold/5'
                       : 'border-glass-border hover:border-gold/50'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-lg font-semibold text-ivory">Family</h3>
                     <span className="text-xs bg-gold/20 text-gold px-2 py-1 rounded">Popular</span>
                   </div>
-                  <p className="text-sm text-gold mb-4 font-medium">₹299/month</p>
+                  <p className="text-sm text-gold mb-4 font-medium">{formatPromptPrice(familyPricing)}</p>
                   <ul className="space-y-2">
                     {[
                       'Everything in Pro',

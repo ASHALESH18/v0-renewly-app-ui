@@ -1,107 +1,95 @@
 /**
- * Pricing display utilities - Single source of truth for pricing across paywall and pricing pages
- * Supports multi-currency display: INR, USD, EUR
+ * Pricing display utilities - Single source of truth for pricing across paywall and pricing pages.
+ * Dedicated plan prices currently exist for INR, USD, and EUR.
+ * Any other selected app currency falls back to USD for plan pricing to avoid mixed INR UI.
  */
 
 import { getPlan, getPlanPricing, type PlanCurrency } from './plans'
-import { getCurrencySymbol } from './locale-utils'
+import { getCurrencySymbol } from './currency'
 
 export interface PricingDisplay {
   amount: number | null
-  currency: string
+  currency: PlanCurrency
   symbol: string
   period: string
-  displayText: string // e.g., "From ₹149/month"
+  displayText: string
   originalAmount?: number
   savings?: number
 }
 
-/**
- * Get pricing for a plan with currency localization
- */
+export function getEffectiveCurrency(
+  userCurrency?: string,
+  locale?: string
+): PlanCurrency {
+  if (userCurrency === 'INR' || userCurrency === 'USD' || userCurrency === 'EUR') {
+    return userCurrency
+  }
+
+  if (locale?.startsWith('en-IN') || locale?.startsWith('hi')) return 'INR'
+  if (
+    locale?.startsWith('de') ||
+    locale?.startsWith('fr') ||
+    locale?.startsWith('es') ||
+    locale?.startsWith('it') ||
+    locale?.startsWith('nl')
+  ) {
+    return 'EUR'
+  }
+
+  return 'USD'
+}
+
 export function getPricingForPaywall(
   planId: 'pro' | 'family' | 'enterprise' = 'pro',
   currencyCode: PlanCurrency = 'INR'
 ): PricingDisplay {
+  const effectiveCurrency = getEffectiveCurrency(currencyCode)
   const plan = getPlan(planId)
+  const symbol = getCurrencySymbol(effectiveCurrency)
+
   if (!plan) {
     return {
       amount: null,
-      currency: currencyCode,
-      symbol: getCurrencySymbol(currencyCode),
-      period: 'month',
-      displayText: 'Contact for pricing',
-    }
-  }
-
-  const pricing = getPlanPricing(planId, currencyCode)
-  if (!pricing) {
-    return {
-      amount: null,
-      currency: currencyCode,
-      symbol: getCurrencySymbol(currencyCode),
-      period: 'month',
-      displayText: 'Contact for pricing',
-    }
-  }
-
-  const symbol = getCurrencySymbol(currencyCode)
-
-  if (pricing.amount === null) {
-    return {
-      amount: null,
-      currency: currencyCode,
+      currency: effectiveCurrency,
       symbol,
-      period: pricing.period,
-      displayText: pricing.priceText || 'Custom pricing',
+      period: 'month',
+      displayText: 'Contact for pricing',
+    }
+  }
+
+  const pricing = getPlanPricing(planId, effectiveCurrency)
+
+  if (!pricing || pricing.amount === null) {
+    return {
+      amount: null,
+      currency: effectiveCurrency,
+      symbol,
+      period: pricing?.period || 'month',
+      displayText: pricing?.priceText || 'Custom pricing',
     }
   }
 
   if (pricing.amount === 0) {
     return {
       amount: 0,
-      currency: currencyCode,
+      currency: effectiveCurrency,
       symbol,
       period: pricing.period,
       displayText: 'Free',
     }
   }
 
+  const amount = pricing.amount.toLocaleString('en-US', { maximumFractionDigits: 2 })
+
   return {
     amount: pricing.amount,
-    currency: currencyCode,
+    currency: effectiveCurrency,
     symbol,
     period: pricing.period,
-    displayText: `From ${symbol}${pricing.amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}/${pricing.period}`,
+    displayText: `From ${symbol}${amount}/${pricing.period}`,
     originalAmount: pricing.originalAmount,
     savings: pricing.savings,
   }
 }
 
-/**
- * Format currency symbol - centralized to avoid duplication
- */
-export { getCurrencySymbol } from './locale-utils'
-
-/**
- * Get user's selected currency, with fallbacks
- */
-export function getEffectiveCurrency(
-  userCurrency?: string,
-  locale?: string
-): PlanCurrency {
-  // If explicitly set to a supported currency, use it
-  if (userCurrency === 'INR' || userCurrency === 'USD' || userCurrency === 'EUR') {
-    return userCurrency as PlanCurrency
-  }
-
-  // If locale provided, map to currency
-  if (locale?.startsWith('en-US')) return 'USD'
-  if (locale?.includes('en-GB') || locale?.startsWith('de') || locale?.startsWith('fr')) {
-    return 'EUR'
-  }
-  if (locale?.startsWith('en-IN') || locale?.startsWith('hi')) return 'INR'
-
-  // Default to INR
-  return 'INR'
-}
+export { getCurrencySymbol } from './currency'

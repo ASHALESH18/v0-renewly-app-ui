@@ -25,6 +25,9 @@ import { cn } from '@/lib/utils'
 import { Header } from '@/components/header'
 import { PageTransition } from '@/components/motion'
 import { SubscriptionIcon } from '@/lib/brand-icons'
+import useStore from '@/lib/store'
+import { useExchangeRates } from '@/lib/hooks/use-exchange-rates'
+import { formatMoneyFromCurrency } from '@/lib/preferences-format'
 import type {
   CandidateStatus,
   CaptureSource,
@@ -159,10 +162,20 @@ interface CandidateCardProps {
 }
 
 function CandidateCard({ candidate, onReview, onAdd, onIgnore }: CandidateCardProps) {
+  const notificationSettings = useStore((state) => state.notificationSettings)
+  const preferredCurrency = notificationSettings.currencyCode || 'INR'
+  const preferredLanguage = notificationSettings.language || 'en'
+  const { rates } = useExchangeRates()
+
   const formatAmount = (amount?: number, currency?: string) => {
     if (!amount) return 'Amount unknown'
-    const symbol = currency === 'INR' ? 'Rs' : currency === 'USD' ? '$' : currency || ''
-    return `${symbol} ${amount.toLocaleString()}`
+    return formatMoneyFromCurrency(
+      amount,
+      currency || preferredCurrency,
+      preferredCurrency,
+      preferredLanguage,
+      rates
+    )
   }
 
   const billingLabels: Record<string, string> = {
@@ -175,9 +188,9 @@ function CandidateCard({ candidate, onReview, onAdd, onIgnore }: CandidateCardPr
   }
 
   // Map confidence score to level
-  const confidenceLevel: ConfidenceLevel = 
-    candidate.confidence_score >= 70 ? 'high' : 
-    candidate.confidence_score >= 40 ? 'medium' : 'low'
+  const confidenceLevel: ConfidenceLevel =
+    candidate.confidence_score >= 70 ? 'high' :
+      candidate.confidence_score >= 40 ? 'medium' : 'low'
 
   return (
     <motion.div
@@ -651,21 +664,21 @@ export function InboxScreen({ onReviewCandidate }: InboxScreenProps) {
               </button>
             </motion.div>
           ) : (
-          <AnimatePresence mode="popLayout">
-            {filteredCandidates.length > 0 ? (
-              filteredCandidates.map((candidate) => (
-                <CandidateCard
-                  key={candidate.id}
-                  candidate={candidate}
-                  onReview={() => handleReview(candidate)}
-                  onAdd={() => handleAdd(candidate)}
-                  onIgnore={() => handleIgnore(candidate)}
-                />
-              ))
-            ) : (
-              <EmptyState status={activeStatus} />
-            )}
-          </AnimatePresence>
+            <AnimatePresence mode="popLayout">
+              {filteredCandidates.length > 0 ? (
+                filteredCandidates.map((candidate) => (
+                  <CandidateCard
+                    key={candidate.id}
+                    candidate={candidate}
+                    onReview={() => handleReview(candidate)}
+                    onAdd={() => handleAdd(candidate)}
+                    onIgnore={() => handleIgnore(candidate)}
+                  />
+                ))
+              ) : (
+                <EmptyState status={activeStatus} />
+              )}
+            </AnimatePresence>
           )}
         </div>
       </div>

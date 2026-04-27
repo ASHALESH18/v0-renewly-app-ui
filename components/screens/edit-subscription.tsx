@@ -14,6 +14,8 @@ import { Button } from '@/components/ui/button'
 import { DatePickerField } from '@/components/date-picker-field'
 import useStore from '@/lib/store'
 import { currencies } from '@/lib/locale-utils'
+import { getCurrencySymbol, convertCurrency } from '@/lib/currency'
+import { useExchangeRates } from '@/lib/hooks/use-exchange-rates'
 import { validateSubscriptionForm, getFirstInvalidField, type SubscriptionValidationErrors } from '@/lib/validation'
 import type { Subscription, SubscriptionCategory, BillingCycle } from '@/lib/types'
 
@@ -100,7 +102,8 @@ type EditSubscriptionResult = {
 export function EditSubscriptionModal({ open, onClose, subscription }: EditSubscriptionModalProps) {
   const notificationSettings = useStore((state) => state.notificationSettings)
   const defaultCurrency = notificationSettings?.currencyCode || 'INR'
-  
+  const { rates } = useExchangeRates()
+
   const [name, setName] = useState('')
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('other')
   const [customCategory, setCustomCategory] = useState('')
@@ -120,7 +123,6 @@ export function EditSubscriptionModal({ open, onClose, subscription }: EditSubsc
 
   const updateSubscriptionRemote = useStore((state) => state.updateSubscriptionRemote)
   const addToast = useStore((state) => state.addToast)
-  const notificationSettings = useStore((state) => state.notificationSettings)
 
   // Initialize form when subscription changes
   React.useEffect(() => {
@@ -147,28 +149,20 @@ export function EditSubscriptionModal({ open, onClose, subscription }: EditSubsc
       }
 
       setSelectedCycle(subscription.billingCycle as BillingCycle)
-      setAmount(subscription.amount.toString())
-      // Preserve subscription's currency if it exists, otherwise use app default
-      setCurrency(subscription.currency || defaultCurrency)
+      const displayAmount = convertCurrency(
+        subscription.amount,
+        subscription.currency || defaultCurrency,
+        defaultCurrency,
+        rates
+      )
+      setAmount(Number(displayAmount.toFixed(2)).toString())
+      setCurrency(defaultCurrency)
       setNextBilling(subscription.renewalDate || '')
       setDescription(subscription.description || '')
       setValidationErrors({})
     }
-  }, [subscription, open, defaultCurrency])
-
-  const currencySymbolMap: Record<string, string> = {
-    INR: '₹',
-    USD: '$',
-    EUR: '€',
-    GBP: '£',
-    JPY: '¥',
-    CNY: '¥',
-    AUD: 'A$',
-    CAD: 'C$',
-    SGD: 'S$',
-  }
-
-  const currencySymbol = currencySymbolMap[currency] || currency
+  }, [subscription, open, defaultCurrency, rates])
+  const currencySymbol = getCurrencySymbol(currency)
 
   const handleSave = async () => {
     if (!subscription) return
