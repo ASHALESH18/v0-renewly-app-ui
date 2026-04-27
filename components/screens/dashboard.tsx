@@ -97,6 +97,31 @@ export function DashboardScreen({
     return name.includes(query) || category.includes(query)
   })
 
+  // Search results for the overlay - search globally across all subscriptions
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return []
+
+    const query = searchQuery.toLowerCase()
+    return subscriptions
+      .filter((sub) => {
+        const name = String(sub.name || '').toLowerCase()
+        const category = String(sub.category || 'Other').toLowerCase()
+        const description = String(sub.description || '').toLowerCase()
+
+        return (
+          name.includes(query) ||
+          category.includes(query) ||
+          description.includes(query)
+        )
+      })
+      .map((sub) => ({
+        id: sub.id,
+        title: sub.name || 'Unknown',
+        subtitle: sub.category || 'Other',
+        meta: formatSubscriptionMoney(sub.amount, sub.currency) + (sub.billingCycle ? `/${sub.billingCycle}` : ''),
+      }))
+  }, [searchQuery, subscriptions])
+
   return (
     <PageTransition className="min-h-screen bg-transparent">
       <Header
@@ -109,6 +134,15 @@ export function DashboardScreen({
         onClose={() => setShowSearch(false)}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        results={searchResults}
+        emptyMessage="No subscriptions match your search"
+        onResultClick={(id) => {
+          const subscription = subscriptions.find(s => s.id === id)
+          if (subscription) {
+            onSubscriptionSelect?.(subscription)
+            setShowSearch(false)
+          }
+        }}
       />
 
       <div className="px-4 lg:px-6 space-y-6 pb-8">

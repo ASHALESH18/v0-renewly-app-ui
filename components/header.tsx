@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, Search, Settings, Check, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -219,7 +220,7 @@ export function Header({
 
         <div className="flex items-center gap-2">
           {showSearch && (
-            <HeaderButton onClick={onSearchClick} ariaLabel="Open search">
+            <HeaderButton onClick={onSearchClick} ariaLabel="Search subscriptions">
               <Search className="w-5 h-5" />
             </HeaderButton>
           )}
@@ -433,19 +434,40 @@ function HeaderButton({ children, onClick, badge, ariaLabel }: HeaderButtonProps
   )
 }
 
+interface SearchResultItem {
+  id: string
+  title: string
+  subtitle?: string
+  meta?: string
+}
+
 interface SearchOverlayProps {
   isOpen: boolean
   onClose: () => void
   searchQuery: string
   onSearchChange: (query: string) => void
+  results?: SearchResultItem[]
+  emptyMessage?: string
+  onResultClick?: (id: string) => void
 }
+
+export type { SearchResultItem, SearchOverlayProps }
 
 export function SearchOverlay({
   isOpen,
   onClose,
   searchQuery,
   onSearchChange,
+  results = [],
+  emptyMessage = 'No subscriptions match your search',
+  onResultClick,
 }: SearchOverlayProps) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   useEffect(() => {
     if (!isOpen) return
 
@@ -459,38 +481,94 @@ export function SearchOverlay({
     return () => document.removeEventListener('keydown', handleEscape)
   }, [isOpen, onClose])
 
-  if (!isOpen) return null
+  if (!isOpen || !mounted) return null
 
-  return (
+  const content = (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onClick={onClose}
-      className="fixed inset-0 z-50 bg-background/95 backdrop-blur-xl"
+      className="fixed inset-0 z-[9999] bg-background/95 backdrop-blur-xl"
     >
-      <div className="p-4" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-3">
-          <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search subscriptions..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              autoFocus
-              className="w-full h-12 pl-12 pr-4 rounded-xl bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50"
-            />
+      <div className="absolute inset-0 flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        {/* Search input area */}
+        <div className="flex-shrink-0 p-4 sm:p-6 border-b border-border/50">
+          <div className="flex items-center gap-3 max-w-2xl mx-auto">
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search subscriptions..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                autoFocus
+                className="w-full h-12 pl-12 pr-4 rounded-xl bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50"
+              />
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={onClose}
+              className="px-4 py-3 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
+              Cancel
+            </motion.button>
           </div>
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={onClose}
-            className="px-4 py-3 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-          >
-            Cancel
-          </motion.button>
+        </div>
+
+        {/* Results area */}
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="max-w-2xl mx-auto">
+            {searchQuery.trim() === '' ? (
+              <div className="text-center py-12">
+                <div className="text-muted-foreground text-sm">
+                  Search by subscription name or category
+                </div>
+              </div>
+            ) : results.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-muted-foreground text-sm">
+                  {emptyMessage}
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="text-xs text-muted-foreground mb-4">
+                  Showing {results.length} result{results.length !== 1 ? 's' : ''}
+                </div>
+                <div className="space-y-2">
+                  {results.slice(0, 6).map((result) => (
+                    <motion.button
+                      key={result.id}
+                      whileHover={{ x: 4, backgroundColor: 'var(--muted)' }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        onResultClick?.(result.id)
+                        onClose()
+                      }}
+                      className="w-full text-left px-4 py-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
+                    >
+                      <div className="font-medium text-foreground">{result.title}</div>
+                      {result.subtitle && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {result.subtitle}
+                        </div>
+                      )}
+                      {result.meta && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {result.meta}
+                        </div>
+                      )}
+                    </motion.button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>
   )
+
+  return createPortal(content, document.body)
 }
