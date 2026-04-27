@@ -72,3 +72,62 @@ export interface NotificationStateRow {
   created_at: string
   updated_at: string
 }
+
+// Family Plan Tables
+
+export interface FamilyGroupRow {
+  id: string
+  owner_user_id: string
+  status: 'active' | 'past_due' | 'cancelled'
+  included_member_limit: number
+  extra_member_price_inr: number
+  extra_seat_count: number
+  current_period_start: string | null
+  current_period_end: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface FamilyMemberRow {
+  id: string
+  family_group_id: string
+  user_id: string
+  email: string
+  role: 'owner' | 'member'
+  status: 'active' | 'removed'
+  seat_type: 'owner' | 'included' | 'extra'
+  joined_at: string
+  removed_at: string | null
+  removed_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface FamilyInviteRow {
+  id: string
+  family_group_id: string
+  invited_email: string
+  invited_by: string
+  token_hash: string
+  status: 'pending' | 'accepted' | 'expired' | 'cancelled'
+  seat_type: 'included' | 'extra'
+  expires_at: string
+  accepted_by: string | null
+  accepted_at: string | null
+  cancelled_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface FamilySeatAddonRow {
+  id: string
+  family_group_id: string
+  quantity: number
+  price_inr_per_seat: number
+  status: 'active' | 'cancelled' | 'past_due'
+  current_period_start: string | null
+  current_period_end: string | null
+  cancel_at_period_end: boolean
+  created_at: string
+  updated_at: string
+}
