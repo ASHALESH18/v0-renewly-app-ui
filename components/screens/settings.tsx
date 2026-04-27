@@ -468,10 +468,13 @@ export function SettingsScreen() {
           <SettingsToggle
             icon={Mail}
             label="Email Notifications"
-            description="Weekly summaries"
+            description="Welcome emails, renewal updates, and account alerts"
             checked={notificationSettings.emailNotifications}
             onToggle={handleToggleEmailNotifications}
           />
+          <div className="px-4 py-2 text-xs text-muted-foreground/70">
+            We'll use email for important account updates, upcoming renewal reminders, and useful subscription summaries — no spam.
+          </div>
           <SettingsItem
             icon={Smartphone}
             label="Reminder Timing"

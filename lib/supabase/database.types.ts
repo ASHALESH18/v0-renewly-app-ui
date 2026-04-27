@@ -9,6 +9,7 @@ export interface ProfileRow {
   country_code: string | null
   locale: string | null
   time_zone: string | null
+  welcome_email_sent_at: string | null
   created_at: string
   updated_at: string
   avatar_source: 'provider' | 'user' | 'generated' | null
