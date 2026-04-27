@@ -362,6 +362,10 @@ function subscriptionReminderTemplate(
 }
 
 function welcomeTemplate(userName: string): string {
+  const appStoreUrl = process.env.NEXT_PUBLIC_APP_STORE_URL
+  const playStoreUrl = process.env.NEXT_PUBLIC_PLAY_STORE_URL
+  const hasRatingButtons = appStoreUrl || playStoreUrl
+
   return `
 <!DOCTYPE html>
 <html>
@@ -374,24 +378,38 @@ function welcomeTemplate(userName: string): string {
     <div class="content">
       <h1>Welcome to Renewly</h1>
       <p>Hi ${userName},</p>
-      <p>Welcome to Renewly! We're thrilled to have you on board.</p>
-      <p>With Renewly, you can:</p>
-      <ul style="margin: 16px 0; padding-left: 24px;">
-        <li>Track all your subscriptions in one place</li>
-        <li>Get reminders before renewals so you never miss a payment</li>
-        <li>Spot subscription leaks and duplicate charges</li>
-        <li>View spending analytics by category</li>
-        <li>Export your data anytime</li>
-      </ul>
-      <p>Start by adding your first subscription, and we'll help you take control of your digital life.</p>
+      <p>Welcome to Renewly — your subscription command center.</p>
+      <p>You can now track your subscriptions, monitor renewal dates, understand your monthly spend, and spot subscriptions that may be quietly leaking money.</p>
+      <p>To get started, add your first subscription and Renewly will begin organizing your dashboard, calendar, and renewal insights.</p>
+      <p>Your Free plan lets you track up to 2 subscriptions. Upgrade anytime for unlimited tracking and premium insights.</p>
       <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://renewly.app'}/app/dashboard" class="button">Open Dashboard</a>
-      <div class="alert-box" style="margin-top: 24px;">
-        <p style="margin: 0;"><strong>Free Plan Limit:</strong> The Free plan includes up to 2 subscriptions. Upgrade to Pro or Family for unlimited subscriptions and more features.</p>
+      ${
+        hasRatingButtons
+          ? `
+      <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e5e5;">
+        <h3 style="margin: 0 0 12px 0; color: #0e1218; font-size: 16px;">Help us grow</h3>
+        <p style="margin: 0 0 16px 0; color: #666666; font-size: 14px;">We've put a lot of care into building Renewly. If it helps you stay on top of subscriptions, a quick rating would mean a lot.</p>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          ${
+            appStoreUrl
+              ? `<a href="${appStoreUrl}" style="display: inline-block; background-color: #f5f5f5; color: #0e1218; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500; border: 1px solid #e5e5e5;">Rate on App Store</a>`
+              : ''
+          }
+          ${
+            playStoreUrl
+              ? `<a href="${playStoreUrl}" style="display: inline-block; background-color: #f5f5f5; color: #0e1218; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500; border: 1px solid #e5e5e5;">Rate on Google Play</a>`
+              : ''
+          }
+        </div>
       </div>
+      `
+          : ''
+      }
     </div>
     <div class="footer">
       <p>Renewly - Track your subscriptions smartly</p>
-      <p>Questions? We're here to help!</p>
+      <p style="margin: 8px 0 0 0;">Made in India with ❤️</p>
+      <p style="margin: 8px 0 0 0;">You're receiving this because you created a Renewly account.</p>
     </div>
   </div>
 </body>

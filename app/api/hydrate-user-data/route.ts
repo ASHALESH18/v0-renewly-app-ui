@@ -58,20 +58,22 @@ export async function POST(request: Request) {
     // Check if we should migrate local data (empty remote subscriptions)
     const shouldMigrate = subscriptions.length === 0
 
-    // Send welcome email if not already sent
-    if (profile && !profile.welcome_email_sent_at) {
+    // Send welcome email if not already sent (idempotent)
+    if (profile && !profile.welcome_email_sent_at && email) {
       try {
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!
-        )
-
-        // Try to send welcome email
-        const userName = email.split('@')[0]
+        // Use full name if available, otherwise use email prefix
+        const userName = profile.full_name || email.split('@')[0]
+        
+        // Send welcome email
         const emailResult = await sendWelcomeEmail(email, userName)
 
         if (emailResult.success) {
-          // Mark welcome email as sent
+          // Mark welcome email as sent in database
+          const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+          )
+
           await supabase
             .from('profiles')
             .update({ welcome_email_sent_at: new Date().toISOString() })
@@ -79,11 +81,12 @@ export async function POST(request: Request) {
 
           console.log(`[v0] Welcome email sent to ${email}`)
         } else {
+          // Log warning but do not fail hydration
           console.warn(`[v0] Welcome email failed for ${email}: ${emailResult.error}`)
         }
       } catch (err) {
-        console.error('[v0] Error sending welcome email:', err)
-        // Don't fail the hydration if email fails - graceful degradation
+        // Graceful degradation - do not fail hydration if email sending fails
+        console.error('[v0] Error in welcome email flow:', err)
       }
     }
 
