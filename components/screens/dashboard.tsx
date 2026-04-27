@@ -134,7 +134,7 @@ export function DashboardScreen({
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08, duration: 0.5 }}
-              className="flex items-center gap-2 mb-6"
+              className="flex items-center justify-between mb-6"
             >
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold/6 border border-gold/15 backdrop-blur-sm">
                 <div className="relative w-2 h-2">
@@ -142,6 +142,13 @@ export function DashboardScreen({
                 </div>
                 <span className="text-[10px] font-semibold text-gold tracking-wider uppercase">
                   Financial Command Center
+                </span>
+              </div>
+              
+              {/* Currency clarity chip */}
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/40 border border-border/50 backdrop-blur-sm">
+                <span className="text-[10px] font-medium text-muted-foreground tracking-wider">
+                  Displayed in {preferredCurrency}
                 </span>
               </div>
             </motion.div>
