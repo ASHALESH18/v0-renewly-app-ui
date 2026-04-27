@@ -57,7 +57,7 @@ export async function GET() {
         id: sub.id,
         name: sub.name || 'Unknown',
         amount: Number(sub.amount ?? 0),
-        currency: sub.currency || '₹',
+        currency: sub.currency || 'INR',
         category: sub.category || 'Other',
         logo: sub.logo ?? null,
         color: sub.color ?? null,
@@ -83,12 +83,19 @@ export async function GET() {
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     )
 
-    return NextResponse.json({
-      calendarEvents,
-      count: calendarEvents.length,
-    })
+    // Always return the expected shape, even if empty
+    return NextResponse.json(
+      {
+        calendarEvents,
+        count: calendarEvents.length,
+      },
+      { status: 200 }
+    )
   } catch (error) {
     console.error('[v0] Calendar API error:', error)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Internal error' },
+      { status: 500 }
+    )
   }
 }
