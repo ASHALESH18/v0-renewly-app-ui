@@ -220,7 +220,7 @@ export default function ContactSalesPage() {
                 >
                   {isLoading ? 'Submitting...' : 'Contact Our Sales Team'}
                 </motion.button>
-              </form>
+              </>
             )}
           </motion.div>
 
