@@ -77,13 +77,22 @@ function UpgradeContent() {
   const refreshPlan = useStore((state) => state.refreshPlanFromServer)
   const updatePlanLocally = useStore((state) => state.updatePlanLocally)
   const addToast = useStore((state) => state.addToast)
+  const currentPlan = useStore((state) => state.plan)
 
   const initialPlan = plans.some((plan) => plan.id === requestedPlan) ? requestedPlan : 'pro'
   const [selectedPlanId, setSelectedPlanId] = useState<PaidPlanId>(initialPlan as PaidPlanId)
   const [step, setStep] = useState<UpgradeStep>(requestedPlan === 'enterprise' ? 'enterprise-contact' : 'select-plan')
+  const [qaOverrideEnabled, setQaOverrideEnabled] = useState(false)
+  const [qaLoading, setQaLoading] = useState(false)
 
   useEffect(() => {
     clearUpgradeIntent()
+    // Detect if QA override is enabled
+    const isDevOrPreview = process.env.NODE_ENV === 'development' || 
+                           (typeof window !== 'undefined' && 
+                            (window.location.hostname.includes('vercel.app') || 
+                             window.location.hostname.includes('localhost')))
+    setQaOverrideEnabled(isDevOrPreview)
   }, [])
 
   const selectedPlan = useMemo(
@@ -113,18 +122,72 @@ function UpgradeContent() {
     }
 
     if (!canUseRazorpay) {
-      addToast({
-        type: 'info',
-        title: 'Payment setup in progress',
-        message:
-          selectedCurrency === 'INR'
-            ? 'Payment system is being configured. Please check back soon.'
-            : `Checkout for ${selectedCurrency} is being configured. Pricing is shown correctly, but payment is not available yet.`,
-      })
+      if (selectedCurrency !== 'INR') {
+        addToast({
+          type: 'info',
+          title: 'Checkout available in INR only',
+          message:
+            'Checkout is currently available in INR only. You can still test premium access using QA mode in preview.',
+        })
+      } else if (!billingStatus.configured) {
+        addToast({
+          type: 'info',
+          title: 'Payment not configured',
+          message:
+            'Razorpay test/live keys are not configured yet. Please check back soon.',
+        })
+      } else {
+        addToast({
+          type: 'info',
+          title: 'Payment setup in progress',
+          message:
+            'Payment system is being configured. Please check back soon.',
+        })
+      }
       return
     }
 
     setStep('checkout')
+  }
+
+  const handleQaPlanOverride = async (plan: 'free' | 'pro' | 'family') => {
+    try {
+      setQaLoading(true)
+      const res = await fetch('/api/qa/plan-override', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        addToast({
+          type: 'error',
+          title: 'QA override failed',
+          message: data.error || 'Failed to set plan',
+        })
+        return
+      }
+
+      // Update local state
+      updatePlanLocally(plan)
+      await refreshPlan()
+
+      addToast({
+        type: 'success',
+        title: 'QA plan updated',
+        message: `QA plan set to ${plan}`,
+      })
+    } catch (error) {
+      addToast({
+        type: 'error',
+        title: 'QA override error',
+        message: (error as Error).message || 'An error occurred',
+      })
+    } finally {
+      setQaLoading(false)
+    }
   }
 
   const handlePaymentSuccess = async (newPlanId: string) => {
@@ -257,6 +320,38 @@ function UpgradeContent() {
             )
           })}
         </div>
+
+        {qaOverrideEnabled && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl border border-amber-400/40 bg-amber-50/20 p-4 dark:bg-amber-950/20"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <span className="inline-flex items-center rounded-full bg-amber-400/30 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-200">
+                QA Mode
+              </span>
+              <span className="text-xs text-amber-600 dark:text-amber-400">
+                Test premium features without payment
+              </span>
+            </div>
+            <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
+              Current plan: <span className="font-semibold capitalize">{currentPlan}</span>
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {['free', 'pro', 'family'].map((plan) => (
+                <button
+                  key={plan}
+                  onClick={() => handleQaPlanOverride(plan as 'free' | 'pro' | 'family')}
+                  disabled={qaLoading || currentPlan === plan}
+                  className="text-sm px-3 py-1.5 rounded-lg bg-amber-400/20 text-amber-700 hover:bg-amber-400/40 dark:bg-amber-900/40 dark:text-amber-300 dark:hover:bg-amber-900/60 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium capitalize"
+                >
+                  {qaLoading ? 'Setting...' : `Set ${plan}`}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         <div className="rounded-2xl border border-border bg-card/80 p-5">
           <h2 className="text-lg font-semibold text-foreground">Plan comparison</h2>
