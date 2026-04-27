@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { createClient } from '@supabase/supabase-js'
 import { isBillingConfigured } from '@/lib/billing-guards'
+import { syncRenewlyBillingSubscriptionForPlan } from '@/lib/billing/renewly-subscription-sync'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -149,6 +150,36 @@ async function handlePaymentCaptured(payment: any) {
       source: 'webhook',
     },
   })
+
+  // Sync system-managed Renewly subscription
+  if (planId === 'pro' || planId === 'family') {
+    try {
+      // Get user email
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', userId)
+        .single()
+
+      if (!profileError && profile) {
+        // Calculate period end
+        const periodStart = new Date()
+        const periodEnd = new Date(periodStart)
+        periodEnd.setMonth(periodEnd.getMonth() + 1)
+        const periodEndStr = periodEnd.toISOString().split('T')[0]
+
+        await syncRenewlyBillingSubscriptionForPlan({
+          userId,
+          email: profile.email,
+          plan: planId,
+          currentPeriodEnd: periodEndStr,
+        })
+      }
+    } catch (syncError) {
+      console.warn('[v0] Could not sync Renewly subscription in webhook:', syncError)
+      // Don't fail webhook if sync fails
+    }
+  }
 
   console.log('[v0] Successfully processed payment for user:', userId, 'plan:', planId)
 }

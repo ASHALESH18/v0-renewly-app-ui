@@ -15,6 +15,14 @@ export function mapSubscriptionRowToUI(row: SubscriptionRow): Subscription {
     description: row.description,
     logo: row.logo,
     color: row.color,
+    isSystemManaged: row.is_system_managed,
+    managedPlan: row.managed_plan as 'pro' | 'family' | undefined,
+    systemSource: row.system_source as 'renewly_billing' | undefined,
+    managedSubscriptionKey: row.managed_subscription_key,
+    billingOwnerUserId: row.billing_owner_user_id,
+    familyGroupId: row.family_group_id,
+    coveredByFamily: row.covered_by_family,
+    systemMetadata: row.system_metadata,
   }
 }
 
@@ -34,6 +42,15 @@ export function mapUISubscriptionToRow(
     description: subscription.description,
     logo: subscription.logo,
     color: subscription.color,
+    // System-managed fields are never set by client
+    is_system_managed: false,
+    managed_plan: null,
+    system_source: null,
+    managed_subscription_key: null,
+    billing_owner_user_id: null,
+    family_group_id: null,
+    covered_by_family: false,
+    system_metadata: {},
   }
 }
 

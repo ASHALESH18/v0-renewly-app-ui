@@ -69,18 +69,26 @@ export async function PUT(
     const { id } = await params
     const body = await request.json()
 
-    // Verify ownership
-    const { data: existing } = await supabase
+    // Verify ownership and check if system-managed
+    const { data: existing, error: selectError } = await supabase
       .from('subscriptions')
-      .select('id')
+      .select('id, is_system_managed')
       .eq('id', id)
       .eq('user_id', user.id)
       .single()
 
-    if (!existing) {
+    if (selectError || !existing) {
       return NextResponse.json(
         { error: 'Subscription not found' },
         { status: 404 }
+      )
+    }
+
+    // Prevent editing system-managed subscriptions
+    if (existing.is_system_managed) {
+      return NextResponse.json(
+        { error: 'Renewly billing subscriptions are managed automatically. Use Manage Plan.' },
+        { status: 403 }
       )
     }
 
@@ -135,6 +143,29 @@ export async function DELETE(
     }
 
     const { id } = await params
+
+    // Check if system-managed before delete
+    const { data: subscription, error: selectError } = await supabase
+      .from('subscriptions')
+      .select('id, is_system_managed')
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .single()
+
+    if (selectError || !subscription) {
+      return NextResponse.json(
+        { error: 'Subscription not found' },
+        { status: 404 }
+      )
+    }
+
+    // Prevent deleting system-managed subscriptions
+    if (subscription.is_system_managed) {
+      return NextResponse.json(
+        { error: 'Renewly billing subscriptions are managed automatically. Use Manage Plan.' },
+        { status: 403 }
+      )
+    }
 
     const { error } = await supabase
       .from('subscriptions')

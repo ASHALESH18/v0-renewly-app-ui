@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
+import { syncRenewlyBillingSubscriptionForPlan } from '@/lib/billing/renewly-subscription-sync'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -114,6 +115,37 @@ export async function POST(request: NextRequest) {
 
     // Audit log (server-side only, never exposed to client)
     console.log(`[v0] QA PLAN OVERRIDE: ${user.email} (${user.id}) changed from ${oldPlan} to ${plan} at ${new Date().toISOString()}`)
+
+    // Sync system-managed Renewly subscriptions
+    if (plan === 'pro' || plan === 'family') {
+      try {
+        // Calculate period end (30 days from now)
+        const periodStart = new Date()
+        const periodEnd = new Date(periodStart)
+        periodEnd.setMonth(periodEnd.getMonth() + 1)
+        const periodEndStr = periodEnd.toISOString().split('T')[0]
+
+        await syncRenewlyBillingSubscriptionForPlan({
+          userId: user.id,
+          email: user.email || '',
+          plan,
+          currentPeriodEnd: periodEndStr,
+        })
+      } catch (syncError) {
+        console.warn('[v0] QA: Could not sync Renewly subscription:', syncError)
+        // Don't fail the QA override if sync fails
+      }
+    } else if (plan === 'free') {
+      // Archive system-managed subscriptions when downgrading to free
+      try {
+        const { archiveManagedRenewlySubscriptions } = await import(
+          '@/lib/billing/renewly-subscription-sync'
+        )
+        await archiveManagedRenewlySubscriptions({ userId: user.id })
+      } catch (syncError) {
+        console.warn('[v0] QA: Could not archive Renewly subscriptions:', syncError)
+      }
+    }
 
     return NextResponse.json(
       {
