@@ -4,8 +4,7 @@ import { revalidateTag } from 'next/cache'
 import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
 import { createRazorpayOrder, verifyPaymentSignature, getPaymentDetails } from '@/lib/razorpay/server'
-import { plans } from '@/lib/plans'
-import type { PlanType } from '@/lib/plan-capabilities'
+import { getPlan, getPlanPricing, type PlanType } from '@/lib/plans'
 import { isBillingConfigured } from '@/lib/billing-guards'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -46,12 +45,19 @@ export async function initiateUpgrade(planId: PlanType) {
       throw new Error('Cannot downgrade to same or lower plan')
     }
 
-    // Get plan details
-    const plan = plans.find(p => p.id === planId)
-    if (!plan || plan.price === null) throw new Error('Invalid plan')
+    // Get plan details - use getPlanPricing for consistent multi-currency support
+    const plan = getPlan(planId)
+    if (!plan) throw new Error('Invalid plan')
 
-    // Create Razorpay order (amount in paise)
-    const amountInPaise = plan.price * 100
+    // For Razorpay, we only support INR for now
+    const pricing = getPlanPricing(planId, 'INR')
+    if (!pricing || pricing.amount === null) {
+      throw new Error('Plan pricing not available for Razorpay checkout')
+    }
+
+    // Convert to paise (1 rupee = 100 paise)
+    const amountInPaise = pricing.amount * 100
+
     const orderResult = await createRazorpayOrder({
       amount: amountInPaise,
       receipt: `upgrade-${user.id}-${planId}-${Date.now()}`,
@@ -72,7 +78,7 @@ export async function initiateUpgrade(planId: PlanType) {
       user_id: user.id,
       razorpay_order_id: orderResult.order.id,
       plan_id: planId,
-      amount: amountInPaise,
+      amountInPaise,
       status: 'created',
       notes: {
         upgrade_from: profile.plan,
@@ -170,7 +176,7 @@ export async function processPayment(
       razorpay_payment_id: paymentId,
       razorpay_order_id: orderId,
       plan_id: planId,
-      amount: payment.amount || orderData.amount,
+      amount: payment.amount || orderData.amountInPaise,
       status: 'paid',
       notes: {
         method: payment.method,
