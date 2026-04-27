@@ -26,6 +26,84 @@ import { calculateMetrics, getUpcomingRenewals, getDaysUntilRenewal } from '@/li
 import { useExchangeRates } from '@/lib/hooks/use-exchange-rates'
 import { SubscriptionIcon } from '@/lib/brand-icons'
 
+// Translation helper for dashboard labels
+const dashboardLabels: Record<string, Record<string, string>> = {
+  en: {
+    financialCommandCenter: 'Financial Command Center',
+    monthlySpend: 'Monthly Spend',
+    annualProjected: 'Annual Projected',
+    potentialSavings: 'Potential Savings',
+    subscriptionHealthScore: 'Subscription Health Score',
+    needsAttention: 'Needs Attention',
+    yourSubscriptions: 'Your Subscriptions',
+    upcomingRenewals: 'Upcoming Renewals',
+    viewReport: 'View Report',
+    displayedIn: 'Displayed in',
+    noSubscriptionsYet: 'No subscriptions yet',
+    noSubscriptionsMatch: 'No subscriptions match your search',
+  },
+  es: {
+    financialCommandCenter: 'Centro de Control Financiero',
+    monthlySpend: 'Gasto Mensual',
+    annualProjected: 'Proyección Anual',
+    potentialSavings: 'Ahorros Potenciales',
+    subscriptionHealthScore: 'Puntuación de Salud',
+    needsAttention: 'Necesita Atención',
+    yourSubscriptions: 'Tus Suscripciones',
+    upcomingRenewals: 'Renovaciones Próximas',
+    viewReport: 'Ver Reporte',
+    displayedIn: 'Mostrado en',
+    noSubscriptionsYet: 'Sin suscripciones aún',
+    noSubscriptionsMatch: 'Ninguna suscripción coincide',
+  },
+  fr: {
+    financialCommandCenter: 'Centre de Commande Financier',
+    monthlySpend: 'Dépenses Mensuelles',
+    annualProjected: 'Projection Annuelle',
+    potentialSavings: 'Économies Potentielles',
+    subscriptionHealthScore: 'Score de Santé',
+    needsAttention: 'Nécessite Attention',
+    yourSubscriptions: 'Vos Abonnements',
+    upcomingRenewals: 'Renouvellements À Venir',
+    viewReport: 'Voir le Rapport',
+    displayedIn: 'Affiché en',
+    noSubscriptionsYet: 'Aucun abonnement pour l\'instant',
+    noSubscriptionsMatch: 'Aucun abonnement ne correspond',
+  },
+  de: {
+    financialCommandCenter: 'Finanzkontrollzentrum',
+    monthlySpend: 'Monatliche Ausgaben',
+    annualProjected: 'Jährliche Projektion',
+    potentialSavings: 'Mögliche Ersparnisse',
+    subscriptionHealthScore: 'Gesundheitswert',
+    needsAttention: 'Erfordert Aufmerksamkeit',
+    yourSubscriptions: 'Ihre Abonnements',
+    upcomingRenewals: 'Anstehende Verlängerungen',
+    viewReport: 'Bericht Anzeigen',
+    displayedIn: 'Angezeigt in',
+    noSubscriptionsYet: 'Noch keine Abonnements',
+    noSubscriptionsMatch: 'Keine Abonnements stimmen überein',
+  },
+  hi: {
+    financialCommandCenter: 'वित्तीय कमांड सेंटर',
+    monthlySpend: 'मासिक खर्च',
+    annualProjected: 'वार्षिक अनुमान',
+    potentialSavings: 'संभावित बचत',
+    subscriptionHealthScore: 'स्वास्थ्य स्कोर',
+    needsAttention: 'ध्यान देने की जरूरत है',
+    yourSubscriptions: 'आपकी सदस्यताएं',
+    upcomingRenewals: 'आने वाली नवीनीकरण',
+    viewReport: 'रिपोर्ट देखें',
+    displayedIn: 'इसमें प्रदर्शित',
+    noSubscriptionsYet: 'अभी कोई सदस्यता नहीं',
+    noSubscriptionsMatch: 'कोई सदस्यता मेल नहीं खाती',
+  },
+}
+
+function getDashboardLabel(key: string, language: string): string {
+  return dashboardLabels[language]?.[key] || dashboardLabels.en[key] || key
+}
+
 const viewSegments = [
   { id: 'cards', label: 'Cards' },
   { id: 'list', label: 'List' },
@@ -222,14 +300,14 @@ export function DashboardScreen({
                   <span className="absolute inset-0 rounded-full bg-gold" />
                 </div>
                 <span className="text-[10px] font-semibold text-gold tracking-wider uppercase">
-                  Financial Command Center
+                  {getDashboardLabel('financialCommandCenter', preferredLanguage)}
                 </span>
               </div>
               
               {/* Currency clarity chip */}
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/40 border border-border/50 backdrop-blur-sm">
                 <span className="text-[10px] font-medium text-muted-foreground tracking-wider">
-                  Displayed in {preferredCurrency}
+                  {getDashboardLabel('displayedIn', preferredLanguage)} {preferredCurrency}
                 </span>
               </div>
             </motion.div>
@@ -247,7 +325,7 @@ export function DashboardScreen({
                   style={{ background: 'radial-gradient(circle at center, rgba(176, 132, 64, 0.05) 0%, transparent 70%)' }}
                 />
                 <div className="relative">
-                  <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">Monthly Spend</p>
+                  <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">{getDashboardLabel('monthlySpend', preferredLanguage)}</p>
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl md:text-4xl font-semibold text-gold tracking-tight">
                       {formatMoney(metrics.totalMonthly, preferredCurrency, preferredLanguage)}
@@ -272,7 +350,7 @@ export function DashboardScreen({
                   style={{ background: 'radial-gradient(circle at center, rgba(168, 174, 184, 0.03) 0%, transparent 70%)' }}
                 />
                 <div className="relative">
-                  <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">Annual Projected</p>
+                  <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">{getDashboardLabel('annualProjected', preferredLanguage)}</p>
                   <p className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight">
                     {formatMoney(metrics.totalYearly, preferredCurrency, preferredLanguage)}
                   </p>
@@ -292,7 +370,7 @@ export function DashboardScreen({
                   style={{ background: 'radial-gradient(circle at center, rgba(61, 107, 88, 0.06) 0%, transparent 70%)' }}
                 />
                 <div className="relative">
-                  <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">Potential Savings</p>
+                  <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider">{getDashboardLabel('potentialSavings', preferredLanguage)}</p>
                   <p className="text-2xl md:text-3xl font-semibold text-emerald tracking-tight">
                     {formatMoney(metrics.savingsPotential, preferredCurrency, preferredLanguage)}
                     <span className="text-sm text-muted-foreground ml-1">/mo</span>
@@ -347,10 +425,10 @@ export function DashboardScreen({
                   </span>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Subscription Health Score</p>
+                  <p className="text-sm text-muted-foreground mb-1">{getDashboardLabel('subscriptionHealthScore', preferredLanguage)}</p>
                   <p className="text-base font-semibold text-foreground">
                     {metrics.leakScore > 70
-                      ? 'Needs Attention'
+                      ? getDashboardLabel('needsAttention', preferredLanguage)
                       : metrics.leakScore > 40
                         ? 'Some Optimization Possible'
                         : 'Well Optimized'}
@@ -364,7 +442,7 @@ export function DashboardScreen({
                 aria-label="View subscription leak report"
                 className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-gold/10 text-gold text-sm font-medium border border-gold/20 hover:bg-gold/15 transition-colors cursor-pointer"
               >
-                View Report
+                {getDashboardLabel('viewReport', preferredLanguage)}
                 <ArrowUpRight className="w-4 h-4" />
               </motion.button>
             </motion.div>
@@ -456,7 +534,7 @@ export function DashboardScreen({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">
-              Your Subscriptions
+              {getDashboardLabel('yourSubscriptions', preferredLanguage)}
             </h2>
             <SegmentedControl
               segments={viewSegments}
@@ -511,7 +589,7 @@ export function DashboardScreen({
           >
             <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">
-              {subscriptions.length === 0 ? 'No subscriptions yet' : 'No subscriptions match your search'}
+              {subscriptions.length === 0 ? getDashboardLabel('noSubscriptionsYet', preferredLanguage) : getDashboardLabel('noSubscriptionsMatch', preferredLanguage)}
             </p>
           </motion.div>
         )}
@@ -520,7 +598,7 @@ export function DashboardScreen({
           <div className="pt-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-foreground">
-                Upcoming Renewals
+                {getDashboardLabel('upcomingRenewals', preferredLanguage)}
               </h2>
               <button 
                 onClick={() => onNavigateTab?.('calendar')}

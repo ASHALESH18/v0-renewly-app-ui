@@ -33,11 +33,35 @@ export interface Translations {
   edit: string
   add: string
   
-  // Settings
+  // Navigation
+  dashboard: string
+  calendar: string
+  analytics: string
+  leakReport: string
+  smartInbox: string
+  integrations: string
+  notifications: string
   settings: string
+  addSubscription: string
+  more: string
+  
+  // Dashboard
+  financialCommandCenter: string
+  monthlySpend: string
+  annualProjected: string
+  potentialSavings: string
+  subscriptionHealthScore: string
+  needsAttention: string
+  yourSubscriptions: string
+  upcomingRenewals: string
+  viewReport: string
+  displayedIn: string
+  noSubscriptionsYet: string
+  noSubscriptionsMatch: string
+
+  // Settings
   settingsDescription: string
   account: string
-  notifications: string
   security: string
   appearance: string
   support: string
@@ -51,7 +75,9 @@ export interface Translations {
   
   // Notifications section
   pushNotifications: string
-  pushNotificationsDesc: string
+  browserPushNotifications: string
+  browserPushDesc: string
+  browserPushNote: string
   emailNotifications: string
   emailNotificationsDesc: string
   reminderTiming: string
@@ -130,6 +156,32 @@ export interface Translations {
 
 const translations: Record<SupportedLanguage, Translations> = {
   en: {
+    // Navigation
+    dashboard: 'Dashboard',
+    calendar: 'Calendar',
+    analytics: 'Analytics',
+    leakReport: 'Leak Report',
+    smartInbox: 'Smart Inbox',
+    integrations: 'Integrations',
+    notifications: 'Notifications',
+    settings: 'Settings',
+    addSubscription: 'Add Subscription',
+    more: 'More',
+    
+    // Dashboard
+    financialCommandCenter: 'Financial Command Center',
+    monthlySpend: 'Monthly Spend',
+    annualProjected: 'Annual Projected',
+    potentialSavings: 'Potential Savings',
+    subscriptionHealthScore: 'Subscription Health Score',
+    needsAttention: 'Needs Attention',
+    yourSubscriptions: 'Your Subscriptions',
+    upcomingRenewals: 'Upcoming Renewals',
+    viewReport: 'View Report',
+    displayedIn: 'Displayed in',
+    noSubscriptionsYet: 'No subscriptions yet',
+    noSubscriptionsMatch: 'No subscriptions match your search',
+    
     // Common
     save: 'Save',
     cancel: 'Cancel',
@@ -143,10 +195,8 @@ const translations: Record<SupportedLanguage, Translations> = {
     add: 'Add',
     
     // Settings
-    settings: 'Settings',
     settingsDescription: 'Manage your account and preferences',
     account: 'Account',
-    notifications: 'Notifications',
     security: 'Security',
     appearance: 'Appearance',
     support: 'Support',
@@ -159,8 +209,10 @@ const translations: Record<SupportedLanguage, Translations> = {
     viewUpgradeOptions: 'View Upgrade Options',
     
     // Notifications section
+    browserPushNotifications: 'Browser Push Notifications',
+    browserPushDesc: 'Receive renewal reminders on this browser/device',
+    browserPushNote: 'For iPhone/iPad, add Renewly to your Home Screen to enable web push. Push delivery setup is being finalized.',
     pushNotifications: 'Push Notifications',
-    pushNotificationsDesc: 'Renewal reminders',
     emailNotifications: 'Email Notifications',
     emailNotificationsDesc: 'Weekly summaries',
     reminderTiming: 'Reminder Timing',
@@ -238,6 +290,32 @@ const translations: Record<SupportedLanguage, Translations> = {
   },
   
   es: {
+    // Navigation
+    dashboard: 'Dashboard',
+    calendar: 'Calendario',
+    analytics: 'Análisis',
+    leakReport: 'Reporte de Fugas',
+    smartInbox: 'Bandeja Inteligente',
+    integrations: 'Integraciones',
+    notifications: 'Notificaciones',
+    settings: 'Configuración',
+    addSubscription: 'Agregar Suscripción',
+    more: 'Más',
+    
+    // Dashboard
+    financialCommandCenter: 'Centro de Control Financiero',
+    monthlySpend: 'Gasto Mensual',
+    annualProjected: 'Proyección Anual',
+    potentialSavings: 'Ahorros Potenciales',
+    subscriptionHealthScore: 'Puntuación de Salud',
+    needsAttention: 'Necesita Atención',
+    yourSubscriptions: 'Tus Suscripciones',
+    upcomingRenewals: 'Renovaciones Próximas',
+    viewReport: 'Ver Reporte',
+    displayedIn: 'Mostrado en',
+    noSubscriptionsYet: 'Sin suscripciones aún',
+    noSubscriptionsMatch: 'Ninguna suscripción coincide',
+    
     // Common
     save: 'Guardar',
     cancel: 'Cancelar',
@@ -251,10 +329,8 @@ const translations: Record<SupportedLanguage, Translations> = {
     add: 'Agregar',
     
     // Settings
-    settings: 'Configuración',
     settingsDescription: 'Administra tu cuenta y preferencias',
     account: 'Cuenta',
-    notifications: 'Notificaciones',
     security: 'Seguridad',
     appearance: 'Apariencia',
     support: 'Soporte',
@@ -267,8 +343,10 @@ const translations: Record<SupportedLanguage, Translations> = {
     viewUpgradeOptions: 'Ver Opciones de Mejora',
     
     // Notifications section
+    browserPushNotifications: 'Notificaciones Push del Navegador',
+    browserPushDesc: 'Recibe recordatorios de renovación en este navegador/dispositivo',
+    browserPushNote: 'Para iPhone/iPad, agrega Renewly a tu pantalla de inicio para habilitar web push. La configuración de entrega de push se está finalizando.',
     pushNotifications: 'Notificaciones Push',
-    pushNotificationsDesc: 'Recordatorios de renovación',
     emailNotifications: 'Notificaciones por Email',
     emailNotificationsDesc: 'Resúmenes semanales',
     reminderTiming: 'Tiempo de Recordatorio',
@@ -346,6 +424,32 @@ const translations: Record<SupportedLanguage, Translations> = {
   },
   
   fr: {
+    // Navigation
+    dashboard: 'Tableau de Bord',
+    calendar: 'Calendrier',
+    analytics: 'Analyse',
+    leakReport: 'Rapport de Fuite',
+    smartInbox: 'Boîte Intelligente',
+    integrations: 'Intégrations',
+    notifications: 'Notifications',
+    settings: 'Paramètres',
+    addSubscription: 'Ajouter Abonnement',
+    more: 'Plus',
+    
+    // Dashboard
+    financialCommandCenter: 'Centre de Commande Financier',
+    monthlySpend: 'Dépenses Mensuelles',
+    annualProjected: 'Projection Annuelle',
+    potentialSavings: 'Économies Potentielles',
+    subscriptionHealthScore: 'Score de Santé',
+    needsAttention: 'Nécessite Attention',
+    yourSubscriptions: 'Vos Abonnements',
+    upcomingRenewals: 'Renouvellements À Venir',
+    viewReport: 'Voir le Rapport',
+    displayedIn: 'Affiché en',
+    noSubscriptionsYet: 'Aucun abonnement pour l\'instant',
+    noSubscriptionsMatch: 'Aucun abonnement ne correspond',
+    
     // Common
     save: 'Enregistrer',
     cancel: 'Annuler',
@@ -359,10 +463,8 @@ const translations: Record<SupportedLanguage, Translations> = {
     add: 'Ajouter',
     
     // Settings
-    settings: 'Paramètres',
     settingsDescription: 'Gérez votre compte et vos préférences',
     account: 'Compte',
-    notifications: 'Notifications',
     security: 'Sécurité',
     appearance: 'Apparence',
     support: 'Support',
@@ -375,8 +477,10 @@ const translations: Record<SupportedLanguage, Translations> = {
     viewUpgradeOptions: 'Voir les Options',
     
     // Notifications section
+    browserPushNotifications: 'Notifications Push du Navigateur',
+    browserPushDesc: 'Recevez des rappels de renouvellement sur ce navigateur/appareil',
+    browserPushNote: 'Pour iPhone/iPad, ajoutez Renewly à votre écran d\'accueil pour activer web push. La configuration de la livraison des notifications est en cours de finalisation.',
     pushNotifications: 'Notifications Push',
-    pushNotificationsDesc: 'Rappels de renouvellement',
     emailNotifications: 'Notifications Email',
     emailNotificationsDesc: 'Résumés hebdomadaires',
     reminderTiming: 'Délai de Rappel',
@@ -454,6 +558,32 @@ const translations: Record<SupportedLanguage, Translations> = {
   },
   
   de: {
+    // Navigation
+    dashboard: 'Dashboard',
+    calendar: 'Kalender',
+    analytics: 'Analytik',
+    leakReport: 'Leckagebericht',
+    smartInbox: 'Intelligente Inbox',
+    integrations: 'Integrationen',
+    notifications: 'Benachrichtigungen',
+    settings: 'Einstellungen',
+    addSubscription: 'Abonnement Hinzufügen',
+    more: 'Mehr',
+    
+    // Dashboard
+    financialCommandCenter: 'Finanzkontrollzentrum',
+    monthlySpend: 'Monatliche Ausgaben',
+    annualProjected: 'Jährliche Projektion',
+    potentialSavings: 'Mögliche Ersparnisse',
+    subscriptionHealthScore: 'Gesundheitswert',
+    needsAttention: 'Erfordert Aufmerksamkeit',
+    yourSubscriptions: 'Ihre Abonnements',
+    upcomingRenewals: 'Anstehende Verlängerungen',
+    viewReport: 'Bericht Anzeigen',
+    displayedIn: 'Angezeigt in',
+    noSubscriptionsYet: 'Noch keine Abonnements',
+    noSubscriptionsMatch: 'Keine Abonnements stimmen überein',
+    
     // Common
     save: 'Speichern',
     cancel: 'Abbrechen',
@@ -467,10 +597,8 @@ const translations: Record<SupportedLanguage, Translations> = {
     add: 'Hinzufügen',
     
     // Settings
-    settings: 'Einstellungen',
     settingsDescription: 'Verwalten Sie Ihr Konto und Ihre Einstellungen',
     account: 'Konto',
-    notifications: 'Benachrichtigungen',
     security: 'Sicherheit',
     appearance: 'Erscheinungsbild',
     support: 'Support',
@@ -483,8 +611,10 @@ const translations: Record<SupportedLanguage, Translations> = {
     viewUpgradeOptions: 'Upgrade-Optionen Anzeigen',
     
     // Notifications section
+    browserPushNotifications: 'Browser-Push-Benachrichtigungen',
+    browserPushDesc: 'Erhalten Sie Verlängerungserinnerungen in diesem Browser/Gerät',
+    browserPushNote: 'Für iPhone/iPad fügen Sie Renewly zum Startbildschirm hinzu, um Web-Push zu aktivieren. Die Push-Zustellung wird gerade abgeschlossen.',
     pushNotifications: 'Push-Benachrichtigungen',
-    pushNotificationsDesc: 'Verlängerungserinnerungen',
     emailNotifications: 'E-Mail-Benachrichtigungen',
     emailNotificationsDesc: 'Wöchentliche Zusammenfassungen',
     reminderTiming: 'Erinnerungszeitpunkt',
@@ -562,6 +692,32 @@ const translations: Record<SupportedLanguage, Translations> = {
   },
   
   hi: {
+    // Navigation
+    dashboard: 'डैशबोर्ड',
+    calendar: 'कैलेंडर',
+    analytics: 'विश्लेषण',
+    leakReport: 'लीक रिपोर्ट',
+    smartInbox: 'स्मार्ट इनबॉक्स',
+    integrations: 'एकीकरण',
+    notifications: 'सूचनाएं',
+    settings: 'सेटिंग्स',
+    addSubscription: 'सदस्यता जोड़ें',
+    more: 'अधिक',
+    
+    // Dashboard
+    financialCommandCenter: 'वित्तीय कमांड सेंटर',
+    monthlySpend: 'मासिक खर्च',
+    annualProjected: 'वार्षिक अनुमान',
+    potentialSavings: 'संभावित बचत',
+    subscriptionHealthScore: 'स्वास्थ्य स्कोर',
+    needsAttention: 'ध्यान देने की जरूरत है',
+    yourSubscriptions: 'आपकी सदस्यताएं',
+    upcomingRenewals: 'आने वाली नवीनीकरण',
+    viewReport: 'रिपोर्ट देखें',
+    displayedIn: 'इसमें प्रदर्शित',
+    noSubscriptionsYet: 'अभी कोई सदस्यता नहीं',
+    noSubscriptionsMatch: 'कोई सदस्यता मेल नहीं खाती',
+    
     // Common
     save: 'सहेजें',
     cancel: 'रद्द करें',
@@ -575,10 +731,8 @@ const translations: Record<SupportedLanguage, Translations> = {
     add: 'जोड़ें',
     
     // Settings
-    settings: 'सेटिंग्स',
     settingsDescription: 'अपना खाता और प्राथमिकताएं प्रबंधित करें',
     account: 'खाता',
-    notifications: 'सूचनाएं',
     security: 'सुरक्षा',
     appearance: 'दिखावट',
     support: 'सहायता',
@@ -591,8 +745,10 @@ const translations: Record<SupportedLanguage, Translations> = {
     viewUpgradeOptions: 'अपग्रेड विकल्प देखें',
     
     // Notifications section
+    browserPushNotifications: 'ब्राउज़र पुश नोटिफिकेशन',
+    browserPushDesc: 'इस ब्राउज़र/डिवाइस पर नवीनीकरण रिमाइंडर प्राप्त करें',
+    browserPushNote: 'iPhone/iPad के लिए, वेब पुश सक्षम करने के लिए Renewly को अपनी होम स्क्रीन पर जोड़ें। पुश डिलीवरी सेटअप अभी अंतिम रूप दिया जा रहा है।',
     pushNotifications: 'पुश नोटिफिकेशन',
-    pushNotificationsDesc: 'नवीनीकरण रिमाइंडर',
     emailNotifications: 'ईमेल नोटिफिकेशन',
     emailNotificationsDesc: 'साप्ताहिक सारांश',
     reminderTiming: 'रिमाइंडर समय',

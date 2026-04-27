@@ -26,32 +26,111 @@ import { springs } from './motion'
 import { RenewlyLogo } from '@/components/renewly-logo'
 import useStore from '@/lib/store'
 import { useNotifications } from '@/lib/hooks/use-remote-data'
+import { languageNames, type SupportedLanguage } from '@/lib/i18n'
 
 interface BottomNavProps {
   activeTab: string
 }
 
-const primaryNavItems = [
-  { id: 'dashboard', icon: Home, label: 'Home', href: '/app/dashboard' },
-  { id: 'calendar', icon: Calendar, label: 'Calendar', href: '/app/calendar' },
-  { id: 'add', icon: Plus, label: 'Add', isAction: true },
-  { id: 'analytics', icon: PieChart, label: 'Analytics', href: '/app/analytics' },
-]
+const createNavItems = (language: string) => {
+  const lang = (language || 'en') as SupportedLanguage
+  const labels: Record<SupportedLanguage, Record<string, string>> = {
+    en: {
+      dashboard: 'Dashboard',
+      calendar: 'Calendar',
+      add: 'Add',
+      analytics: 'Analytics',
+      leakReport: 'Leak Report',
+      smartInbox: 'Smart Inbox',
+      integrations: 'Integrations',
+      notificationLab: 'Notification Lab',
+      notifications: 'Notifications',
+      settings: 'Settings',
+      more: 'More',
+    },
+    es: {
+      dashboard: 'Dashboard',
+      calendar: 'Calendario',
+      add: 'Agregar',
+      analytics: 'Análisis',
+      leakReport: 'Reporte de Fugas',
+      smartInbox: 'Bandeja Inteligente',
+      integrations: 'Integraciones',
+      notificationLab: 'Lab de Notificaciones',
+      notifications: 'Notificaciones',
+      settings: 'Configuración',
+      more: 'Más',
+    },
+    fr: {
+      dashboard: 'Tableau de Bord',
+      calendar: 'Calendrier',
+      add: 'Ajouter',
+      analytics: 'Analyse',
+      leakReport: 'Rapport de Fuite',
+      smartInbox: 'Boîte Intelligente',
+      integrations: 'Intégrations',
+      notificationLab: 'Labo Notifications',
+      notifications: 'Notifications',
+      settings: 'Paramètres',
+      more: 'Plus',
+    },
+    de: {
+      dashboard: 'Dashboard',
+      calendar: 'Kalender',
+      add: 'Hinzufügen',
+      analytics: 'Analytik',
+      leakReport: 'Leckagebericht',
+      smartInbox: 'Intelligente Inbox',
+      integrations: 'Integrationen',
+      notificationLab: 'Benachrichtigungs-Labor',
+      notifications: 'Benachrichtigungen',
+      settings: 'Einstellungen',
+      more: 'Mehr',
+    },
+    hi: {
+      dashboard: 'डैशबोर्ड',
+      calendar: 'कैलेंडर',
+      add: 'जोड़ें',
+      analytics: 'विश्लेषण',
+      leakReport: 'लीक रिपोर्ट',
+      smartInbox: 'स्मार्ट इनबॉक्स',
+      integrations: 'एकीकरण',
+      notificationLab: 'सूचना प्रयोगशाला',
+      notifications: 'सूचनाएं',
+      settings: 'सेटिंग्स',
+      more: 'अधिक',
+    },
+  }
 
-const moreNavItems = [
-  { id: 'leak-report', icon: FileText, label: 'Leak Report', href: '/app/leak-report' },
-  { id: 'inbox', icon: Inbox, label: 'Smart Inbox', href: '/app/inbox' },
-  { id: 'integrations', icon: Link2, label: 'Integrations', href: '/app/integrations' },
-  { id: 'notification-lab', icon: FlaskConical, label: 'Notification Lab', href: '/app/labs/notification-capture' },
-  { id: 'notifications', icon: Bell, label: 'Notifications', href: '/app/notifications' },
-  { id: 'settings', icon: Settings, label: 'Settings', href: '/app/settings' },
-]
+  const t = labels[lang] || labels.en
+
+  return {
+    primaryNavItems: [
+      { id: 'dashboard', icon: Home, label: t.dashboard, href: '/app/dashboard' },
+      { id: 'calendar', icon: Calendar, label: t.calendar, href: '/app/calendar' },
+      { id: 'add', icon: Plus, label: t.add, isAction: true },
+      { id: 'analytics', icon: PieChart, label: t.analytics, href: '/app/analytics' },
+    ],
+    moreNavItems: [
+      { id: 'leak-report', icon: FileText, label: t.leakReport, href: '/app/leak-report' },
+      { id: 'inbox', icon: Inbox, label: t.smartInbox, href: '/app/inbox' },
+      { id: 'integrations', icon: Link2, label: t.integrations, href: '/app/integrations' },
+      { id: 'notification-lab', icon: FlaskConical, label: t.notificationLab, href: '/app/labs/notification-capture' },
+      { id: 'notifications', icon: Bell, label: t.notifications, href: '/app/notifications' },
+      { id: 'settings', icon: Settings, label: t.settings, href: '/app/settings' },
+    ],
+  }
+}
 
 export function BottomNav({ activeTab }: BottomNavProps) {
   const [showMore, setShowMore] = useState(false)
   const openAddSubscriptionSheet = useStore((state) => state.openAddSubscriptionSheet)
+  const notificationSettings = useStore((state) => state.notificationSettings)
+  const language = notificationSettings.language || 'en'
   const { unreadCount } = useNotifications()
   const hasUnreadNotifications = unreadCount > 0
+
+  const { primaryNavItems, moreNavItems } = createNavItems(language)
 
   useEffect(() => {
     setShowMore(false)
