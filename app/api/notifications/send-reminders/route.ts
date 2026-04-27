@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
           continue
         }
 
+
         if (!subscriptions || subscriptions.length === 0) {
           continue
         }
