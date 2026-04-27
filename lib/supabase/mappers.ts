@@ -72,3 +72,4 @@ export function mapUISettingsToRow(
     time_zone: settings.timeZone || null,
   }
 }
+
