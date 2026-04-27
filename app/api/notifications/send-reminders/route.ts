@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
             // Calculate days until renewal
             const renewalDate = new Date(sub.renewal_date)
             renewalDate.setHours(0, 0, 0, 0)
-            
+
             if (isNaN(renewalDate.getTime())) continue
 
             const daysUntil = Math.ceil(
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
             }
 
             // Format amount with currency
-            const amount = `${sub.currency}${sub.amount?.toLocaleString('en-US', { maximumFractionDigits: 2 }) || '0'}`
+            const amount = formatSubscriptionMoney(sub.currency || 'USD', Number(sub.amount || 0))
 
             // Send email
             const emailResult = await sendSubscriptionReminderEmail(

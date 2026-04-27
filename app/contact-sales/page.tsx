@@ -64,7 +64,7 @@ export default function ContactSalesPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header 
+      <Header
         title="Enterprise Sales"
         subtitle="Let's talk about your team's subscription management needs"
       />
@@ -105,7 +105,7 @@ export default function ContactSalesPage() {
                 <p className="text-platinum">{successMessage}</p>
               </motion.div>
             ) : (
-              <>
+              <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Error Message */}
                 {errorMessage && (
                   <motion.div
@@ -220,7 +220,7 @@ export default function ContactSalesPage() {
                 >
                   {isLoading ? 'Submitting...' : 'Contact Our Sales Team'}
                 </motion.button>
-              </>
+              </form>
             )}
           </motion.div>
 

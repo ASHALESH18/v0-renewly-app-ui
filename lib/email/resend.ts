@@ -14,8 +14,23 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.renewly.in'
  * Helper to format subscription amount with currency symbol
  */
 export function formatSubscriptionMoney(currency: string, amount: number): string {
-  const symbol = currency === '₹' ? '₹' : currency
-  return `${symbol}${amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
+  const symbolMap: Record<string, string> = {
+    INR: '₹',
+    USD: '$',
+    EUR: '€',
+    GBP: '£',
+    CAD: 'C$',
+    AUD: 'A$',
+    SGD: 'S$',
+    JPY: '¥',
+  }
+
+  const symbol = symbolMap[currency] || currency || ''
+  const safeAmount = Number.isFinite(Number(amount)) ? Number(amount) : 0
+
+  return `${symbol}${safeAmount.toLocaleString('en-US', {
+    maximumFractionDigits: 2,
+  })}`
 }
 
 /**
@@ -197,6 +212,131 @@ export async function sendContactSalesConfirmationToUser(
     return { success: true }
   } catch (err) {
     console.error('[v0] Failed to send confirmation email:', err)
+    return { success: false, error: (err as Error).message }
+  }
+}
+
+/**
+ * Send a welcome email to a new user.
+ */
+export async function sendWelcomeEmail(
+  to: string,
+  userName: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!resend) {
+    console.log('[v0] Resend not configured, skipping welcome email')
+    return { success: false, error: 'Email service not configured' }
+  }
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      replyTo: REPLY_TO_EMAIL,
+      to,
+      subject: 'Welcome to Renewly',
+      html: welcomeTemplate(userName),
+      text: welcomeTemplateText(userName),
+    })
+
+    if (error) {
+      console.error('[v0] Resend error:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error('[v0] Failed to send welcome email:', err)
+    return { success: false, error: (err as Error).message }
+  }
+}
+
+/**
+ * Send a subscription renewal reminder email.
+ */
+export async function sendSubscriptionReminderEmail(
+  to: string,
+  userName: string,
+  subscriptionName: string,
+  renewalDate: string,
+  amount: string,
+  billingCycle?: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!resend) {
+    console.log('[v0] Resend not configured, skipping subscription reminder email')
+    return { success: false, error: 'Email service not configured' }
+  }
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      replyTo: REPLY_TO_EMAIL,
+      to,
+      subject: `Renewal reminder: ${subscriptionName} renews soon`,
+      html: subscriptionReminderTemplate(
+        userName,
+        subscriptionName,
+        renewalDate,
+        amount,
+        billingCycle
+      ),
+      text: subscriptionReminderTextTemplate(
+        subscriptionName,
+        renewalDate,
+        amount,
+        billingCycle
+      ),
+    })
+
+    if (error) {
+      console.error('[v0] Resend error:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error('[v0] Failed to send subscription reminder email:', err)
+    return { success: false, error: (err as Error).message }
+  }
+}
+
+/**
+ * Send a weekly summary email.
+ */
+export async function sendWeeklySummaryEmail(
+  to: string,
+  userName: string,
+  summaryData: {
+    monthlySpend: string
+    activeSubscriptionCount: number
+    upcomingRenewals7Days: number
+    upcomingRenewals30Days: number
+    potentialSavings: string
+    topCategory: string
+  }
+): Promise<{ success: boolean; error?: string }> {
+  if (!resend) {
+    console.log('[v0] Resend not configured, skipping weekly summary email')
+    return { success: false, error: 'Email service not configured' }
+  }
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      replyTo: REPLY_TO_EMAIL,
+      to,
+      subject: 'Your weekly Renewly summary',
+      html: weeklySummaryTemplate(userName, summaryData),
+      text: weeklySummaryTextTemplate(summaryData),
+    })
+
+    if (error) {
+      console.error('[v0] Resend error:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error('[v0] Failed to send weekly summary email:', err)
     return { success: false, error: (err as Error).message }
   }
 }
@@ -454,28 +594,25 @@ function welcomeTemplate(userName: string): string {
       <p>To get started, add your first subscription and Renewly will begin organizing your dashboard, calendar, and renewal insights.</p>
       <p>Your Free plan lets you track up to 2 subscriptions. Upgrade anytime for unlimited tracking and premium insights.</p>
       <a href="${APP_URL}/app/dashboard" class="button">Open Dashboard</a>
-      ${
-        hasRatingButtons
-          ? `
+      ${hasRatingButtons
+      ? `
       <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e5e5;">
         <h3 style="margin: 0 0 12px 0; color: #0e1218; font-size: 16px;">Help us grow</h3>
         <p style="margin: 0 0 16px 0; color: #666666; font-size: 14px;">We've put a lot of care into building Renewly. If it helps you stay on top of subscriptions, a quick rating would mean a lot.</p>
         <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-          ${
-            appStoreUrl
-              ? `<a href="${appStoreUrl}" style="display: inline-block; background-color: #f5f5f5; color: #0e1218; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500; border: 1px solid #e5e5e5;">Rate on App Store</a>`
-              : ''
-          }
-          ${
-            playStoreUrl
-              ? `<a href="${playStoreUrl}" style="display: inline-block; background-color: #f5f5f5; color: #0e1218; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500; border: 1px solid #e5e5e5;">Rate on Google Play</a>`
-              : ''
-          }
+          ${appStoreUrl
+        ? `<a href="${appStoreUrl}" style="display: inline-block; background-color: #f5f5f5; color: #0e1218; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500; border: 1px solid #e5e5e5;">Rate on App Store</a>`
+        : ''
+      }
+          ${playStoreUrl
+        ? `<a href="${playStoreUrl}" style="display: inline-block; background-color: #f5f5f5; color: #0e1218; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500; border: 1px solid #e5e5e5;">Rate on Google Play</a>`
+        : ''
+      }
         </div>
       </div>
       `
-          : ''
-      }
+      : ''
+    }
     </div>
     <div class="footer">
       <p>Renewly - Track your subscriptions smartly</p>
