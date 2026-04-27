@@ -523,11 +523,11 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                             onChange={(e) => setCurrency(e.target.value)}
                             className="h-12 px-3 bg-secondary border border-transparent rounded-xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all"
                           >
-                            {currencies.map((curr) => (
-                              <option key={curr.code} value={curr.code}>
-                                {curr.code}
-                              </option>
-                            ))}
+                          {currencies.map((curr) => (
+                            <option key={curr.code} value={curr.code}>
+                              {curr.symbol} {curr.code} — {curr.name}
+                            </option>
+                          ))}
                           </select>
                         </div>
                         {validationErrors.amount && (
@@ -540,7 +540,10 @@ export function AddSubscriptionSheet({ open, onClose }: AddSubscriptionSheetProp
                           </motion.p>
                         )}
                         <p className="text-xs text-muted-foreground">
-                          Selected: {currencies.find((c) => c.code === currency)?.name}
+                          Selected: {(() => {
+                            const curr = currencies.find((c) => c.code === currency)
+                            return curr ? `${curr.symbol} ${curr.code} — ${curr.name}` : currency
+                          })()}
                         </p>
                       </div>
 

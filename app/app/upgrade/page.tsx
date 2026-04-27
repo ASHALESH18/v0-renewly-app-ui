@@ -48,19 +48,19 @@ function formatPlanPrice(plan: Plan, currency: PlanCurrency) {
   if (pricing.amount === null) return pricing.priceText || 'Custom pricing'
   if (pricing.amount === 0) return 'Free'
 
-  return `${symbol}${pricing.amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}/${pricing.period}`
+  return `${symbol}${pricing.amount.toLocaleString('en-US', { maximumFractionDigits: 2 })} ${currency}/${pricing.period}`
 }
 
 function getOriginalPrice(plan: Plan, currency: PlanCurrency) {
   const pricing = getPlanPricing(plan.id, currency)
   if (!pricing?.originalAmount) return null
-  return `${getCurrencySymbol(currency)}${pricing.originalAmount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
+  return `${getCurrencySymbol(currency)}${pricing.originalAmount.toLocaleString('en-US', { maximumFractionDigits: 2 })} ${currency}`
 }
 
 function getSavings(plan: Plan, currency: PlanCurrency) {
   const pricing = getPlanPricing(plan.id, currency)
   if (!pricing?.savings) return null
-  return `${getCurrencySymbol(currency)}${pricing.savings.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
+  return `${getCurrencySymbol(currency)}${pricing.savings.toLocaleString('en-US', { maximumFractionDigits: 2 })} ${currency}`
 }
 
 function UpgradeContent() {

@@ -86,7 +86,7 @@ export function getPricingForPaywall(
     currency: effectiveCurrency,
     symbol,
     period: pricing.period,
-    displayText: `From ${symbol}${amount}/${pricing.period}`,
+    displayText: `From ${symbol}${amount} ${effectiveCurrency}/${pricing.period}`,
     originalAmount: pricing.originalAmount,
     savings: pricing.savings,
   }
