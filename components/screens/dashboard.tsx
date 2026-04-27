@@ -15,19 +15,16 @@ import {
 import { Header, SearchOverlay } from '@/components/header'
 import { MetricCard } from '@/components/metric-card'
 import { SubscriptionCard, SubscriptionCardCompact } from '@/components/subscription-card'
-import { SubscriptionIcon } from '@/lib/brand-icons'
 import { FilterChips, SegmentedControl } from '@/components/filter-chips'
-import { PageTransition, StaggerList, staggerItem, viewportFadeInUp } from '@/components/motion'
-import { MotionSection, MotionSectionItem } from '@/components/motion-section'
+import { PageTransition, StaggerList, staggerItem } from '@/components/motion'
+import { MotionSection } from '@/components/motion-section'
 import useStore from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { useCountUp } from '@/lib/hooks/use-count-up'
 import type { Subscription } from '@/lib/types'
 import { formatMoney, formatNumberForLocale, getCurrencySymbol } from '@/lib/preferences-format'
 import { calculateMetrics, getUpcomingRenewals, getDaysUntilRenewal } from '@/lib/subscription-math'
-
-// Fast, performant transition - no spring physics overhead
-const fastTransition = { duration: 0.2, ease: [0.32, 0.72, 0, 1] }
+import { SubscriptionIcon } from '@/lib/brand-icons'
 
 const viewSegments = [
   { id: 'cards', label: 'Cards' },
@@ -50,15 +47,12 @@ export function DashboardScreen({
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [viewMode, setViewMode] = useState('cards')
 
-  // Get data from store
   const subscriptions = useStore((state) => state.subscriptions)
   const notificationSettings = useStore((state) => state.notificationSettings)
   const preferredLanguage = notificationSettings.language || 'en'
   const preferredCurrency = notificationSettings.currencyCode || 'INR'
   const currencySymbol = getCurrencySymbol(preferredCurrency, preferredLanguage)
 
-
-  // Memoize metrics calculation to prevent infinite loops
   const metrics = useMemo(() => {
     const m = calculateMetrics(subscriptions)
 
@@ -71,12 +65,10 @@ export function DashboardScreen({
     }
   }, [subscriptions])
 
-  // Calculate upcoming renewals
   const upcoming = useMemo(() => {
     return getUpcomingRenewals(subscriptions, 30)
   }, [subscriptions])
 
-  // Build filter chips dynamically from subscriptions
   const categories = [...new Set(subscriptions.map((s) => s.category || 'Other'))]
   const filterChips = [
     { id: 'all', label: 'All', count: subscriptions.length },
@@ -88,7 +80,6 @@ export function DashboardScreen({
     }))
   ]
 
-  // Filter subscriptions based on selected filter
   const filteredSubscriptions = subscriptions.filter(sub => {
     if (selectedFilter === 'all') return true
     if (selectedFilter === 'upcoming') {
@@ -98,7 +89,6 @@ export function DashboardScreen({
     return sub.category === selectedFilter
   })
 
-  // Filter by search query
   const displayedSubscriptions = filteredSubscriptions.filter((sub) => {
     const name = String(sub.name || '').toLowerCase()
     const category = String(sub.category || 'Other').toLowerCase()
@@ -122,9 +112,7 @@ export function DashboardScreen({
       />
 
       <div className="px-4 lg:px-6 space-y-6 pb-8">
-        {/* Command Center Hero - static, no animation for instant render */}
         <div className="rounded-2xl overflow-hidden relative">
-          {/* Subtle background treatment */}
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,254,250,0.75),rgba(248,244,236,0.60))] dark:bg-[linear-gradient(180deg,rgba(17,20,24,0.80),rgba(8,9,12,0.75))]" />
 
@@ -142,7 +130,6 @@ export function DashboardScreen({
           </div>
 
           <div className="relative glass-premium border border-gold/8 p-6 md:p-8 shadow-md">
-            {/* Command Center eyebrow */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -297,7 +284,6 @@ export function DashboardScreen({
           </div>
         </div>
 
-        {/* Metrics grid */}
         <StaggerList className="grid grid-cols-2 gap-4">
           <MetricCard
             title="Monthly Recurring"
@@ -337,7 +323,6 @@ export function DashboardScreen({
           />
         </StaggerList>
 
-        {/* Premium Quick Insights Card - Viewport triggered */}
         <MotionSection>
           <motion.div
             whileInView={{ opacity: 1, y: 0 }}
@@ -346,10 +331,8 @@ export function DashboardScreen({
             whileHover={{ y: -2, boxShadow: '0 20px 40px -12px rgba(199, 163, 106, 0.15)' }}
             className="relative rounded-2xl overflow-hidden cursor-pointer group"
           >
-            {/* Gradient background */}
             <div className="absolute inset-0 bg-gradient-to-br from-gold/8 via-card to-emerald/5 dark:from-gold/10 dark:via-graphite dark:to-emerald/5" />
 
-            {/* Animated light sweep */}
             <motion.div
               className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
               initial={{ x: '-100%' }}
@@ -357,7 +340,6 @@ export function DashboardScreen({
               transition={{ duration: 0.8 }}
             />
 
-            {/* Content */}
             <div className="relative border border-gold/15 rounded-2xl p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-4">
@@ -387,7 +369,6 @@ export function DashboardScreen({
           </motion.div>
         </MotionSection>
 
-        {/* Filters section */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">
@@ -407,8 +388,6 @@ export function DashboardScreen({
           />
         </div>
 
-        {/* Subscriptions list */}
-        {/* Subscriptions list */}
         <motion.div layout className="space-y-3">
           <AnimatePresence initial={false} mode="popLayout">
             {displayedSubscriptions.map((subscription, index) => (
@@ -453,7 +432,6 @@ export function DashboardScreen({
           </motion.div>
         )}
 
-        {/* Upcoming renewals section */}
         {upcoming.length > 0 && (
           <div className="pt-4">
             <div className="flex items-center justify-between mb-4">
@@ -538,8 +516,6 @@ function UpcomingCard({
     </motion.div>
   )
 }
-
-
 
 interface AnimatedNumberProps {
   value: number
