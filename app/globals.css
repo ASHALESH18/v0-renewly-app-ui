@@ -445,6 +445,26 @@ html.dark[data-appearance="glass"] .border-border {
     @apply bg-background text-foreground antialiased;
   }
 
+  /* Global cursor pointer for clickable elements */
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  a[href],
+  summary,
+  select:not(:disabled),
+  input[type="button"]:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="reset"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* Disabled states show not-allowed cursor */
+  button:disabled,
+  [role="button"][aria-disabled="true"],
+  select:disabled,
+  input:disabled {
+    cursor: not-allowed;
+  }
+
   /* Premium scrollbar styling */
   ::-webkit-scrollbar {
     width: 6px;
