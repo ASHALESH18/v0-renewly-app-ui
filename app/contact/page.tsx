@@ -24,8 +24,8 @@ export default function ContactPage() {
           <div className="border border-border rounded-lg p-6">
             <h2 className="text-xl font-semibold text-foreground mb-2">Email</h2>
             <p className="text-muted-foreground mb-4">Send us a message anytime</p>
-            <a href="mailto:support@renewly.app" className="text-gold hover:underline font-medium">
-              support@renewly.app
+            <a href="mailto:contact@renewly.in" className="text-gold hover:underline font-medium">
+              contact@renewly.in
             </a>
           </div>
 

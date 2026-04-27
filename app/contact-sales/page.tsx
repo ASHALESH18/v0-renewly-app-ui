@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Mail, Phone, Linkedin, ArrowLeft, Check, Calendar } from 'lucide-react'
+import { Mail, Linkedin, ArrowLeft, Check, Calendar } from 'lucide-react'
 import { Header } from '@/components/header'
 import { springs } from '@/components/motion'
 
@@ -17,16 +17,42 @@ export default function ContactSalesPage() {
     message: '',
   })
   const [submitted, setSubmitted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // In production, this would send to backend/email service
-    console.log('Contact form submitted:', formData)
-    setSubmitted(true)
-    setTimeout(() => {
-      setSubmitted(false)
-      setFormData({ firstName: '', lastName: '', email: '', company: '', teamSize: '', message: '' })
-    }, 3000)
+    setErrorMessage(null)
+    setSuccessMessage(null)
+    setIsLoading(true)
+
+    try {
+      const response = await fetch('/api/public/contact-sales', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setSuccessMessage(`Thanks — we received your enquiry. Our team will contact you at ${formData.email}.`)
+        setSubmitted(true)
+        setFormData({ firstName: '', lastName: '', email: '', company: '', teamSize: '', message: '' })
+        setTimeout(() => {
+          setSubmitted(false)
+          setSuccessMessage(null)
+        }, 5000)
+      } else {
+        setErrorMessage(result.message || 'We couldn\'t submit your request right now. Please email contact@renewly.in.')
+      }
+    } catch (error) {
+      console.error('[v0] Failed to submit contact form:', error)
+      setErrorMessage('We couldn\'t submit your request right now. Please email contact@renewly.in.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -76,12 +102,20 @@ export default function ContactSalesPage() {
                   </div>
                 </div>
                 <h3 className="text-lg font-semibold text-ivory mb-2">Thank you!</h3>
-                <p className="text-platinum">
-                  We've received your message. Our sales team will contact you within 24 hours.
-                </p>
+                <p className="text-platinum">{successMessage}</p>
               </motion.div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <>
+                {/* Error Message */}
+                {errorMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl"
+                  >
+                    <p className="text-sm text-red-400">{errorMessage}</p>
+                  </motion.div>
+                )}
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-ivory mb-2">
@@ -181,9 +215,10 @@ export default function ContactSalesPage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  className="w-full py-3 rounded-xl gold-gradient text-obsidian font-semibold shadow-luxury transition-all"
+                  disabled={isLoading}
+                  className="w-full py-3 rounded-xl gold-gradient text-obsidian font-semibold shadow-luxury transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Contact Our Sales Team
+                  {isLoading ? 'Submitting...' : 'Contact Our Sales Team'}
                 </motion.button>
               </form>
             )}
@@ -219,16 +254,10 @@ export default function ContactSalesPage() {
             {/* Direct Contact */}
             <div className="rounded-2xl bg-slate/50 border border-glass-border p-6">
               <h3 className="font-semibold text-ivory mb-4">Direct Contact</h3>
-              <div className="space-y-3">
-                <a href="mailto:sales@renewly.io" className="flex items-center gap-3 text-platinum hover:text-gold transition-colors">
-                  <Mail className="w-4 h-4 shrink-0" />
-                  <span className="text-sm">sales@renewly.io</span>
-                </a>
-                <a href="tel:+918000000000" className="flex items-center gap-3 text-platinum hover:text-gold transition-colors">
-                  <Phone className="w-4 h-4 shrink-0" />
-                  <span className="text-sm">+91 800 000 0000</span>
-                </a>
-              </div>
+              <a href="mailto:contact@renewly.in" className="flex items-center gap-3 text-platinum hover:text-gold transition-colors">
+                <Mail className="w-4 h-4 shrink-0" />
+                <span className="text-sm">contact@renewly.in</span>
+              </a>
             </div>
 
             {/* Enterprise Features */}
