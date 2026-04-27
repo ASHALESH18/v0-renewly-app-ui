@@ -21,6 +21,7 @@ import { generateAvatar } from '@/lib/avatar-utils'
 import { signOutAndRedirectHome } from '@/lib/auth/sign-out'
 import { currencies } from '@/lib/locale-utils'
 import { ThemeSelectorCards } from '@/components/theme-selector-cards'
+import { languageNames, type SupportedLanguage } from '@/lib/i18n'
 
 // Sheet component for settings modals
 function SettingsSheet({
@@ -290,12 +291,83 @@ export function SettingsScreen() {
 
   // Toggle handlers that properly await async store updates
   const handleTogglePushNotifications = async () => {
-    // Push notifications not yet configured - show info message instead
-    addToast({
-      type: 'info',
-      title: 'Push notifications coming soon',
-      message: 'Push notifications are not yet configured. Email reminders are available now.',
-    })
+    // Browser push notifications - check browser support and request permission
+    if (typeof window === 'undefined') {
+      addToast({
+        type: 'error',
+        title: 'Browser not supported',
+        message: 'Push notifications require a browser environment.',
+      })
+      return
+    }
+
+    if (!('Notification' in window)) {
+      addToast({
+        type: 'error',
+        title: 'Notifications not supported',
+        message: 'This browser does not support push notifications.',
+      })
+      return
+    }
+
+    if (!notificationSettings.pushNotifications) {
+      // User wants to turn ON push notifications - request permission
+      try {
+        const permission = Notification.permission
+
+        if (permission === 'granted') {
+          // Already have permission - just save setting
+          await updateNotificationSettings({ pushNotifications: true })
+          addToast({
+            type: 'success',
+            title: 'Browser push enabled',
+            message: 'You will receive renewal reminders on this browser.',
+          })
+        } else if (permission === 'default') {
+          // Request permission from user
+          const result = await Notification.requestPermission()
+          if (result === 'granted') {
+            await updateNotificationSettings({ pushNotifications: true })
+            addToast({
+              type: 'success',
+              title: 'Browser push enabled',
+              message: 'You will receive renewal reminders on this browser.',
+            })
+          } else {
+            // User denied - save false and show message
+            await updateNotificationSettings({ pushNotifications: false })
+            addToast({
+              type: 'info',
+              title: 'Permission required',
+              message: 'Browser permission is required for push notifications.',
+            })
+          }
+        } else if (permission === 'denied') {
+          // Permission previously denied
+          addToast({
+            type: 'error',
+            title: 'Notifications blocked',
+            message: 'Browser notifications are blocked. Enable them in your browser settings.',
+          })
+          await updateNotificationSettings({ pushNotifications: false })
+        }
+      } catch (error) {
+        console.error('[v0] Error toggling push notifications:', error)
+        addToast({
+          type: 'error',
+          title: 'Error',
+          message: 'Failed to enable push notifications.',
+        })
+      }
+    } else {
+      // User wants to turn OFF push notifications
+      await updateNotificationSettings({ pushNotifications: false })
+      addToast({
+        type: 'success',
+        title: 'Browser push disabled',
+        message: 'Browser push notifications disabled.',
+      })
+    }
   }
 
   const handleToggleEmailNotifications = async () => {
@@ -384,12 +456,15 @@ export function SettingsScreen() {
         <SettingsSection title="Notifications" delay={0.2}>
           <SettingsToggle
             icon={Bell}
-            label="Push Notifications"
-            description="Coming soon"
-            checked={false}
-            disabled={true}
+            label="Browser Push Notifications"
+            description="Receive renewal reminders on this browser/device"
+            checked={notificationSettings.pushNotifications}
+            disabled={false}
             onToggle={handleTogglePushNotifications}
           />
+          <div className="px-4 py-2 text-xs text-muted-foreground/70">
+            For iPhone/iPad, add Renewly to your Home Screen to enable web push. Push delivery setup is being finalized.
+          </div>
           <SettingsToggle
             icon={Mail}
             label="Email Notifications"
@@ -461,7 +536,7 @@ export function SettingsScreen() {
           <SettingsItem
             icon={Globe}
             label="Language"
-            description={notificationSettings.language === 'en' ? 'English' : notificationSettings.language}
+            description={languageNames[(notificationSettings.language || 'en') as SupportedLanguage]}
             onClick={() => setActiveSheet('language')}
           />
         </SettingsSection>
