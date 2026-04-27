@@ -31,6 +31,14 @@ export interface Subscription {
   description?: string
   logo?: string
   color?: string
+  isSystemManaged?: boolean
+  managedPlan?: 'pro' | 'family'
+  systemSource?: 'renewly_billing'
+  managedSubscriptionKey?: string
+  billingOwnerUserId?: string
+  familyGroupId?: string
+  coveredByFamily?: boolean
+  systemMetadata?: Record<string, unknown>
 }
 
 export interface Notification {

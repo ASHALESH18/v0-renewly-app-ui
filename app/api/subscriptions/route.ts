@@ -109,6 +109,15 @@ export async function POST(request: NextRequest) {
       renewal_date: renewal_date || null,
       description: description || null,
       status: status || 'active',
+      // System-managed fields: never allow client to set these
+      is_system_managed: false,
+      managed_plan: null,
+      system_source: null,
+      managed_subscription_key: null,
+      billing_owner_user_id: null,
+      family_group_id: null,
+      covered_by_family: false,
+      system_metadata: {},
     }
 
     const { data: subscription, error } = await supabase

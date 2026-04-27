@@ -18,6 +18,11 @@ export function SubscriptionActions({ subscription, onEdit }: SubscriptionAction
   const deleteSubscriptionRemote = useStore((state) => state.deleteSubscriptionRemote)
   const addToast = useStore((state) => state.addToast)
 
+  // Don't show actions for system-managed subscriptions
+  if (subscription.isSystemManaged) {
+    return null
+  }
+
   const handleDelete = async () => {
     if (isDeleting) return
 

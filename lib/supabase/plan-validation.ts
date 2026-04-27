@@ -23,12 +23,13 @@ export async function getUserPlanAndSubscriptionCount() {
 
     if (profileError) throw profileError
 
-    // Count subscriptions
+    // Count subscriptions (excluding system-managed)
     const { count, error: countError } = await supabase
       .from('subscriptions')
       .select('id', { count: 'exact' })
       .eq('user_id', user.id)
       .eq('status', 'active')
+      .eq('is_system_managed', false)
 
     if (countError) throw countError
 

@@ -152,6 +152,18 @@ export function SubscriptionCard({
                   <span>Unused</span>
                 </div>
               )}
+
+              {subscription.isSystemManaged && (
+                <div className="flex items-center gap-1.5 rounded-full bg-muted/50 px-2 py-1 text-muted-foreground text-xs">
+                  <span>Managed by Renewly</span>
+                </div>
+              )}
+
+              {subscription.coveredByFamily && (
+                <div className="flex items-center gap-1.5 rounded-full bg-emerald/10 px-2 py-1 text-emerald text-xs">
+                  <span>Covered by Family</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

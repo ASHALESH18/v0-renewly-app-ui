@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js'
 import { createRazorpayOrder, verifyPaymentSignature, getPaymentDetails } from '@/lib/razorpay/server'
 import { getPlan, getPlanPricing, type PlanType } from '@/lib/plans'
 import { isBillingConfigured } from '@/lib/billing-guards'
+import { syncRenewlyBillingSubscriptionForPlan } from '@/lib/billing/renewly-subscription-sync'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -188,8 +189,39 @@ export async function processPayment(
       console.warn('[v0] Could not create billing record:', billingError)
     }
 
+    // Sync system-managed Renewly subscription
+    if (planId === 'pro' || planId === 'family') {
+      try {
+        // Get user email for sync
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('id', user.id)
+          .single()
+
+        if (!profileError && profile) {
+          // Calculate period end from payment
+          const periodStart = new Date()
+          const periodEnd = new Date(periodStart)
+          periodEnd.setMonth(periodEnd.getMonth() + 1)
+          const periodEndStr = periodEnd.toISOString().split('T')[0]
+
+          await syncRenewlyBillingSubscriptionForPlan({
+            userId: user.id,
+            email: profile.email,
+            plan: planId,
+            currentPeriodEnd: periodEndStr,
+          })
+        }
+      } catch (syncError) {
+        console.warn('[v0] Could not sync Renewly subscription:', syncError)
+        // Don't fail payment if sync fails
+      }
+    }
+
     revalidateTag('profile')
     revalidateTag('billing')
+    revalidateTag(`subscriptions:${user.id}`)
 
     return {
       success: true,

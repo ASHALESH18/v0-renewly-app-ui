@@ -46,6 +46,14 @@ export interface SubscriptionRow {
   description: string | null
   logo: string | null
   color: string | null
+  is_system_managed: boolean
+  managed_plan: 'pro' | 'family' | null
+  system_source: 'renewly_billing' | null
+  managed_subscription_key: string | null
+  billing_owner_user_id: string | null
+  family_group_id: string | null
+  covered_by_family: boolean
+  system_metadata: Record<string, unknown>
   created_at: string
   updated_at: string
 }
