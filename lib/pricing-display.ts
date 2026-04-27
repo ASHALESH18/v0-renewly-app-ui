@@ -3,76 +3,96 @@
  * Supports multi-currency display: INR, USD, EUR
  */
 
-import { getPlan } from './plans'
+import { getPlan, getPlanPricing, type PlanCurrency } from './plans'
+import { getCurrencySymbol } from './locale-utils'
 
 export interface PricingDisplay {
-  amount: number
+  amount: number | null
   currency: string
   symbol: string
   period: string
   displayText: string // e.g., "From ₹149/month"
+  originalAmount?: number
+  savings?: number
 }
 
 /**
- * Get pricing for Pro plan with currency localization
- * Priority: explicit currency → user settings → locale → default (INR)
+ * Get pricing for a plan with currency localization
  */
 export function getPricingForPaywall(
-  currencyCode: string = 'INR'
+  planId: 'pro' | 'family' | 'enterprise' = 'pro',
+  currencyCode: PlanCurrency = 'INR'
 ): PricingDisplay {
-  const proPlan = getPlan('pro')
-  if (!proPlan || proPlan.price === null) {
+  const plan = getPlan(planId)
+  if (!plan) {
     return {
-      amount: 149,
-      currency: 'INR',
-      symbol: '₹',
+      amount: null,
+      currency: currencyCode,
+      symbol: getCurrencySymbol(currencyCode),
       period: 'month',
-      displayText: 'From ₹149/month',
+      displayText: 'Contact for pricing',
     }
   }
 
-  // Map prices by currency (using INR as source, you'd scale these based on real conversion)
-  const priceMap: Record<string, { amount: number; symbol: string }> = {
-    INR: { amount: 149, symbol: '₹' },
-    USD: { amount: 2, symbol: '$' },
-    EUR: { amount: 1.99, symbol: '€' },
+  const pricing = getPlanPricing(planId, currencyCode)
+  if (!pricing) {
+    return {
+      amount: null,
+      currency: currencyCode,
+      symbol: getCurrencySymbol(currencyCode),
+      period: 'month',
+      displayText: 'Contact for pricing',
+    }
   }
 
-  const pricing = priceMap[currencyCode] || priceMap.INR
+  const symbol = getCurrencySymbol(currencyCode)
+
+  if (pricing.amount === null) {
+    return {
+      amount: null,
+      currency: currencyCode,
+      symbol,
+      period: pricing.period,
+      displayText: pricing.priceText || 'Custom pricing',
+    }
+  }
+
+  if (pricing.amount === 0) {
+    return {
+      amount: 0,
+      currency: currencyCode,
+      symbol,
+      period: pricing.period,
+      displayText: 'Free',
+    }
+  }
 
   return {
     amount: pricing.amount,
     currency: currencyCode,
-    symbol: pricing.symbol,
-    period: 'month',
-    displayText: `From ${pricing.symbol}${pricing.amount}/${proPlan.period}`,
+    symbol,
+    period: pricing.period,
+    displayText: `From ${symbol}${pricing.amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}/${pricing.period}`,
+    originalAmount: pricing.originalAmount,
+    savings: pricing.savings,
   }
 }
 
 /**
- * Format currency symbol
+ * Format currency symbol - centralized to avoid duplication
  */
-export function getCurrencySymbol(currencyCode: string): string {
-  const map: Record<string, string> = {
-    INR: '₹',
-    USD: '$',
-    EUR: '€',
-    GBP: '£',
-  }
-  return map[currencyCode] || currencyCode
-}
+export { getCurrencySymbol } from './locale-utils'
 
 /**
- * Get user's likely currency based on locale/settings
- * Falls back to INR if unknown
+ * Get user's selected currency, with fallbacks
  */
-export function getUserCurrency(
+export function getEffectiveCurrency(
   userCurrency?: string,
   locale?: string
-): string {
-  // If explicitly set, use it
-  if (userCurrency && ['INR', 'USD', 'EUR'].includes(userCurrency)) {
-    return userCurrency
+): PlanCurrency {
+  // If explicitly set to a supported currency, use it
+  if (userCurrency === 'INR' || userCurrency === 'USD' || userCurrency === 'EUR') {
+    return userCurrency as PlanCurrency
   }
 
   // If locale provided, map to currency
@@ -80,7 +100,7 @@ export function getUserCurrency(
   if (locale?.includes('en-GB') || locale?.startsWith('de') || locale?.startsWith('fr')) {
     return 'EUR'
   }
-  if (locale?.startsWith('en-IN')) return 'INR'
+  if (locale?.startsWith('en-IN') || locale?.startsWith('hi')) return 'INR'
 
   // Default to INR
   return 'INR'

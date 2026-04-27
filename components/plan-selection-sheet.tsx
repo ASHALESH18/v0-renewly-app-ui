@@ -4,10 +4,12 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, ChevronRight, Sparkles, ArrowLeft, X, Zap, Crown, Users, Building2 } from 'lucide-react'
 import { springs } from '@/components/motion'
-import { getAllPlans } from '@/lib/plans'
+import { getAllPlans, getPlanPricing, type PlanCurrency } from '@/lib/plans'
 import { useRouter } from 'next/navigation'
 import { getUpgradeDestination } from '@/lib/upgrade-flow'
 import { useAuth } from '@/lib/hooks/use-auth'
+import useStore from '@/lib/store'
+import { getCurrencySymbol } from '@/lib/locale-utils'
 
 export interface PlanSheetProps {
   onClose: () => void
@@ -15,13 +17,17 @@ export interface PlanSheetProps {
 }
 
 export function PlanSelectionSheet({ onClose, currentPlan = 'free' }: PlanSheetProps) {
+  const notificationSettings = useStore((state) => state.notificationSettings)
+  const selectedCurrency = (notificationSettings?.currencyCode || 'INR') as PlanCurrency
+  const currencySymbol = getCurrencySymbol(selectedCurrency)
+  
   const plans = getAllPlans()
   const [showComparison, setShowComparison] = useState(true)  // Default to comparison view
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
 
   // If showing comparison view
   if (showComparison) {
-    return <PlanComparisonView onBack={() => setShowComparison(false)} currentPlan={currentPlan} />
+    return <PlanComparisonView onBack={() => setShowComparison(false)} currentPlan={currentPlan} selectedCurrency={selectedCurrency} />
   }
 
   // If showing upgrade flow
@@ -31,6 +37,7 @@ export function PlanSelectionSheet({ onClose, currentPlan = 'free' }: PlanSheetP
         planId={selectedPlan as 'pro' | 'family'}
         onBack={() => setSelectedPlan(null)}
         onClose={onClose}
+        selectedCurrency={selectedCurrency}
       />
     )
   }
@@ -61,6 +68,7 @@ export function PlanSelectionSheet({ onClose, currentPlan = 'free' }: PlanSheetP
         {plans.map((plan) => {
           const isCurrentPlan = currentPlan === plan.id
           const isUpgrade = !isCurrentPlan && plan.id !== 'free'
+          const pricing = getPlanPricing(plan.id, selectedCurrency)
           
           return (
             <motion.div
@@ -93,11 +101,42 @@ export function PlanSelectionSheet({ onClose, currentPlan = 'free' }: PlanSheetP
                   <p className="text-xs text-muted-foreground mb-2">{plan.description}</p>
 
                   <div className="flex items-baseline gap-2 mb-2">
-                    {plan.price !== null ? (
+                    {pricing && pricing.amount !== null ? (
                       <>
-                        {plan.originalPrice && (
+                        {pricing.originalAmount && (
                           <span className="text-sm text-muted-foreground/50 line-through">
-                            ₹{plan.originalPrice.toLocaleString('en-IN')}
+                            {currencySymbol}{pricing.originalAmount.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                          </span>
+                        )}
+                        <span className="text-lg font-semibold text-foreground">
+                          {currencySymbol}{pricing.amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                        </span>
+                        <span className="text-sm text-muted-foreground">/{pricing.period}</span>
+                      </>
+                    ) : (
+                      <span className="text-lg font-semibold text-foreground">
+                        {pricing?.priceText || 'Custom pricing'}
+                      </span>
+                    )}
+                  </div>
+
+                  {pricing && pricing.savings && (
+                    <div className="inline-block px-2 py-1 rounded-md bg-emerald/10 mb-3">
+                      <span className="text-xs font-medium text-emerald">
+                        Save {currencySymbol}{pricing.savings.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground/50 mt-1 flex-shrink-0" />
+              </div>
+            </motion.div>
+          )
+        })}
+      </div>
+    </motion.div>
+  )
+}
                           </span>
                         )}
                         <span className="text-lg font-semibold text-foreground">₹{plan.price.toLocaleString('en-IN')}</span>
