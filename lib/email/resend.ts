@@ -8,6 +8,14 @@ const resend = process.env.RESEND_API_KEY
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Renewly <noreply@renewly.app>'
 
 /**
+ * Helper to format subscription amount with currency symbol
+ */
+export function formatSubscriptionMoney(currency: string, amount: number): string {
+  const symbol = currency === '₹' ? '₹' : currency
+  return `${symbol}${amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
+}
+
+/**
  * Check if Resend is configured and available
  */
 export function isResendConfigured(): boolean {
@@ -115,6 +123,38 @@ export async function sendEmailVerificationCode(
     return { success: true }
   } catch (err) {
     console.error('[v0] Failed to send verification email:', err)
+    return { success: false, error: (err as Error).message }
+  }
+}
+
+/**
+ * Send a welcome email to new users
+ */
+export async function sendWelcomeEmail(
+  to: string,
+  userName: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!resend) {
+    console.log('[v0] Resend not configured, skipping welcome email')
+    return { success: true } // Graceful degradation
+  }
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      subject: 'Welcome to Renewly',
+      html: welcomeTemplate(userName),
+    })
+
+    if (error) {
+      console.error('[v0] Resend error:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error('[v0] Failed to send welcome email:', err)
     return { success: false, error: (err as Error).message }
   }
 }
@@ -314,6 +354,44 @@ function subscriptionReminderTemplate(
     <div class="footer">
       <p>Renewly - Track your subscriptions smartly</p>
       <p>You're receiving this because you enabled renewal reminders.</p>
+    </div>
+  </div>
+</body>
+</html>
+`
+}
+
+function welcomeTemplate(userName: string): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head><style>${baseStyles}</style></head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">Renewly</div>
+    </div>
+    <div class="content">
+      <h1>Welcome to Renewly</h1>
+      <p>Hi ${userName},</p>
+      <p>Welcome to Renewly! We're thrilled to have you on board.</p>
+      <p>With Renewly, you can:</p>
+      <ul style="margin: 16px 0; padding-left: 24px;">
+        <li>Track all your subscriptions in one place</li>
+        <li>Get reminders before renewals so you never miss a payment</li>
+        <li>Spot subscription leaks and duplicate charges</li>
+        <li>View spending analytics by category</li>
+        <li>Export your data anytime</li>
+      </ul>
+      <p>Start by adding your first subscription, and we'll help you take control of your digital life.</p>
+      <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://renewly.app'}/app/dashboard" class="button">Open Dashboard</a>
+      <div class="alert-box" style="margin-top: 24px;">
+        <p style="margin: 0;"><strong>Free Plan Limit:</strong> The Free plan includes up to 2 subscriptions. Upgrade to Pro or Family for unlimited subscriptions and more features.</p>
+      </div>
+    </div>
+    <div class="footer">
+      <p>Renewly - Track your subscriptions smartly</p>
+      <p>Questions? We're here to help!</p>
     </div>
   </div>
 </body>
