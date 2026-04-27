@@ -448,7 +448,7 @@ interface SearchOverlayProps {
   onSearchChange: (query: string) => void
   results?: SearchResultItem[]
   emptyMessage?: string
-  onResultClick?: (id: string) => void
+  onResultClick?: (id: string) => void // Deprecated: results are now display-only
 }
 
 export type { SearchResultItem, SearchOverlayProps }
@@ -538,15 +538,9 @@ export function SearchOverlay({
                 </div>
                 <div className="space-y-2">
                   {results.slice(0, 6).map((result) => (
-                    <motion.button
+                    <div
                       key={result.id}
-                      whileHover={{ x: 4, backgroundColor: 'var(--muted)' }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => {
-                        onResultClick?.(result.id)
-                        onClose()
-                      }}
-                      className="w-full text-left px-4 py-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
+                      className="w-full text-left px-4 py-3 rounded-lg bg-muted/50 transition-colors cursor-default"
                     >
                       <div className="font-medium text-foreground">{result.title}</div>
                       {result.subtitle && (
@@ -559,7 +553,7 @@ export function SearchOverlay({
                           {result.meta}
                         </div>
                       )}
-                    </motion.button>
+                    </div>
                   ))}
                 </div>
               </>

@@ -190,13 +190,6 @@ export function DashboardScreen({
         onSearchChange={setSearchQuery}
         results={searchResults}
         emptyMessage="No subscriptions match your search"
-        onResultClick={(id) => {
-          const subscription = subscriptions.find(s => s.id === id)
-          if (subscription) {
-            onSubscriptionSelect?.(subscription)
-            setShowSearch(false)
-          }
-        }}
       />
 
       <div className="px-4 lg:px-6 space-y-6 pb-8">
