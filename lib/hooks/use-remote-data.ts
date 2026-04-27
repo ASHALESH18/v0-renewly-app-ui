@@ -19,12 +19,17 @@ export function useCalendarEvents() {
           setIsLoading(true)
         }
 
-        const res = await fetch('/api/calendar/events')
+        const res = await fetch('/api/calendar/events', { 
+          credentials: 'same-origin',
+          cache: 'no-store',
+        })
         
         // Handle auth errors gracefully
         if (res.status === 401) {
           if (active) {
-            setData({ calendarEvents: [] })
+            // Use cached data if available, otherwise empty
+            const fallbackData = calendarEventsCache || { calendarEvents: [], count: 0 }
+            setData(fallbackData)
             setError(null)
             setIsLoading(false)
           }
@@ -46,8 +51,9 @@ export function useCalendarEvents() {
         console.error('[v0] Calendar fetch error:', err)
         if (active) {
           setError(err instanceof Error ? err : new Error('Unknown error'))
-          // Return empty data to prevent crashes
-          setData({ calendarEvents: [] })
+          // Keep cached data if available, otherwise provide empty default
+          const fallbackData = calendarEventsCache || { calendarEvents: [], count: 0 }
+          setData(fallbackData)
         }
       } finally {
         if (active) {

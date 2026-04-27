@@ -117,6 +117,7 @@ export function CalendarScreen() {
   const preferredLanguage = notificationSettings.language || 'en'
   const { rates } = useExchangeRates()
 
+  // Move all useMemo/useCallback hooks BEFORE any conditional return
   const events = useMemo<CalendarEventItem[]>(
     () => normalizeEvents(calendarEvents),
     [calendarEvents]
@@ -130,10 +131,24 @@ export function CalendarScreen() {
     setSelectedDate(todayEvent?.date ?? events[0]?.date ?? null)
   }, [events, selectedDate])
 
-  const getEventForDate = (dateStr: string) => {
+  const getEventForDate = useCallback((dateStr: string) => {
     return events.find((event) => event.date === dateStr) ?? null
-  }
+  }, [events])
 
+  // Calculate upcomingEvents BEFORE any early return
+  const upcomingEvents = useMemo(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    return events
+      .filter((event) => {
+        const eventDate = new Date(`${event.date}T00:00:00`)
+        return !Number.isNaN(eventDate.getTime()) && eventDate >= today
+      })
+      .slice(0, 5)
+  }, [events])
+
+  // NOW we can return early if loading
   if (isLoading) {
     return <CalendarSkeleton />
   }
@@ -168,18 +183,6 @@ export function CalendarScreen() {
   }
 
   const selectedEvent = selectedDate ? getEventForDate(selectedDate) : null
-
-  const upcomingEvents = useMemo(() => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    return events
-      .filter((event) => {
-        const eventDate = new Date(`${event.date}T00:00:00`)
-        return !Number.isNaN(eventDate.getTime()) && eventDate >= today
-      })
-      .slice(0, 5)
-  }, [events])
 
   return (
     <PageTransition className="min-h-screen">
