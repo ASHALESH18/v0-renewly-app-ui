@@ -386,7 +386,8 @@ function subscriptionReminderTemplate(
   userName: string,
   subscriptionName: string,
   renewalDate: string,
-  amount: string
+  amount: string,
+  billingCycle?: string
 ): string {
   return `
 <!DOCTYPE html>
@@ -401,14 +402,15 @@ function subscriptionReminderTemplate(
       <h1>Upcoming Renewal Reminder</h1>
       <p>Hi ${userName},</p>
       <div class="alert-box">
-        <p style="margin: 0;"><strong>${subscriptionName}</strong> will renew on <strong>${renewalDate}</strong> for <strong>${amount}</strong>.</p>
+        <p style="margin: 0;"><strong>${subscriptionName}</strong> will renew on <strong>${renewalDate}</strong> for <strong>${amount}</strong>${billingCycle ? ` (${billingCycle})` : ''}.</p>
       </div>
       <p>Make sure you have sufficient funds or update your payment method if needed.</p>
-      <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://renewly.app'}/app/dashboard" class="button">View in Renewly</a>
+      <a href="${APP_URL}/app/dashboard" class="button">View in Renewly</a>
     </div>
     <div class="footer">
       <p>Renewly - Track your subscriptions smartly</p>
-      <p>You're receiving this because you enabled renewal reminders.</p>
+      <p style="margin: 8px 0 0 0;">You're receiving this because Email Notifications are enabled in Renewly.</p>
+      <p style="margin: 8px 0 0 0;">You can turn off Email Notifications in <a href="${APP_URL}/app/settings?section=notifications" style="color: #c7a36a; text-decoration: none;">Settings</a>.</p>
     </div>
   </div>
 </body>
@@ -416,7 +418,70 @@ function subscriptionReminderTemplate(
 `
 }
 
-function welcomeTemplate(userName: string): string {
+function weeklySummaryTemplate(
+  userName: string,
+  summaryData: {
+    monthlySpend: string
+    activeSubscriptionCount: number
+    upcomingRenewals7Days: number
+    upcomingRenewals30Days: number
+    potentialSavings: string
+    topCategory: string
+  }
+): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head><style>${baseStyles}</style></head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">Renewly</div>
+    </div>
+    <div class="content">
+      <h1>Your Weekly Renewly Summary</h1>
+      <p>Hi ${userName},</p>
+      <p>Here's your subscription overview for this week:</p>
+      
+      <table style="width: 100%; margin: 24px 0; border-collapse: collapse;">
+        <tr style="border-bottom: 1px solid #e5e5e5;">
+          <td style="padding: 12px 0; font-weight: 600; color: #0e1218;">Monthly Spend</td>
+          <td style="padding: 12px 0; text-align: right; color: #333333;">${summaryData.monthlySpend}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e5e5e5;">
+          <td style="padding: 12px 0; font-weight: 600; color: #0e1218;">Active Subscriptions</td>
+          <td style="padding: 12px 0; text-align: right; color: #333333;">${summaryData.activeSubscriptionCount}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e5e5e5;">
+          <td style="padding: 12px 0; font-weight: 600; color: #0e1218;">Renewals in 7 Days</td>
+          <td style="padding: 12px 0; text-align: right; color: #333333;">${summaryData.upcomingRenewals7Days}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e5e5e5;">
+          <td style="padding: 12px 0; font-weight: 600; color: #0e1218;">Renewals in 30 Days</td>
+          <td style="padding: 12px 0; text-align: right; color: #333333;">${summaryData.upcomingRenewals30Days}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e5e5e5;">
+          <td style="padding: 12px 0; font-weight: 600; color: #0e1218;">Potential Savings</td>
+          <td style="padding: 12px 0; text-align: right; color: #333333;">${summaryData.potentialSavings}</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px 0; font-weight: 600; color: #0e1218;">Top Category</td>
+          <td style="padding: 12px 0; text-align: right; color: #333333;">${summaryData.topCategory}</td>
+        </tr>
+      </table>
+      
+      <a href="${APP_URL}/app/dashboard" class="button">View Full Summary</a>
+    </div>
+    <div class="footer">
+      <p>Renewly - Track your subscriptions smartly</p>
+      <p style="margin: 8px 0 0 0;">You're receiving this because Email Notifications are enabled in Renewly.</p>
+      <p style="margin: 8px 0 0 0;">You can turn off Email Notifications in <a href="${APP_URL}/app/settings?section=notifications" style="color: #c7a36a; text-decoration: none;">Settings</a>.</p>
+    </div>
+  </div>
+</body>
+</html>
+`
+}
   const appStoreUrl = process.env.NEXT_PUBLIC_APP_STORE_URL
   const playStoreUrl = process.env.NEXT_PUBLIC_PLAY_STORE_URL
   const hasRatingButtons = appStoreUrl || playStoreUrl
@@ -437,7 +502,7 @@ function welcomeTemplate(userName: string): string {
       <p>You can now track your subscriptions, monitor renewal dates, understand your monthly spend, and spot subscriptions that may be quietly leaking money.</p>
       <p>To get started, add your first subscription and Renewly will begin organizing your dashboard, calendar, and renewal insights.</p>
       <p>Your Free plan lets you track up to 2 subscriptions. Upgrade anytime for unlimited tracking and premium insights.</p>
-      <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://renewly.app'}/app/dashboard" class="button">Open Dashboard</a>
+      <a href="${APP_URL}/app/dashboard" class="button">Open Dashboard</a>
       ${
         hasRatingButtons
           ? `
@@ -465,9 +530,137 @@ function welcomeTemplate(userName: string): string {
       <p>Renewly - Track your subscriptions smartly</p>
       <p style="margin: 8px 0 0 0;">Made in India with ❤️</p>
       <p style="margin: 8px 0 0 0;">You're receiving this because you created a Renewly account.</p>
+      <p style="margin: 8px 0 0 0;"><a href="${APP_URL}/app/settings?section=notifications" style="color: #c7a36a; text-decoration: none;">Manage email preferences</a></p>
     </div>
   </div>
 </body>
 </html>
+`
+}
+
+// ============================================================================
+// Plain Text Templates
+// ============================================================================
+
+function welcomeTemplateText(userName: string): string {
+  return `Welcome to Renewly
+
+Hi ${userName},
+
+Welcome to Renewly — your subscription command center.
+
+You can now track your subscriptions, monitor renewal dates, understand your monthly spend, and spot subscriptions that may be quietly leaking money.
+
+To get started, add your first subscription and Renewly will begin organizing your dashboard, calendar, and renewal insights.
+
+Your Free plan lets you track up to 2 subscriptions. Upgrade anytime for unlimited tracking and premium insights.
+
+Open Dashboard: ${APP_URL}/app/dashboard
+
+---
+
+Renewly - Track your subscriptions smartly
+Made in India with ❤️
+
+You're receiving this because you created a Renewly account.
+Manage email preferences: ${APP_URL}/app/settings?section=notifications
+`
+}
+
+function subscriptionReminderTextTemplate(
+  subscriptionName: string,
+  renewalDate: string,
+  amount: string,
+  billingCycle?: string
+): string {
+  return `Upcoming Renewal Reminder
+
+${subscriptionName} will renew on ${renewalDate} for ${amount}${billingCycle ? ` (${billingCycle})` : ''}.
+
+Make sure you have sufficient funds or update your payment method if needed.
+
+View in Renewly: ${APP_URL}/app/dashboard
+
+---
+
+Renewly - Track your subscriptions smartly
+
+You're receiving this because Email Notifications are enabled in Renewly.
+You can turn off Email Notifications in Settings: ${APP_URL}/app/settings?section=notifications
+Manage email preferences: ${APP_URL}/app/settings?section=notifications
+`
+}
+
+function weeklySummaryTextTemplate(summaryData: {
+  monthlySpend: string
+  activeSubscriptionCount: number
+  upcomingRenewals7Days: number
+  upcomingRenewals30Days: number
+  potentialSavings: string
+  topCategory: string
+}): string {
+  return `Your Weekly Renewly Summary
+
+Monthly Spend: ${summaryData.monthlySpend}
+Active Subscriptions: ${summaryData.activeSubscriptionCount}
+Renewals in 7 Days: ${summaryData.upcomingRenewals7Days}
+Renewals in 30 Days: ${summaryData.upcomingRenewals30Days}
+Potential Savings: ${summaryData.potentialSavings}
+Top Category: ${summaryData.topCategory}
+
+View Full Summary: ${APP_URL}/app/dashboard
+
+---
+
+Renewly - Track your subscriptions smartly
+
+You're receiving this because Email Notifications are enabled in Renewly.
+You can turn off Email Notifications in Settings: ${APP_URL}/app/settings?section=notifications
+Manage email preferences: ${APP_URL}/app/settings?section=notifications
+`
+}
+
+function securityAlertTextTemplate(
+  userName: string,
+  alertType: 'new_device' | 'password_reset_requested' | 'email_changed' | 'account_locked',
+  metadata?: { device?: string; location?: string; time?: string }
+): string {
+  const alertMessages: Record<typeof alertType, { title: string; message: string }> = {
+    new_device: {
+      title: 'New Device Sign-In',
+      message: `A new device signed into your Renewly account.${metadata?.device ? ` Device: ${metadata.device}.` : ''}${metadata?.location ? ` Location: ${metadata.location}.` : ''}`,
+    },
+    password_reset_requested: {
+      title: 'Password Reset Requested',
+      message: 'A password reset was requested for your account. If you did not request this, please ignore this email or contact support if you have concerns.',
+    },
+    email_changed: {
+      title: 'Email Address Changed',
+      message: 'The email address associated with your Renewly account has been changed. If you did not make this change, please contact support immediately.',
+    },
+    account_locked: {
+      title: 'Account Locked',
+      message: 'Your Renewly account has been temporarily locked due to too many failed sign-in attempts. Please reset your password to regain access.',
+    },
+  }
+
+  const alert = alertMessages[alertType]
+
+  return `SECURITY ALERT: ${alert.title}
+
+Hi ${userName},
+
+${alert.message}
+
+If this was you, no action is needed. If you don't recognize this activity, please secure your account immediately by changing your password.
+
+Time: ${metadata?.time || new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' })}
+
+---
+
+Renewly - Track your subscriptions smartly
+
+This is an automated security notification. Please do not reply to this email.
+If you need help, contact support at contact@renewly.in
 `
 }
