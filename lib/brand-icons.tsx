@@ -206,6 +206,9 @@ const brandEntries: BrandEntry[] = [
   { aliases: ['urban company', 'urbanclap', 'urban clap'], displayName: 'Urban Company', color: '#7C2AE8', domain: 'urbancompany.com' },
   { aliases: ['nobroker', 'no broker'], displayName: 'NoBroker', color: '#D32F2F', domain: 'nobroker.in' },
   { aliases: ['wakefit'], displayName: 'Wakefit', color: '#FFC107', domain: 'wakefit.co' },
+
+  // Renewly system-managed subscriptions
+  { aliases: ['renewly', 'renewly pro', 'renewly family'], displayName: 'Renewly', color: '#C7A36A', textColor: '#1A1A1A' },
 ]
 
 const makeLogoUrls = (entry: BrandEntry) => {
