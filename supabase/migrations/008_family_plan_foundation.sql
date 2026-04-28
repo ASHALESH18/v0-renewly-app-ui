@@ -264,16 +264,20 @@ CREATE POLICY family_seat_addons_owner_update ON public.family_seat_addons
     )
   );
 
--- Add triggers for updated_at
+-- Add triggers for updated_at using existing update_updated_at_column function
+DROP TRIGGER IF EXISTS update_family_groups_updated_at ON public.family_groups;
 CREATE TRIGGER update_family_groups_updated_at BEFORE UPDATE ON public.family_groups
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_family_members_updated_at ON public.family_members;
 CREATE TRIGGER update_family_members_updated_at BEFORE UPDATE ON public.family_members
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_family_invites_updated_at ON public.family_invites;
 CREATE TRIGGER update_family_invites_updated_at BEFORE UPDATE ON public.family_invites
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_family_seat_addons_updated_at ON public.family_seat_addons;
 CREATE TRIGGER update_family_seat_addons_updated_at BEFORE UPDATE ON public.family_seat_addons
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
