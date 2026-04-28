@@ -243,6 +243,7 @@ export function EditSubscriptionModal({ open, onClose, subscription }: EditSubsc
   if (!subscription) return null
 
   return (
+    <AnimatePresence>
       {open && (
         <>
           <motion.div
