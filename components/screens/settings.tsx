@@ -122,6 +122,8 @@ export function SettingsScreen() {
   const [newEmail, setNewEmail] = useState('')
   const [isChangingEmail, setIsChangingEmail] = useState(false)
   const [isExportingAccount, setIsExportingAccount] = useState(false)
+  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false)
+  const [isCancellingPlan, setIsCancellingPlan] = useState(false)
 
   // Store
   const userProfile = useStore((state) => state.userProfile)
@@ -136,6 +138,12 @@ export function SettingsScreen() {
   const [isMounted, setIsMounted] = useState(false)
   useEffect(() => {
     setIsMounted(true)
+  }, [])
+
+  // Check if QA mode is enabled (production-safe check)
+  const isQAMode = useMemo(() => {
+    if (typeof window === 'undefined') return false
+    return process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_QA_ENABLED !== 'false'
   }, [])
 
   // Open profile sheet if coming from dropdown
@@ -402,9 +410,69 @@ export function SettingsScreen() {
     await updateNotificationSettings({ emailNotifications: !notificationSettings.emailNotifications })
   }
 
+  const handleCancelPlan = async () => {
+    if (isCancellingPlan) return
+    setIsCancellingPlan(true)
 
+    try {
+      // Use QA endpoint in preview/QA mode to safely cancel
+      const response = await fetch('/api/qa/plan-override', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: 'free' }),
+      })
 
-  // Theme handling has moved to <ThemeSelectorCards /> (Light / Dark / Glass).
+      const data = await response.json()
+
+      if (!response.ok) {
+        addToast({
+          type: 'error',
+          title: 'Cancellation failed',
+          message: data.error || 'Failed to cancel plan',
+        })
+        return
+      }
+
+      // Refresh plan and subscriptions from server
+      const { refreshPlan } = useStore.getState()
+      await refreshPlan()
+
+      // Refresh subscriptions
+      const subResponse = await fetch('/api/subscriptions', { cache: 'no-store' })
+      if (subResponse.ok) {
+        const subData = await subResponse.json()
+        if (Array.isArray(subData)) {
+          const { setSubscriptions, mapSubscriptionRowToUI } = useStore.getState()
+          const mapped = subData.map(mapSubscriptionRowToUI)
+          setSubscriptions(mapped)
+        }
+      }
+
+      addToast({
+        type: 'success',
+        title: 'Plan cancelled',
+        message: 'Your subscription has been cancelled and your plan is now Free.',
+      })
+
+      setShowCancelConfirmation(false)
+      setActiveSheet(null)
+    } catch (error) {
+      console.error('[v0] Plan cancellation error:', error)
+      addToast({
+        type: 'error',
+        title: 'Cancellation error',
+        message: (error as Error).message || 'An unexpected error occurred',
+      })
+    } finally {
+      setIsCancellingPlan(false)
+    }
+  }
+
+  const handleChangePlan = () => {
+    setActiveSheet(null)
+    // Navigate to upgrade page with optional plan parameter
+    router.push('/app/upgrade')
+  }
 
   // Show premium skeleton while store hydrates
   if (!isMounted) {
@@ -821,7 +889,8 @@ export function SettingsScreen() {
         onClose={() => setActiveSheet(null)}
         title="Billing & Plan"
       >
-        <div className="space-y-4">
+        <div className="space-y-6">
+          {/* Current Plan Display */}
           <div className="p-4 rounded-xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
             <p className="text-sm text-muted-foreground">Current Plan</p>
             <p className="text-2xl font-semibold text-gold mt-1">{planName}</p>
@@ -829,25 +898,71 @@ export function SettingsScreen() {
               <p className="text-xs text-muted-foreground mt-2">Your subscription is active</p>
             )}
           </div>
+
+          {/* Free Plan - Show Upgrade CTA */}
           {!isPremium && (
             <>
               <p className="text-sm text-muted-foreground">
-                Upgrade to Pro to unlock advanced features including analytics, leak detection, and more.
+                Upgrade to Pro or Family to unlock advanced features including analytics, leak detection, and more.
               </p>
               <button
-                onClick={() => {
-                  setShowPlanSheet(true)
-                  setActiveSheet(null)
-                }}
+                onClick={handleChangePlan}
                 className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
               >
                 View Upgrade Options
               </button>
             </>
           )}
+
+          {/* Premium Plans - Show Manage Plan & Cancel Plan */}
+          {isPremium && userProfile?.plan !== 'enterprise' && (
+            <>
+              <div className="space-y-3 pt-2">
+                <button
+                  onClick={handleChangePlan}
+                  className="w-full px-4 py-3 rounded-xl bg-gold/10 text-gold font-medium hover:bg-gold/20 border border-gold/30 transition-colors cursor-pointer"
+                >
+                  Change Plan
+                </button>
+                <button
+                  onClick={() => setShowCancelConfirmation(true)}
+                  className="w-full px-4 py-3 rounded-xl bg-red-500/10 text-red-600 font-medium hover:bg-red-500/20 border border-red-500/30 transition-colors cursor-pointer"
+                >
+                  Cancel Plan
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* Enterprise Plan */}
+          {userProfile?.plan === 'enterprise' && (
+            <>
+              <p className="text-sm text-muted-foreground">
+                For changes to your enterprise subscription, please contact our sales team.
+              </p>
+              <button
+                onClick={() => {
+                  window.location.href = 'mailto:contact@renewly.in'
+                }}
+                className="w-full py-3 rounded-xl bg-gold/10 text-gold font-medium hover:bg-gold/20 border border-gold/30 transition-colors cursor-pointer"
+              >
+                Contact Sales
+              </button>
+            </>
+          )}
+
+          {/* Support Section */}
           <div className="p-4 rounded-xl bg-muted space-y-2">
             <p className="text-xs font-medium text-muted-foreground">Questions about billing?</p>
             <p className="text-sm text-foreground">Contact our support team for assistance with your account or subscription.</p>
+            <button
+              onClick={() => {
+                window.location.href = 'mailto:contact@renewly.in'
+              }}
+              className="text-sm text-gold hover:text-gold/80 font-medium transition-colors cursor-pointer"
+            >
+              contact@renewly.in
+            </button>
           </div>
         </div>
       </SettingsSheet>
@@ -940,7 +1055,59 @@ export function SettingsScreen() {
           </p>
         </div>
       </SettingsSheet>
-    </div >
+    </div>
+
+    {/* Cancel Plan Confirmation Modal */}
+    <AnimatePresence>
+      {showCancelConfirmation && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowCancelConfirmation(false)}
+            className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm"
+          />
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[150] max-w-md mx-auto bg-card rounded-2xl border border-border p-6 shadow-xl"
+          >
+            <h2 className="text-lg font-semibold text-foreground mb-3">
+              Cancel {userProfile?.plan === 'pro' ? 'Renewly Pro' : 'Renewly Family'}?
+            </h2>
+            <div className="space-y-3 mb-6 text-sm text-muted-foreground">
+              <p>Cancelling your subscription will:</p>
+              <ul className="space-y-2 pl-4 list-disc">
+                <li>Remove your premium access and features</li>
+                <li>Keep your tracked subscriptions safe (they will not be deleted)</li>
+                <li>Downgrade your plan to Free</li>
+              </ul>
+              <p className="pt-2 text-xs italic">Your personal subscription records will always be preserved.</p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCancelConfirmation(false)}
+                className="flex-1 px-4 py-2 rounded-lg bg-muted text-foreground font-medium hover:bg-secondary transition-colors cursor-pointer"
+              >
+                Keep Plan
+              </button>
+              <button
+                onClick={handleCancelPlan}
+                disabled={isCancellingPlan}
+                className="flex-1 px-4 py-2 rounded-lg bg-red-500/20 text-red-600 font-medium hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {isCancellingPlan ? 'Cancelling...' : 'Cancel Plan'}
+              </button>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+    </>
   )
 }
 
