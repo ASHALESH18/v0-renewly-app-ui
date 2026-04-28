@@ -63,10 +63,11 @@ export async function ensureUserSettings(userId: string): Promise<UserSettingsRo
           theme: 'dark',
           language: 'en',
           reminder_days: 3,
-          push_notifications: true,
+          push_notifications: false,
           email_notifications: true,
           leak_alerts: true,
           biometric_enabled: false,
+          push_prompt_seen_at: null,
         }),
       }
     )

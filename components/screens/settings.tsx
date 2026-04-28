@@ -316,8 +316,8 @@ export function SettingsScreen() {
         const permission = Notification.permission
 
         if (permission === 'granted') {
-          // Already have permission - just save setting
-          await updateNotificationSettings({ pushNotifications: true })
+          // Already have permission - save via API
+          await callBrowserPushAPI(true, true)
           addToast({
             type: 'success',
             title: 'Browser push enabled',
@@ -327,19 +327,19 @@ export function SettingsScreen() {
           // Request permission from user
           const result = await Notification.requestPermission()
           if (result === 'granted') {
-            await updateNotificationSettings({ pushNotifications: true })
+            await callBrowserPushAPI(true, true)
             addToast({
               type: 'success',
               title: 'Browser push enabled',
               message: 'You will receive renewal reminders on this browser.',
             })
           } else {
-            // User denied - save false and show message
-            await updateNotificationSettings({ pushNotifications: false })
+            // User denied - save as disabled via API
+            await callBrowserPushAPI(false, true)
             addToast({
               type: 'info',
               title: 'Permission required',
-              message: 'Browser permission is required for push notifications.',
+              message: 'You can enable push notifications anytime in Settings.',
             })
           }
         } else if (permission === 'denied') {
@@ -349,7 +349,7 @@ export function SettingsScreen() {
             title: 'Notifications blocked',
             message: 'Browser notifications are blocked. Enable them in your browser settings.',
           })
-          await updateNotificationSettings({ pushNotifications: false })
+          await callBrowserPushAPI(false, true)
         }
       } catch (error) {
         console.error('[v0] Error toggling push notifications:', error)
@@ -361,12 +361,40 @@ export function SettingsScreen() {
       }
     } else {
       // User wants to turn OFF push notifications
-      await updateNotificationSettings({ pushNotifications: false })
+      await callBrowserPushAPI(false, false)
       addToast({
         type: 'success',
         title: 'Browser push disabled',
         message: 'Browser push notifications disabled.',
       })
+    }
+  }
+
+  const callBrowserPushAPI = async (pushEnabled: boolean, markSeen: boolean) => {
+    try {
+      const response = await fetch('/api/notifications/browser-push-preference', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pushNotifications: pushEnabled,
+          markPromptSeen: markSeen,
+        }),
+      })
+
+      if (!response.ok) {
+        console.warn('[v0] Failed to update push preference:', response.status)
+        return
+      }
+
+      const data = await response.json()
+      if (data.success) {
+        updateNotificationSettings({
+          pushNotifications: data.pushNotifications,
+          pushPromptSeenAt: data.pushPromptSeenAt,
+        })
+      }
+    } catch (err) {
+      console.error('[v0] Error calling browser push API:', err)
     }
   }
 

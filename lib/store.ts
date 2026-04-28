@@ -136,14 +136,12 @@ export interface NotificationSettings {
   pushNotifications: boolean
   emailNotifications: boolean
   leakAlerts: boolean
+  pushPromptSeenAt?: string | null
   reminderDays: number
   currencyCode: string
   theme: 'light' | 'dark' | 'glass'
   language: string
   biometricEnabled: boolean
-  countryCode?: string
-  locale?: string
-  timeZone?: string
 }
 
 export interface AppState {
@@ -225,7 +223,8 @@ const useStore = create<AppState>()(
       userProfile: null,
       subscriptions: [],
       notificationSettings: {
-        pushNotifications: true,
+        pushNotifications: false,
+        pushPromptSeenAt: null,
         emailNotifications: true,
         leakAlerts: true,
         reminderDays: 3,

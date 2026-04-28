@@ -61,12 +61,13 @@ export function mapUserSettingsRowToUI(row: UserSettingsRow) {
     language: row.language,
     reminderDays: row.reminder_days,
     pushNotifications: row.push_notifications,
+    pushPromptSeenAt: row.push_prompt_seen_at,
     emailNotifications: row.email_notifications,
     leakAlerts: row.leak_alerts,
     biometricEnabled: row.biometric_enabled,
     countryCode: row.country_code || undefined,
     locale: row.locale || undefined,
-    timeZone: row.time_zone || undefined, // Include timezone from settings
+    timeZone: row.time_zone || undefined,
   }
 }
 
@@ -84,6 +85,7 @@ export function mapUISettingsToRow(
     email_notifications: settings.emailNotifications,
     leak_alerts: settings.leakAlerts,
     biometric_enabled: settings.biometricEnabled,
+    push_prompt_seen_at: settings.pushPromptSeenAt || null,
     country_code: settings.countryCode || null,
     locale: settings.locale || null,
     time_zone: settings.timeZone || null,
