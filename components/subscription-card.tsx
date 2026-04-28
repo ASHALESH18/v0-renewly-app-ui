@@ -10,6 +10,7 @@ import { SubscriptionIcon } from '@/lib/brand-icons'
 import useStore from '@/lib/store'
 import { useExchangeRates } from '@/lib/hooks/use-exchange-rates'
 import { formatSubscriptionMoney } from '@/lib/preferences-format'
+import { isRenewlyManagedSubscription } from '@/lib/billing/managed-subscription-utils'
 
 interface SubscriptionCardProps {
   subscription: Subscription
@@ -101,12 +102,14 @@ export function SubscriptionCard({
                 </p>
               </div>
 
-              <div
-                className="relative z-30 shrink-0 rounded-lg p-1.5 opacity-70 transition-opacity group-hover:opacity-100"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <SubscriptionActions subscription={subscription} onEdit={onEdit} />
-              </div>
+              {!isRenewlyManagedSubscription(subscription) && (
+                <div
+                  className="relative z-30 shrink-0 rounded-lg p-1.5 opacity-70 transition-opacity group-hover:opacity-100"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <SubscriptionActions subscription={subscription} onEdit={onEdit} />
+                </div>
+              )}
             </div>
 
             <div className="mt-3 flex items-baseline gap-1">

@@ -415,17 +415,29 @@ export function FallbackBadge({
 }
 
 function RenewlyIcon({ size = 'md' }: { size?: SubscriptionIconSize }) {
-  const sizeStyle = getSizeStyle(size)
-  const sizeNum = typeof size === 'number' ? size : size === 'sm' ? 24 : size === 'lg' ? 48 : 36
+  // Determine fixed square dimensions
+  let containerSize = 48
+  let iconSize = 24
+  
+  if (size === 'sm') {
+    containerSize = 40
+    iconSize = 20
+  } else if (size === 'lg') {
+    containerSize = 56
+    iconSize = 28
+  }
 
   return (
     <div
-      className="flex items-center justify-center font-bold shrink-0 shadow-sm ring-1 ring-white/20 rounded-full bg-gradient-to-br from-gold to-amber-600 text-obsidian"
-      style={sizeStyle}
+      className="flex items-center justify-center font-bold shrink-0 shadow-sm ring-1 ring-white/20 rounded-xl bg-gradient-to-br from-gold to-amber-600 text-obsidian"
+      style={{
+        width: containerSize,
+        height: containerSize,
+      }}
       aria-label="Renewly"
       title="Renewly"
     >
-      <svg viewBox="0 0 32 32" className="w-1/2 h-1/2" fill="currentColor">
+      <svg viewBox="0 0 32 32" style={{ width: iconSize, height: iconSize }} fill="currentColor">
         <g>
           <path d="M8 6a2 2 0 012-2h12a2 2 0 012 2v14a2 2 0 01-2 2h-3v2a2 2 0 01-2 2h-7a2 2 0 01-2-2v-7a2 2 0 012-2h3V6z" opacity="0.8" />
           <circle cx="18" cy="8" r="1.5" fill="currentColor" />
