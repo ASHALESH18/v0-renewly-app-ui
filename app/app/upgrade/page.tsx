@@ -78,6 +78,8 @@ function UpgradeContent() {
   const updatePlanLocally = useStore((state) => state.updatePlanLocally)
   const addToast = useStore((state) => state.addToast)
   const currentPlan = useStore((state) => state.plan)
+  const setSubscriptions = useStore((state) => state.setSubscriptions)
+  const mapSubscriptionRowToUI = useStore((state) => state.mapSubscriptionRowToUI)
 
   const initialPlan = plans.some((plan) => plan.id === requestedPlan) ? requestedPlan : 'pro'
   const [selectedPlanId, setSelectedPlanId] = useState<PaidPlanId>(initialPlan as PaidPlanId)
@@ -122,32 +124,21 @@ function UpgradeContent() {
     }
   }
 
-  const handleContinue = () => {
-    if (selectedPlanId === 'enterprise') {
-      setStep('enterprise-contact')
-      return
+  const refreshSubscriptionsFromServer = async () => {
+    try {
+      const response = await fetch('/api/subscriptions', { cache: 'no-store' })
+      if (response.ok) {
+        const data = await response.json()
+        if (Array.isArray(data)) {
+          setSubscriptions(data)
+        }
+      }
+    } catch (error) {
+      console.error('[v0] Error refreshing subscriptions:', error)
     }
-
-    if (!billingStatus.configured) {
-      addToast({
-        type: 'info',
-        title: 'Payment not configured',
-        message: 'Razorpay keys are not configured yet. Please check back soon.',
-      })
-      return
-    }
-
-    if (!inrPricing || inrPricing.amount === null) {
-      addToast({
-        type: 'info',
-        title: 'Plan not available',
-        message: 'This plan is not available for checkout right now. Please try again later.',
-      })
-      return
-    }
-
-    setStep('checkout')
   }
+
+  const handleContinue = () => {
 
   const handleQaPlanOverride = async (plan: 'free' | 'pro' | 'family') => {
     try {
@@ -172,11 +163,16 @@ function UpgradeContent() {
       // Update local state
       updatePlanLocally(plan)
       await refreshPlan()
+      await refreshSubscriptionsFromServer()
+
+      const syncMessage = data.sync === 'failed'
+        ? 'Plan updated but sync failed. Try Resync Current Plan.'
+        : `QA plan set to ${plan}`
 
       addToast({
-        type: 'success',
+        type: data.sync === 'failed' ? 'warning' : 'success',
         title: 'QA plan updated',
-        message: `QA plan set to ${plan}`,
+        message: syncMessage,
       })
     } catch (error) {
       addToast({
@@ -193,6 +189,44 @@ function UpgradeContent() {
     updatePlanLocally(newPlanId as 'pro' | 'family')
     await refreshPlan()
     setStep('success')
+  }
+
+  const handleQaResync = async () => {
+    try {
+      setQaLoading(true)
+      const res = await fetch('/api/qa/resync-renewly-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        addToast({
+          type: 'error',
+          title: 'Resync failed',
+          message: data.error || 'Failed to resync subscriptions',
+        })
+        return
+      }
+
+      // Refresh subscriptions from server
+      await refreshSubscriptionsFromServer()
+
+      addToast({
+        type: 'success',
+        title: 'Renewly subscription resynced',
+        message: `Resync completed for ${data.plan} plan`,
+      })
+    } catch (error) {
+      addToast({
+        type: 'error',
+        title: 'Resync error',
+        message: (error as Error).message || 'An error occurred',
+      })
+    } finally {
+      setQaLoading(false)
+    }
   }
 
   if (step === 'enterprise-contact') {
@@ -348,6 +382,13 @@ function UpgradeContent() {
                   {qaLoading ? 'Setting...' : `Set ${plan}`}
                 </button>
               ))}
+              <button
+                onClick={handleQaResync}
+                disabled={qaLoading}
+                className="text-sm px-3 py-1.5 rounded-lg bg-blue-400/20 text-blue-700 hover:bg-blue-400/40 dark:bg-blue-900/40 dark:text-blue-300 dark:hover:bg-blue-900/60 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              >
+                {qaLoading ? 'Resyncing...' : 'Resync Current Plan'}
+              </button>
             </div>
           </motion.div>
         )}
