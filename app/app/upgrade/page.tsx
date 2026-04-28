@@ -153,10 +153,17 @@ function UpgradeContent() {
       const response = await fetch('/api/subscriptions', { cache: 'no-store' })
       if (response.ok) {
         const data = await response.json()
-        // Map snake_case DB rows to camelCase UI subscriptions
-        const subscriptions = Array.isArray(data)
-          ? data.map(mapSubscriptionRowToUI)
-          : []
+        // Handle both { subscriptions: [] } and direct array responses
+        const rows = Array.isArray(data?.subscriptions)
+          ? data.subscriptions
+          : Array.isArray(data)
+            ? data
+            : []
+        
+        const { isDisplayableSubscription } = await import('@/lib/billing/subscription-display-utils')
+        const subscriptions = rows
+          .map(mapSubscriptionRowToUI)
+          .filter(isDisplayableSubscription)
         setSubscriptions(subscriptions)
       }
     } catch (error) {

@@ -441,11 +441,21 @@ export function SettingsScreen() {
       const subResponse = await fetch('/api/subscriptions', { cache: 'no-store' })
       if (subResponse.ok) {
         const subData = await subResponse.json()
-        if (Array.isArray(subData)) {
-          const { setSubscriptions, mapSubscriptionRowToUI } = useStore.getState()
-          const mapped = subData.map(mapSubscriptionRowToUI)
-          setSubscriptions(mapped)
-        }
+        // Handle both { subscriptions: [] } and direct array responses
+        const rows = Array.isArray(subData?.subscriptions)
+          ? subData.subscriptions
+          : Array.isArray(subData)
+            ? subData
+            : []
+        
+        const { setSubscriptions } = useStore.getState()
+        const { mapSubscriptionRowToUI } = await import('@/lib/supabase/mappers')
+        const { isDisplayableSubscription } = await import('@/lib/billing/subscription-display-utils')
+        
+        const subscriptions = rows
+          .map(mapSubscriptionRowToUI)
+          .filter(isDisplayableSubscription)
+        setSubscriptions(subscriptions)
       }
 
       addToast({
@@ -925,12 +935,16 @@ export function SettingsScreen() {
                 >
                   Change Plan
                 </button>
-                <button
-                  onClick={() => setShowCancelConfirmation(true)}
-                  className="w-full px-4 py-3 rounded-xl bg-red-500/10 text-red-600 font-medium hover:bg-red-500/20 border border-red-500/30 transition-colors cursor-pointer"
-                >
-                  Cancel Plan
-                </button>
+              <button
+                onClick={() => {
+                  setActiveSheet(null)
+                  // Use requestAnimationFrame to ensure sheet closes before modal opens
+                  requestAnimationFrame(() => setShowCancelConfirmation(true))
+                }}
+                className="w-full px-4 py-3 rounded-xl bg-red-500/10 text-red-600 font-medium hover:bg-red-500/20 border border-red-500/30 transition-colors cursor-pointer"
+              >
+                Cancel Plan
+              </button>
               </div>
             </>
           )}
