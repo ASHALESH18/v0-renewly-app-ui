@@ -222,12 +222,14 @@ export function SubscriptionCardCompact({
           </p>
         </div>
 
-        <div
-          className="relative z-30 shrink-0 rounded-lg p-1"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <SubscriptionActions subscription={subscription} onEdit={onEdit} />
-        </div>
+        {!isRenewlyManagedSubscription(subscription) && (
+          <div
+            className="relative z-30 shrink-0 rounded-lg p-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <SubscriptionActions subscription={subscription} onEdit={onEdit} />
+          </div>
+        )}
       </div>
     </motion.div>
   )
