@@ -2,7 +2,7 @@
 -- Adds columns to subscriptions table to support automatic Renewly Pro/Family subscriptions
 -- F1.1/F2 Batch: Foundation for system-managed subscription tracking
 
--- Add columns to subscriptions table
+-- Add columns to subscriptions table for system-managed subscription tracking
 ALTER TABLE public.subscriptions
 ADD COLUMN IF NOT EXISTS is_system_managed boolean not null default false,
 ADD COLUMN IF NOT EXISTS managed_plan text null,
@@ -13,10 +13,27 @@ ADD COLUMN IF NOT EXISTS family_group_id uuid null references public.family_grou
 ADD COLUMN IF NOT EXISTS covered_by_family boolean not null default false,
 ADD COLUMN IF NOT EXISTS system_metadata jsonb not null default '{}'::jsonb;
 
--- Add check constraints for managed_plan and system_source
-ALTER TABLE public.subscriptions
-ADD CONSTRAINT check_managed_plan CHECK (managed_plan IS NULL OR managed_plan IN ('pro', 'family')),
-ADD CONSTRAINT check_system_source CHECK (system_source IS NULL OR system_source IN ('renewly_billing'));
+-- Add check constraints safely using DO blocks to prevent errors if they already exist
+DO $$ 
+BEGIN
+  -- Check constraint for managed_plan
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.constraint_column_usage 
+    WHERE table_name = 'subscriptions' AND constraint_name = 'check_managed_plan'
+  ) THEN
+    ALTER TABLE public.subscriptions
+    ADD CONSTRAINT check_managed_plan CHECK (managed_plan IS NULL OR managed_plan IN ('pro', 'family'));
+  END IF;
+  
+  -- Check constraint for system_source
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.constraint_column_usage 
+    WHERE table_name = 'subscriptions' AND constraint_name = 'check_system_source'
+  ) THEN
+    ALTER TABLE public.subscriptions
+    ADD CONSTRAINT check_system_source CHECK (system_source IS NULL OR system_source IN ('renewly_billing'));
+  END IF;
+END $$;
 
 -- Add unique index for managed_subscription_key (only when not null)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriptions_managed_subscription_key
