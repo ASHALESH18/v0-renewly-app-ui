@@ -19,6 +19,7 @@ import { getAllPlans, getPlanPricing, type Plan, type PlanCurrency, type PlanTyp
 import { getCurrencySymbol } from '@/lib/currency'
 import { getEffectiveCurrency } from '@/lib/pricing-display'
 import { clearUpgradeIntent } from '@/lib/upgrade-flow'
+import { mapSubscriptionRowToUI } from '@/lib/supabase/mappers'
 import { RazorpayCheckout, useBillingStatus } from '@/components/razorpay-checkout'
 import useStore from '@/lib/store'
 
@@ -152,9 +153,11 @@ function UpgradeContent() {
       const response = await fetch('/api/subscriptions', { cache: 'no-store' })
       if (response.ok) {
         const data = await response.json()
-        if (Array.isArray(data)) {
-          setSubscriptions(data)
-        }
+        // Map snake_case DB rows to camelCase UI subscriptions
+        const subscriptions = Array.isArray(data)
+          ? data.map(mapSubscriptionRowToUI)
+          : []
+        setSubscriptions(subscriptions)
       }
     } catch (error) {
       console.error('[v0] Error refreshing subscriptions:', error)

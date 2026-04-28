@@ -119,6 +119,63 @@ function normalizeSubscription(sub: Record<string, unknown>): Subscription | nul
           ? sub.lastUsed
           : undefined
 
+    // System-managed subscription fields (F1.1+F2)
+    const isSystemManaged =
+      typeof sub.is_system_managed === 'boolean'
+        ? sub.is_system_managed
+        : typeof sub.isSystemManaged === 'boolean'
+          ? sub.isSystemManaged
+          : false
+
+    const managedPlan =
+      typeof sub.managed_plan === 'string'
+        ? (sub.managed_plan as 'pro' | 'family')
+        : typeof sub.managedPlan === 'string'
+          ? (sub.managedPlan as 'pro' | 'family')
+          : undefined
+
+    const systemSource =
+      typeof sub.system_source === 'string'
+        ? (sub.system_source as 'renewly_billing')
+        : typeof sub.systemSource === 'string'
+          ? (sub.systemSource as 'renewly_billing')
+          : undefined
+
+    const managedSubscriptionKey =
+      typeof sub.managed_subscription_key === 'string'
+        ? sub.managed_subscription_key
+        : typeof sub.managedSubscriptionKey === 'string'
+          ? sub.managedSubscriptionKey
+          : undefined
+
+    const billingOwnerUserId =
+      typeof sub.billing_owner_user_id === 'string'
+        ? sub.billing_owner_user_id
+        : typeof sub.billingOwnerUserId === 'string'
+          ? sub.billingOwnerUserId
+          : undefined
+
+    const familyGroupId =
+      typeof sub.family_group_id === 'string'
+        ? sub.family_group_id
+        : typeof sub.familyGroupId === 'string'
+          ? sub.familyGroupId
+          : undefined
+
+    const coveredByFamily =
+      typeof sub.covered_by_family === 'boolean'
+        ? sub.covered_by_family
+        : typeof sub.coveredByFamily === 'boolean'
+          ? sub.coveredByFamily
+          : false
+
+    const systemMetadata =
+      typeof sub.system_metadata === 'object' && sub.system_metadata !== null
+        ? (sub.system_metadata as Record<string, unknown>)
+        : typeof sub.systemMetadata === 'object' && sub.systemMetadata !== null
+          ? (sub.systemMetadata as Record<string, unknown>)
+          : undefined
+
     if (!id || !name) {
       return null
     }
@@ -143,6 +200,14 @@ function normalizeSubscription(sub: Record<string, unknown>): Subscription | nul
       lastUsed,
       isAutoRenew,
       currency,
+      isSystemManaged,
+      managedPlan,
+      systemSource,
+      managedSubscriptionKey,
+      billingOwnerUserId,
+      familyGroupId,
+      coveredByFamily,
+      systemMetadata,
     }
   } catch (error) {
     console.warn('[subscriptions] normalize failed', error, sub)
