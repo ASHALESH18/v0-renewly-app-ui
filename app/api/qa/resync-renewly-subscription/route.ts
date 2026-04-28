@@ -10,34 +10,32 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 /**
- * QA-only endpoint to override user plan for testing
- * This is NOT a production feature and must be disabled in production
+ * QA-only endpoint to resync Renewly subscription for current plan
+ * Useful when profile.plan is Pro/Family but Renewly subscription row is missing
  * 
  * Security:
  * - Only works if QA_PLAN_OVERRIDE_ENABLED=true in server env
  * - Only works if Vercel env is preview/development (not production)
  * - Requires authentication (getUser)
  * - Requires email allowlist in QA_PLAN_OVERRIDE_EMAILS
- * - Server-side only, never exposes service role key
  */
 export async function POST(request: NextRequest) {
   try {
     // Check if QA override is enabled
     const qaEnabled = process.env.QA_PLAN_OVERRIDE_ENABLED === 'true'
-    const nodeEnv = process.env.NODE_ENV
     const vercelEnv = process.env.VERCEL_ENV || 'development'
 
     // Deny in production
     if (vercelEnv === 'production') {
       return NextResponse.json(
-        { error: 'QA override is not available in production' },
+        { error: 'QA resync is not available in production' },
         { status: 403 }
       )
     }
 
     if (!qaEnabled) {
       return NextResponse.json(
-        { error: 'QA override is not enabled' },
+        { error: 'QA resync is not enabled' },
         { status: 403 }
       )
     }
@@ -59,27 +57,14 @@ export async function POST(request: NextRequest) {
       .filter(Boolean)
 
     if (!allowlist.includes(user.email?.toLowerCase() || '')) {
-      console.warn(`[v0] QA override attempted by unauthorized email: ${user.email}`)
+      console.warn(`[v0] QA resync attempted by unauthorized email: ${user.email}`)
       return NextResponse.json(
-        { error: 'Your email is not authorized for QA override' },
+        { error: 'Your email is not authorized for QA resync' },
         { status: 403 }
       )
     }
 
-    // Parse request body
-    const body = await request.json()
-    const { plan } = body
-
-    // Validate plan
-    const validPlans = ['free', 'pro', 'family']
-    if (!validPlans.includes(plan)) {
-      return NextResponse.json(
-        { error: `Invalid plan: ${plan}. Must be one of: ${validPlans.join(', ')}` },
-        { status: 400 }
-      )
-    }
-
-    // Get current plan for audit log
+    // Get current plan
     const { data: profile, error: fetchError } = await supabase
       .from('profiles')
       .select('plan')
@@ -93,32 +78,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const oldPlan = profile.plan
+    const currentPlan = profile.plan
 
-    // Update plan in Supabase
-    const { data: updated, error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        plan,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', user.id)
-      .select('plan')
-      .single()
-
-    if (updateError) {
-      return NextResponse.json(
-        { error: 'Could not update plan' },
-        { status: 500 }
-      )
-    }
-
-    // Audit log (server-side only, never exposed to client)
-    console.log(`[v0] QA PLAN OVERRIDE: ${user.email} (${user.id}) changed from ${oldPlan} to ${plan} at ${new Date().toISOString()}`)
-
-    // Sync system-managed Renewly subscriptions
-    let syncStatus: 'completed' | 'failed' | 'skipped' = 'skipped'
-    if (plan === 'pro' || plan === 'family') {
+    // Sync based on current plan
+    let syncStatus: 'completed' | 'failed' = 'completed'
+    if (currentPlan === 'pro' || currentPlan === 'family') {
       try {
         // Calculate period end (30 days from now)
         const periodStart = new Date()
@@ -129,24 +93,22 @@ export async function POST(request: NextRequest) {
         await syncRenewlyBillingSubscriptionForPlan({
           userId: user.id,
           email: user.email || '',
-          plan,
+          plan: currentPlan,
           currentPeriodEnd: periodEndStr,
         })
-        syncStatus = 'completed'
       } catch (syncError) {
-        console.error('[v0] QA: Renewly subscription sync failed:', syncError)
+        console.error('[v0] QA resync: Renewly subscription sync failed:', syncError)
         syncStatus = 'failed'
       }
-    } else if (plan === 'free') {
-      // Archive system-managed subscriptions when downgrading to free
+    } else if (currentPlan === 'free') {
+      // Archive system-managed subscriptions for free plan
       try {
         const { archiveManagedRenewlySubscriptions } = await import(
           '@/lib/billing/renewly-subscription-sync'
         )
         await archiveManagedRenewlySubscriptions({ userId: user.id })
-        syncStatus = 'completed'
       } catch (syncError) {
-        console.error('[v0] QA: Archive Renewly subscriptions failed:', syncError)
+        console.error('[v0] QA resync: Archive Renewly subscriptions failed:', syncError)
         syncStatus = 'failed'
       }
     }
@@ -156,19 +118,21 @@ export async function POST(request: NextRequest) {
     revalidateTag(`subscriptions:${user.id}`)
     revalidateTag('profile')
 
+    console.log(`[v0] QA RESYNC: ${user.email} (${user.id}) resynced plan: ${currentPlan}`)
+
     return NextResponse.json(
       {
         success: true,
-        plan: updated.plan,
+        plan: currentPlan,
         sync: syncStatus,
         message: syncStatus === 'failed' 
-          ? 'Plan updated, but Renewly subscription sync failed. Use Resync Current Plan or check server logs.'
-          : `QA plan set to ${plan}`,
+          ? 'Resync attempted but failed. Check server logs.'
+          : `Renewly subscription resynced for ${currentPlan} plan`,
       },
       { status: 200 }
     )
   } catch (error) {
-    console.error('[v0] QA plan override error:', error)
+    console.error('[v0] QA resync error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
