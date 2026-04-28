@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
 import { syncRenewlyBillingSubscriptionForPlan } from '@/lib/billing/renewly-subscription-sync'
+import { invalidateCache } from '@/lib/redis'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -149,6 +150,13 @@ export async function POST(request: NextRequest) {
         console.error('[v0] QA: Archive Renewly subscriptions failed:', syncError)
         syncStatus = 'failed'
       }
+    }
+
+    // Invalidate subscriptions cache after plan change and sync
+    try {
+      await invalidateCache(`subscriptions:${user.id}`)
+    } catch (cacheError) {
+      console.error('[v0] QA: Failed to invalidate subscriptions cache:', cacheError)
     }
 
     // Invalidate cache tags
