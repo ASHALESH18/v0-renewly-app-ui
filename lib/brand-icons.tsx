@@ -414,22 +414,20 @@ export function FallbackBadge({
   )
 }
 
-function RenewlyIcon({ size = 'md' }: { size?: SubscriptionIconSize }) {
-  // Determine fixed square dimensions
-  let containerSize = 48
-  let iconSize = 24
-  
+function RenewlyAssetIcon({ size = 'md' }: { size?: SubscriptionIconSize }) {
+  // Use consistent sizes
+  let containerSize = 40
   if (size === 'sm') {
+    containerSize = 32
+  } else if (size === 'md') {
     containerSize = 40
-    iconSize = 20
   } else if (size === 'lg') {
-    containerSize = 56
-    iconSize = 28
+    containerSize = 48
   }
 
   return (
     <div
-      className="flex items-center justify-center font-bold shrink-0 shadow-sm ring-1 ring-white/20 rounded-xl bg-gradient-to-br from-gold to-amber-600 text-obsidian"
+      className="flex items-center justify-center shrink-0 shadow-sm ring-1 ring-white/20 rounded-xl overflow-hidden bg-card"
       style={{
         width: containerSize,
         height: containerSize,
@@ -437,12 +435,16 @@ function RenewlyIcon({ size = 'md' }: { size?: SubscriptionIconSize }) {
       aria-label="Renewly"
       title="Renewly"
     >
-      <svg viewBox="0 0 32 32" style={{ width: iconSize, height: iconSize }} fill="currentColor">
-        <g>
-          <path d="M8 6a2 2 0 012-2h12a2 2 0 012 2v14a2 2 0 01-2 2h-3v2a2 2 0 01-2 2h-7a2 2 0 01-2-2v-7a2 2 0 012-2h3V6z" opacity="0.8" />
-          <circle cx="18" cy="8" r="1.5" fill="currentColor" />
-        </g>
-      </svg>
+      <img
+        src="/icon.svg"
+        alt="Renewly"
+        className="h-full w-full object-contain p-1"
+        onError={(e) => {
+          // Fallback to dark PNG if SVG fails to load
+          const img = e.target as HTMLImageElement
+          img.src = '/icon-dark-32x32.png'
+        }}
+      />
     </div>
   )
 }
@@ -460,14 +462,14 @@ export function SubscriptionIcon({
 }) {
   const brandConfig = getBrandConfig(name)
 
-  // Special handling for Renewly managed subscriptions
+  // Special handling for Renewly managed subscriptions - use real app icon
   const nameLower = (name || '').toLowerCase().trim()
   const isRenewly = nameLower === 'renewly' || nameLower === 'renewly pro' || nameLower === 'renewly family'
 
   if (isRenewly) {
     return (
       <div className={className}>
-        <RenewlyIcon size={size} />
+        <RenewlyAssetIcon size={size} />
       </div>
     )
   }
