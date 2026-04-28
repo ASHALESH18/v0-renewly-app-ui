@@ -6,7 +6,9 @@ import {
   X, Check,
   Tv, Music, Briefcase, Cloud, Dumbbell, Newspaper, Gamepad2, Package,
   Sparkles, Home, Wallet, ShoppingBag, GraduationCap, Shield, Plug,
+  ArrowRight,
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { SubscriptionIcon } from '@/lib/brand-icons'
@@ -17,6 +19,7 @@ import { currencies } from '@/lib/locale-utils'
 import { getCurrencySymbol, convertCurrency } from '@/lib/currency'
 import { useExchangeRates } from '@/lib/hooks/use-exchange-rates'
 import { validateSubscriptionForm, getFirstInvalidField, type SubscriptionValidationErrors } from '@/lib/validation'
+import { isRenewlyManagedSubscription } from '@/lib/billing/managed-subscription-utils'
 import type { Subscription, SubscriptionCategory, BillingCycle } from '@/lib/types'
 
 interface EditSubscriptionModalProps {
@@ -244,7 +247,84 @@ export function EditSubscriptionModal({ open, onClose, subscription }: EditSubsc
 
   if (!subscription) return null
 
-  return (
+  // Guard: Show managed billing state for Renewly subscriptions
+  if (isRenewlyManagedSubscription(subscription)) {
+    const router = useRouter()
+    return (
+      <AnimatePresence>
+        {open && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => onClose()}
+              className="fixed inset-0 bg-obsidian/80 backdrop-blur-sm z-50"
+            />
+
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+              className="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-hidden rounded-t-3xl bg-card"
+            >
+              <div className="flex justify-center pt-3 pb-2">
+                <div className="w-12 h-1.5 rounded-full bg-muted-foreground/30" />
+              </div>
+
+              <div className="flex items-center justify-between px-4 pb-4">
+                <h2 className="text-xl font-semibold text-foreground">
+                  Managed by Renewly
+                </h2>
+
+                <button
+                  onClick={() => onClose()}
+                  className="p-2 -mr-2 rounded-full hover:bg-secondary/50 transition-colors"
+                >
+                  <X className="w-5 h-5 text-muted-foreground" />
+                </button>
+              </div>
+
+              <div className="px-4 pb-8 space-y-6">
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-secondary/50">
+                  <SubscriptionIcon
+                    name={subscription.name}
+                    fallbackColor={subscription.color}
+                    size="lg"
+                  />
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">{subscription.name}</h3>
+                    <p className="text-sm text-gold font-medium">Renewly Plan</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 text-center py-4">
+                  <p className="text-foreground font-medium">
+                    Renewly Pro and Family plans are managed from billing.
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    You can change your plan from the Upgrade page.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    onClose()
+                    router.push('/app/upgrade')
+                  }}
+                  className="w-full px-4 py-3 rounded-xl bg-gold text-obsidian font-semibold hover:bg-gold/90 transition-colors flex items-center justify-center gap-2"
+                >
+                  <span>Manage Plan</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    )
+  }
     <AnimatePresence>
       {open && (
         <>

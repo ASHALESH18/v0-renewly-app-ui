@@ -414,6 +414,27 @@ export function FallbackBadge({
   )
 }
 
+function RenewlyIcon({ size = 'md' }: { size?: SubscriptionIconSize }) {
+  const sizeStyle = getSizeStyle(size)
+  const sizeNum = typeof size === 'number' ? size : size === 'sm' ? 24 : size === 'lg' ? 48 : 36
+
+  return (
+    <div
+      className="flex items-center justify-center font-bold shrink-0 shadow-sm ring-1 ring-white/20 rounded-full bg-gradient-to-br from-gold to-amber-600 text-obsidian"
+      style={sizeStyle}
+      aria-label="Renewly"
+      title="Renewly"
+    >
+      <svg viewBox="0 0 32 32" className="w-1/2 h-1/2" fill="currentColor">
+        <g>
+          <path d="M8 6a2 2 0 012-2h12a2 2 0 012 2v14a2 2 0 01-2 2h-3v2a2 2 0 01-2 2h-7a2 2 0 01-2-2v-7a2 2 0 012-2h3V6z" opacity="0.8" />
+          <circle cx="18" cy="8" r="1.5" fill="currentColor" />
+        </g>
+      </svg>
+    </div>
+  )
+}
+
 export function SubscriptionIcon({
   name,
   fallbackColor,
@@ -426,6 +447,18 @@ export function SubscriptionIcon({
   className?: string
 }) {
   const brandConfig = getBrandConfig(name)
+
+  // Special handling for Renewly managed subscriptions
+  const nameLower = (name || '').toLowerCase().trim()
+  const isRenewly = nameLower === 'renewly' || nameLower === 'renewly pro' || nameLower === 'renewly family'
+
+  if (isRenewly) {
+    return (
+      <div className={className}>
+        <RenewlyIcon size={size} />
+      </div>
+    )
+  }
 
   if (brandConfig) {
     return (
