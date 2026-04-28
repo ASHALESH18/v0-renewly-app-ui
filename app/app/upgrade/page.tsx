@@ -23,7 +23,6 @@ import { RazorpayCheckout, useBillingStatus } from '@/components/razorpay-checko
 import useStore from '@/lib/store'
 
 type UpgradeStep = 'select-plan' | 'checkout' | 'success' | 'enterprise-contact'
-
 type PaidPlanId = 'pro' | 'family' | 'enterprise'
 
 const comparisonRows: Array<{ label: string; pro: string; family: string; enterprise: string }> = [
@@ -63,6 +62,33 @@ function getSavings(plan: Plan, currency: PlanCurrency) {
   return `${getCurrencySymbol(currency)}${pricing.savings.toLocaleString('en-US', { maximumFractionDigits: 2 })} ${currency}`
 }
 
+function EnterpriseContactView({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md space-y-6"
+      >
+        <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground hover:text-foreground" type="button">
+          <ArrowLeft className="h-4 w-4" /> Back to plans
+        </button>
+        <div className="rounded-2xl border border-border bg-card p-6 text-center">
+          <Building2 className="mx-auto mb-4 h-12 w-12 text-gold" />
+          <h1 className="text-2xl font-semibold text-foreground">Enterprise</h1>
+          <p className="mt-2 text-muted-foreground">Custom pricing, team controls, reporting, onboarding, and dedicated support.</p>
+          <Link
+            href="/contact-sales"
+            className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gold px-4 py-3 font-semibold text-obsidian"
+          >
+            Contact Sales
+          </Link>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
 function UpgradeContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -77,9 +103,7 @@ function UpgradeContent() {
   const refreshPlan = useStore((state) => state.refreshPlanFromServer)
   const updatePlanLocally = useStore((state) => state.updatePlanLocally)
   const addToast = useStore((state) => state.addToast)
-  const currentPlan = useStore((state) => state.plan)
   const setSubscriptions = useStore((state) => state.setSubscriptions)
-  const mapSubscriptionRowToUI = useStore((state) => state.mapSubscriptionRowToUI)
 
   const initialPlan = plans.some((plan) => plan.id === requestedPlan) ? requestedPlan : 'pro'
   const [selectedPlanId, setSelectedPlanId] = useState<PaidPlanId>(initialPlan as PaidPlanId)
@@ -90,7 +114,6 @@ function UpgradeContent() {
   useEffect(() => {
     clearUpgradeIntent()
     
-    // Fetch QA status from server
     const fetchQaStatus = async () => {
       try {
         const res = await fetch('/api/qa/plan-override/status')
@@ -139,6 +162,12 @@ function UpgradeContent() {
   }
 
   const handleContinue = () => {
+    if (selectedPlanId === 'enterprise') {
+      setStep('enterprise-contact')
+    } else if (canUseRazorpay) {
+      setStep('checkout')
+    }
+  }
 
   const handleQaPlanOverride = async (plan: 'free' | 'pro' | 'family') => {
     try {
@@ -160,7 +189,6 @@ function UpgradeContent() {
         return
       }
 
-      // Update local state
       updatePlanLocally(plan)
       await refreshPlan()
       await refreshSubscriptionsFromServer()
@@ -188,6 +216,7 @@ function UpgradeContent() {
   const handlePaymentSuccess = async (newPlanId: string) => {
     updatePlanLocally(newPlanId as 'pro' | 'family')
     await refreshPlan()
+    await refreshSubscriptionsFromServer()
     setStep('success')
   }
 
@@ -210,7 +239,6 @@ function UpgradeContent() {
         return
       }
 
-      // Refresh subscriptions from server
       await refreshSubscriptionsFromServer()
 
       addToast({
@@ -259,7 +287,7 @@ function UpgradeContent() {
   }
 
   if (step === 'checkout' && selectedPlanId !== 'enterprise') {
-    const inrPricing = getPlanPricing(selectedPlanId as PlanType, 'INR')
+    const checkoutPricing = getPlanPricing(selectedPlanId as PlanType, 'INR')
 
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -276,7 +304,7 @@ function UpgradeContent() {
           <RazorpayCheckout
             planId={selectedPlanId as 'pro' | 'family'}
             planName={selectedPlan.name}
-            amount={inrPricing?.amount || 0}
+            amount={checkoutPricing?.amount || 0}
             onSuccess={handlePaymentSuccess}
             onCancel={() => setStep('select-plan')}
             onError={(error) => {
@@ -319,10 +347,11 @@ function UpgradeContent() {
                 whileHover={{ y: -4 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleSelectPlan(plan.id)}
-                className={`relative rounded-2xl border p-5 text-left transition-all ${isSelected
+                className={`relative rounded-2xl border p-5 text-left transition-all ${
+                  isSelected
                     ? 'border-gold bg-gold/10 shadow-luxury'
                     : 'border-border bg-card/80 hover:border-gold/40'
-                  }`}
+                }`}
                 type="button"
               >
                 {plan.badge === 'popular' && (
@@ -337,66 +366,18 @@ function UpgradeContent() {
                 <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
                 <div className="mt-4 flex items-baseline gap-2">
                   {original && <span className="text-sm text-muted-foreground line-through">{original}</span>}
-                  <span className="text-2xl font-bold text-foreground">{formatPlanPrice(plan, selectedCurrency)}</span>
+                  <span className="text-xl font-bold text-foreground">{formatPlanPrice(plan, selectedCurrency)}</span>
+                  {savings && <span className="text-xs text-emerald">Save {savings}</span>}
                 </div>
-                {savings && <p className="mt-2 text-sm font-medium text-emerald">Save {savings}/month</p>}
-                {plan.extraNote && <p className="mt-2 text-xs text-muted-foreground">{plan.extraNote}</p>}
-                <ul className="mt-4 space-y-2">
-                  {plan.features.slice(0, 5).map((feature) => (
-                    <li key={feature} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
               </motion.button>
             )
           })}
         </div>
 
-        {qaStatus?.enabled && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl border border-amber-400/40 bg-amber-50/20 p-4 dark:bg-amber-950/20"
-          >
-            <div className="flex items-center gap-2 mb-3">
-              <span className="inline-flex items-center rounded-full bg-amber-400/30 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-200">
-                QA Mode
-              </span>
-              <span className="text-xs text-amber-600 dark:text-amber-400">
-                Test premium features without payment
-              </span>
-            </div>
-            <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
-              Current plan: <span className="font-semibold capitalize">{qaStatus.currentPlan || 'unknown'}</span>
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {['free', 'pro', 'family'].map((plan) => (
-                <button
-                  key={plan}
-                  onClick={() => handleQaPlanOverride(plan as 'free' | 'pro' | 'family')}
-                  disabled={qaLoading || qaStatus.currentPlan === plan}
-                  className="text-sm px-3 py-1.5 rounded-lg bg-amber-400/20 text-amber-700 hover:bg-amber-400/40 dark:bg-amber-900/40 dark:text-amber-300 dark:hover:bg-amber-900/60 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium capitalize"
-                >
-                  {qaLoading ? 'Setting...' : `Set ${plan}`}
-                </button>
-              ))}
-              <button
-                onClick={handleQaResync}
-                disabled={qaLoading}
-                className="text-sm px-3 py-1.5 rounded-lg bg-blue-400/20 text-blue-700 hover:bg-blue-400/40 dark:bg-blue-900/40 dark:text-blue-300 dark:hover:bg-blue-900/60 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-              >
-                {qaLoading ? 'Resyncing...' : 'Resync Current Plan'}
-              </button>
-            </div>
-          </motion.div>
-        )}
-
-        <div className="rounded-2xl border border-border bg-card/80 p-5">
-          <h2 className="text-lg font-semibold text-foreground">Plan comparison</h2>
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[680px] text-sm">
+        <div className="space-y-4 rounded-2xl border border-border/60 bg-card/40 p-6">
+          <h3 className="text-lg font-semibold text-foreground">Plan Comparison</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full">
               <thead>
                 <tr className="border-b border-border text-left text-muted-foreground">
                   <th className="py-3 pr-4 font-medium">Feature</th>
@@ -461,34 +442,37 @@ function UpgradeContent() {
             <Link href="/app/dashboard" className="hover:text-foreground">Back to Dashboard</Link>
           </div>
         </div>
-      </div>
-    </div>
-  )
-}
 
-function EnterpriseContactView({ onBack }: { onBack: () => void }) {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md space-y-6"
-      >
-        <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground hover:text-foreground" type="button">
-          <ArrowLeft className="h-4 w-4" /> Back to plans
-        </button>
-        <div className="rounded-2xl border border-border bg-card p-6 text-center">
-          <Building2 className="mx-auto mb-4 h-12 w-12 text-gold" />
-          <h1 className="text-2xl font-semibold text-foreground">Enterprise</h1>
-          <p className="mt-2 text-muted-foreground">Custom pricing, team controls, reporting, onboarding, and dedicated support.</p>
-          <Link
-            href="/contact-sales"
-            className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gold px-4 py-3 font-semibold text-obsidian"
-          >
-            Contact Sales
-          </Link>
-        </div>
-      </motion.div>
+        {qaStatus?.enabled && (
+          <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-semibold text-amber-700 dark:text-amber-300">QA Mode</p>
+                <p className="text-sm text-amber-600 dark:text-amber-400">Current plan: {qaStatus.currentPlan || 'unknown'}</p>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {['free', 'pro', 'family'].map((plan) => (
+                <button
+                  key={plan}
+                  onClick={() => handleQaPlanOverride(plan as 'free' | 'pro' | 'family')}
+                  disabled={qaLoading || qaStatus.currentPlan === plan}
+                  className="text-sm px-3 py-1.5 rounded-lg bg-amber-400/20 text-amber-700 hover:bg-amber-400/40 dark:bg-amber-900/40 dark:text-amber-300 dark:hover:bg-amber-900/60 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium capitalize"
+                >
+                  {qaLoading ? 'Setting...' : `Set ${plan}`}
+                </button>
+              ))}
+              <button
+                onClick={handleQaResync}
+                disabled={qaLoading}
+                className="text-sm px-3 py-1.5 rounded-lg bg-blue-400/20 text-blue-700 hover:bg-blue-400/40 dark:bg-blue-900/40 dark:text-blue-300 dark:hover:bg-blue-900/60 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              >
+                {qaLoading ? 'Resyncing...' : 'Resync Current Plan'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
