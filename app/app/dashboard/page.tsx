@@ -22,7 +22,6 @@ export default function DashboardPage() {
         title: 'Managed by Renewly',
         message: 'Renewly billing subscriptions are managed automatically.',
       })
-      router.push('/app/upgrade')
       return
     }
 

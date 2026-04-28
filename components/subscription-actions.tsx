@@ -2,10 +2,8 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MoreHorizontal, Trash2, Edit2, Settings } from 'lucide-react'
+import { MoreHorizontal, Trash2, Edit2 } from 'lucide-react'
 import useStore from '@/lib/store'
-import { useRouter } from 'next/navigation'
-import { isRenewlyManagedSubscription } from '@/lib/billing/managed-subscription-utils'
 import type { Subscription } from '@/lib/types'
 
 interface SubscriptionActionsProps {
@@ -16,31 +14,9 @@ interface SubscriptionActionsProps {
 export function SubscriptionActions({ subscription, onEdit }: SubscriptionActionsProps) {
   const [showMenu, setShowMenu] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const router = useRouter()
 
   const deleteSubscriptionRemote = useStore((state) => state.deleteSubscriptionRemote)
   const addToast = useStore((state) => state.addToast)
-
-  const isManaged = isRenewlyManagedSubscription(subscription)
-
-  // Show "Manage Plan" button for managed subscriptions
-  if (isManaged) {
-    return (
-      <div className="relative">
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={(e) => {
-            e.stopPropagation()
-            router.push('/app/upgrade')
-          }}
-          className="rounded-lg p-2 transition-colors hover:bg-muted cursor-pointer"
-          type="button"
-        >
-          <Settings className="h-4 w-4 text-muted-foreground" />
-        </motion.button>
-      </div>
-    )
-  }
 
   const handleDelete = async () => {
     if (isDeleting) return
