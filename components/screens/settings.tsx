@@ -480,7 +480,8 @@ export function SettingsScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent pb-24">
+    <>
+      <div className="min-h-screen bg-transparent pb-24">
       {/* Header */}
       <div className="px-4 pt-8 pb-6 lg:px-6">
         <motion.div
