@@ -11,6 +11,7 @@ import useStore from '@/lib/store'
 import { useExchangeRates } from '@/lib/hooks/use-exchange-rates'
 import { formatSubscriptionMoney } from '@/lib/preferences-format'
 import { isRenewlyManagedSubscription } from '@/lib/billing/managed-subscription-utils'
+import { getPendingBillingBadgeText } from '@/lib/billing/billing-lifecycle-utils'
 
 interface SubscriptionCardProps {
   subscription: Subscription
@@ -165,6 +166,12 @@ export function SubscriptionCard({
               {subscription.coveredByFamily && (
                 <div className="flex items-center gap-1.5 rounded-full bg-emerald/10 px-2 py-1 text-emerald text-xs">
                   <span>Covered by Family</span>
+                </div>
+              )}
+
+              {getPendingBillingBadgeText(subscription) && (
+                <div className="flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2 py-1 text-amber-600 text-xs">
+                  <span>{getPendingBillingBadgeText(subscription)}</span>
                 </div>
               )}
             </div>

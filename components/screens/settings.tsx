@@ -18,6 +18,7 @@ import useStore from '@/lib/store'
 import { exportSubscriptions } from '@/lib/export'
 import { PlanSelectionSheet } from '@/components/plan-selection-sheet'
 import { generateAvatar } from '@/lib/avatar-utils'
+import { getSubscriptionRenewalDate, getPendingBillingBadgeText } from '@/lib/billing/billing-lifecycle-utils'
 import { signOutAndRedirectHome } from '@/lib/auth/sign-out'
 import { currencies } from '@/lib/locale-utils'
 import { ThemeSelectorCards } from '@/components/theme-selector-cards'
@@ -411,15 +412,21 @@ export function SettingsScreen() {
   }
 
   const handleCancelPlan = async () => {
+    // TODO: Real production cancellation should use Razorpay Subscriptions API with 
+    // cancel_at_cycle_end=true, stored razorpay_subscription_id, subscription webhook lifecycle, 
+    // and period-end entitlement enforcement.
     if (isCancellingPlan) return
     setIsCancellingPlan(true)
 
     try {
-      // Use QA endpoint in preview/QA mode to safely cancel
-      const response = await fetch('/api/qa/plan-override', {
+      // Use QA schedule-change endpoint for period-end cancellation
+      const response = await fetch('/api/qa/billing/schedule-change', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: 'free' }),
+        body: JSON.stringify({
+          type: 'cancel',
+          targetPlan: 'free',
+        }),
       })
 
       const data = await response.json()
@@ -428,40 +435,44 @@ export function SettingsScreen() {
         addToast({
           type: 'error',
           title: 'Cancellation error',
-          message: 'We could not cancel your plan right now. Please try again.',
+          message: 'We could not schedule your cancellation right now. Please try again.',
         })
         setIsCancellingPlan(false)
         return
       }
 
-      // Refresh plan from server
-      const { refreshPlanFromServer, setSubscriptions } = useStore.getState()
-      await refreshPlanFromServer()
-
       // Refresh subscriptions from server
       const subResponse = await fetch('/api/subscriptions', { cache: 'no-store' })
       if (subResponse.ok) {
         const subData = await subResponse.json()
-        // Handle both { subscriptions: [] } and direct array responses
         const rows = Array.isArray(subData?.subscriptions)
           ? subData.subscriptions
           : Array.isArray(subData)
             ? subData
             : []
-        
+
         const { mapSubscriptionRowToUI } = await import('@/lib/supabase/mappers')
-        const { isDisplayableSubscription } = await import('@/lib/billing/subscription-display-utils')
-        
+        const { filterDisplayableSubscriptionsForCurrentPlan } = await import(
+          '@/lib/billing/billing-lifecycle-utils'
+        )
+
         const subscriptions = rows
           .map(mapSubscriptionRowToUI)
-          .filter(isDisplayableSubscription)
+          .filter((sub: any) => sub && sub.id)
+        const { setSubscriptions } = useStore.getState()
         setSubscriptions(subscriptions)
       }
 
+      // Get the renewal date for the toast message
+      const renewalDate = getSubscriptionRenewalDate(userProfile)
+      const dateStr = renewalDate
+        ? new Date(renewalDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        : 'your renewal date'
+
       addToast({
         type: 'success',
-        title: 'Plan cancelled',
-        message: 'Your subscription has been cancelled and your plan is now Free.',
+        title: 'Cancellation scheduled',
+        message: `You can continue using Renewly until ${dateStr}.`,
       })
 
       setShowCancelConfirmation(false)
@@ -471,7 +482,7 @@ export function SettingsScreen() {
       addToast({
         type: 'error',
         title: 'Cancellation error',
-        message: 'We could not cancel your plan right now. Please try again.',
+        message: 'We could not schedule your cancellation right now. Please try again.',
       })
     } finally {
       setIsCancellingPlan(false)
@@ -1074,53 +1085,66 @@ export function SettingsScreen() {
 
     {/* Cancel Plan Confirmation Modal */}
     <AnimatePresence>
-      {showCancelConfirmation && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowCancelConfirmation(false)}
-            className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm"
-          />
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            onClick={(e) => e.stopPropagation()}
-            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[150] max-w-md mx-auto bg-card rounded-2xl border border-border p-6 shadow-xl"
-          >
-            <h2 className="text-lg font-semibold text-foreground mb-3">
-              Cancel {userProfile?.plan === 'pro' ? 'Renewly Pro' : 'Renewly Family'}?
-            </h2>
-            <div className="space-y-3 mb-6 text-sm text-muted-foreground">
-              <p>Cancelling your subscription will:</p>
-              <ul className="space-y-2 pl-4 list-disc">
-                <li>Remove your premium access and features</li>
-                <li>Keep your tracked subscriptions safe (they will not be deleted)</li>
-                <li>Downgrade your plan to Free</li>
-              </ul>
-              <p className="pt-2 text-xs italic">Your personal subscription records will always be preserved.</p>
-            </div>
+      {showCancelConfirmation && (() => {
+        const renewalDate = getSubscriptionRenewalDate(userProfile)
+        const dateStr = renewalDate
+          ? new Date(renewalDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+          : 'your renewal date'
+        const isPro = userProfile?.plan === 'pro'
+        const planName = isPro ? 'Renewly Pro' : 'Renewly Family'
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowCancelConfirmation(false)}
-                className="flex-1 px-4 py-2 rounded-lg bg-muted text-foreground font-medium hover:bg-secondary transition-colors cursor-pointer"
-              >
-                Keep Plan
-              </button>
-              <button
-                onClick={handleCancelPlan}
-                disabled={isCancellingPlan}
-                className="flex-1 px-4 py-2 rounded-lg bg-red-500/20 text-red-600 font-medium hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-              >
-                {isCancellingPlan ? 'Cancelling...' : 'Cancel Plan'}
-              </button>
-            </div>
-          </motion.div>
-        </>
-      )}
+        return (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCancelConfirmation(false)}
+              className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+              className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[150] max-w-md mx-auto bg-card rounded-2xl border border-border p-6 shadow-xl"
+            >
+              <h2 className="text-lg font-semibold text-foreground mb-4">
+                Cancel {planName}?
+              </h2>
+              <div className="space-y-4 mb-6 text-sm text-muted-foreground">
+                <p>
+                  Your {planName} access is paid until <span className="font-semibold text-foreground">{dateStr}</span>.
+                </p>
+                <div>
+                  <p className="font-medium text-foreground mb-2">If you schedule cancellation now:</p>
+                  <ul className="space-y-2 pl-4 list-disc">
+                    <li>You can continue using {isPro ? 'Pro' : 'Family'} features until {dateStr}</li>
+                    <li>Your plan will move to Free after that date</li>
+                    <li>Your personal tracked subscriptions will not be deleted</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowCancelConfirmation(false)}
+                  className="flex-1 px-4 py-2 rounded-lg bg-muted text-foreground font-medium hover:bg-secondary transition-colors cursor-pointer"
+                >
+                  Keep Plan
+                </button>
+                <button
+                  onClick={handleCancelPlan}
+                  disabled={isCancellingPlan}
+                  className="flex-1 px-4 py-2 rounded-lg bg-red-500/20 text-red-600 font-medium hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {isCancellingPlan ? 'Scheduling...' : 'Schedule Cancellation'}
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )
+      })()}
     </AnimatePresence>
     </>
   )
