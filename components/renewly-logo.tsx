@@ -1,10 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
-import { useMotionPreferences } from '@/components/motion'
-import { getResponsiveLogoAnimation, logoAnimationMap, type LogoAnimationType } from '@/components/logo-animations'
 
 interface RenewlyLogoProps {
   /** Show the text wordmark alongside the logo icon */
@@ -17,10 +14,6 @@ interface RenewlyLogoProps {
   linkToHome?: boolean
   /** Theme override (auto-detects by default via CSS) */
   theme?: 'light' | 'dark' | 'auto'
-  /** Animation type to apply to the logo */
-  animation?: LogoAnimationType | 'hover-only'
-  /** Whether animation is enabled (default: true) */
-  enableAnimation?: boolean
 }
 
 // Refined size map for premium visual harmony across devices
@@ -137,32 +130,11 @@ export function RenewlyLogo({
   className,
   linkToHome = true,
   theme = 'auto',
-  animation = 'fade-in-scale',
-  enableAnimation = true,
 }: RenewlyLogoProps) {
   const { icon, text, gap, tracking } = sizeMap[size]
-  const { prefersReducedMotion, isMobile } = useMotionPreferences()
-
-  // Get responsive animation type
-  const animationType = enableAnimation 
-    ? getResponsiveLogoAnimation(
-        animation === 'hover-only' ? 'fade-in' : animation,
-        isMobile,
-        prefersReducedMotion
-      )
-    : 'none'
-
-  const animationVariants = logoAnimationMap[animationType]
-  const hoverAnimations = animation === 'hover-only' ? logoAnimationMap['fade-in'] : {}
 
   const content = (
-    <motion.div
-      className={cn('flex items-center group', gap, className)}
-      variants={enableAnimation ? animationVariants : undefined}
-      initial="initial"
-      animate="animate"
-      whileHover={animation === 'hover-only' ? hoverAnimations : undefined}
-    >
+    <div className={cn('flex items-center group', gap, className)}>
       {/* SVG Logo Icon */}
       <RenewlyIconSVG size={icon} theme={theme} />
 
@@ -178,7 +150,7 @@ export function RenewlyLogo({
           Renewly
         </span>
       )}
-    </motion.div>
+    </div>
   )
 
   if (linkToHome) {
@@ -200,8 +172,6 @@ export function RenewlyIcon({
   size = 'md',
   className,
   theme = 'auto',
-  animation = 'fade-in',
-  enableAnimation = true,
 }: Omit<RenewlyLogoProps, 'showWordmark' | 'linkToHome'>) {
   return (
     <RenewlyLogo
@@ -210,8 +180,6 @@ export function RenewlyIcon({
       className={className}
       linkToHome={false}
       theme={theme}
-      animation={animation}
-      enableAnimation={enableAnimation}
     />
   )
 }
