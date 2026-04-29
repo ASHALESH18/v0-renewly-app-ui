@@ -228,19 +228,6 @@ export function SettingsScreen() {
         return
       }
 
-      // Refresh plan and subscriptions
-      await refreshPlan()
-      
-      // Refresh subscriptions with proper mapping
-      const subResponse = await fetch('/api/subscriptions', { cache: 'no-store' })
-      if (subResponse.ok) {
-        const subData = await subResponse.json()
-        const rows = Array.isArray(subData?.subscriptions) ? subData.subscriptions : Array.isArray(subData) ? subData : []
-        const { isDisplayableSubscription } = await import('@/lib/billing/subscription-display-utils')
-        const mapped = rows.map(mapSubscriptionRowToUI).filter(isDisplayableSubscription)
-        setSubscriptions(mapped)
-      }
-
       addToast({
         type: 'success',
         title: 'Plan cancelled',
@@ -251,6 +238,8 @@ export function SettingsScreen() {
       setTimeout(() => {
         setActiveSheet(null)
         setBillingStep('overview')
+        // Refresh the page to get updated plan and subscriptions from server
+        router.refresh()
       }, 2000)
     } catch (error) {
       console.error('[v0] Plan cancellation error:', error)
@@ -262,150 +251,6 @@ export function SettingsScreen() {
     } finally {
       setIsCancellingPlan(false)
     }
-  }
-
-  // Cooldown timer
-  useEffect(() => {
-    if (cooldown > 0) {
-      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000)
-      return () => clearTimeout(timer)
-    }
-  }, [cooldown])
-
-  const formatPhoneNumber = (value: string) => {
-    const cleaned = value.replace(/[^\d+]/g, '')
-    return cleaned
-  }
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhoneNumber(e.target.value)
-    setPhoneNumber(formatted)
-    setError(null)
-  }
-
-  const handleSendOTP = async () => {
-    setError(null)
-
-    if (!phoneNumber || phoneNumber.length < 10) {
-      setError('Please enter a valid phone number with country code')
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      const res = await fetch('/api/otp/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber }),
-      })
-
-      const data = await res.json()
-
-      if (data.success) {
-        setStep('verify')
-        setCooldown(60)
-        addToast({
-          type: 'success',
-          title: 'Code sent',
-          message: `Verification code sent to ${phoneNumber}`,
-        })
-      } else {
-        if (data.cooldownSeconds) {
-          setCooldown(data.cooldownSeconds)
-        }
-        setError(data.error || 'Failed to send verification code')
-      }
-    } catch (err) {
-      setError('Failed to send verification code. Please try again.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleVerifyOTP = async () => {
-    setError(null)
-
-    if (otpCode.length !== 6) {
-      setError('Please enter the 6-digit verification code')
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      const res = await fetch('/api/otp/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber, code: otpCode }),
-      })
-
-      const data = await res.json()
-
-      if (data.success) {
-        addToast({
-          type: 'success',
-          title: 'Phone verified',
-          message: 'Your phone number has been verified successfully.',
-        })
-        onSuccess()
-      } else {
-        setError(data.error || 'Invalid verification code')
-      }
-    } catch (err) {
-      setError('Failed to verify code. Please try again.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleSaveWithoutVerification = async () => {
-    setError(null)
-    setIsLoading(true)
-    try {
-      const { updateUserPhone } = await import('@/lib/supabase/settings-actions')
-      const result = await updateUserPhone(phoneNumber || null)
-
-      if (result.success) {
-        addToast({
-          type: 'success',
-          title: 'Phone number saved',
-          message: 'Phone saved without verification.',
-        })
-        onSuccess()
-      } else {
-        setError(result.error || 'Failed to save phone number')
-      }
-    } catch (err) {
-      setError('Failed to save phone number')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleRemove = async () => {
-    setIsLoading(true)
-    try {
-      const { updateUserPhone } = await import('@/lib/supabase/settings-actions')
-      const result = await updateUserPhone(null)
-
-      if (result.success) {
-        addToast({ type: 'success', title: 'Phone number removed' })
-        onSuccess()
-      } else {
-        setError(result.error || 'Failed to remove phone number')
-      }
-    } catch (err) {
-      setError('Failed to remove phone number')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  if (isFetching) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <RefreshCw className="w-6 h-6 text-gold animate-spin" />
-      </div>
-    )
   }
 
   // OTP Verification Step
