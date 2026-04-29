@@ -57,10 +57,32 @@ function getOriginalPrice(plan: Plan, currency: PlanCurrency) {
   return `${getCurrencySymbol(currency)}${pricing.originalAmount.toLocaleString('en-US', { maximumFractionDigits: 2 })} ${currency}`
 }
 
-function getSavings(plan: Plan, currency: PlanCurrency) {
-  const pricing = getPlanPricing(plan.id, currency)
-  if (!pricing?.savings) return null
-  return `${getCurrencySymbol(currency)}${pricing.savings.toLocaleString('en-US', { maximumFractionDigits: 2 })} ${currency}`
+function getPlanChangeWarning(currentPlan: string | null, selectedPlanId: string): { title: string; message: string } | null {
+  if (!currentPlan || currentPlan === selectedPlanId) return null
+
+  if (currentPlan === 'pro' && selectedPlanId === 'family') {
+    return {
+      title: 'Upgrade to Family',
+      message: 'Family access starts immediately after checkout. Your dashboard should show Renewly Family and replace the Renewly Pro billing card.',
+    }
+  }
+
+  if (currentPlan === 'family' && selectedPlanId === 'pro') {
+    return {
+      title: 'Schedule downgrade to Pro',
+      message: 'Your Family plan remains active until the current renewal date. Your dashboard should continue showing Renewly Family until then, with a downgrade notice. Renewly Pro should start after the Family period ends.',
+    }
+  }
+
+  return null
+}
+
+function getPlanChangeButtonLabel(currentPlan: string | null, selectedPlanId: string): string {
+  if (!currentPlan) return 'Continue'
+  if (currentPlan === selectedPlanId) return 'Already selected'
+  if (currentPlan === 'pro' && selectedPlanId === 'family') return 'Upgrade to Family'
+  if (currentPlan === 'family' && selectedPlanId === 'pro') return 'Schedule Downgrade'
+  return 'Continue'
 }
 
 function EnterpriseContactView({ onBack }: { onBack: () => void }) {
@@ -171,15 +193,73 @@ function UpgradeContent() {
     }
   }
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (selectedPlanId === 'enterprise') {
       setStep('enterprise-contact')
-    } else if (canUseRazorpay) {
+      return
+    }
+
+    // Handle Family -> Pro downgrade with schedule-change
+    if (qaStatus?.currentPlan === 'family' && selectedPlanId === 'pro') {
+      try {
+        setQaLoading(true)
+        const res = await fetch('/api/qa/billing/schedule-change', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'downgrade',
+            targetPlan: 'pro',
+          }),
+        })
+
+        const data = await res.json()
+
+        if (!res.ok) {
+          addToast({
+            type: 'error',
+            title: 'Downgrade scheduling failed',
+            message: data.error || 'Failed to schedule downgrade',
+          })
+          return
+        }
+
+        await refreshPlan()
+        await refreshSubscriptionsFromServer()
+
+        addToast({
+          type: 'success',
+          title: 'Downgrade scheduled',
+          message: 'Your Family plan will downgrade to Pro at the renewal date.',
+        })
+
+        setStep('success')
+      } catch (error) {
+        addToast({
+          type: 'error',
+          title: 'Error',
+          message: (error as Error).message || 'Failed to schedule downgrade',
+        })
+      } finally {
+        setQaLoading(false)
+      }
+      return
+    }
+
+    // Normal checkout flow for other transitions
+    if (canUseRazorpay) {
       setStep('checkout')
     }
   }
 
   const handleQaPlanOverride = async (plan: 'free' | 'pro' | 'family') => {
+    // Show QA confirmation for force downgrade (Family -> Pro/Free)
+    if (qaStatus?.currentPlan === 'family' && (plan === 'pro' || plan === 'free')) {
+      const confirmed = window.confirm(
+        `This is a QA force override. It will immediately switch the test account to ${plan}. Real customer downgrades should remain Family until the renewal date.\n\nContinue?`
+      )
+      if (!confirmed) return
+    }
+
     try {
       setQaLoading(true)
       const res = await fetch('/api/qa/plan-override', {
@@ -443,8 +523,19 @@ function UpgradeContent() {
               ) : (
                 <CreditCard className="h-5 w-5" />
               )}
-              {selectedPlanId === 'enterprise' ? 'Contact Sales' : `Continue — ${inrPricing && inrPricing.amount !== null ? `₹${inrPricing.amount}/month` : 'Contact Sales'}`}
+              {selectedPlanId === 'enterprise' 
+                ? 'Contact Sales' 
+                : `${getPlanChangeButtonLabel(qaStatus?.currentPlan || null, selectedPlanId)} — ${inrPricing && inrPricing.amount !== null ? `₹${inrPricing.amount}/month` : 'Contact Sales'}`}
             </button>
+
+            {getPlanChangeWarning(qaStatus?.currentPlan || null, selectedPlanId) && (
+              <div className="mt-4 rounded-lg border border-blue-500/30 bg-blue-500/10 p-4">
+                <p className="font-medium text-blue-700 dark:text-blue-300">{getPlanChangeWarning(qaStatus?.currentPlan || null, selectedPlanId)?.title}</p>
+                <p className="mt-2 text-sm text-blue-600 dark:text-blue-400">
+                  {getPlanChangeWarning(qaStatus?.currentPlan || null, selectedPlanId)?.message}
+                </p>
+              </div>
+            )}
           </div>
           <div className="mt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1"><Shield className="h-3.5 w-3.5" /> Secure checkout</span>
@@ -454,12 +545,13 @@ function UpgradeContent() {
         </div>
 
         {qaStatus?.enabled && (
-          <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-semibold text-amber-700 dark:text-amber-300">QA Mode</p>
-                <p className="text-sm text-amber-600 dark:text-amber-400">Current plan: {qaStatus.currentPlan || 'unknown'}</p>
-              </div>
+          <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5 space-y-4">
+            <div>
+              <p className="font-semibold text-amber-700 dark:text-amber-300">QA Mode — force plan state for testing</p>
+              <p className="text-sm text-amber-600 dark:text-amber-400">Current test plan: {qaStatus.currentPlan || 'unknown'}</p>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 leading-relaxed">
+                These buttons immediately force the account plan for Preview QA. They do not simulate real customer billing lifecycle, renewal dates, scheduled downgrades, or period-end cancellation.
+              </p>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               {['free', 'pro', 'family'].map((plan) => (
@@ -469,7 +561,7 @@ function UpgradeContent() {
                   disabled={qaLoading || qaStatus.currentPlan === plan}
                   className="text-sm px-3 py-1.5 rounded-lg bg-amber-400/20 text-amber-700 hover:bg-amber-400/40 dark:bg-amber-900/40 dark:text-amber-300 dark:hover:bg-amber-900/60 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium capitalize"
                 >
-                  {qaLoading ? 'Setting...' : `Set ${plan}`}
+                  {qaLoading ? 'Setting...' : `Force ${plan}`}
                 </button>
               ))}
               <button
