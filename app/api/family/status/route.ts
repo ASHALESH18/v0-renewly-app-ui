@@ -3,6 +3,7 @@
 import { NextResponse } from 'next/server'
 import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
+import { FAMILY_INCLUDED_MEMBER_COUNT } from '@/lib/family/family-config'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -11,12 +12,13 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 /**
  * GET /api/family/status
  * 
- * Returns family status for signed-in user:
+ * Returns comprehensive family status for signed-in user:
  * - Profile plan
- * - Family owner status
- * - Active family group (if owner)
+ * - Family owner status with members and invites (for owners)
  * - Family membership (if member)
  * - Pending invite (if invited)
+ * 
+ * Returns safe empty status for non-Family users (no 403).
  */
 export async function GET() {
   try {
@@ -45,9 +47,25 @@ export async function GET() {
     }
 
     const userEmail = profile?.email || user.email || ''
+    const maxMembers = FAMILY_INCLUDED_MEMBER_COUNT
+
+    // Default safe response for non-Family users
+    const defaultResponse = {
+      profilePlan: profile?.plan || 'free',
+      isFamilyOwner: false,
+      familyGroup: null,
+      familyGroupId: null,
+      membership: null,
+      pendingInvite: null,
+      members: [],
+      invites: [],
+      maxMembers,
+      currentMemberCount: 0,
+      availableSeats: 0,
+    }
 
     // Fetch active family group where user is owner
-    const { data: ownerGroup } = await supabase
+    const { data: ownerGroup, error: ownerGroupError } = await supabase
       .from('family_groups')
       .select('id, status, included_member_limit, extra_member_price_inr, current_period_end')
       .eq('owner_user_id', user.id)
@@ -55,7 +73,7 @@ export async function GET() {
       .single()
 
     // Fetch active family membership where user is member
-    const { data: membership } = await supabase
+    const { data: membership, error: membershipError } = await supabase
       .from('family_members')
       .select('id, family_group_id, role, seat_type, joined_at')
       .eq('user_id', user.id)
@@ -63,34 +81,107 @@ export async function GET() {
       .single()
 
     // Fetch pending invite by signed-in email (case-insensitive match)
-    const { data: pendingInvite } = await supabase
+    const { data: pendingInviteData } = await supabase
       .from('family_invites')
-      .select('id, invited_email, status, expires_at')
+      .select('id, invited_email, status, expires_at, seat_type')
       .ilike('invited_email', userEmail)
       .eq('status', 'pending')
       .gt('expires_at', 'now()')
       .single()
 
-    return NextResponse.json({
-      profilePlan: profile?.plan || 'free',
-      isFamilyOwner: !!ownerGroup,
-      familyGroup: ownerGroup ? {
-        id: ownerGroup.id,
-        status: ownerGroup.status,
-        currentPeriodEnd: ownerGroup.current_period_end,
-      } : null,
-      membership: membership ? {
-        id: membership.id,
-        role: membership.role,
-        seatType: membership.seat_type,
-        joinedAt: membership.joined_at,
-      } : null,
-      pendingInvite: pendingInvite ? {
-        id: pendingInvite.id,
-        invitedEmail: pendingInvite.invited_email,
-        expiresAt: pendingInvite.expires_at,
-      } : null,
-    })
+    // If owner, fetch active members and pending invites
+    if (ownerGroup) {
+      const { data: members = [], error: membersError } = await supabase
+        .from('family_members')
+        .select('id, user_id, email, role, seat_type, status, joined_at')
+        .eq('family_group_id', ownerGroup.id)
+        .eq('status', 'active')
+        .not('role', 'eq', 'owner') // Exclude owner from member list
+
+      if (membersError) {
+        console.error('[family-status] Members fetch error:', membersError)
+      }
+
+      const { data: invites = [], error: invitesError } = await supabase
+        .from('family_invites')
+        .select('id, invited_email, status, expires_at, seat_type')
+        .eq('family_group_id', ownerGroup.id)
+        .eq('seat_type', 'included') // Only show included seat invites
+
+      if (invitesError) {
+        console.error('[family-status] Invites fetch error:', invitesError)
+      }
+
+      // Calculate capacity
+      const activeMembers = (members || []).filter(m => m.status === 'active')
+      const pendingIncludedInvites = (invites || []).filter(i => i.status === 'pending' && i.seat_type === 'included')
+      const currentMemberCount = activeMembers.length
+      const includedInviteCount = pendingIncludedInvites.length
+      const availableSeats = Math.max(0, maxMembers - currentMemberCount - includedInviteCount)
+
+      return NextResponse.json({
+        profilePlan: profile?.plan || 'free',
+        isFamilyOwner: true,
+        familyGroup: {
+          id: ownerGroup.id,
+          status: ownerGroup.status,
+          currentPeriodEnd: ownerGroup.current_period_end,
+          includedMemberLimit: ownerGroup.included_member_limit,
+        },
+        familyGroupId: ownerGroup.id,
+        membership: null, // Owner is not a "member"
+        pendingInvite: null, // Owner doesn't have pending invites
+        members: (activeMembers || []).map(m => ({
+          id: m.id,
+          userId: m.user_id,
+          email: m.email,
+          role: m.role,
+          seatType: m.seat_type,
+          status: m.status,
+          joinedAt: m.joined_at,
+        })),
+        invites: (invites || []).map(i => ({
+          id: i.id,
+          invitedEmail: i.invited_email,
+          status: i.status,
+          expiresAt: i.expires_at,
+          seatType: i.seat_type,
+        })),
+        maxMembers,
+        currentMemberCount,
+        availableSeats,
+      })
+    }
+
+    // If member, return membership info
+    if (membership) {
+      return NextResponse.json({
+        ...defaultResponse,
+        membership: {
+          id: membership.id,
+          familyGroupId: membership.family_group_id,
+          role: membership.role,
+          seatType: membership.seat_type,
+          joinedAt: membership.joined_at,
+        },
+      })
+    }
+
+    // If has pending invite, return it
+    if (pendingInviteData) {
+      return NextResponse.json({
+        ...defaultResponse,
+        pendingInvite: {
+          id: pendingInviteData.id,
+          invitedEmail: pendingInviteData.invited_email,
+          expiresAt: pendingInviteData.expires_at,
+          seatType: pendingInviteData.seat_type,
+        },
+      })
+    }
+
+    // Default: return safe empty response
+    return NextResponse.json(defaultResponse)
   } catch (error) {
     console.error('[family-status] Error:', error)
     return NextResponse.json(
