@@ -2,18 +2,21 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Users, Plus, Mail, Loader2, AlertCircle, CheckCircle2, Clock } from 'lucide-react'
+import { Users, Plus, Mail, Loader2, AlertCircle, CheckCircle2, Clock, ExternalLink } from 'lucide-react'
 import { Header } from '@/components/header'
 import { PageTransition } from '@/components/motion'
 import useStore from '@/lib/store'
 import { cn } from '@/lib/utils'
-import type { FamilyMemberRow, FamilyInviteRow } from '@/lib/supabase/database.types'
 
 interface FamilyStatus {
-  familyGroupId: string
-  plan: string
-  members: FamilyMemberRow[]
-  invites: FamilyInviteRow[]
+  profilePlan: string
+  isFamilyOwner: boolean
+  familyGroup: any
+  familyGroupId: string | null
+  membership: any
+  pendingInvite: any
+  members: Array<any>
+  invites: Array<any>
   maxMembers: number
   currentMemberCount: number
   availableSeats: number
@@ -23,6 +26,7 @@ interface InvitationState {
   email: string
   status: 'idle' | 'sending' | 'success' | 'error'
   errorMessage?: string
+  inviteUrl?: string
 }
 
 export function FamilyMembersScreen() {
@@ -39,16 +43,6 @@ export function FamilyMembersScreen() {
       try {
         const res = await fetch('/api/family/status')
         if (!res.ok) {
-          if (res.status === 403) {
-            // User is not on Family plan
-            addToast({
-              type: 'info',
-              title: 'Not on Family Plan',
-              message: 'Family Members is only available for Renewly Family subscribers.',
-            })
-            setIsLoading(false)
-            return
-          }
           throw new Error('Failed to fetch family status')
         }
         const data = await res.json()
@@ -91,7 +85,18 @@ export function FamilyMembersScreen() {
         throw new Error(data.error || 'Failed to send invite')
       }
 
-      setInvitationState({ email: '', status: 'success' })
+      // Handle QA mode with inviteUrl but no email
+      if (data.inviteUrl && !data.emailSent) {
+        setInvitationState({ 
+          email: '', 
+          status: 'success',
+          inviteUrl: data.inviteUrl,
+          errorMessage: data.warning || 'Email not sent - sharing link instead'
+        })
+      } else {
+        setInvitationState({ email: '', status: 'success' })
+      }
+
       addToast({
         type: 'success',
         title: 'Invite sent',
@@ -120,6 +125,20 @@ export function FamilyMembersScreen() {
     }
   }
 
+  // Safe array access
+  const members = Array.isArray(familyStatus?.members) ? familyStatus.members : []
+  const invites = Array.isArray(familyStatus?.invites) ? familyStatus.invites : []
+  const pendingInvites = invites.filter((invite) => invite.status === 'pending')
+  const maxMembers = familyStatus?.maxMembers ?? 4
+  const currentMemberCount = familyStatus?.currentMemberCount ?? members.length
+  const availableSeats = familyStatus?.availableSeats ?? Math.max(0, maxMembers - currentMemberCount - pendingInvites.length)
+
+  // Page state detection
+  const isOwner = familyStatus?.isFamilyOwner === true
+  const isMember = familyStatus?.membership != null && !isOwner
+  const isPendingInvited = familyStatus?.pendingInvite != null && !isOwner && !isMember
+  const isNonFamilyUser = !isOwner && !isMember && !isPendingInvited
+
   return (
     <PageTransition>
       <div className="min-h-screen bg-background">
@@ -130,7 +149,8 @@ export function FamilyMembersScreen() {
             <div className="flex items-center justify-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-gold" />
             </div>
-          ) : !familyStatus ? (
+          ) : isNonFamilyUser ? (
+            // E: Free/Pro user - show upgrade message
             <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-6">
               <div className="flex items-start gap-4">
                 <AlertCircle className="h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
@@ -139,10 +159,72 @@ export function FamilyMembersScreen() {
                   <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">
                     Family Members is only available for Renewly Family subscribers. Upgrade your plan to invite members and manage shared access.
                   </p>
+                  <a
+                    href="/app/upgrade?plan=family"
+                    className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-300 hover:underline"
+                  >
+                    View Family Plan
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
                 </div>
               </div>
             </div>
-          ) : (
+          ) : isPendingInvited ? (
+            // C: Pending invited user
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl border border-blue-500/30 bg-blue-500/10 p-6"
+            >
+              <div className="flex items-start gap-4">
+                <Mail className="h-6 w-6 flex-shrink-0 text-blue-600 dark:text-blue-400 mt-0.5" />
+                <div className="flex-1">
+                  <h2 className="text-xl font-semibold text-blue-900 dark:text-blue-100">You&apos;ve Been Invited to Renewly Family</h2>
+                  <p className="mt-2 text-sm text-blue-800 dark:text-blue-200">
+                    Check your email for an invitation link to accept this Family group invitation.
+                  </p>
+                  {familyStatus?.pendingInvite && (
+                    <div className="mt-4 space-y-2 text-sm">
+                      <p className="text-blue-700 dark:text-blue-300">
+                        <span className="font-medium">Email:</span> {familyStatus.pendingInvite.invitedEmail}
+                      </p>
+                      <p className="text-blue-700 dark:text-blue-300">
+                        <span className="font-medium">Expires:</span> {new Date(familyStatus.pendingInvite.expiresAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          ) : isMember ? (
+            // D: Family member - show read-only membership
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6"
+            >
+              <div className="flex items-start gap-4">
+                <Users className="h-6 w-6 flex-shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+                <div className="flex-1">
+                  <h2 className="text-xl font-semibold text-emerald-900 dark:text-emerald-100">You&apos;re Part of a Renewly Family</h2>
+                  <p className="mt-2 text-sm text-emerald-800 dark:text-emerald-200">
+                    You are a member of an existing Family group. Contact the family owner to manage group settings.
+                  </p>
+                  {familyStatus?.membership && (
+                    <div className="mt-4 space-y-2 text-sm">
+                      <p className="text-emerald-700 dark:text-emerald-300">
+                        <span className="font-medium">Role:</span> Member
+                      </p>
+                      <p className="text-emerald-700 dark:text-emerald-300">
+                        <span className="font-medium">Seat Type:</span> {familyStatus.membership.seatType === 'included' ? 'Included' : 'Extra'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          ) : isOwner ? (
+            // B: Family owner - show full management UI
             <div className="space-y-8">
               {/* Family Overview */}
               <motion.div
@@ -154,10 +236,10 @@ export function FamilyMembersScreen() {
                   <div>
                     <h2 className="text-2xl font-semibold text-foreground">Your Family Plan</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {familyStatus.currentMemberCount} of {familyStatus.maxMembers} members
+                      {currentMemberCount} of {maxMembers} members
                     </p>
                   </div>
-                  {familyStatus.availableSeats > 0 && (
+                  {availableSeats > 0 && (
                     <button
                       onClick={() => setShowInviteForm(!showInviteForm)}
                       className="flex items-center gap-2 rounded-lg bg-gold px-4 py-2 text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
@@ -205,6 +287,33 @@ export function FamilyMembersScreen() {
                       {invitationState.errorMessage && (
                         <p className="text-sm text-red-600 dark:text-red-400">{invitationState.errorMessage}</p>
                       )}
+                      {invitationState.inviteUrl && (
+                        <div className="space-y-2">
+                          <p className="text-xs font-medium text-amber-700 dark:text-amber-300">QA Invite Link (copy and share):</p>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={invitationState.inviteUrl}
+                              readOnly
+                              className="flex-1 rounded-lg border border-border bg-muted px-3 py-2 text-xs text-foreground font-mono"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(invitationState.inviteUrl)
+                                addToast({
+                                  type: 'success',
+                                  title: 'Copied',
+                                  message: 'Invite link copied to clipboard',
+                                })
+                              }}
+                              className="flex items-center gap-2 rounded-lg bg-gold/20 px-3 py-2 text-obsidian font-medium hover:bg-gold/30 transition-colors cursor-pointer text-sm"
+                            >
+                              Copy
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </motion.form>
                   )}
                 </AnimatePresence>
@@ -213,12 +322,12 @@ export function FamilyMembersScreen() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Seats Used</span>
-                    <span className="font-medium text-foreground">{familyStatus.currentMemberCount + familyStatus.invites.filter(i => i.status === 'pending').length} / {familyStatus.maxMembers}</span>
+                    <span className="font-medium text-foreground">{currentMemberCount + pendingInvites.length} / {maxMembers}</span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${((familyStatus.currentMemberCount + familyStatus.invites.filter(i => i.status === 'pending').length) / familyStatus.maxMembers) * 100}%` }}
+                      animate={{ width: `${((currentMemberCount + pendingInvites.length) / maxMembers) * 100}%` }}
                       className="h-full bg-gold"
                     />
                   </div>
@@ -233,11 +342,11 @@ export function FamilyMembersScreen() {
                 className="space-y-4"
               >
                 <h3 className="font-semibold text-foreground">Active Members</h3>
-                {familyStatus.members.length === 0 ? (
+                {members.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No other members yet.</p>
                 ) : (
                   <div className="space-y-2">
-                    {familyStatus.members.map((member) => (
+                    {members.map((member) => (
                       <div
                         key={member.id}
                         className="flex items-center justify-between rounded-lg border border-border bg-card/50 p-4"
@@ -258,7 +367,7 @@ export function FamilyMembersScreen() {
               </motion.div>
 
               {/* Pending Invitations */}
-              {familyStatus.invites.filter(i => i.status === 'pending').length > 0 && (
+              {pendingInvites.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -267,29 +376,27 @@ export function FamilyMembersScreen() {
                 >
                   <h3 className="font-semibold text-foreground">Pending Invitations</h3>
                   <div className="space-y-2">
-                    {familyStatus.invites
-                      .filter(i => i.status === 'pending')
-                      .map((invite) => (
-                        <div
-                          key={invite.id}
-                          className="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/10 p-4"
-                        >
-                          <div className="flex items-center gap-3">
-                            <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                            <div>
-                              <p className="font-medium text-foreground">{invite.invited_email}</p>
-                              <p className="text-xs text-muted-foreground">
-                                Expires {new Date(invite.expires_at).toLocaleDateString()}
-                              </p>
-                            </div>
+                    {pendingInvites.map((invite) => (
+                      <div
+                        key={invite.id}
+                        className="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/10 p-4"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                          <div>
+                            <p className="font-medium text-foreground">{invite.invitedEmail}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Expires {new Date(invite.expiresAt).toLocaleDateString()}
+                            </p>
                           </div>
                         </div>
-                      ))}
+                      </div>
+                    ))}
                   </div>
                 </motion.div>
               )}
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </PageTransition>
