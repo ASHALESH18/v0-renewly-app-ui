@@ -6,6 +6,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Cache refresh trigger - v704 rollback verified
 }
 
 export default nextConfig
