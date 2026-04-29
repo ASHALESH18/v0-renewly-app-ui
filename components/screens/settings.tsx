@@ -6,21 +6,17 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Bell, CreditCard, Shield, Globe,
-  HelpCircle, FileText, LogOut, ChevronRight, ChevronLeft, Crown,
-  Smartphone, Mail, Lock, Download, FileJson, X,
-  Check, AlertCircle, Eye, EyeOff, RefreshCw
+  HelpCircle, FileText, LogOut, ChevronRight, Crown,
+  Smartphone, Download, X,
+  Check, AlertCircle, RefreshCw
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { springs } from '@/components/motion'
 import { Switch } from '@/components/ui/switch'
 import { SettingsSkeleton } from '@/components/skeletons'
 import useStore from '@/lib/store'
 import { exportSubscriptions } from '@/lib/export'
-import { PlanSelectionSheet } from '@/components/plan-selection-sheet'
-import { generateAvatar } from '@/lib/avatar-utils'
 import { signOutAndRedirectHome } from '@/lib/auth/sign-out'
 import { currencies } from '@/lib/locale-utils'
-import { ThemeSelectorCards } from '@/components/theme-selector-cards'
 import { languageNames, type SupportedLanguage } from '@/lib/i18n'
 
 // Sheet component for settings modals
@@ -117,24 +113,18 @@ export function SettingsScreen() {
 
   // Sheet states
   const [activeSheet, setActiveSheet] = useState<string | null>(null)
-  const [showPlanSheet, setShowPlanSheet] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
-  const [newEmail, setNewEmail] = useState('')
-  const [isChangingEmail, setIsChangingEmail] = useState(false)
   const [isExportingAccount, setIsExportingAccount] = useState(false)
   const [billingStep, setBillingStep] = useState<'overview' | 'cancel-confirm' | 'cancel-success' | 'support-cancel'>('overview')
   const [qaStatus, setQaStatus] = useState<{ enabled: boolean; emailAllowed: boolean; currentPlan: string } | null>(null)
-  const [isFetchingQaStatus, setIsFetchingQaStatus] = useState(false)
   const [isCancellingPlan, setIsCancellingPlan] = useState(false)
 
   // Store
   const userProfile = useStore((state) => state.userProfile)
-  const currentUserEmail = useStore((state) => state.currentUserEmail)
   const notificationSettings = useStore((state) => state.notificationSettings)
   const subscriptions = useStore((state) => state.subscriptions)
   const addToast = useStore((state) => state.addToast)
   const updateNotificationSettings = useStore((state) => state.updateNotificationSettings)
-  const setUserProfile = useStore((state) => state.setUserProfile)
 
   // Track client-side mounting to prevent hydration mismatch
   const [isMounted, setIsMounted] = useState(false)
@@ -207,7 +197,8 @@ export function SettingsScreen() {
   }
 
   const handleCancelPlan = async () => {
-    if (!qaStatus?.enabled || isCancellingPlan) return
+    // Guard: only allow if QA is enabled AND emailAllowed is true
+    if (!qaStatus?.enabled || !qaStatus?.emailAllowed || isCancellingPlan) return
     
     setIsCancellingPlan(true)
     try {
@@ -423,7 +414,7 @@ export function SettingsScreen() {
             onClick={async () => {
               setIsExportingAccount(true)
               try {
-                await exportSubscriptions()
+                await exportSubscriptions(subscriptions, 'json')
                 addToast({
                   type: 'success',
                   title: 'Export successful',
@@ -471,6 +462,177 @@ export function SettingsScreen() {
           </button>
         </div>
       </div>
+    </div>
+
+      {/* Billing & Plan Sheet */}
+      <SettingsSheet
+        isOpen={activeSheet === 'billing'}
+        onClose={() => setActiveSheet(null)}
+        title={billingStep === 'overview' ? 'Billing & Plan' : 'Cancel Subscription'}
+      >
+        {billingStep === 'overview' && (
+          <div className="space-y-6">
+            {/* Current Plan Display */}
+            <div className="p-4 rounded-xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
+              <p className="text-sm text-muted-foreground">Current Plan</p>
+              <p className="text-2xl font-semibold text-gold mt-1 capitalize">{userProfile?.plan || 'free'}</p>
+              {userProfile?.plan && userProfile.plan !== 'free' && (
+                <p className="text-xs text-muted-foreground mt-2">Your subscription is active</p>
+              )}
+            </div>
+
+            {/* Free Plan - Show Upgrade CTA */}
+            {!userProfile?.plan || userProfile.plan === 'free' ? (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  Upgrade to Pro or Family to unlock advanced features including analytics, leak detection, and more.
+                </p>
+                <button
+                  onClick={handleChangePlan}
+                  className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
+                >
+                  View Upgrade Options
+                </button>
+              </>
+            ) : (
+              <>
+                {/* Pro/Family Plans - Show Manage Options */}
+                {userProfile.plan !== 'enterprise' && (
+                  <div className="space-y-3 pt-2">
+                    <button
+                      onClick={handleChangePlan}
+                      className="w-full px-4 py-3 rounded-xl bg-gold/10 text-gold font-medium hover:bg-gold/20 border border-gold/30 transition-colors cursor-pointer"
+                    >
+                      {userProfile.plan === 'pro' ? 'Upgrade to Family' : 'Change Plan'}
+                    </button>
+                    {qaStatus?.enabled && qaStatus?.emailAllowed ? (
+                      <button
+                        onClick={handleReviewCancellation}
+                        className="w-full px-4 py-3 rounded-xl bg-red-500/10 text-red-600 font-medium hover:bg-red-500/20 border border-red-500/30 transition-colors cursor-pointer"
+                      >
+                        Review Cancellation
+                      </button>
+                    ) : null}
+                  </div>
+                )}
+
+                {/* Enterprise Support */}
+                {userProfile.plan === 'enterprise' && (
+                  <>
+                    <p className="text-sm text-muted-foreground">
+                      For changes to your enterprise subscription, please contact our sales team.
+                    </p>
+                    <button
+                      onClick={() => window.location.href = 'mailto:contact@renewly.in'}
+                      className="w-full py-3 rounded-xl bg-gold/10 text-gold font-medium hover:bg-gold/20 border border-gold/30 transition-colors cursor-pointer"
+                    >
+                      Contact Sales
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+
+            {/* Support Section */}
+            <div className="p-4 rounded-xl bg-muted space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Questions about billing?</p>
+              <p className="text-sm text-foreground">Contact our support team for assistance with your account or subscription.</p>
+              <button
+                onClick={() => window.location.href = 'mailto:contact@renewly.in'}
+                className="text-sm text-gold hover:text-gold/80 font-medium transition-colors"
+              >
+                contact@renewly.in
+              </button>
+            </div>
+          </div>
+        )}
+
+        {billingStep === 'cancel-confirm' && qaStatus?.enabled && qaStatus?.emailAllowed && (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-3">
+                Cancel Renewly {userProfile?.plan === 'pro' ? 'Pro' : 'Family'}?
+              </h3>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <p>Cancelling will:</p>
+                <ul className="space-y-2 pl-4 list-disc">
+                  <li>Remove premium access and features</li>
+                  <li>Keep your personal tracked subscriptions safe</li>
+                  <li>Downgrade your plan to Free</li>
+                </ul>
+                <p className="pt-2 text-xs italic">Your personal subscription records will always be preserved.</p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleKeepPlan}
+                className="flex-1 px-4 py-3 rounded-xl bg-muted text-foreground font-medium hover:bg-secondary transition-colors cursor-pointer"
+              >
+                Keep Plan
+              </button>
+              <button
+                onClick={handleCancelPlan}
+                disabled={isCancellingPlan}
+                className="flex-1 px-4 py-3 rounded-xl bg-red-500/20 text-red-600 font-medium hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {isCancellingPlan ? 'Cancelling...' : 'Confirm Cancel'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {billingStep === 'cancel-success' && (
+          <div className="space-y-6 py-8 text-center">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/20 mx-auto flex items-center justify-center">
+              <Check className="w-8 h-8 text-emerald-500" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">Plan Cancelled</h3>
+              <p className="text-sm text-muted-foreground mt-2">
+                Your subscription has been cancelled. Your plan is now Free.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {billingStep === 'support-cancel' && (
+          <div className="space-y-6">
+            <p className="text-sm text-muted-foreground">
+              Downgrades are not yet automated. Please contact our support team to downgrade your subscription.
+            </p>
+            <button
+              onClick={() => window.location.href = 'mailto:contact@renewly.in'}
+              className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
+            >
+              Contact Support
+            </button>
+          </div>
+        )}
+      </SettingsSheet>
+
+      {/* Phone Number Sheet - Unavailable */}
+      <SettingsSheet
+        isOpen={activeSheet === 'phone'}
+        onClose={() => setActiveSheet(null)}
+        title="Phone Number"
+      >
+        <div className="space-y-4">
+          <span className="inline-flex rounded-full bg-muted px-3 py-1 text-sm text-muted-foreground">
+            Unavailable
+          </span>
+          <p className="text-sm text-muted-foreground">
+            Phone number management is not available yet. We're keeping Renewly account access focused on secure Google/Apple sign-in. Phone number verification will be added later if needed.
+          </p>
+          <button
+            type="button"
+            onClick={() => setActiveSheet(null)}
+            className="w-full rounded-xl bg-gold py-3 font-medium text-obsidian"
+          >
+            Got it
+          </button>
+        </div>
+      </SettingsSheet>
     </>
   )
 }
