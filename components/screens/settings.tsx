@@ -427,17 +427,18 @@ export function SettingsScreen() {
       if (!response.ok) {
         addToast({
           type: 'error',
-          title: 'Cancellation failed',
-          message: data.error || 'Failed to cancel plan',
+          title: 'Cancellation error',
+          message: 'We could not cancel your plan right now. Please try again.',
         })
+        setIsCancellingPlan(false)
         return
       }
 
-      // Refresh plan and subscriptions from server
-      const { refreshPlan } = useStore.getState()
-      await refreshPlan()
+      // Refresh plan from server
+      const { refreshPlanFromServer, setSubscriptions } = useStore.getState()
+      await refreshPlanFromServer()
 
-      // Refresh subscriptions
+      // Refresh subscriptions from server
       const subResponse = await fetch('/api/subscriptions', { cache: 'no-store' })
       if (subResponse.ok) {
         const subData = await subResponse.json()
@@ -448,7 +449,6 @@ export function SettingsScreen() {
             ? subData
             : []
         
-        const { setSubscriptions } = useStore.getState()
         const { mapSubscriptionRowToUI } = await import('@/lib/supabase/mappers')
         const { isDisplayableSubscription } = await import('@/lib/billing/subscription-display-utils')
         
@@ -471,7 +471,7 @@ export function SettingsScreen() {
       addToast({
         type: 'error',
         title: 'Cancellation error',
-        message: (error as Error).message || 'An unexpected error occurred',
+        message: 'We could not cancel your plan right now. Please try again.',
       })
     } finally {
       setIsCancellingPlan(false)

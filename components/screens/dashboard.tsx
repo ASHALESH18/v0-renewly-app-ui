@@ -25,6 +25,7 @@ import { formatMoney, formatSubscriptionMoney } from '@/lib/preferences-format'
 import { calculateMetrics, getUpcomingRenewals, getDaysUntilRenewal } from '@/lib/subscription-math'
 import { useExchangeRates } from '@/lib/hooks/use-exchange-rates'
 import { SubscriptionIcon } from '@/lib/brand-icons'
+import { isDisplayableSubscription } from '@/lib/billing/subscription-display-utils'
 
 // Translation helper for dashboard labels
 const dashboardLabels: Record<string, Record<string, string>> = {
@@ -167,7 +168,11 @@ export function DashboardScreen({
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [viewMode, setViewMode] = useState('cards')
 
-  const subscriptions = useStore((state) => state.subscriptions)
+  const rawSubscriptions = useStore((state) => state.subscriptions)
+  const subscriptions = useMemo(
+    () => rawSubscriptions.filter(isDisplayableSubscription),
+    [rawSubscriptions]
+  )
   const notificationSettings = useStore((state) => state.notificationSettings)
   const preferredLanguage = notificationSettings.language || 'en'
   const preferredCurrency = notificationSettings.currencyCode || 'INR'

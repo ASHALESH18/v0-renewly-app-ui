@@ -7,6 +7,7 @@ import type { Subscription } from './types'
 import { mapSubscriptionRowToUI, mapUserSettingsRowToUI } from './supabase/mappers'
 import { calculateMetrics } from './subscription-math'
 import { getCurrencyFromCountry, getCurrencyFromLocale } from './currency'
+import { isDisplayableSubscription } from './billing/subscription-display-utils'
 
 const SUBSCRIPTIONS_SWR_KEY = '/api/subscriptions'
 
@@ -340,7 +341,7 @@ const useStore = create<AppState>()(
           }
 
           const uiSubscriptions = Array.isArray(subscriptions)
-            ? subscriptions.map(mapSubscriptionRowToUI)
+            ? subscriptions.map(mapSubscriptionRowToUI).filter(isDisplayableSubscription)
             : []
 
           set({ subscriptions: uiSubscriptions })
@@ -381,13 +382,15 @@ const useStore = create<AppState>()(
       },
 
       loadSubscriptionsFromSupabase: (subscriptions) => {
-        set({ subscriptions })
-        void mutateSWR(SUBSCRIPTIONS_SWR_KEY, { subscriptions }, false)
+        const displayable = subscriptions.filter(isDisplayableSubscription)
+        set({ subscriptions: displayable })
+        void mutateSWR(SUBSCRIPTIONS_SWR_KEY, { subscriptions: displayable }, false)
       },
 
       setSubscriptions: (subscriptions) => {
-        set({ subscriptions })
-        void mutateSWR(SUBSCRIPTIONS_SWR_KEY, { subscriptions }, false)
+        const displayable = subscriptions.filter(isDisplayableSubscription)
+        set({ subscriptions: displayable })
+        void mutateSWR(SUBSCRIPTIONS_SWR_KEY, { subscriptions: displayable }, false)
       },
 
       addSubscription: (subscription) =>

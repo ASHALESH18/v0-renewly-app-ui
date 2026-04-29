@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
 import { syncRenewlyBillingSubscriptionForPlan } from '@/lib/billing/renewly-subscription-sync'
+import { safeCacheDelete } from '@/lib/redis'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -117,6 +118,9 @@ export async function POST(request: NextRequest) {
     const { revalidateTag } = await import('next/cache')
     revalidateTag(`subscriptions:${user.id}`)
     revalidateTag('profile')
+    
+    // Invalidate Redis cache for subscriptions
+    await safeCacheDelete(`subscriptions:${user.id}`)
 
     console.log(`[v0] QA RESYNC: ${user.email} (${user.id}) resynced plan: ${currentPlan}`)
 

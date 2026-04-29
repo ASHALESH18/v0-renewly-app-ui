@@ -15,9 +15,11 @@ export function isDisplayableSubscription(subscription: Subscription | null): bo
   if (!subscription) return false
 
   const isManaged = isRenewlyManagedSubscription(subscription)
+  
+  // Use string-safe status checking to avoid type comparison issues
+  const status = String((subscription as any).status || '').toLowerCase()
   const isCancelledOrArchived =
-    subscription.status === 'cancelled' ||
-    subscription.status === 'archived'
+    status === 'cancelled' || status === 'archived'
 
   // Hide archived/cancelled managed subscriptions
   if (isManaged && isCancelledOrArchived) {
