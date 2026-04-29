@@ -48,6 +48,50 @@ button,
   scroll-behavior: inherit;
 }
 
+/* === LOGO ANIMATIONS === */
+/* Subtle pulse animation for logo - fallback CSS version */
+@keyframes logo-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.95;
+  }
+}
+
+@keyframes logo-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes logo-glow {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* CSS class utilities for logo animations (used as fallback) */
+.logo-pulse {
+  animation: logo-pulse 3s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+
+.logo-float {
+  animation: logo-float 4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+
+.logo-glow {
+  animation: logo-glow 2.5s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+
 /* GPU acceleration for motion elements - auto to prevent layer explosion */
 [class*="motion-"],
 [data-slot="motion"] {
