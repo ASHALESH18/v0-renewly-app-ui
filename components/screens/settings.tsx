@@ -8,7 +8,7 @@ import {
   Bell, CreditCard, Shield, Globe,
   HelpCircle, FileText, LogOut, ChevronRight, ChevronLeft, Crown,
   Smartphone, Mail, Lock, Download, FileJson, X,
-  Check, AlertCircle, Eye, EyeOff, RefreshCw
+  Check, AlertCircle, Eye, EyeOff, RefreshCw, Users
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from '@/components/motion'
@@ -568,6 +568,14 @@ export function SettingsScreen() {
             description={userProfile?.plan === 'pro' ? 'Pro - Active' : planName}
             onClick={() => setActiveSheet('billing')}
           />
+          {userProfile?.plan === 'family' && (
+            <SettingsItem
+              icon={Users}
+              label="Family Members"
+              description="Manage members and invitations"
+              onClick={() => window.location.href = '/app/family'}
+            />
+          )}
         </SettingsSection>
 
         {/* Notifications Section */}
