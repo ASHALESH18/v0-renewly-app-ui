@@ -253,250 +253,399 @@ export function SettingsScreen() {
     }
   }
 
-  // OTP Verification Step
-  if (step === 'verify') {
-    return (
-      <div className="space-y-5">
-        <button
-          type="button"
-          onClick={() => {
-            setStep('input')
-            setOtpCode('')
-            setError(null)
-          }}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          Back to phone number
-        </button>
-
-        <div className="text-center space-y-2">
-          <div className="w-14 h-14 mx-auto rounded-full bg-gold/10 flex items-center justify-center">
-            <Smartphone className="w-7 h-7 text-gold" />
-          </div>
-          <h3 className="text-lg font-semibold text-foreground">Enter verification code</h3>
-          <p className="text-sm text-muted-foreground">
-            We sent a 6-digit code to <span className="font-medium text-foreground">{phoneNumber}</span>
-          </p>
+  // Main Settings Page
+  return (
+    <div className="min-h-screen bg-transparent pb-24">
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+        {/* Account Section */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-foreground">Account</h2>
+          <button
+            onClick={() => setActiveSheet('profile')}
+            className="w-full flex items-center gap-4 p-4 rounded-xl border border-border hover:bg-secondary/30 transition-colors cursor-pointer text-left"
+          >
+            <div className="w-12 h-12 rounded-full bg-gold/20 flex items-center justify-center flex-shrink-0">
+              <span className="text-gold font-semibold">{userProfile?.name?.[0]?.toUpperCase() || 'U'}</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="text-foreground font-medium block truncate">{userProfile?.name || 'Guest'}</span>
+              <span className="text-xs text-muted-foreground truncate">{userProfile?.email}</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+          </button>
         </div>
 
-        {/* OTP Input */}
-        <div className="space-y-3">
-          <div className="flex justify-center gap-2">
-            {[...Array(6)].map((_, i) => (
-              <input
-                key={i}
-                type="text"
-                inputMode="numeric"
-                maxLength={1}
-                value={otpCode[i] || ''}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, '')
-                  if (val.length <= 1) {
-                    const newCode = otpCode.split('')
-                    newCode[i] = val
-                    setOtpCode(newCode.join(''))
-                    // Auto-focus next input
-                    if (val && i < 5) {
-                      const nextInput = e.target.parentElement?.children[i + 1] as HTMLInputElement
-                      nextInput?.focus()
-                    }
-                  }
-                }}
-                onKeyDown={(e) => {
-                  // Handle backspace to go to previous input
-                  if (e.key === 'Backspace' && !otpCode[i] && i > 0) {
-                    const prevInput = (e.target as HTMLElement).parentElement?.children[i - 1] as HTMLInputElement
-                    prevInput?.focus()
-                  }
-                }}
-                onPaste={(e) => {
-                  e.preventDefault()
-                  const paste = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
-                  setOtpCode(paste)
-                }}
-                className={cn(
-                  "w-12 h-14 text-center text-xl font-semibold rounded-xl border transition-all focus:outline-none focus:ring-2",
-                  error
-                    ? "border-destructive bg-destructive/5 focus:ring-destructive/50"
-                    : "border-border bg-muted focus:ring-gold/50 focus:border-gold"
-                )}
-              />
-            ))}
-          </div>
+        {/* Preferences Section */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-foreground">Preferences</h2>
+          
+          {/* Notifications */}
+          <button
+            onClick={() => setActiveSheet('notifications')}
+            className="w-full flex items-center gap-4 p-4 rounded-xl border border-border hover:bg-secondary/30 transition-colors cursor-pointer text-left"
+          >
+            <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+              <Bell className="w-5 h-5 text-foreground" />
+            </div>
+            <div className="flex-1">
+              <span className="text-foreground font-medium">Notifications</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </button>
 
-          {error && (
-            <p className="text-center text-sm text-destructive">{error}</p>
-          )}
+          {/* Theme */}
+          <button
+            onClick={() => setActiveSheet('theme')}
+            className="w-full flex items-center gap-4 p-4 rounded-xl border border-border hover:bg-secondary/30 transition-colors cursor-pointer text-left"
+          >
+            <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+              <Globe className="w-5 h-5 text-foreground" />
+            </div>
+            <div className="flex-1">
+              <span className="text-foreground font-medium">Theme</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </button>
+
+          {/* Currency */}
+          <button
+            onClick={() => setActiveSheet('currency')}
+            className="w-full flex items-center gap-4 p-4 rounded-xl border border-border hover:bg-secondary/30 transition-colors cursor-pointer text-left"
+          >
+            <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+              <CreditCard className="w-5 h-5 text-foreground" />
+            </div>
+            <div className="flex-1">
+              <span className="text-foreground font-medium">Currency</span>
+              <p className="text-xs text-muted-foreground">{notificationSettings.currencyCode || 'INR'}</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </button>
+
+          {/* Language */}
+          <button
+            onClick={() => setActiveSheet('language')}
+            className="w-full flex items-center gap-4 p-4 rounded-xl border border-border hover:bg-secondary/30 transition-colors cursor-pointer text-left"
+          >
+            <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+              <Globe className="w-5 h-5 text-foreground" />
+            </div>
+            <div className="flex-1">
+              <span className="text-foreground font-medium">Language</span>
+              <p className="text-xs text-muted-foreground">{languageNames[notificationSettings.language as SupportedLanguage] || 'English'}</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </button>
+
+          {/* Phone Number - Disabled */}
+          <button
+            onClick={() => setActiveSheet('phone')}
+            className="w-full flex items-center gap-4 p-4 rounded-xl border border-border/50 opacity-60 cursor-not-allowed text-left"
+          >
+            <div className="w-9 h-9 rounded-full bg-secondary/50 flex items-center justify-center flex-shrink-0">
+              <Smartphone className="w-5 h-5 text-muted-foreground" />
+            </div>
+            <div className="flex-1">
+              <span className="text-muted-foreground font-medium">Phone Number</span>
+              <p className="text-xs text-muted-foreground">Not available yet</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </button>
         </div>
 
-        {/* Verify Button */}
-        <button
-          type="button"
-          onClick={handleVerifyOTP}
-          disabled={isLoading || otpCode.length !== 6}
-          className={cn(
-            "w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2",
-            isLoading || otpCode.length !== 6
-              ? "bg-gold/40 text-obsidian/70 cursor-not-allowed"
-              : "bg-gold text-obsidian hover:bg-gold/90 shadow-[0_4px_16px_rgba(199,163,106,0.25)]"
-          )}
-        >
-          {isLoading ? (
-            <>
-              <RefreshCw className="w-4 h-4 animate-spin" />
-              Verifying...
-            </>
-          ) : (
-            'Verify Phone Number'
-          )}
-        </button>
+        {/* Billing Section */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-foreground">Billing</h2>
+          <button
+            onClick={() => setActiveSheet('billing')}
+            className="w-full flex items-center gap-4 p-4 rounded-xl border border-border hover:bg-secondary/30 transition-colors cursor-pointer text-left"
+          >
+            <div className="w-9 h-9 rounded-full bg-gold/20 flex items-center justify-center flex-shrink-0">
+              <Crown className="w-5 h-5 text-gold" />
+            </div>
+            <div className="flex-1">
+              <span className="text-foreground font-medium">Plan & Billing</span>
+              <p className="text-xs text-gold capitalize">{userProfile?.plan || 'free'}</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </button>
+        </div>
 
-        {/* Resend */}
-        <div className="text-center">
-          {cooldown > 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Resend code in <span className="font-medium text-foreground">{cooldown}s</span>
-            </p>
-          ) : (
-            <button
-              type="button"
-              onClick={handleSendOTP}
-              disabled={isLoading}
-              className="text-sm text-gold hover:text-gold/80 font-medium transition-colors"
-            >
-              Resend verification code
-            </button>
-          )}
+        {/* Support & Legal Section */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-foreground">Support & Legal</h2>
+          
+          {/* Privacy Policy */}
+          <button
+            onClick={() => window.open('https://renewly.in/privacy', '_blank')}
+            className="w-full flex items-center gap-4 p-4 rounded-xl border border-border hover:bg-secondary/30 transition-colors cursor-pointer text-left"
+          >
+            <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+              <Shield className="w-5 h-5 text-foreground" />
+            </div>
+            <div className="flex-1">
+              <span className="text-foreground font-medium">Privacy Policy</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </button>
+
+          {/* Terms of Service */}
+          <button
+            onClick={() => window.open('https://renewly.in/terms', '_blank')}
+            className="w-full flex items-center gap-4 p-4 rounded-xl border border-border hover:bg-secondary/30 transition-colors cursor-pointer text-left"
+          >
+            <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+              <FileText className="w-5 h-5 text-foreground" />
+            </div>
+            <div className="flex-1">
+              <span className="text-foreground font-medium">Terms of Service</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </button>
+
+          {/* Help & Support */}
+          <button
+            onClick={() => window.location.href = 'mailto:contact@renewly.in'}
+            className="w-full flex items-center gap-4 p-4 rounded-xl border border-border hover:bg-secondary/30 transition-colors cursor-pointer text-left"
+          >
+            <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+              <HelpCircle className="w-5 h-5 text-foreground" />
+            </div>
+            <div className="flex-1">
+              <span className="text-foreground font-medium">Help & Support</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </button>
+
+          {/* Export Account Data */}
+          <button
+            onClick={async () => {
+              setIsExportingAccount(true)
+              try {
+                await exportSubscriptions()
+                addToast({
+                  type: 'success',
+                  title: 'Export successful',
+                  message: 'Your subscription data has been downloaded as JSON.',
+                })
+              } catch (error) {
+                addToast({
+                  type: 'error',
+                  title: 'Export failed',
+                  message: 'Failed to export your data. Please try again.',
+                })
+              } finally {
+                setIsExportingAccount(false)
+              }
+            }}
+            disabled={isExportingAccount}
+            className="w-full flex items-center gap-4 p-4 rounded-xl border border-border hover:bg-secondary/30 transition-colors cursor-pointer text-left disabled:opacity-50"
+          >
+            <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+              <Download className="w-5 h-5 text-foreground" />
+            </div>
+            <div className="flex-1">
+              <span className="text-foreground font-medium">Export Account Data</span>
+              <p className="text-xs text-muted-foreground">Download your subscriptions as JSON</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </button>
+
+          {/* Sign Out */}
+          <button
+            onClick={async () => {
+              setIsSigningOut(true)
+              await signOutAndRedirectHome()
+            }}
+            disabled={isSigningOut}
+            className="w-full flex items-center gap-4 p-4 rounded-xl border border-destructive/20 hover:bg-destructive/5 transition-colors cursor-pointer text-left disabled:opacity-50"
+          >
+            <div className="w-9 h-9 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">
+              <LogOut className="w-5 h-5 text-destructive" />
+            </div>
+            <div className="flex-1">
+              <span className="text-destructive font-medium">{isSigningOut ? 'Signing out...' : 'Sign Out'}</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </button>
         </div>
       </div>
-    )
-  }
+    </div>
 
-  // Phone Input Step
-  return (
-    <div className="space-y-5">
-      {/* Existing Phone Display */}
-      {existingPhone && (
-        <div className="p-4 rounded-xl bg-secondary/50 border border-border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Current phone number</p>
-              <p className="font-medium text-foreground">{existingPhone}</p>
-            </div>
-            <div className={cn(
-              "px-2.5 py-1 rounded-full text-xs font-medium",
-              isVerified
-                ? "bg-emerald-500/20 text-emerald-500"
-                : "bg-amber-500/20 text-amber-500"
-            )}>
-              {isVerified ? 'Verified' : 'Not verified'}
-            </div>
+    {/* Billing & Plan Sheet */}
+    <SettingsSheet
+      isOpen={activeSheet === 'billing'}
+      onClose={() => setActiveSheet(null)}
+      title={billingStep === 'overview' ? 'Billing & Plan' : 'Cancel Subscription'}
+    >
+      {billingStep === 'overview' && (
+        <div className="space-y-6">
+          {/* Current Plan Display */}
+          <div className="p-4 rounded-xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
+            <p className="text-sm text-muted-foreground">Current Plan</p>
+            <p className="text-2xl font-semibold text-gold mt-1 capitalize">{userProfile?.plan || 'free'}</p>
+            {userProfile?.plan && userProfile.plan !== 'free' && (
+              <p className="text-xs text-muted-foreground mt-2">Your subscription is active</p>
+            )}
+          </div>
+
+          {/* Free Plan - Show Upgrade CTA */}
+          {!userProfile?.plan || userProfile.plan === 'free' ? (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Upgrade to Pro or Family to unlock advanced features including analytics, leak detection, and more.
+              </p>
+              <button
+                onClick={handleChangePlan}
+                className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
+              >
+                View Upgrade Options
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Pro/Family Plans - Show Manage Options */}
+              {userProfile.plan !== 'enterprise' && (
+                <div className="space-y-3 pt-2">
+                  <button
+                    onClick={handleChangePlan}
+                    className="w-full px-4 py-3 rounded-xl bg-gold/10 text-gold font-medium hover:bg-gold/20 border border-gold/30 transition-colors cursor-pointer"
+                  >
+                    {userProfile.plan === 'pro' ? 'Upgrade to Family' : 'Change Plan'}
+                  </button>
+                  {qaStatus?.enabled && qaStatus?.emailAllowed ? (
+                    <button
+                      onClick={handleReviewCancellation}
+                      className="w-full px-4 py-3 rounded-xl bg-red-500/10 text-red-600 font-medium hover:bg-red-500/20 border border-red-500/30 transition-colors cursor-pointer"
+                    >
+                      Review Cancellation
+                    </button>
+                  ) : null}
+                </div>
+              )}
+
+              {/* Enterprise Support */}
+              {userProfile.plan === 'enterprise' && (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    For changes to your enterprise subscription, please contact our sales team.
+                  </p>
+                  <button
+                    onClick={() => window.location.href = 'mailto:contact@renewly.in'}
+                    className="w-full py-3 rounded-xl bg-gold/10 text-gold font-medium hover:bg-gold/20 border border-gold/30 transition-colors cursor-pointer"
+                  >
+                    Contact Sales
+                  </button>
+                </>
+              )}
+            </>
+          )}
+
+          {/* Support Section */}
+          <div className="p-4 rounded-xl bg-muted space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">Questions about billing?</p>
+            <p className="text-sm text-foreground">Contact our support team for assistance with your account or subscription.</p>
+            <button
+              onClick={() => window.location.href = 'mailto:contact@renewly.in'}
+              className="text-sm text-gold hover:text-gold/80 font-medium transition-colors"
+            >
+              contact@renewly.in
+            </button>
           </div>
         </div>
       )}
 
-      {/* SMS Availability Banner */}
-      {!smsAvailable && (
-        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+      {billingStep === 'cancel-confirm' && qaStatus?.enabled && qaStatus?.emailAllowed && (
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-lg font-semibold text-foreground mb-3">
+              Cancel Renewly {userProfile?.plan === 'pro' ? 'Pro' : 'Family'}?
+            </h3>
+            <div className="space-y-3 text-sm text-muted-foreground">
+              <p>Cancelling will:</p>
+              <ul className="space-y-2 pl-4 list-disc">
+                <li>Remove premium access and features</li>
+                <li>Keep your personal tracked subscriptions safe</li>
+                <li>Downgrade your plan to Free</li>
+              </ul>
+              <p className="pt-2 text-xs italic">Your personal subscription records will always be preserved.</p>
+            </div>
+          </div>
+
           <div className="flex gap-3">
+            <button
+              onClick={handleKeepPlan}
+              className="flex-1 px-4 py-3 rounded-xl bg-muted text-foreground font-medium hover:bg-secondary transition-colors cursor-pointer"
+            >
+              Keep Plan
+            </button>
+            <button
+              onClick={handleCancelPlan}
+              disabled={isCancellingPlan}
+              className="flex-1 px-4 py-3 rounded-xl bg-red-500/20 text-red-600 font-medium hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {isCancellingPlan ? 'Cancelling...' : 'Confirm Cancel'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {billingStep === 'cancel-success' && (
+        <div className="space-y-6 py-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-emerald-500/20 mx-auto flex items-center justify-center">
+            <Check className="w-8 h-8 text-emerald-500" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-foreground">Plan Cancelled</h3>
+            <p className="text-sm text-muted-foreground mt-2">
+              Your subscription has been cancelled. Your plan is now Free.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {billingStep === 'support-cancel' && (
+        <div className="space-y-6">
+          <p className="text-sm text-muted-foreground">
+            Downgrades are not yet automated. Please contact our support team to downgrade your subscription.
+          </p>
+          <button
+            onClick={() => window.location.href = 'mailto:contact@renewly.in'}
+            className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
+          >
+            Contact Support
+          </button>
+        </div>
+      )}
+    </SettingsSheet>
+
+    {/* Phone Number Sheet - Unavailable */}
+    <SettingsSheet
+      isOpen={activeSheet === 'phone'}
+      onClose={() => setActiveSheet(null)}
+      title="Phone Number"
+    >
+      <div className="space-y-6">
+        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+          <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <p className="text-sm font-medium text-amber-500">SMS Verification Not Available</p>
-              <p className="text-xs text-amber-500/80">
-                SMS verification is not configured. Your phone number will be saved but cannot be verified at this time.
+              <p className="text-sm font-medium text-amber-500">Unavailable</p>
+              <p className="text-sm text-muted-foreground">
+                Phone number management is not available yet. We're keeping Renewly account access focused on secure Google/Apple sign-in. Phone number verification will be added later if needed.
               </p>
             </div>
           </div>
         </div>
-      )}
 
-      {/* Phone Input */}
-      <div>
-        <label className="block text-sm font-medium text-foreground mb-2">
-          {existingPhone ? 'Update Phone Number' : 'Add Phone Number'}
-        </label>
-        <div className="relative">
-          <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <input
-            type="tel"
-            value={phoneNumber}
-            onChange={handlePhoneChange}
-            placeholder="+1 234 567 8900"
-            className="w-full px-4 py-3 pl-12 rounded-xl bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors"
-          />
-        </div>
-        <p className="mt-2 text-xs text-muted-foreground">
-          Include country code (e.g., +1 for US, +91 for India)
-        </p>
+        <button
+          onClick={() => setActiveSheet(null)}
+          className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
+        >
+          Got it
+        </button>
       </div>
-
-      {/* Error */}
-      {error && (
-        <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
-          <AlertCircle className="w-4 h-4 flex-shrink-0" />
-          {error}
-        </div>
-      )}
-
-      {/* Action Buttons */}
-      <div className="space-y-3">
-        {smsAvailable ? (
-          <button
-            type="button"
-            onClick={handleSendOTP}
-            disabled={isLoading || !phoneNumber || phoneNumber.length < 10}
-            className={cn(
-              "w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2",
-              isLoading || !phoneNumber || phoneNumber.length < 10
-                ? "bg-gold/40 text-obsidian/70 cursor-not-allowed"
-                : "bg-gold text-obsidian hover:bg-gold/90 shadow-[0_4px_16px_rgba(199,163,106,0.25)]"
-            )}
-          >
-            {isLoading ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                Sending code...
-              </>
-            ) : (
-              'Send Verification Code'
-            )}
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={handleSaveWithoutVerification}
-            disabled={isLoading || !phoneNumber}
-            className={cn(
-              "w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2",
-              isLoading || !phoneNumber
-                ? "bg-gold/40 text-obsidian/70 cursor-not-allowed"
-                : "bg-gold text-obsidian hover:bg-gold/90 shadow-[0_4px_16px_rgba(199,163,106,0.25)]"
-            )}
-          >
-            {isLoading ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              'Save Phone Number'
-            )}
-          </button>
-        )}
-
-        {existingPhone && (
-          <button
-            type="button"
-            onClick={handleRemove}
-            disabled={isLoading}
-            className="w-full py-3 rounded-xl font-medium text-destructive bg-destructive/10 border border-destructive/20 hover:bg-destructive/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Remove Phone Number
-          </button>
-        )}
-      </div>
-    </div>
+    </SettingsSheet>
   )
 }
 
