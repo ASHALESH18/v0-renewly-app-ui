@@ -255,7 +255,8 @@ export function SettingsScreen() {
 
   // Main Settings Page
   return (
-    <div className="min-h-screen bg-transparent pb-24">
+    <>
+      <div className="min-h-screen bg-transparent pb-24">
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* Account Section */}
         <div className="space-y-4">
@@ -470,9 +471,9 @@ export function SettingsScreen() {
           </button>
         </div>
       </div>
-    </div>
-
-    {/* Billing & Plan Sheet */}
+    </>
+  )
+}
     <SettingsSheet
       isOpen={activeSheet === 'billing'}
       onClose={() => setActiveSheet(null)}
@@ -619,33 +620,34 @@ export function SettingsScreen() {
       )}
     </SettingsSheet>
 
-    {/* Phone Number Sheet - Unavailable */}
-    <SettingsSheet
-      isOpen={activeSheet === 'phone'}
-      onClose={() => setActiveSheet(null)}
-      title="Phone Number"
-    >
-      <div className="space-y-6">
-        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-amber-500">Unavailable</p>
-              <p className="text-sm text-muted-foreground">
-                Phone number management is not available yet. We're keeping Renewly account access focused on secure Google/Apple sign-in. Phone number verification will be added later if needed.
-              </p>
+      {/* Phone Number Sheet - Unavailable */}
+      <SettingsSheet
+        isOpen={activeSheet === 'phone'}
+        onClose={() => setActiveSheet(null)}
+        title="Phone Number"
+      >
+        <div className="space-y-6">
+          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-amber-500">Unavailable</p>
+                <p className="text-sm text-muted-foreground">
+                  Phone number management is not available yet. We're keeping Renewly account access focused on secure Google/Apple sign-in. Phone number verification will be added later if needed.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <button
-          onClick={() => setActiveSheet(null)}
-          className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
-        >
-          Got it
-        </button>
-      </div>
-    </SettingsSheet>
+          <button
+            onClick={() => setActiveSheet(null)}
+            className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
+          >
+            Got it
+          </button>
+        </div>
+      </SettingsSheet>
+    </>
   )
 }
 
