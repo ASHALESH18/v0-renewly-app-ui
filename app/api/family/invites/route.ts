@@ -8,6 +8,7 @@ import {
   generateInviteToken, 
   hashInviteToken, 
   buildFamilyInviteUrl,
+  getInviteBaseUrl,
   getInviteExpiryDate 
 } from '@/lib/family/family-invite-utils'
 import { sendFamilyInviteEmail } from '@/lib/email/family-invite-email'
@@ -190,8 +191,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Build invite URL
-    const inviteUrl = buildFamilyInviteUrl(rawToken, request.headers.get('origin') || undefined)
+    // Build invite URL using request origin for environment-aware URL resolution
+    const requestOrigin =
+      request.headers.get('origin') ||
+      request.nextUrl.origin ||
+      undefined
+
+    const inviteUrl = buildFamilyInviteUrl(rawToken, requestOrigin)
+
+    // Add safe diagnostic logging in Preview/development (never log raw token or hash)
+    if (process.env.VERCEL_ENV !== 'production') {
+      console.info('[family-invites] invite created', {
+        vercelEnv: process.env.VERCEL_ENV,
+        invitedEmail,
+        baseUrl: getInviteBaseUrl(requestOrigin),
+      })
+    }
 
     // Send email
     const emailResult = await sendFamilyInviteEmail({
