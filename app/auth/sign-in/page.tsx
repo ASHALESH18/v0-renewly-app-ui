@@ -12,10 +12,12 @@ import { AuthSkeleton } from '@/components/skeletons'
 import { springs } from '@/components/motion'
 import { createClient } from '@/lib/supabase/client'
 import { getURL } from '@/lib/supabase/url'
+import { getSafeNextPath } from '@/lib/auth/redirect-utils'
 
 function SignInPageContent() {
   const searchParams = useSearchParams()
-  const next = searchParams.get('next') || '/app'
+  const nextParam = searchParams.get('next')
+  const safeNext = getSafeNextPath(nextParam)
   const errorParam = searchParams.get('error')
 
   const [showPassword, setShowPassword] = useState(false)
@@ -55,7 +57,7 @@ function SignInPageContent() {
 
       // Successful sign-in - use a hard navigation so the authenticated app
       // boots with a clean session state on first load.
-      const destination = next === '/app' ? '/app/dashboard' : next
+      const destination = safeNext === '/app/dashboard' ? '/app/dashboard' : safeNext
       window.location.replace(destination)
       return
     } catch (err) {
@@ -73,7 +75,7 @@ function SignInPageContent() {
         type: 'signup',
         email: formData.email,
         options: {
-          emailRedirectTo: getURL('auth/callback?next=/app'),
+          emailRedirectTo: getURL(`auth/callback?next=${encodeURIComponent(safeNext)}`),
         },
       })
 
@@ -218,7 +220,10 @@ function SignInPageContent() {
         {/* Sign up link */}
         <p className="text-center text-sm text-platinum pt-4">
           {"Don't have an account? "}
-          <Link href="/auth/sign-up" className="text-gold hover:text-gold/80 font-medium transition-colors">
+          <Link 
+            href={`/auth/sign-up?next=${encodeURIComponent(safeNext)}`}
+            className="text-gold hover:text-gold/80 font-medium transition-colors"
+          >
             Sign up
           </Link>
         </p>

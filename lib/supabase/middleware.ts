@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
+import { getSafeNextPath } from '@/lib/auth/redirect-utils'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -36,11 +37,14 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const pathname = request.nextUrl.pathname
+  const search = request.nextUrl.search || ''
 
   // Redirect unauthenticated users trying to access /app
+  // Preserve the full path including query string (e.g., /app/family/accept?token=abc)
   if (pathname.startsWith('/app') && !user) {
     const signInUrl = new URL('/auth/sign-in', request.url)
-    signInUrl.searchParams.set('next', pathname)
+    const nextPath = `${pathname}${search}`
+    signInUrl.searchParams.set('next', nextPath)
     return NextResponse.redirect(signInUrl)
   }
 
@@ -54,7 +58,10 @@ export async function updateSession(request: NextRequest) {
     !pathname.includes('reset-password') &&
     user
   ) {
-    return NextResponse.redirect(new URL('/app', request.url))
+    // If there's a safe next parameter, respect it (e.g., family invite token redirect)
+    const next = request.nextUrl.searchParams.get('next')
+    const safeNext = getSafeNextPath(next)
+    return NextResponse.redirect(new URL(safeNext, request.url))
   }
 
   return supabaseResponse
