@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Users, Plus, Mail, Loader2, AlertCircle, CheckCircle2, Clock, ExternalLink } from 'lucide-react'
+import { Users, Plus, Mail, Loader2, AlertCircle, CheckCircle2, Clock, ExternalLink, X } from 'lucide-react'
 import { Header } from '@/components/header'
 import { PageTransition } from '@/components/motion'
-import { PremiumModal } from '@/components/premium-modal'
 import useStore from '@/lib/store'
 import { cn } from '@/lib/utils'
 
@@ -578,45 +577,82 @@ export function FamilyMembersScreen() {
       </div>
 
       {/* Cancel Invite Confirmation Modal */}
-      <PremiumModal
-        isOpen={inviteToCancel !== null}
-        onClose={() => !isCancellingInvite && setInviteToCancel(null)}
-        title="Cancel pending invite?"
-        size="sm"
-        showCloseButton={!isCancellingInvite}
-      >
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <p className="text-sm text-foreground">
-              This will cancel the invite for:
-            </p>
-            <p className="text-sm font-medium text-ivory">
-              {inviteToCancel?.email}
-            </p>
-          </div>
+      <AnimatePresence mode="wait">
+        {inviteToCancel !== null && (
+          <>
+            {/* Darker backdrop */}
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !isCancellingInvite && setInviteToCancel(null)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200]"
+            />
 
-          <p className="text-sm text-muted-foreground">
-            The old invite link will stop working immediately. You can send a new invite later.
-          </p>
+            {/* Modal container */}
+            <motion.div
+              key="modal"
+              initial={{ opacity: 0, y: 18, scale: 0.975 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.985 }}
+              className="fixed inset-0 z-[210] flex items-center justify-center p-4 pointer-events-none"
+            >
+              <motion.div
+                className="relative rounded-2xl bg-slate-950/95 border border-white/10 shadow-2xl pointer-events-auto max-w-md w-full"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-white/10">
+                  <h2 className="text-xl font-semibold text-white">Cancel pending invite?</h2>
+                  {!isCancellingInvite && (
+                    <button
+                      onClick={() => setInviteToCancel(null)}
+                      className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                      aria-label="Close dialog"
+                    >
+                      <X className="w-5 h-5 text-slate-300" />
+                    </button>
+                  )}
+                </div>
 
-          <div className="flex gap-3 justify-end">
-            <button
-              onClick={() => setInviteToCancel(null)}
-              disabled={isCancellingInvite}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-gold/20 text-obsidian hover:bg-gold/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Keep Invite
-            </button>
-            <button
-              onClick={handleConfirmCancelInvite}
-              disabled={isCancellingInvite}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-red-500/20 text-red-700 hover:bg-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors dark:bg-red-900/40 dark:text-red-300 dark:hover:bg-red-900/60"
-            >
-              {isCancellingInvite ? 'Cancelling...' : 'Cancel Invite'}
-            </button>
-          </div>
-        </div>
-      </PremiumModal>
+                {/* Content */}
+                <div className="p-6 space-y-6">
+                  <div className="space-y-2">
+                    <p className="text-sm text-slate-300">
+                      This will cancel the invite for:
+                    </p>
+                    <p className="text-sm font-semibold text-white">
+                      {inviteToCancel?.email}
+                    </p>
+                  </div>
+
+                  <p className="text-sm text-slate-300">
+                    The old invite link will stop working immediately. You can send a new invite later.
+                  </p>
+
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      onClick={() => setInviteToCancel(null)}
+                      disabled={isCancellingInvite}
+                      className="px-4 py-2 text-sm font-medium rounded-lg bg-slate-700 text-white hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Keep Invite
+                    </button>
+                    <button
+                      onClick={handleConfirmCancelInvite}
+                      disabled={isCancellingInvite}
+                      className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isCancellingInvite ? 'Cancelling...' : 'Cancel Invite'}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </PageTransition>
   )
 }
