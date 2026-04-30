@@ -2,9 +2,20 @@ import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
 import { hasHitSubscriptionLimit, type PlanType } from '@/lib/plan-capabilities'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+/**
+ * Get Supabase client for plan validation operations
+ * Initializes inside function calls, not at module level, to avoid build-time errors
+ */
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Missing Supabase env vars')
+  }
+
+  return createClient(supabaseUrl, supabaseServiceKey)
+}
 
 /**
  * Get user's current plan and subscription count
@@ -13,6 +24,8 @@ export async function getUserPlanAndSubscriptionCount() {
   try {
     const user = await getUser()
     if (!user) throw new Error('Unauthorized')
+
+    const supabase = getSupabaseClient()
 
     // Get profile with plan
     const { data: profile, error: profileError } = await supabase

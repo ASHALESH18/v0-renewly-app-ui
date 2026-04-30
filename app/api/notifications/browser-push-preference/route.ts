@@ -47,9 +47,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Use service role to update settings
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
     // Build update payload
     const updatePayload: Record<string, unknown> = {
       push_notifications: pushNotifications,
