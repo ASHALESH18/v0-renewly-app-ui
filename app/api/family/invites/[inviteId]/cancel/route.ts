@@ -15,7 +15,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { inviteId: string } }
+  context: { params: Promise<{ inviteId: string }> }
 ) {
   try {
     const user = await getUser()
@@ -23,18 +23,33 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const inviteId = params.inviteId
-    if (!inviteId) {
+    // Await params in Next.js 16
+    const { inviteId } = await context.params
+    const normalizedInviteId = typeof inviteId === 'string' ? inviteId.trim() : ''
+
+    if (
+      !normalizedInviteId ||
+      normalizedInviteId === 'undefined' ||
+      normalizedInviteId === 'null'
+    ) {
       return NextResponse.json({ error: 'Invalid invite ID' }, { status: 400 })
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+    // Debug logging in non-production
+    if (process.env.VERCEL_ENV !== 'production') {
+      console.info('[family-invites] action invite id', {
+        action: 'cancel',
+        hasInviteId: Boolean(normalizedInviteId),
+      })
+    }
+
     // Fetch the invite
     const { data: invite, error: inviteError } = await supabase
       .from('family_invites')
       .select('id, family_group_id, status')
-      .eq('id', inviteId)
+      .eq('id', normalizedInviteId)
       .single()
 
     if (inviteError) {
@@ -78,7 +93,7 @@ export async function POST(
         cancelled_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
-      .eq('id', inviteId)
+      .eq('id', normalizedInviteId)
 
     if (updateError) {
       throw updateError

@@ -29,6 +29,14 @@ interface InvitationState {
   inviteUrl?: string
 }
 
+/**
+ * Get stable invite ID from invite object
+ * Handles multiple field name variations for compatibility
+ */
+function getInviteId(invite: any): string {
+  return String(invite?.id || invite?.inviteId || invite?.invite_id || '').trim()
+}
+
 export function FamilyMembersScreen() {
   const userProfile = useStore((state) => state.userProfile)
   const addToast = useStore((state) => state.addToast)
@@ -133,7 +141,7 @@ export function FamilyMembersScreen() {
     if (!confirmed) return
 
     try {
-      const res = await fetch(`/api/family/invites/${inviteId}/cancel`, {
+      const res = await fetch(`/api/family/invites/${encodeURIComponent(inviteId)}/cancel`, {
         method: 'POST',
       })
 
@@ -167,7 +175,7 @@ export function FamilyMembersScreen() {
     setResendingInviteId(inviteId)
 
     try {
-      const res = await fetch(`/api/family/invites/${inviteId}/resend`, {
+      const res = await fetch(`/api/family/invites/${encodeURIComponent(inviteId)}/resend`, {
         method: 'POST',
       })
 
@@ -473,70 +481,81 @@ export function FamilyMembersScreen() {
                 >
                   <h3 className="font-semibold text-foreground">Pending Invitations</h3>
                   <div className="space-y-3">
-                    {pendingInvites.map((invite) => (
-                      <div key={invite.id}>
-                        <div className="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/10 p-4">
-                          <div className="flex items-center gap-3">
-                            <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                            <div>
-                              <p className="font-medium text-foreground">{invite.invitedEmail}</p>
-                              <p className="text-xs text-muted-foreground">
-                                Expires {new Date(invite.expiresAt).toLocaleDateString()}
-                              </p>
+                    {pendingInvites.map((invite) => {
+                      const inviteId = getInviteId(invite)
+                      const hasValidId = Boolean(inviteId && inviteId !== 'undefined' && inviteId !== 'null')
+                      
+                      return (
+                        <div key={inviteId || invite.invitedEmail}>
+                          <div className="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/10 p-4">
+                            <div className="flex items-center gap-3">
+                              <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                              <div>
+                                <p className="font-medium text-foreground">{invite.invitedEmail}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Expires {new Date(invite.expiresAt).toLocaleDateString()}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleResendInvite(invite.id, invite.invitedEmail)}
-                              disabled={resendingInviteId === invite.id}
-                              className="text-sm px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-700 hover:bg-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium dark:bg-blue-900/40 dark:text-blue-300 dark:hover:bg-blue-900/60"
-                            >
-                              {resendingInviteId === invite.id ? 'Resending...' : 'Resend'}
-                            </button>
-                            <button
-                              onClick={() => handleCancelInvite(invite.id, invite.invitedEmail)}
-                              className="text-sm px-3 py-1.5 rounded-lg bg-red-500/20 text-red-700 hover:bg-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium dark:bg-red-900/40 dark:text-red-300 dark:hover:bg-red-900/60"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                        {/* QA Invite URL (if present) */}
-                        {invite._qaInviteUrl && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 space-y-2"
-                          >
-                            <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
-                              Email is not configured in Preview. Copy this QA invite link and send it manually.
-                            </p>
                             <div className="flex gap-2">
-                              <input
-                                type="text"
-                                value={invite._qaInviteUrl}
-                                readOnly
-                                className="flex-1 rounded-lg border border-border bg-muted px-3 py-2 text-xs text-foreground font-mono"
-                              />
                               <button
-                                type="button"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(invite._qaInviteUrl)
-                                  addToast({
-                                    type: 'success',
-                                    title: 'Copied',
-                                    message: 'Invite link copied to clipboard',
-                                  })
-                                }}
-                                className="flex items-center gap-2 rounded-lg bg-gold/20 px-3 py-2 text-obsidian font-medium hover:bg-gold/30 transition-colors cursor-pointer text-sm"
+                                onClick={() => handleResendInvite(inviteId, invite.invitedEmail)}
+                                disabled={!hasValidId || resendingInviteId === inviteId}
+                                className="text-sm px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-700 hover:bg-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium dark:bg-blue-900/40 dark:text-blue-300 dark:hover:bg-blue-900/60"
                               >
-                                Copy
+                                {resendingInviteId === inviteId ? 'Resending...' : 'Resend'}
+                              </button>
+                              <button
+                                onClick={() => handleCancelInvite(inviteId, invite.invitedEmail)}
+                                disabled={!hasValidId}
+                                className="text-sm px-3 py-1.5 rounded-lg bg-red-500/20 text-red-700 hover:bg-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium dark:bg-red-900/40 dark:text-red-300 dark:hover:bg-red-900/60"
+                              >
+                                Cancel
                               </button>
                             </div>
-                          </motion.div>
-                        )}
-                      </div>
-                    ))}
+                          </div>
+                          {!hasValidId && (
+                            <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                              Invite ID missing. Refresh the page and try again.
+                            </p>
+                          )}
+                          {/* QA Invite URL (if present) */}
+                          {invite._qaInviteUrl && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 space-y-2"
+                            >
+                              <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                                Email is not configured in Preview. Copy this QA invite link and send it manually.
+                              </p>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  value={invite._qaInviteUrl}
+                                  readOnly
+                                  className="flex-1 rounded-lg border border-border bg-muted px-3 py-2 text-xs text-foreground font-mono"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(invite._qaInviteUrl)
+                                    addToast({
+                                      type: 'success',
+                                      title: 'Copied',
+                                      message: 'Invite link copied to clipboard',
+                                    })
+                                  }}
+                                  className="flex items-center gap-2 rounded-lg bg-gold/20 px-3 py-2 text-obsidian font-medium hover:bg-gold/30 transition-colors cursor-pointer text-sm"
+                                >
+                                  Copy
+                                </button>
+                              </div>
+                            </motion.div>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
                 </motion.div>
               )}

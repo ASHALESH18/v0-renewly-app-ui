@@ -142,6 +142,7 @@ export async function GET() {
         })),
         invites: (invites || []).map(i => ({
           id: i.id,
+          inviteId: i.id,
           invitedEmail: i.invited_email,
           status: i.status,
           expiresAt: i.expires_at,
