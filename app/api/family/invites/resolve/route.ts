@@ -4,10 +4,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { hashInviteToken, isInviteExpired } from '@/lib/family/family-invite-utils'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
 /**
  * GET /api/family/invites/resolve?token=...
  * 
@@ -17,6 +13,20 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
  */
 export async function GET(request: NextRequest) {
   try {
+    // Initialize Supabase client inside the function (not at module level)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('[family-invites-resolve] Missing Supabase env vars')
+      return NextResponse.json(
+        { error: 'Service misconfigured' },
+        { status: 500 }
+      )
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
     const token = request.nextUrl.searchParams.get('token')
 
     if (!token) {
