@@ -14,8 +14,9 @@ import { hashInviteToken, isInviteExpired } from '@/lib/family/family-invite-uti
 export async function GET(request: NextRequest) {
   try {
     // Initialize Supabase client inside the function (not at module level)
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    // These env vars are only available at runtime, not during build
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 
     if (!supabaseUrl || !supabaseServiceKey) {
       console.error('[family-invites-resolve] Missing Supabase env vars')
