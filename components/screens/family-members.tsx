@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Users, Plus, Mail, Loader2, AlertCircle, CheckCircle2, Clock, ExternalLink } from 'lucide-react'
 import { Header } from '@/components/header'
 import { PageTransition } from '@/components/motion'
+import { PremiumModal } from '@/components/premium-modal'
 import useStore from '@/lib/store'
 import { cn } from '@/lib/utils'
 
@@ -44,6 +45,11 @@ export function FamilyMembersScreen() {
   const [isLoading, setIsLoading] = useState(true)
   const [showInviteForm, setShowInviteForm] = useState(false)
   const [resendingInviteId, setResendingInviteId] = useState<string | null>(null)
+  const [isCancellingInvite, setIsCancellingInvite] = useState(false)
+  const [inviteToCancel, setInviteToCancel] = useState<{
+    id: string
+    email: string
+  } | null>(null)
   const [invitationState, setInvitationState] = useState<InvitationState>({ email: '', status: 'idle' })
 
   // Fetch family status
@@ -134,14 +140,17 @@ export function FamilyMembersScreen() {
     }
   }
 
-  const handleCancelInvite = async (inviteId: string, invitedEmail: string) => {
-    const confirmed = window.confirm(
-      'Cancel this pending invite? The old invite link will stop working.'
-    )
-    if (!confirmed) return
+  const handleCancelInvite = (inviteId: string, invitedEmail: string) => {
+    setInviteToCancel({ id: inviteId, email: invitedEmail })
+  }
+
+  const handleConfirmCancelInvite = async () => {
+    if (!inviteToCancel) return
+
+    setIsCancellingInvite(true)
 
     try {
-      const res = await fetch(`/api/family/invites/${encodeURIComponent(inviteId)}/cancel`, {
+      const res = await fetch(`/api/family/invites/${encodeURIComponent(inviteToCancel.id)}/cancel`, {
         method: 'POST',
       })
 
@@ -153,8 +162,10 @@ export function FamilyMembersScreen() {
       addToast({
         type: 'success',
         title: 'Invite cancelled',
-        message: `Invite to ${invitedEmail} has been cancelled.`,
+        message: 'The old invite link will no longer work.',
       })
+
+      setInviteToCancel(null)
 
       // Refresh family status
       const statusRes = await fetch('/api/family/status', { cache: 'no-store' })
@@ -166,8 +177,10 @@ export function FamilyMembersScreen() {
       addToast({
         type: 'error',
         title: 'Error cancelling invite',
-        message: errorMessage,
+        message: 'We could not cancel this invite. Please try again.',
       })
+    } finally {
+      setIsCancellingInvite(false)
     }
   }
 
@@ -563,6 +576,47 @@ export function FamilyMembersScreen() {
           ) : null}
         </div>
       </div>
+
+      {/* Cancel Invite Confirmation Modal */}
+      <PremiumModal
+        isOpen={inviteToCancel !== null}
+        onClose={() => !isCancellingInvite && setInviteToCancel(null)}
+        title="Cancel pending invite?"
+        size="sm"
+        showCloseButton={!isCancellingInvite}
+      >
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <p className="text-sm text-foreground">
+              This will cancel the invite for:
+            </p>
+            <p className="text-sm font-medium text-ivory">
+              {inviteToCancel?.email}
+            </p>
+          </div>
+
+          <p className="text-sm text-muted-foreground">
+            The old invite link will stop working immediately. You can send a new invite later.
+          </p>
+
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={() => setInviteToCancel(null)}
+              disabled={isCancellingInvite}
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-gold/20 text-obsidian hover:bg-gold/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Keep Invite
+            </button>
+            <button
+              onClick={handleConfirmCancelInvite}
+              disabled={isCancellingInvite}
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-red-500/20 text-red-700 hover:bg-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors dark:bg-red-900/40 dark:text-red-300 dark:hover:bg-red-900/60"
+            >
+              {isCancellingInvite ? 'Cancelling...' : 'Cancel Invite'}
+            </button>
+          </div>
+        </div>
+      </PremiumModal>
     </PageTransition>
   )
 }
