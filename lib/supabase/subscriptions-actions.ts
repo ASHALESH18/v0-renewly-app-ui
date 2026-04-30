@@ -5,9 +5,20 @@ import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
 import { canAddSubscription } from './plan-validation'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+/**
+ * Get Supabase client for subscription operations
+ * Initializes inside function calls, not at module level, to avoid build-time errors
+ */
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Missing Supabase env vars')
+  }
+
+  return createClient(supabaseUrl, supabaseServiceKey)
+}
 
 export async function createSubscription(data: {
   name: string
@@ -32,6 +43,8 @@ export async function createSubscription(data: {
           'You have reached the subscription limit for your current plan.',
       }
     }
+    
+    const supabase = getSupabaseClient()
 
     const { data: subscription, error } = await supabase
       .from('subscriptions')

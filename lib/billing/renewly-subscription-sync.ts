@@ -4,9 +4,20 @@ import { createClient } from '@supabase/supabase-js'
 import { getPlanPricing } from '@/lib/plans'
 import type { PlanType } from '@/lib/plans'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+/**
+ * Get Supabase client for sync operations
+ * Initializes inside function calls, not at module level, to avoid build-time errors
+ */
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Missing Supabase env vars')
+  }
+
+  return createClient(supabaseUrl, supabaseServiceKey)
+}
 
 /**
  * Get next monthly renewal date
@@ -32,6 +43,8 @@ export async function ensureFamilyGroupForOwner(params: {
   currentPeriodEnd?: string | null
 }): Promise<string> {
   const { ownerUserId, ownerEmail, currentPeriodStart, currentPeriodEnd } = params
+  
+  const supabase = getSupabaseClient()
 
   try {
     // Find existing active/past_due family group for owner

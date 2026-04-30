@@ -8,9 +8,20 @@ import { getPlan, getPlanPricing, type PlanType } from '@/lib/plans'
 import { isBillingConfigured } from '@/lib/billing-guards'
 import { syncRenewlyBillingSubscriptionForPlan } from '@/lib/billing/renewly-subscription-sync'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+/**
+ * Get Supabase client for billing operations
+ * Initializes inside function calls, not at module level, to avoid build-time errors
+ */
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Missing Supabase env vars')
+  }
+
+  return createClient(supabaseUrl, supabaseServiceKey)
+}
 
 /**
  * Initiate upgrade by creating a Razorpay order
@@ -27,6 +38,8 @@ export async function initiateUpgrade(planId: PlanType) {
 
     const user = await getUser()
     if (!user) throw new Error('Unauthorized')
+    
+    const supabase = getSupabaseClient()
 
     // Get user profile for email and current plan
     const { data: profile, error: profileError } = await supabase
