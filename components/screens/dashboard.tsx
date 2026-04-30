@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   CreditCard,
@@ -10,7 +10,8 @@ import {
   ChevronRight,
   Search,
   ArrowUpRight,
-  Zap
+  Zap,
+  X
 } from 'lucide-react'
 import { Header, SearchOverlay } from '@/components/header'
 import { MetricCard } from '@/components/metric-card'
@@ -167,6 +168,33 @@ export function DashboardScreen({
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [viewMode, setViewMode] = useState('cards')
+  const [familyStatus, setFamilyStatus] = useState<any>(null)
+  const [dismissedInviteId, setDismissedInviteId] = useState<string | null>(null)
+
+  // Fetch family status to show pending invite banner
+  useEffect(() => {
+    const fetchFamilyStatus = async () => {
+      try {
+        const res = await fetch('/api/family/status', { cache: 'no-store' })
+        if (res.ok) {
+          const data = await res.json()
+          setFamilyStatus(data)
+          
+          // Initialize dismissed state from sessionStorage
+          if (data.pendingInvite?.id) {
+            const dismissed = sessionStorage.getItem(`renewly:pending-invite-dismissed:${data.pendingInvite.id}`)
+            if (dismissed) {
+              setDismissedInviteId(data.pendingInvite.id)
+            }
+          }
+        }
+      } catch (error) {
+        console.error('[v0] Error fetching family status:', error)
+      }
+    }
+
+    fetchFamilyStatus()
+  }, [])
 
   const rawSubscriptions = useStore((state) => state.subscriptions)
   const subscriptions = useMemo(
@@ -274,6 +302,44 @@ export function DashboardScreen({
         results={searchResults}
         emptyMessage="No subscriptions match your search"
       />
+
+      {/* Pending Family Invite Banner */}
+      <AnimatePresence mode="wait">
+        {familyStatus?.pendingInvite && dismissedInviteId !== familyStatus.pendingInvite.id && (
+          <motion.div
+            key="family-invite-banner"
+            initial={{ opacity: 0, y: -16, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            exit={{ opacity: 0, y: -16, height: 0 }}
+            className="px-4 lg:px-6"
+          >
+            <div className="rounded-xl border border-blue-500/30 bg-gradient-to-r from-blue-500/10 to-blue-600/5 p-4 flex items-center gap-4 shadow-sm">
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-blue-900 dark:text-blue-100">You&apos;ve been invited to Renewly Family</p>
+                <p className="text-sm text-blue-800 dark:text-blue-300 mt-1">Accept your invite to join a Family plan and unlock shared Renewly access.</p>
+              </div>
+              <div className="flex gap-2 flex-shrink-0">
+                <button
+                  onClick={() => onNavigateTab?.('family')}
+                  className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors cursor-pointer"
+                >
+                  Review Invite
+                </button>
+                <button
+                  onClick={() => {
+                    setDismissedInviteId(familyStatus.pendingInvite.id)
+                    sessionStorage.setItem(`renewly:pending-invite-dismissed:${familyStatus.pendingInvite.id}`, 'true')
+                  }}
+                  className="rounded-lg p-1.5 hover:bg-blue-600/20 transition-colors cursor-pointer"
+                  aria-label="Dismiss banner"
+                >
+                  <X className="h-4 w-4 text-blue-700 dark:text-blue-300" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="px-4 lg:px-6 space-y-6 pb-8">
         <div className="rounded-2xl overflow-hidden relative">
