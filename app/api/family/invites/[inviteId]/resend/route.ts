@@ -55,8 +55,6 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid invite ID' }, { status: 400 })
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
     // Debug logging in non-production
     if (process.env.VERCEL_ENV !== 'production') {
       console.info('[family-invites] action invite id', {

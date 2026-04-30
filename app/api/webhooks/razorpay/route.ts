@@ -4,10 +4,6 @@ import { createClient } from '@supabase/supabase-js'
 import { isBillingConfigured } from '@/lib/billing-guards'
 import { syncRenewlyBillingSubscriptionForPlan } from '@/lib/billing/renewly-subscription-sync'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
 /**
  * Verify Razorpay webhook signature
  */
@@ -32,6 +28,21 @@ function verifyWebhookSignature(body: string, signature: string): boolean {
  */
 export async function POST(req: NextRequest) {
   try {
+    // Initialize Supabase client inside the function (not at module level)
+    // These env vars are only available at runtime, not during build
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('[razorpay-webhook] Missing Supabase env vars')
+      return NextResponse.json(
+        { error: 'Service misconfigured' },
+        { status: 500 }
+      )
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
     if (!isBillingConfigured()) {
       return NextResponse.json(
         { error: 'Billing not configured' },

@@ -6,10 +6,6 @@ import { createClient } from '@supabase/supabase-js'
 import { syncRenewlyBillingSubscriptionForPlan } from '@/lib/billing/renewly-subscription-sync'
 import { safeCacheDelete } from '@/lib/redis'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
 /**
  * QA-only endpoint to resync Renewly subscription for current plan
  * Useful when profile.plan is Pro/Family but Renewly subscription row is missing
@@ -22,6 +18,21 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
  */
 export async function POST(request: NextRequest) {
   try {
+    // Initialize Supabase client inside the function (not at module level)
+    // These env vars are only available at runtime, not during build
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('[resync-renewly-subscription] Missing Supabase env vars')
+      return NextResponse.json(
+        { error: 'Service misconfigured' },
+        { status: 500 }
+      )
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
     // Check if QA override is enabled
     const qaEnabled = process.env.QA_PLAN_OVERRIDE_ENABLED === 'true'
     const vercelEnv = process.env.VERCEL_ENV || 'development'
