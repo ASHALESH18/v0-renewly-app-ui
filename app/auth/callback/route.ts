@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { getSafeNextPath } from '@/lib/auth/redirect-utils'
 
 function isEmailVerificationType(type?: string | null) {
   return type === 'signup' || type === 'email'
@@ -26,6 +27,7 @@ export async function GET(request: NextRequest) {
 
   const code = searchParams.get('code')
   const next = searchParams.get('next')
+  const safeNext = getSafeNextPath(next)
   const error = searchParams.get('error')
   const errorDescription = searchParams.get('error_description')
   const type = searchParams.get('type')
@@ -56,14 +58,14 @@ export async function GET(request: NextRequest) {
 
     if (!verifyError) {
       if (isEmailVerificationType(type)) {
-        return NextResponse.redirect(new URL('/auth/verified', origin))
+        return NextResponse.redirect(new URL(`/auth/verified?next=${encodeURIComponent(safeNext)}`, origin))
       }
 
       if (type === 'recovery') {
         return NextResponse.redirect(new URL('/auth/reset-password', origin))
       }
 
-      return NextResponse.redirect(new URL(next || '/app/dashboard', origin))
+      return NextResponse.redirect(new URL(safeNext, origin))
     }
 
     if (isEmailVerificationType(type) && looksLikeAlreadyUsedOrPrefetched(verifyError.message)) {
@@ -84,14 +86,14 @@ export async function GET(request: NextRequest) {
 
     if (!exchangeError) {
       if (isEmailVerificationType(type)) {
-        return NextResponse.redirect(new URL('/auth/verified', origin))
+        return NextResponse.redirect(new URL(`/auth/verified?next=${encodeURIComponent(safeNext)}`, origin))
       }
 
       if (type === 'recovery') {
         return NextResponse.redirect(new URL('/auth/reset-password', origin))
       }
 
-      return NextResponse.redirect(new URL(next || '/app/dashboard', origin))
+      return NextResponse.redirect(new URL(safeNext, origin))
     }
 
     if (isEmailVerificationType(type) && looksLikeAlreadyUsedOrPrefetched(exchangeError.message)) {

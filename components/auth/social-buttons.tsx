@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { getSafeNextPath } from '@/lib/auth/redirect-utils'
 import { Loader2 } from 'lucide-react'
 
 type Provider = 'google' | 'apple'
@@ -44,6 +46,10 @@ const socialProviders: { name: string; provider: Provider; icon: JSX.Element }[]
 ]
 
 export function SocialButtons() {
+  const searchParams = useSearchParams()
+  const nextParam = searchParams.get('next')
+  const safeNext = getSafeNextPath(nextParam)
+  
   const [loading, setLoading] = useState<Provider | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -53,10 +59,15 @@ export function SocialButtons() {
 
     try {
       const supabase = createClient()
+      
+      // Build callback URL with next parameter
+      const callbackUrl = new URL('/auth/callback', window.location.origin)
+      callbackUrl.searchParams.set('next', safeNext)
+      
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: callbackUrl.toString(),
         },
       })
 

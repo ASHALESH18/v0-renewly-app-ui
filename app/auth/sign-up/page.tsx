@@ -11,11 +11,13 @@ import { SocialButtons } from '@/components/auth/social-buttons'
 import { AuthSkeleton } from '@/components/skeletons'
 import { createClient } from '@/lib/supabase/client'
 import { getURL } from '@/lib/supabase/url'
+import { getSafeNextPath } from '@/lib/auth/redirect-utils'
 
 function SignUpPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const next = searchParams.get('next') || '/app'
+  const nextParam = searchParams.get('next')
+  const safeNext = getSafeNextPath(nextParam)
 
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -83,7 +85,7 @@ function SignUpPageContent() {
           data: {
             name: formData.name,
           },
-          emailRedirectTo: getURL('auth/callback?next=/app'),
+          emailRedirectTo: getURL(`auth/callback?next=${encodeURIComponent(safeNext)}`),
         },
       })
 
@@ -101,8 +103,8 @@ function SignUpPageContent() {
         // Do NOT auto-redirect - let user click the email link
         // The callback will handle navigation when verification completes
       } else if (data.session) {
-        // Session created immediately - go to app
-        router.replace('/app')
+        // Session created immediately - go to safeNext
+        router.replace(safeNext)
         router.refresh()
       }
     } catch (err) {
@@ -368,7 +370,10 @@ function SignUpPageContent() {
         {/* Sign in link */}
         <p className="text-center text-sm text-platinum pt-4">
           Already have an account?{' '}
-          <Link href="/auth/sign-in" className="text-gold hover:text-gold/80 font-medium transition-colors">
+          <Link 
+            href={`/auth/sign-in?next=${encodeURIComponent(safeNext)}`}
+            className="text-gold hover:text-gold/80 font-medium transition-colors"
+          >
             Sign in
           </Link>
         </p>

@@ -6,10 +6,13 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CheckCircle, ArrowRight, Sparkles } from 'lucide-react'
 import { AuthLayout } from '@/components/auth/auth-layout'
+import { getSafeNextPath } from '@/lib/auth/redirect-utils'
 
 export default function EmailVerifiedPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const nextParam = searchParams.get('next')
+  const safeNext = getSafeNextPath(nextParam)
   const alreadyUsed = searchParams.get('already') === '1'
   const [countdown, setCountdown] = useState(5)
 
@@ -18,7 +21,7 @@ export default function EmailVerifiedPage() {
       setCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(timer)
-          router.push('/auth/sign-in')
+          router.push(`/auth/sign-in?next=${encodeURIComponent(safeNext)}`)
           return 0
         }
         return prev - 1
@@ -26,7 +29,7 @@ export default function EmailVerifiedPage() {
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [router])
+  }, [router, safeNext])
 
   return (
     <AuthLayout
@@ -94,7 +97,7 @@ export default function EmailVerifiedPage() {
           transition={{ delay: 0.4 }}
           className="space-y-4"
         >
-          <Link href="/auth/sign-in">
+          <Link href={`/auth/sign-in?next=${encodeURIComponent(safeNext)}`}>
             <motion.button
               whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(199, 163, 106, 0.2)' }}
               whileTap={{ scale: 0.98 }}
