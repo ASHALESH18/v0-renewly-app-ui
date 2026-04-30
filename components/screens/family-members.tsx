@@ -49,6 +49,7 @@ export function FamilyMembersScreen() {
     id: string
     email: string
   } | null>(null)
+  const [isAcceptingDirectInvite, setIsAcceptingDirectInvite] = useState(false)
   const [invitationState, setInvitationState] = useState<InvitationState>({ email: '', status: 'idle' })
 
   // Fetch family status
@@ -242,6 +243,46 @@ export function FamilyMembersScreen() {
     }
   }
 
+  const handleAcceptDirectInvite = async () => {
+    if (!familyStatus?.pendingInvite) return
+
+    setIsAcceptingDirectInvite(true)
+
+    try {
+      const res = await fetch('/api/family/invites/accept-direct', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inviteId: familyStatus.pendingInvite.id }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to accept invite')
+      }
+
+      addToast({
+        type: 'success',
+        title: 'Invite accepted',
+        message: 'You&apos;ve been added to the Renewly Family plan.',
+      })
+
+      // Redirect to dashboard to show family status
+      setTimeout(() => {
+        window.location.href = '/app/dashboard'
+      }, 500)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+      addToast({
+        type: 'error',
+        title: 'Error accepting invite',
+        message: errorMessage,
+      })
+    } finally {
+      setIsAcceptingDirectInvite(false)
+    }
+  }
+
   // Safe array access
   const members = Array.isArray(familyStatus?.members) ? familyStatus.members : []
   const invites = Array.isArray(familyStatus?.invites) ? familyStatus.invites : []
@@ -297,18 +338,48 @@ export function FamilyMembersScreen() {
                 <Mail className="h-6 w-6 flex-shrink-0 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div className="flex-1">
                   <h2 className="text-xl font-semibold text-blue-900 dark:text-blue-100">You&apos;ve Been Invited to Renewly Family</h2>
-                  <p className="mt-2 text-sm text-blue-800 dark:text-blue-200">
-                    Check your email for an invitation link to accept this Family group invitation.
-                  </p>
+                  
                   {familyStatus?.pendingInvite && (
-                    <div className="mt-4 space-y-2 text-sm">
-                      <p className="text-blue-700 dark:text-blue-300">
-                        <span className="font-medium">Email:</span> {familyStatus.pendingInvite.invitedEmail}
-                      </p>
-                      <p className="text-blue-700 dark:text-blue-300">
-                        <span className="font-medium">Expires:</span> {new Date(familyStatus.pendingInvite.expiresAt).toLocaleDateString()}
+                    <div className="mt-4 space-y-4">
+                      <div className="space-y-2 text-sm">
+                        <p className="text-blue-700 dark:text-blue-300">
+                          <span className="font-medium">Email:</span> {familyStatus.pendingInvite.invitedEmail}
+                        </p>
+                        <p className="text-blue-700 dark:text-blue-300">
+                          <span className="font-medium">Expires:</span> {new Date(familyStatus.pendingInvite.expiresAt).toLocaleDateString()}
+                        </p>
+                      </div>
+
+                      {/* Accept Invite Button */}
+                      <button
+                        onClick={handleAcceptDirectInvite}
+                        disabled={isAcceptingDirectInvite}
+                        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {isAcceptingDirectInvite ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Accepting...
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="h-4 w-4" />
+                            Accept Invite
+                          </>
+                        )}
+                      </button>
+
+                      {/* Email link fallback */}
+                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-3">
+                        Or check your email for the invite link
                       </p>
                     </div>
+                  )}
+
+                  {!familyStatus?.pendingInvite && (
+                    <p className="mt-2 text-sm text-blue-800 dark:text-blue-200">
+                      Check your email for an invitation link to accept this Family group invitation.
+                    </p>
                   )}
                 </div>
               </div>
