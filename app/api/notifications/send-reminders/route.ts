@@ -5,10 +5,6 @@ import { createClient } from '@supabase/supabase-js'
 import { sendSubscriptionReminderEmail, formatSubscriptionMoney } from '@/lib/email/resend'
 import { getDaysUntilRenewal } from '@/lib/subscription-math'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
 /**
  * POST /api/notifications/send-reminders
  * 
@@ -23,6 +19,21 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
  */
 export async function POST(request: NextRequest) {
   try {
+    // Initialize Supabase client inside the function (not at module level)
+    // These env vars are only available at runtime, not during build
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('[send-reminders] Missing Supabase env vars')
+      return NextResponse.json(
+        { error: 'Service misconfigured' },
+        { status: 500 }
+      )
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
     // Verify CRON_SECRET
     const cronSecret = request.headers.get('Authorization')?.replace('Bearer ', '')
     const expectedSecret = process.env.CRON_SECRET

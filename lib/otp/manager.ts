@@ -2,9 +2,20 @@ import { createClient } from '@supabase/supabase-js'
 import { sendOTPSMS, formatPhoneNumber, isValidPhoneNumber, isTwilioConfigured } from '@/lib/sms/twilio'
 import crypto from 'crypto'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+/**
+ * Get Supabase client for OTP operations
+ * Initializes inside function calls, not at module level, to avoid build-time errors
+ */
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Missing Supabase env vars')
+  }
+
+  return createClient(supabaseUrl, supabaseServiceKey)
+}
 
 // OTP Configuration
 const OTP_LENGTH = 6
@@ -37,6 +48,7 @@ async function canRequestNewOTP(userId: string, phoneNumber: string): Promise<{
   canRequest: boolean
   secondsRemaining?: number
 }> {
+  const supabase = getSupabaseClient()
   const { data: existingOTP } = await supabase
     .from('otp_codes')
     .select('created_at')
@@ -106,6 +118,8 @@ export async function sendPhoneOTP(userId: string, phoneNumber: string): Promise
     const code = generateOTP()
     const hashedCode = hashOTP(code)
     const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000)
+    
+    const supabase = getSupabaseClient()
 
     // Invalidate any existing OTPs for this user/phone by marking them as verified
     await supabase
@@ -165,6 +179,8 @@ export async function verifyPhoneOTP(userId: string, phoneNumber: string, code: 
   try {
     const formattedPhone = formatPhoneNumber(phoneNumber)
     const hashedCode = hashOTP(code)
+    
+    const supabase = getSupabaseClient()
 
     // Get the latest OTP for this user/phone
     const { data: otpRecord, error: fetchError } = await supabase

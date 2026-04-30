@@ -7,10 +7,6 @@ import { hashInviteToken, isInviteExpired, normalizeInviteEmail } from '@/lib/fa
 import { syncRenewlyFamilyMemberSubscription } from '@/lib/billing/renewly-subscription-sync'
 import { revalidateTag } from 'next/cache'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
 /**
  * POST /api/family/invites/accept
  * 
@@ -32,6 +28,21 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
  */
 export async function POST(request: NextRequest) {
   try {
+    // Initialize Supabase client inside the function (not at module level)
+    // These env vars are only available at runtime, not during build
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('[family-invites-accept] Missing Supabase env vars')
+      return NextResponse.json(
+        { error: 'Service misconfigured' },
+        { status: 500 }
+      )
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
     // Authenticate user
     const user = await getUser()
     if (!user) {

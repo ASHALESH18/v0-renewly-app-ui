@@ -7,10 +7,6 @@ import { invalidateCache } from '@/lib/redis'
 import { isRenewlyManagedSubscription } from '@/lib/billing/managed-subscription-utils'
 import { getRenewlyManagedPlan, getSubscriptionRenewalDate } from '@/lib/billing/billing-lifecycle-utils'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
 /**
  * QA-only endpoint to schedule period-end billing changes (cancel/downgrade)
  * This is NOT a production feature and must be disabled in production
@@ -24,6 +20,21 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
  */
 export async function POST(request: NextRequest) {
   try {
+    // Initialize Supabase client inside the function (not at module level)
+    // These env vars are only available at runtime, not during build
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('[schedule-change] Missing Supabase env vars')
+      return NextResponse.json(
+        { error: 'Service misconfigured' },
+        { status: 500 }
+      )
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
     // Check if QA override is enabled
     const qaEnabled = process.env.QA_PLAN_OVERRIDE_ENABLED === 'true'
     const vercelEnv = process.env.VERCEL_ENV || 'development'

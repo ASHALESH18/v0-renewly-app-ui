@@ -5,10 +5,6 @@ import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
 import { FAMILY_INCLUDED_MEMBER_COUNT } from '@/lib/family/family-config'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
 /**
  * GET /api/family/status
  * 
@@ -22,6 +18,21 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
  */
 export async function GET() {
   try {
+    // Initialize Supabase client inside the function (not at module level)
+    // These env vars are only available at runtime, not during build
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('[family-status] Missing Supabase env vars')
+      return NextResponse.json(
+        { error: 'Service misconfigured' },
+        { status: 500 }
+      )
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
     // Authenticate user
     const user = await getUser()
     if (!user) {
@@ -142,6 +153,7 @@ export async function GET() {
         })),
         invites: (invites || []).map(i => ({
           id: i.id,
+          inviteId: i.id,
           invitedEmail: i.invited_email,
           status: i.status,
           expiresAt: i.expires_at,
