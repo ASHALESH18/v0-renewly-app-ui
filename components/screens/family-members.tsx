@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Users, Plus, Mail, Loader2, AlertCircle, CheckCircle2, Clock, ExternalLink, X } from 'lucide-react'
+import { Users, Plus, Mail, Loader2, AlertCircle, CheckCircle2, Clock, ExternalLink, X, RefreshCw } from 'lucide-react'
 import { Header } from '@/components/header'
 import { PageTransition } from '@/components/motion'
 import useStore from '@/lib/store'
@@ -50,6 +50,7 @@ export function FamilyMembersScreen() {
     email: string
   } | null>(null)
   const [isAcceptingDirectInvite, setIsAcceptingDirectInvite] = useState(false)
+  const [isResyncingFamily, setIsResyncingFamily] = useState(false)
   const [invitationState, setInvitationState] = useState<InvitationState>({ email: '', status: 'idle' })
 
   // Fetch family status
@@ -184,62 +185,39 @@ export function FamilyMembersScreen() {
     }
   }
 
-  const handleResendInvite = async (inviteId: string, invitedEmail: string) => {
-    setResendingInviteId(inviteId)
+  const handleResyncFamily = async () => {
+    setIsResyncingFamily(true)
 
     try {
-      const res = await fetch(`/api/family/invites/${encodeURIComponent(inviteId)}/resend`, {
+      const res = await fetch('/api/family/member/resync-subscription', {
         method: 'POST',
       })
 
-      const data = await res.json()
-
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to resend invite')
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to resync Family access')
       }
 
-      if (data.emailSent) {
-        addToast({
-          type: 'success',
-          title: 'Invite resent',
-          message: `Invite resent to ${invitedEmail}.`,
-        })
-      } else if (data.inviteUrl) {
-        addToast({
-          type: 'info',
-          title: 'QA invite link ready',
-          message: 'Email is not configured in Preview. Copy the QA invite link below.',
-        })
-      }
+      addToast({
+        type: 'success',
+        title: 'Family access refreshed',
+        message: 'Your Renewly Family subscription has been updated. Open Dashboard to see your card.',
+      })
 
       // Refresh family status
       const statusRes = await fetch('/api/family/status', { cache: 'no-store' })
       if (statusRes.ok) {
         setFamilyStatus(await statusRes.json())
       }
-
-      // Store resend URL for UI display if needed
-      if (data.inviteUrl && !data.emailSent) {
-        // Find the invite and update local state with URL
-        setFamilyStatus((prev) => {
-          if (!prev) return prev
-          return {
-            ...prev,
-            invites: prev.invites.map((inv) =>
-              inv.id === inviteId ? { ...inv, _qaInviteUrl: data.inviteUrl } : inv
-            ),
-          }
-        })
-      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred'
       addToast({
         type: 'error',
-        title: 'Error resending invite',
+        title: 'Error refreshing Family access',
         message: errorMessage,
       })
     } finally {
-      setResendingInviteId(null)
+      setIsResyncingFamily(false)
     }
   }
 
@@ -399,13 +377,31 @@ export function FamilyMembersScreen() {
                     You are a member of an existing Family group. Contact the family owner to manage group settings.
                   </p>
                   {familyStatus?.membership && (
-                    <div className="mt-4 space-y-2 text-sm">
+                    <div className="mt-4 space-y-3 text-sm">
                       <p className="text-emerald-700 dark:text-emerald-300">
                         <span className="font-medium">Role:</span> Member
                       </p>
                       <p className="text-emerald-700 dark:text-emerald-300">
                         <span className="font-medium">Seat Type:</span> {familyStatus.membership.seatType === 'included' ? 'Included' : 'Extra'}
                       </p>
+                      {/* Refresh Family Access Button */}
+                      <button
+                        onClick={handleResyncFamily}
+                        disabled={isResyncingFamily}
+                        className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-2"
+                      >
+                        {isResyncingFamily ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            Refreshing...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="h-3.5 w-3.5" />
+                            Refresh Family Access
+                          </>
+                        )}
+                      </button>
                     </div>
                   )}
                 </div>

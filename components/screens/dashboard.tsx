@@ -11,7 +11,8 @@ import {
   Search,
   ArrowUpRight,
   Zap,
-  X
+  X,
+  Users
 } from 'lucide-react'
 import { Header, SearchOverlay } from '@/components/header'
 import { MetricCard } from '@/components/metric-card'
@@ -554,6 +555,17 @@ export function DashboardScreen({
             index={3}
             variant="emerald"
           />
+          {familyStatus?.membership?.role === 'member' && (
+            <MetricCard
+              title="Renewly Family"
+              value="Member"
+              suffix="Included"
+              icon={Users}
+              iconColor="#8B5CF6"
+              index={4}
+              variant="violet"
+            />
+          )}
         </StaggerList>
 
         <MotionSection>

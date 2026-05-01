@@ -5,6 +5,7 @@ import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
 import { normalizeInviteEmail, isInviteExpired } from '@/lib/family/family-invite-utils'
 import { syncRenewlyFamilyMemberSubscription } from '@/lib/billing/renewly-subscription-sync'
+import { invalidateCache } from '@/lib/redis'
 import { revalidateTag } from 'next/cache'
 
 /**
@@ -255,6 +256,7 @@ export async function POST(request: Request) {
     }
 
     // Sync Renewly Family subscription as covered_by_family
+    let syncStatus: 'completed' | 'failed' = 'failed'
     try {
       await syncRenewlyFamilyMemberSubscription({
         memberUserId: user.id,
@@ -262,17 +264,22 @@ export async function POST(request: Request) {
         familyGroupId: familyGroup.id,
         currentPeriodEnd: familyGroup.current_period_end,
       })
+      syncStatus = 'completed'
     } catch (syncError) {
       console.error('[accept-direct] Sync error:', syncError)
-      // Non-blocking: sync error doesn't prevent acceptance
+      // Non-blocking: sync error doesn't prevent acceptance, but we log it for debugging
     }
 
-    // Invalidate caches
+    // Invalidate Redis cache for member subscriptions
+    await invalidateCache(`subscriptions:${user.id}`)
+
+    // Invalidate Next.js cache tags
     revalidateTag(`subscriptions:${user.id}`)
     revalidateTag('profile')
 
     return NextResponse.json({
       success: true,
+      sync: syncStatus,
       message: 'Invite accepted',
     })
   } catch (error) {

@@ -135,17 +135,44 @@ export function SettingsScreen() {
   const updateNotificationSettings = useStore((state) => state.updateNotificationSettings)
   const setUserProfile = useStore((state) => state.setUserProfile)
 
+  // Family status for member/owner distinction
+  const [familyStatus, setFamilyStatus] = useState<any>(null)
+
   // Track client-side mounting to prevent hydration mismatch
   const [isMounted, setIsMounted] = useState(false)
   useEffect(() => {
     setIsMounted(true)
   }, [])
 
+  // Fetch family status to check if user is owner or member
+  useEffect(() => {
+    const fetchFamilyStatus = async () => {
+      try {
+        const res = await fetch('/api/family/status')
+        if (res.ok) {
+          const data = await res.json()
+          setFamilyStatus(data)
+        }
+      } catch (error) {
+        console.error('[v0] Error fetching family status:', error)
+      }
+    }
+
+    if (isMounted) {
+      fetchFamilyStatus()
+    }
+  }, [isMounted])
+
   // Check if QA mode is enabled (production-safe check)
   const isQAMode = useMemo(() => {
     if (typeof window === 'undefined') return false
     return process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_QA_ENABLED !== 'false'
   }, [])
+
+  // Determine if user is a Family member (not owner)
+  const isFamilyMember = useMemo(() => {
+    return userProfile?.plan === 'family' && familyStatus?.membership?.role === 'member'
+  }, [userProfile?.plan, familyStatus?.membership?.role])
 
   // Open profile sheet if coming from dropdown
   useEffect(() => {
@@ -917,87 +944,143 @@ export function SettingsScreen() {
       <SettingsSheet
         isOpen={activeSheet === 'billing'}
         onClose={() => setActiveSheet(null)}
-        title="Billing & Plan"
+        title={isFamilyMember ? 'Family Access' : 'Billing & Plan'}
       >
         <div className="space-y-6">
-          {/* Current Plan Display */}
-          <div className="p-4 rounded-xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
-            <p className="text-sm text-muted-foreground">Current Plan</p>
-            <p className="text-2xl font-semibold text-gold mt-1">{planName}</p>
-            {isPremium && (
-              <p className="text-xs text-muted-foreground mt-2">Your subscription is active</p>
-            )}
-          </div>
-
-          {/* Free Plan - Show Upgrade CTA */}
-          {!isPremium && (
+          {/* Family Member - Special UI */}
+          {isFamilyMember ? (
             <>
+              {/* Current Plan Display */}
+              <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20">
+                <p className="text-sm text-muted-foreground">Status</p>
+                <p className="text-2xl font-semibold text-blue-600 dark:text-blue-400 mt-1">Included in Family</p>
+                <p className="text-xs text-muted-foreground mt-2">You are not paying for this subscription</p>
+              </div>
+
+              {/* Family Member Description */}
               <p className="text-sm text-muted-foreground">
-                Upgrade to Pro or Family to unlock advanced features including analytics, leak detection, and more.
+                You are included in a Renewly Family plan. You are not the billing owner, so there is no paid subscription to cancel here.
               </p>
-              <button
-                onClick={handleChangePlan}
-                className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
-              >
-                View Upgrade Options
-              </button>
-            </>
-          )}
 
-          {/* Premium Plans - Show Manage Plan & Cancel Plan */}
-          {isPremium && userProfile?.plan !== 'enterprise' && (
-            <>
+              {/* Period End Info */}
+              {familyStatus?.familyGroup?.currentPeriodEnd && (
+                <div className="p-4 rounded-xl bg-muted/50 border border-border">
+                  <p className="text-xs font-medium text-foreground mb-1">Your Family access expires</p>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(familyStatus.familyGroup.currentPeriodEnd).toLocaleDateString()}, unless the owner removes you or the plan ends.
+                  </p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
               <div className="space-y-3 pt-2">
                 <button
-                  onClick={handleChangePlan}
+                  onClick={() => {
+                    window.location.href = '/app/family'
+                    setActiveSheet(null)
+                  }}
+                  className="w-full px-4 py-3 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium hover:bg-blue-500/20 border border-blue-500/30 transition-colors cursor-pointer"
+                >
+                  View Family Members
+                </button>
+                <button
+                  onClick={() => {
+                    window.location.href = '/app/upgrade'
+                    setActiveSheet(null)
+                  }}
                   className="w-full px-4 py-3 rounded-xl bg-gold/10 text-gold font-medium hover:bg-gold/20 border border-gold/30 transition-colors cursor-pointer"
                 >
-                  Change Plan
+                  View Your Own Plans
                 </button>
-              <button
-                onClick={() => {
-                  setActiveSheet(null)
-                  // Use requestAnimationFrame to ensure sheet closes before modal opens
-                  requestAnimationFrame(() => setShowCancelConfirmation(true))
-                }}
-                className="w-full px-4 py-3 rounded-xl bg-red-500/10 text-red-600 font-medium hover:bg-red-500/20 border border-red-500/30 transition-colors cursor-pointer"
-              >
-                Cancel Plan
-              </button>
+              </div>
+
+              <p className="text-xs text-muted-foreground text-center pt-2">
+                Only the Family owner can cancel the Family plan billing.
+              </p>
+            </>
+          ) : (
+            /* Owner or Non-Family - Original UI */
+            <>
+              {/* Current Plan Display */}
+              <div className="p-4 rounded-xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
+                <p className="text-sm text-muted-foreground">Current Plan</p>
+                <p className="text-2xl font-semibold text-gold mt-1">{planName}</p>
+                {isPremium && (
+                  <p className="text-xs text-muted-foreground mt-2">Your subscription is active</p>
+                )}
+              </div>
+
+              {/* Free Plan - Show Upgrade CTA */}
+              {!isPremium && (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    Upgrade to Pro or Family to unlock advanced features including analytics, leak detection, and more.
+                  </p>
+                  <button
+                    onClick={handleChangePlan}
+                    className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
+                  >
+                    View Upgrade Options
+                  </button>
+                </>
+              )}
+
+              {/* Premium Plans - Show Manage Plan & Cancel Plan */}
+              {isPremium && userProfile?.plan !== 'enterprise' && (
+                <>
+                  <div className="space-y-3 pt-2">
+                    <button
+                      onClick={handleChangePlan}
+                      className="w-full px-4 py-3 rounded-xl bg-gold/10 text-gold font-medium hover:bg-gold/20 border border-gold/30 transition-colors cursor-pointer"
+                    >
+                      Change Plan
+                    </button>
+                  <button
+                    onClick={() => {
+                      setActiveSheet(null)
+                      // Use requestAnimationFrame to ensure sheet closes before modal opens
+                      requestAnimationFrame(() => setShowCancelConfirmation(true))
+                    }}
+                    className="w-full px-4 py-3 rounded-xl bg-red-500/10 text-red-600 font-medium hover:bg-red-500/20 border border-red-500/30 transition-colors cursor-pointer"
+                  >
+                    Cancel Plan
+                  </button>
+                  </div>
+                </>
+              )}
+
+              {/* Enterprise Plan */}
+              {userProfile?.plan === 'enterprise' && (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    For changes to your enterprise subscription, please contact our sales team.
+                  </p>
+                  <button
+                    onClick={() => {
+                      window.location.href = 'mailto:contact@renewly.in'
+                    }}
+                    className="w-full py-3 rounded-xl bg-gold/10 text-gold font-medium hover:bg-gold/20 border border-gold/30 transition-colors cursor-pointer"
+                  >
+                    Contact Sales
+                  </button>
+                </>
+              )}
+
+              {/* Support Section */}
+              <div className="p-4 rounded-xl bg-muted space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">Questions about billing?</p>
+                <p className="text-sm text-foreground">Contact our support team for assistance with your account or subscription.</p>
+                <button
+                  onClick={() => {
+                    window.location.href = 'mailto:contact@renewly.in'
+                  }}
+                  className="text-sm text-gold hover:text-gold/80 font-medium transition-colors cursor-pointer"
+                >
+                  contact@renewly.in
+                </button>
               </div>
             </>
           )}
-
-          {/* Enterprise Plan */}
-          {userProfile?.plan === 'enterprise' && (
-            <>
-              <p className="text-sm text-muted-foreground">
-                For changes to your enterprise subscription, please contact our sales team.
-              </p>
-              <button
-                onClick={() => {
-                  window.location.href = 'mailto:contact@renewly.in'
-                }}
-                className="w-full py-3 rounded-xl bg-gold/10 text-gold font-medium hover:bg-gold/20 border border-gold/30 transition-colors cursor-pointer"
-              >
-                Contact Sales
-              </button>
-            </>
-          )}
-
-          {/* Support Section */}
-          <div className="p-4 rounded-xl bg-muted space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Questions about billing?</p>
-            <p className="text-sm text-foreground">Contact our support team for assistance with your account or subscription.</p>
-            <button
-              onClick={() => {
-                window.location.href = 'mailto:contact@renewly.in'
-              }}
-              className="text-sm text-gold hover:text-gold/80 font-medium transition-colors cursor-pointer"
-            >
-              contact@renewly.in
-            </button>
-          </div>
         </div>
       </SettingsSheet>
 
