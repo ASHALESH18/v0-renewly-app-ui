@@ -286,6 +286,11 @@ export function FamilyMembersScreen() {
     }
   }
 
+  const handleManualRefresh = async () => {
+    setIsRefreshingStatus(true)
+    await refreshFamilyStatus()
+  }
+
   const handleResendInvite = async (inviteId: string, invitedEmail: string) => {
     setResendingInviteId(inviteId)
 
@@ -320,8 +325,8 @@ export function FamilyMembersScreen() {
         })
       }
 
-      // Refresh family status after resend
-      await refreshFamilyStatus({ silent: true })
+      // Refresh family status after resend (fire and forget)
+      refreshFamilyStatus({ silent: true })
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred'
       addToast({
@@ -504,19 +509,16 @@ export function FamilyMembersScreen() {
                       <Plus className="h-4 w-4" />
                       Invite Member
                     </button>
-                    <button
-                      onClick={() => {
-                        setIsRefreshingStatus(true)
-                        refreshFamilyStatus().finally(() => setIsRefreshingStatus(false))
-                      }}
-                      disabled={isRefreshingStatus}
-                      title="Refresh family members and invites"
-                      className="flex items-center gap-2 rounded-lg bg-slate-700 px-3 py-2 text-sm text-slate-100 font-medium hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                    >
-                      <RefreshCw className={`h-4 w-4 ${isRefreshingStatus ? 'animate-spin' : ''}`} />
-                      {!isRefreshingStatus && 'Refresh'}
-                    </button>
                   )}
+                  <button
+                    onClick={handleManualRefresh}
+                    disabled={isRefreshingStatus}
+                    title="Refresh family members and invites"
+                    className="flex items-center gap-2 rounded-lg bg-slate-700 px-3 py-2 text-sm text-slate-100 font-medium hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isRefreshingStatus ? 'animate-spin' : ''}`} />
+                    {!isRefreshingStatus && 'Refresh'}
+                  </button>
                 </div>
 
                 {/* Invite Form */}
