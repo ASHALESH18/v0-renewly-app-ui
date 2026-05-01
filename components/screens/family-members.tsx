@@ -44,6 +44,7 @@ export function FamilyMembersScreen() {
   const [isLoading, setIsLoading] = useState(true)
   const [showInviteForm, setShowInviteForm] = useState(false)
   const [resendingInviteId, setResendingInviteId] = useState<string | null>(null)
+  const [resendResults, setResendResults] = useState<Record<string, { emailSent: boolean; qaInviteUrl?: string }>>({})
   const [isCancellingInvite, setIsCancellingInvite] = useState(false)
   const [inviteToCancel, setInviteToCancel] = useState<{
     id: string
@@ -51,32 +52,69 @@ export function FamilyMembersScreen() {
   } | null>(null)
   const [isAcceptingDirectInvite, setIsAcceptingDirectInvite] = useState(false)
   const [isResyncingFamily, setIsResyncingFamily] = useState(false)
+  const [isRefreshingStatus, setIsRefreshingStatus] = useState(false)
   const [invitationState, setInvitationState] = useState<InvitationState>({ email: '', status: 'idle' })
 
-  // Fetch family status
-  useEffect(() => {
-    const fetchFamilyStatus = async () => {
-      try {
-        const res = await fetch('/api/family/status')
-        if (!res.ok) {
-          throw new Error('Failed to fetch family status')
-        }
-        const data = await res.json()
-        setFamilyStatus(data)
-      } catch (error) {
-        console.error('[v0] Error fetching family status:', error)
+  // Helper to refresh family status
+  const refreshFamilyStatus = async (options?: { silent?: boolean }) => {
+    try {
+      const res = await fetch('/api/family/status', { cache: 'no-store' })
+      if (!res.ok) throw new Error('Failed to fetch family status')
+      const data = await res.json()
+      setFamilyStatus(data)
+    } catch (error) {
+      if (!options?.silent) {
+        console.error('[v0] Error refreshing family status:', error)
         addToast({
           type: 'error',
           title: 'Error',
           message: 'Failed to load family members. Please try again.',
         })
-      } finally {
-        setIsLoading(false)
+      }
+    } finally {
+      setIsLoading(false)
+      setIsRefreshingStatus(false)
+    }
+  }
+
+  // Fetch family status on mount
+  useEffect(() => {
+    refreshFamilyStatus()
+  }, [addToast])
+
+  // Auto-refresh for owners
+  useEffect(() => {
+    if (!familyStatus?.isFamilyOwner) return
+
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        refreshFamilyStatus({ silent: true })
+      }
+    }, 15000)
+
+    return () => window.clearInterval(interval)
+  }, [familyStatus?.isFamilyOwner])
+
+  // Refresh on focus/visibility
+  useEffect(() => {
+    const handleFocus = () => {
+      refreshFamilyStatus({ silent: true })
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshFamilyStatus({ silent: true })
       }
     }
 
-    fetchFamilyStatus()
-  }, [addToast])
+    window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [])
 
   const handleSendInvite = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -120,10 +158,7 @@ export function FamilyMembersScreen() {
       })
 
       // Refresh family status
-      const statusRes = await fetch('/api/family/status')
-      if (statusRes.ok) {
-        setFamilyStatus(await statusRes.json())
-      }
+      await refreshFamilyStatus({ silent: true })
 
       // Reset form after success
       setTimeout(() => {
@@ -205,17 +240,7 @@ export function FamilyMembersScreen() {
       })
 
       // Refresh family status
-      const statusRes = await fetch('/api/family/status', { cache: 'no-store' })
-      if (statusRes.ok) {
-        setFamilyStatus(await statusRes.json())
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred'
-      addToast({
-        type: 'error',
-        title: 'Error refreshing Family access',
-        message: errorMessage,
-      })
+      await refreshFamilyStatus({ silent: true })
     } finally {
       setIsResyncingFamily(false)
     }
@@ -258,6 +283,59 @@ export function FamilyMembersScreen() {
       })
     } finally {
       setIsAcceptingDirectInvite(false)
+    }
+  }
+
+  const handleManualRefresh = async () => {
+    setIsRefreshingStatus(true)
+    await refreshFamilyStatus()
+  }
+
+  const handleResendInvite = async (inviteId: string, invitedEmail: string) => {
+    setResendingInviteId(inviteId)
+
+    try {
+      const res = await fetch(`/api/family/invites/${inviteId}/resend`, {
+        method: 'POST',
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to resend invite')
+      }
+
+      // Handle result
+      if (data.emailSent) {
+        addToast({
+          type: 'success',
+          title: 'Invite resent',
+          message: `Resent to ${invitedEmail}`,
+        })
+      } else if (data.inviteUrl) {
+        // Store the QA invite URL for display
+        setResendResults((prev) => ({
+          ...prev,
+          [inviteId]: { emailSent: false, qaInviteUrl: data.inviteUrl },
+        }))
+        addToast({
+          type: 'info',
+          title: 'QA Invite Link Ready',
+          message: 'Email is not configured. Copy the invite link below.',
+        })
+      }
+
+      // Refresh family status after resend (fire and forget)
+      refreshFamilyStatus({ silent: true })
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+      addToast({
+        type: 'error',
+        title: 'Error resending invite',
+        message: errorMessage,
+      })
+    } finally {
+      setResendingInviteId(null)
     }
   }
 
@@ -432,6 +510,15 @@ export function FamilyMembersScreen() {
                       Invite Member
                     </button>
                   )}
+                  <button
+                    onClick={handleManualRefresh}
+                    disabled={isRefreshingStatus}
+                    title="Refresh family members and invites"
+                    className="flex items-center gap-2 rounded-lg bg-slate-700 px-3 py-2 text-sm text-slate-100 font-medium hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isRefreshingStatus ? 'animate-spin' : ''}`} />
+                    {!isRefreshingStatus && 'Refresh'}
+                  </button>
                 </div>
 
                 {/* Invite Form */}
@@ -598,8 +685,8 @@ export function FamilyMembersScreen() {
                               Invite ID missing. Refresh the page and try again.
                             </p>
                           )}
-                          {/* QA Invite URL (if present) */}
-                          {invite._qaInviteUrl && (
+                          {/* QA Invite URL (if present from resend) */}
+                          {resendResults[inviteId]?.qaInviteUrl && (
                             <motion.div
                               initial={{ opacity: 0, height: 0 }}
                               animate={{ opacity: 1, height: 'auto' }}
@@ -611,14 +698,14 @@ export function FamilyMembersScreen() {
                               <div className="flex gap-2">
                                 <input
                                   type="text"
-                                  value={invite._qaInviteUrl}
+                                  value={resendResults[inviteId].qaInviteUrl}
                                   readOnly
                                   className="flex-1 rounded-lg border border-border bg-muted px-3 py-2 text-xs text-foreground font-mono"
                                 />
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    navigator.clipboard.writeText(invite._qaInviteUrl)
+                                    navigator.clipboard.writeText(resendResults[inviteId].qaInviteUrl || '')
                                     addToast({
                                       type: 'success',
                                       title: 'Copied',
