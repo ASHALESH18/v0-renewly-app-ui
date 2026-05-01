@@ -241,6 +241,9 @@ export function FamilyMembersScreen() {
 
       // Refresh family status
       await refreshFamilyStatus({ silent: true })
+    } finally {
+      setIsResyncingFamily(false)
+    }
   }
 
   const handleAcceptDirectInvite = async () => {
@@ -502,9 +505,9 @@ export function FamilyMembersScreen() {
                       Invite Member
                     </button>
                     <button
-                      onClick={async () => {
+                      onClick={() => {
                         setIsRefreshingStatus(true)
-                        await refreshFamilyStatus()
+                        refreshFamilyStatus().finally(() => setIsRefreshingStatus(false))
                       }}
                       disabled={isRefreshingStatus}
                       title="Refresh family members and invites"
