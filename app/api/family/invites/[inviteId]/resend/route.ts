@@ -130,29 +130,48 @@ export async function POST(
       throw updateError
     }
 
-    // Try to send email
-    try {
-      await sendFamilyInviteEmail(invite.invited_email, inviteUrl)
-      return NextResponse.json({ success: true, emailSent: true })
-    } catch (emailError) {
-      // Email is not configured in Preview/development
-      if (process.env.VERCEL_ENV !== 'production') {
-        console.warn('[family-invites-resend] Email not sent (Preview/dev):', emailError)
-        return NextResponse.json({
-          success: true,
-          emailSent: false,
-          inviteUrl,
-          warning: 'Email is not configured. Use this QA invite link.',
-        })
-      }
+    // Fetch owner profile to get email and name for email
+    const { data: ownerProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('email, full_name, name')
+      .eq('id', user.id)
+      .single()
 
-      // Email failed in production - return safe error
-      console.error('[family-invites-resend] Email send failed:', emailError)
+    if (profileError) {
+      console.warn('[family-invites-resend] Could not fetch owner profile:', profileError)
+      // Continue anyway - we'll use user.email as fallback
+    }
+
+    // Try to send email with correct parameters
+    const emailResult = await sendFamilyInviteEmail({
+      invitedEmail: invite.invited_email,
+      ownerEmail: ownerProfile?.email || user.email || '',
+      ownerName: ownerProfile?.full_name || ownerProfile?.name || ownerProfile?.email || user.email || 'Family owner',
+      inviteUrl,
+      expiresInDays: 7,
+    })
+
+    // Handle email result
+    if (emailResult.reason === 'email_unconfigured') {
+      return NextResponse.json({
+        success: true,
+        emailSent: false,
+        inviteUrl,
+        warning: 'Email is not configured. Use this QA invite link.',
+      })
+    }
+
+    if (!emailResult.sent) {
       return NextResponse.json(
         { error: 'Failed to resend invite email. Please try again.' },
         { status: 500 }
       )
     }
+
+    return NextResponse.json({
+      success: true,
+      emailSent: true,
+    })
   } catch (error) {
     console.error('[family-invites-resend] Error:', error)
     return NextResponse.json(
