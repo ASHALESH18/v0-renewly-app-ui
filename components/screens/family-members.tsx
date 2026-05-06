@@ -54,6 +54,9 @@ export function FamilyMembersScreen() {
   const [isResyncingFamily, setIsResyncingFamily] = useState(false)
   const [isRefreshingStatus, setIsRefreshingStatus] = useState(false)
   const [invitationState, setInvitationState] = useState<InvitationState>({ email: '', status: 'idle' })
+  const [isSeatsFullError, setIsSeatsFullError] = useState(false)
+  const [memberToRemove, setMemberToRemove] = useState<{ id: string; email: string } | null>(null)
+  const [isRemovingMember, setIsRemovingMember] = useState(false)
 
   // Helper to refresh family status
   const refreshFamilyStatus = async (options?: { silent?: boolean }) => {
@@ -167,6 +170,12 @@ export function FamilyMembersScreen() {
       }, 1500)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+      
+      // Check if this is the "seats full" error
+      if (errorMessage.includes('Included family seats are full')) {
+        setIsSeatsFullError(true)
+      }
+      
       setInvitationState((prev) => ({ ...prev, status: 'error', errorMessage }))
       addToast({
         type: 'error',
@@ -343,6 +352,44 @@ export function FamilyMembersScreen() {
   const members = Array.isArray(familyStatus?.members) ? familyStatus.members : []
   const invites = Array.isArray(familyStatus?.invites) ? familyStatus.invites : []
   const pendingInvites = invites.filter((invite) => invite.status === 'pending')
+
+  const handleRemoveMember = async () => {
+    if (!memberToRemove) return
+
+    setIsRemovingMember(true)
+
+    try {
+      const res = await fetch(`/api/family/members/${memberToRemove.id}/remove`, {
+        method: 'POST',
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to remove member')
+      }
+
+      addToast({
+        type: 'success',
+        title: 'Member removed',
+        message: `Family access has been removed for ${memberToRemove.email}.`,
+      })
+
+      // Close modal and refresh
+      setMemberToRemove(null)
+      await refreshFamilyStatus({ silent: true })
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+      addToast({
+        type: 'error',
+        title: 'Error removing member',
+        message: errorMessage,
+      })
+    } finally {
+      setIsRemovingMember(false)
+    }
+  }
+
+  // Safe array access
   const maxMembers = familyStatus?.maxMembers ?? 4
   const currentMemberCount = familyStatus?.currentMemberCount ?? members.length
   const availableSeats = familyStatus?.availableSeats ?? Math.max(0, maxMembers - currentMemberCount - pendingInvites.length)
@@ -556,7 +603,18 @@ export function FamilyMembersScreen() {
                         </button>
                       </div>
                       {invitationState.errorMessage && (
-                        <p className="text-sm text-red-600 dark:text-red-400">{invitationState.errorMessage}</p>
+                        isSeatsFullError ? (
+                          <div className="space-y-2 p-3 rounded-lg border border-amber-500/30 bg-amber-500/10">
+                            <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                              You&apos;ve used all 4 included Family seats.
+                            </p>
+                            <p className="text-sm text-amber-800 dark:text-amber-200">
+                              Extra seats for ₹99/member/month are coming soon.
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-red-600 dark:text-red-400">{invitationState.errorMessage}</p>
+                        )
                       )}
                       {invitationState.inviteUrl && (
                         <div className="space-y-2">
@@ -631,6 +689,14 @@ export function FamilyMembersScreen() {
                             <p className="text-xs text-muted-foreground">Member</p>
                           </div>
                         </div>
+                        {familyStatus?.isFamilyOwner && (
+                          <button
+                            onClick={() => setMemberToRemove({ id: member.id, email: member.email })}
+                            className="text-sm px-3 py-1.5 rounded-lg bg-red-500/20 text-red-700 hover:bg-red-500/30 transition-colors font-medium dark:bg-red-900/40 dark:text-red-300 dark:hover:bg-red-900/60 cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -799,6 +865,80 @@ export function FamilyMembersScreen() {
                       className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {isCancellingInvite ? 'Cancelling...' : 'Cancel Invite'}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Remove Member Confirmation Modal */}
+      <AnimatePresence mode="wait">
+        {memberToRemove !== null && (
+          <>
+            {/* Darker backdrop */}
+            <motion.div
+              key="member-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !isRemovingMember && setMemberToRemove(null)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200]"
+            />
+
+            {/* Modal container */}
+            <motion.div
+              key="member-modal"
+              initial={{ opacity: 0, y: 18, scale: 0.975 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.985 }}
+              className="fixed inset-0 z-[210] flex items-center justify-center p-4 pointer-events-none"
+            >
+              <motion.div
+                className="relative rounded-2xl bg-slate-950/95 border border-white/10 shadow-2xl pointer-events-auto max-w-md w-full"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-white/10">
+                  <h2 className="text-xl font-semibold text-white">Remove family member?</h2>
+                  {!isRemovingMember && (
+                    <button
+                      onClick={() => setMemberToRemove(null)}
+                      className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                      aria-label="Close dialog"
+                    >
+                      <X className="w-5 h-5 text-slate-300" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Content */}
+                <div className="p-6 space-y-6">
+                  <div className="space-y-3">
+                    <p className="text-sm text-slate-300">
+                      This will remove {memberToRemove.email} from your Renewly Family plan.
+                    </p>
+                    <p className="text-sm text-slate-300">
+                      They will lose Family access immediately, but their personal Renewly account and tracked subscriptions will not be deleted.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      onClick={() => setMemberToRemove(null)}
+                      disabled={isRemovingMember}
+                      className="px-4 py-2 text-sm font-medium rounded-lg bg-slate-700 text-white hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Keep Member
+                    </button>
+                    <button
+                      onClick={handleRemoveMember}
+                      disabled={isRemovingMember}
+                      className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isRemovingMember ? 'Removing...' : 'Remove Member'}
                     </button>
                   </div>
                 </div>

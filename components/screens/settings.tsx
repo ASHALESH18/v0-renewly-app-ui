@@ -990,8 +990,11 @@ export function SettingsScreen() {
                   }}
                   className="w-full px-4 py-3 rounded-xl bg-gold/10 text-gold font-medium hover:bg-gold/20 border border-gold/30 transition-colors cursor-pointer"
                 >
-                  View Your Own Plans
+                  Start Your Own Plan
                 </button>
+                <p className="text-xs text-muted-foreground">
+                  You can start your own Pro or Family plan anytime. This will be separate from the Family access you currently receive.
+                </p>
               </div>
 
               <p className="text-xs text-muted-foreground text-center pt-2">

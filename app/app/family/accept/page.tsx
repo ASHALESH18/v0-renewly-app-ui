@@ -36,6 +36,7 @@ export default function AcceptInvitePage() {
   const [isAccepting, setIsAccepting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isAccepted, setIsAccepted] = useState(false)
+  const [wrongEmailMatch, setWrongEmailMatch] = useState<string | null>(null)
 
   // Resolve invite details or check for pending invite
   useEffect(() => {
@@ -128,6 +129,15 @@ export default function AcceptInvitePage() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An error occurred'
       setError(message)
+      
+      // Check if this is a wrong-email error
+      if (message.includes('This invite was sent to')) {
+        const emailMatch = message.match(/This invite was sent to ([^.]+)\./)
+        if (emailMatch) {
+          setWrongEmailMatch(emailMatch[1])
+        }
+      }
+      
       addToast({
         type: 'error',
         title: 'Error accepting invitation',
@@ -161,22 +171,56 @@ export default function AcceptInvitePage() {
               </p>
             </motion.div>
           ) : error ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="rounded-2xl border border-red-500/30 bg-red-500/10 p-8"
-            >
-              <div className="flex items-start gap-4">
-                <AlertCircle className="h-6 w-6 flex-shrink-0 text-red-600 dark:text-red-400 mt-0.5" />
+            wrongEmailMatch ? (
+              // Wrong account signed in UI
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-8 space-y-6"
+              >
                 <div>
-                  <h2 className="text-lg font-semibold text-red-900 dark:text-red-100">Cannot Accept Invitation</h2>
-                  <p className="mt-2 text-sm text-red-800 dark:text-red-200">{error}</p>
-                  <p className="mt-4 text-xs text-red-700 dark:text-red-300">
-                    Check your email for a fresh invitation link or contact the Family group owner.
+                  <h2 className="text-2xl font-semibold text-amber-900 dark:text-amber-100">Wrong account signed in</h2>
+                  <p className="mt-2 text-sm text-amber-800 dark:text-amber-200">
+                    This invite was sent to {wrongEmailMatch}. Please sign out and sign in with that email to accept.
                   </p>
                 </div>
-              </div>
-            </motion.div>
+                <div className="flex gap-3 justify-start">
+                  <button
+                    onClick={async () => {
+                      await fetch('/auth/logout', { method: 'POST' })
+                      router.push('/auth/signin')
+                    }}
+                    className="px-4 py-3 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors cursor-pointer"
+                  >
+                    Sign out
+                  </button>
+                  <button
+                    onClick={() => router.push('/app/dashboard')}
+                    className="px-4 py-3 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300 font-medium hover:bg-amber-500/30 transition-colors cursor-pointer"
+                  >
+                    Back to Dashboard
+                  </button>
+                </div>
+              </motion.div>
+            ) : (
+              // Generic error UI
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="rounded-2xl border border-red-500/30 bg-red-500/10 p-8"
+              >
+                <div className="flex items-start gap-4">
+                  <AlertCircle className="h-6 w-6 flex-shrink-0 text-red-600 dark:text-red-400 mt-0.5" />
+                  <div>
+                    <h2 className="text-lg font-semibold text-red-900 dark:text-red-100">Cannot Accept Invitation</h2>
+                    <p className="mt-2 text-sm text-red-800 dark:text-red-200">{error}</p>
+                    <p className="mt-4 text-xs text-red-700 dark:text-red-300">
+                      Check your email for a fresh invitation link or contact the Family group owner.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )
           ) : mode === 'token' && inviteDetails ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
