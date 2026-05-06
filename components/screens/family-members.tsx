@@ -947,6 +947,80 @@ export function FamilyMembersScreen() {
           </>
         )}
       </AnimatePresence>
+
+      {/* Leave Family Confirmation Modal */}
+      <AnimatePresence mode="wait">
+        {showLeaveConfirmation && (
+          <>
+            {/* Darker backdrop */}
+            <motion.div
+              key="leave-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !isLeavingFamily && setShowLeaveConfirmation(false)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200]"
+            />
+
+            {/* Modal container */}
+            <motion.div
+              key="leave-modal"
+              initial={{ opacity: 0, y: 18, scale: 0.975 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.985 }}
+              className="fixed inset-0 z-[210] flex items-center justify-center p-4 pointer-events-none"
+            >
+              <motion.div
+                className="relative rounded-2xl bg-slate-950/95 border border-white/10 shadow-2xl pointer-events-auto max-w-md w-full"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-white/10">
+                  <h2 className="text-xl font-semibold text-white">Leave Renewly Family?</h2>
+                  {!isLeavingFamily && (
+                    <button
+                      onClick={() => setShowLeaveConfirmation(false)}
+                      className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                      aria-label="Close dialog"
+                    >
+                      <X className="w-5 h-5 text-slate-300" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Content */}
+                <div className="p-6 space-y-6">
+                  <div className="space-y-3">
+                    <p className="text-sm text-slate-300">
+                      You&apos;ll lose Family access immediately. Your personal Renewly account and tracked subscriptions will not be deleted.
+                    </p>
+                    <p className="text-sm text-slate-300">
+                      You can start your own Pro or Family plan anytime.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      onClick={() => setShowLeaveConfirmation(false)}
+                      disabled={isLeavingFamily}
+                      className="px-4 py-2 text-sm font-medium rounded-lg bg-slate-700 text-white hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Stay in Family
+                    </button>
+                    <button
+                      onClick={handleLeaveFamilyConfirm}
+                      disabled={isLeavingFamily}
+                      className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isLeavingFamily ? 'Leaving...' : 'Leave Family'}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </PageTransition>
   )
 }
