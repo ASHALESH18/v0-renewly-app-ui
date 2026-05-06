@@ -1024,7 +1024,7 @@ export function SettingsScreen() {
                   }}
                   className="w-full px-4 py-3 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium hover:bg-blue-500/20 border border-blue-500/30 transition-colors cursor-pointer"
                 >
-                  View Family Members
+                  Manage Family Access
                 </button>
                 <button
                   onClick={() => {
