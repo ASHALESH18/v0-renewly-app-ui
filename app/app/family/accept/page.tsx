@@ -117,8 +117,8 @@ export default function AcceptInvitePage() {
       setIsAccepted(true)
       addToast({
         type: 'success',
-        title: 'Invitation accepted!',
-        message: 'You have successfully joined the Family group.',
+        title: 'Family invite accepted',
+        message: 'You&apos;re now included in a Renewly Family plan.',
       })
 
       // Redirect to dashboard after success
@@ -155,9 +155,9 @@ export default function AcceptInvitePage() {
               className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-8 text-center"
             >
               <CheckCircle2 className="h-16 w-16 mx-auto mb-4 text-emerald-600 dark:text-emerald-400" />
-              <h2 className="text-2xl font-semibold text-emerald-900 dark:text-emerald-100">Invitation Accepted!</h2>
+              <h2 className="text-2xl font-semibold text-emerald-900 dark:text-emerald-100">You&apos;re in Renewly Family</h2>
               <p className="mt-2 text-sm text-emerald-800 dark:text-emerald-200">
-                You have successfully joined the Family group. Redirecting to dashboard...
+                Your Family access is active. We&apos;ll take you to your dashboard now.
               </p>
             </motion.div>
           ) : error ? (
@@ -186,7 +186,7 @@ export default function AcceptInvitePage() {
               <div>
                 <h2 className="text-2xl font-semibold text-blue-900 dark:text-blue-100">You&apos;ve Been Invited</h2>
                 <p className="mt-2 text-sm text-blue-800 dark:text-blue-200">
-                  Accept this invitation to join a Renewly Family group and share subscription management with family members.
+                  Accept this invite to get Renewly Family access through the family owner&apos;s plan. Your personal subscriptions stay private.
                 </p>
               </div>
 

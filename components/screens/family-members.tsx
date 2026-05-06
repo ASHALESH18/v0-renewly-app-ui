@@ -266,8 +266,8 @@ export function FamilyMembersScreen() {
 
       addToast({
         type: 'success',
-        title: 'Invite accepted',
-        message: 'You&apos;ve been added to the Renewly Family plan.',
+        title: 'Family invite accepted',
+        message: 'You&apos;re now included in a Renewly Family plan.',
       })
 
       // Redirect to dashboard to show family status
