@@ -174,6 +174,26 @@ export function SettingsScreen() {
     return userProfile?.plan === 'family' && familyStatus?.membership?.role === 'member'
   }, [userProfile?.plan, familyStatus?.membership?.role])
 
+  // Safer derived billing state
+  const isFamilyOwner = useMemo(() => {
+    return familyStatus?.isFamilyOwner === true
+  }, [familyStatus?.isFamilyOwner])
+
+  const isActiveFamilyMember = useMemo(() => {
+    return familyStatus?.membership?.role === 'member'
+  }, [familyStatus?.membership?.role])
+
+  const wasRemovedFromFamily = useMemo(() => {
+    return Boolean(familyStatus?.removedMembership)
+  }, [familyStatus?.removedMembership])
+
+  const effectivePlan = useMemo(() => {
+    if (wasRemovedFromFamily && userProfile?.plan === 'family') {
+      return 'free'
+    }
+    return userProfile?.plan || 'free'
+  }, [userProfile?.plan, wasRemovedFromFamily])
+
   // Open profile sheet if coming from dropdown
   useEffect(() => {
     if (section === 'profile') {
@@ -595,7 +615,7 @@ export function SettingsScreen() {
             description={userProfile?.plan === 'pro' ? 'Pro - Active' : planName}
             onClick={() => setActiveSheet('billing')}
           />
-          {userProfile?.plan === 'family' && (
+          {(isFamilyOwner || isActiveFamilyMember || familyStatus?.pendingInvite) && !wasRemovedFromFamily && (
             <SettingsItem
               icon={Users}
               label="Family Members"
@@ -944,11 +964,34 @@ export function SettingsScreen() {
       <SettingsSheet
         isOpen={activeSheet === 'billing'}
         onClose={() => setActiveSheet(null)}
-        title={isFamilyMember ? 'Family Access' : 'Billing & Plan'}
+        title={wasRemovedFromFamily ? 'Billing & Plan' : isFamilyMember ? 'Family Access' : 'Billing & Plan'}
       >
         <div className="space-y-6">
-          {/* Family Member - Special UI */}
-          {isFamilyMember ? (
+          {/* Removed from Family - Show Free Plan */}
+          {wasRemovedFromFamily ? (
+            <>
+              <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20">
+                <p className="text-sm text-muted-foreground">Status</p>
+                <p className="text-2xl font-semibold text-amber-600 dark:text-amber-400 mt-1">Free Plan</p>
+                <p className="text-xs text-muted-foreground mt-2">Your Family access was removed</p>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                Your personal Renewly account and tracked subscriptions are safe. You can start your own Pro or Family plan anytime.
+              </p>
+
+              <button
+                onClick={() => {
+                  window.location.href = '/app/upgrade'
+                  setActiveSheet(null)
+                }}
+                className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
+              >
+                Start Your Own Plan
+              </button>
+            </>
+          ) : isFamilyMember ? (
+            /* Active Family Member */
             <>
               {/* Current Plan Display */}
               <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20">

@@ -67,6 +67,7 @@ export async function GET() {
       familyGroup: null,
       familyGroupId: null,
       membership: null,
+      removedMembership: null,
       pendingInvite: null,
       members: [],
       invites: [],
@@ -89,6 +90,16 @@ export async function GET() {
       .select('id, family_group_id, role, seat_type, joined_at')
       .eq('user_id', user.id)
       .eq('status', 'active')
+      .single()
+
+    // Fetch removed membership (lightweight check for recently removed members)
+    const { data: removedMembership, error: removedMembershipError } = await supabase
+      .from('family_members')
+      .select('id, family_group_id, role, removed_at')
+      .eq('user_id', user.id)
+      .eq('status', 'removed')
+      .order('removed_at', { ascending: false })
+      .limit(1)
       .single()
 
     // Fetch pending invite by signed-in email (case-insensitive match)
@@ -175,6 +186,20 @@ export async function GET() {
           role: membership.role,
           seatType: membership.seat_type,
           joinedAt: membership.joined_at,
+        },
+      })
+    }
+
+    // If removed from family, return removed membership state
+    if (removedMembership && removedMembershipError?.code !== 'PGRST116') {
+      return NextResponse.json({
+        ...defaultResponse,
+        removedMembership: {
+          id: removedMembership.id,
+          familyGroupId: removedMembership.family_group_id,
+          role: removedMembership.role,
+          removedAt: removedMembership.removed_at,
+          status: 'removed',
         },
       })
     }
