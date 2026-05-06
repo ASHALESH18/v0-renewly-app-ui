@@ -66,7 +66,7 @@ export async function sendFamilyMemberRemovedEmail(
             <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
               <p style="color: #6b7280; font-size: 12px; margin: 0;">
                 This email was sent to ${params.memberEmail} because you were a member of a Renewly Family plan.<br/>
-                © Renewly | support@renewly.in
+                © Renewly | contact@renewly.in
               </p>
             </div>
           </div>

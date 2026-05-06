@@ -70,7 +70,7 @@ export async function sendFamilyInviteEmail(
         subject: "You're invited to join Renewly Family",
         html: htmlContent,
         text: textContent,
-        reply_to: 'support@renewly.in',
+        reply_to: 'contact@renewly.in',
       }),
     })
 
@@ -142,7 +142,7 @@ function buildInviteEmailHtml(params: SendInviteEmailParams & { fromEmail: strin
       </div>
     </div>
     
-    <p>If you have any questions, contact us at support@renewly.in</p>
+                <p>If you have any questions, contact us at contact@renewly.in</p>
     
     <div class="footer">
       <p>© Renewly. All rights reserved.</p>
@@ -172,7 +172,7 @@ IMPORTANT:
 - This invite expires in ${params.expiresInDays} days
 - You must sign in with ${params.invitedEmail} to accept
 
-If you have questions, contact support@renewly.in
+If you have questions, contact contact@renewly.in
 
 © Renewly. All rights reserved.
 `.trim()

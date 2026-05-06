@@ -234,7 +234,7 @@ export async function POST(
         console.warn('[family-members-remove] Failed to fetch owner profile:', ownerError)
       }
 
-      const ownerEmail = ownerProfile?.email || 'support@renewly.in'
+      const ownerEmail = ownerProfile?.email || 'contact@renewly.in'
       const ownerName = ownerProfile?.full_name || 'Family owner'
 
       const emailResult = await sendFamilyMemberRemovedEmail({
