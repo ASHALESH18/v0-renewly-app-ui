@@ -36,11 +36,31 @@ function extractOAuthProfile(authUser: any) {
   const googleIdentity =
     identities.find((i: any) => i?.provider === 'google')?.identity_data || {}
 
-  const fullName =
-    metadata.full_name ||
-    metadata.name ||
-    [metadata.given_name, metadata.family_name].filter(Boolean).join(' ').trim() ||
-    null
+  // Build full name from multiple sources with fallback chain
+  const candidates = [
+    metadata.full_name,
+    metadata.name,
+    googleIdentity.full_name,
+    googleIdentity.name,
+    metadata.given_name && metadata.family_name
+      ? `${metadata.given_name} ${metadata.family_name}`.trim()
+      : null,
+    googleIdentity.given_name && googleIdentity.family_name
+      ? `${googleIdentity.given_name} ${googleIdentity.family_name}`.trim()
+      : null,
+  ]
+
+  let fullName: string | null = null
+  for (const candidate of candidates) {
+    if (candidate && typeof candidate === 'string') {
+      const trimmed = candidate.trim()
+      // Ignore generic "User" or empty strings
+      if (trimmed && trimmed !== 'User') {
+        fullName = trimmed
+        break
+      }
+    }
+  }
 
   const avatarUrl =
     metadata.avatar_url ||
@@ -88,13 +108,17 @@ export async function ensureProfile(authUser: any): Promise<ProfileRow | null> {
     const nextAvatarSource = isGoogleProvider ? 'provider' : existing?.avatar_source || null
 
     if (existing) {
+      const shouldUpdateName =
+        (fullName && (fullName !== existing.full_name)) ||
+        (fullName && (existing.full_name === 'User' || !existing.full_name))
+
       const shouldSyncProviderAvatar =
         isGoogleProvider &&
         (!!avatarUrl) &&
         (existing.avatar_source === 'provider' || !existing.avatar_source)
 
       const shouldUpdate =
-        (fullName && fullName !== existing.full_name) ||
+        (shouldUpdateName) ||
         (email && email !== existing.email) ||
         (shouldSyncProviderAvatar && avatarUrl !== existing.avatar_url)
 

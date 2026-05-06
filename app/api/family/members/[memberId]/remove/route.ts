@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
+import { invalidateCache } from '@/lib/redis'
+import { sendFamilyMemberRemovedEmail } from '@/lib/email/family-member-removed-email'
 import { revalidateTag } from 'next/cache'
 
 /**
@@ -114,66 +116,102 @@ export async function POST(
 
     // Check if member's plan needs to be downgraded to free
     // Only downgrade if they have no independent paid subscription
-    const { data: memberProfile } = await supabase
+    const { data: memberProfile, error: profileFetchError } = await supabase
       .from('profiles')
-      .select('id, plan, subscription_status')
+      .select('id, plan, email, full_name')
       .eq('id', member.user_id)
       .single()
 
-    if (memberProfile && memberProfile.plan === 'family') {
-      // Only downgrade if they're on family plan (not an independent pro/owner)
-      const { error: updateProfileError } = await supabase
-        .from('profiles')
-        .update({
-          plan: 'free',
-          subscription_status: 'inactive',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', member.user_id)
+    if (profileFetchError) {
+      console.warn('[family-members-remove] Failed to fetch member profile:', profileFetchError)
+    }
 
-      if (updateProfileError) {
-        console.warn('[family-members-remove] Failed to update member profile:', updateProfileError)
-        // Non-blocking error: continue to cancel subscription
+    let profileDowngraded = false
+    let memberEmail = member.email || memberProfile?.email || 'unknown'
+
+    if (memberProfile && memberProfile.plan === 'family') {
+      // Check if member has independent active paid subscription (not covered by family)
+      const { data: independentSubscription, error: subError } = await supabase
+        .from('subscriptions')
+        .select('id, managed_plan')
+        .eq('user_id', member.user_id)
+        .eq('is_system_managed', true)
+        .eq('system_source', 'renewly_billing')
+        .eq('status', 'active')
+        .eq('covered_by_family', false)
+        .in('managed_plan', ['pro', 'family'])
+        .single()
+
+      if (subError?.code !== 'PGRST116') {
+        // Error other than not found
+        console.warn('[family-members-remove] Error checking independent subscription:', subError)
+      }
+
+      // Only downgrade if no independent paid subscription exists
+      if (!independentSubscription) {
+        const { error: updateProfileError } = await supabase
+          .from('profiles')
+          .update({
+            plan: 'free',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', member.user_id)
+
+        if (updateProfileError) {
+          console.warn('[family-members-remove] Failed to update member profile:', updateProfileError)
+        } else {
+          profileDowngraded = true
+        }
       }
     }
 
-    // Cancel the member's system-managed Renewly Family subscription
-    const { error: cancelSubscriptionError } = await supabase
+    // Cancel the member's system-managed Renewly Family subscription (covered by family)
+    let coveredSubscriptionCancelled = false
+    const now = new Date().toISOString()
+    const { data: coveredSubscription, error: getCoveredSubError } = await supabase
       .from('subscriptions')
-      .update({
-        status: 'cancelled',
-        updated_at: new Date().toISOString(),
-        system_metadata: {
-          removed_from_family: true,
-          removed_at: new Date().toISOString(),
-        },
-      })
+      .select('id, system_metadata')
       .eq('user_id', member.user_id)
       .eq('is_system_managed', true)
       .eq('system_source', 'renewly_billing')
       .eq('managed_plan', 'family')
       .eq('covered_by_family', true)
       .eq('family_group_id', member.family_group_id)
+      .single()
 
-    if (cancelSubscriptionError) {
-      console.warn('[family-members-remove] Failed to cancel subscription:', cancelSubscriptionError)
-      // Non-blocking error: member already removed from family
+    if (getCoveredSubError?.code !== 'PGRST116') {
+      console.warn('[family-members-remove] Error fetching covered subscription:', getCoveredSubError)
+    }
+
+    if (coveredSubscription) {
+      // Merge existing metadata with removal info
+      const existingMetadata = coveredSubscription.system_metadata || {}
+      const updatedMetadata = {
+        ...existingMetadata,
+        removed_from_family: true,
+        removed_at: now,
+        removed_by: user.id,
+      }
+
+      const { error: cancelSubscriptionError } = await supabase
+        .from('subscriptions')
+        .update({
+          status: 'cancelled',
+          updated_at: now,
+          system_metadata: updatedMetadata,
+        })
+        .eq('id', coveredSubscription.id)
+
+      if (cancelSubscriptionError) {
+        console.warn('[family-members-remove] Failed to cancel subscription:', cancelSubscriptionError)
+      } else {
+        coveredSubscriptionCancelled = true
+      }
     }
 
     // Invalidate caches for the removed member
-    // Note: Redis invalidation is async and may not complete before response
     try {
-      const cacheRes = await fetch(
-        `${request.nextUrl.origin}/api/cache/invalidate`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key: `subscriptions:${member.user_id}` }),
-        }
-      )
-      if (!cacheRes.ok) {
-        console.warn('[family-members-remove] Cache invalidation request failed')
-      }
+      await invalidateCache(`subscriptions:${member.user_id}`)
     } catch (e) {
       console.warn('[family-members-remove] Cache invalidation error:', e)
     }
@@ -182,7 +220,42 @@ export async function POST(
     revalidateTag(`subscriptions:${member.user_id}`)
     revalidateTag('profile')
 
-    return NextResponse.json({ success: true })
+    // Send removal email to member
+    let emailSent = false
+    try {
+      // Fetch owner profile for email
+      const { data: ownerProfile, error: ownerError } = await supabase
+        .from('profiles')
+        .select('email, full_name')
+        .eq('id', familyGroup.owner_user_id)
+        .single()
+
+      if (ownerError) {
+        console.warn('[family-members-remove] Failed to fetch owner profile:', ownerError)
+      }
+
+      const ownerEmail = ownerProfile?.email || 'support@renewly.in'
+      const ownerName = ownerProfile?.full_name || 'Family owner'
+
+      const emailResult = await sendFamilyMemberRemovedEmail({
+        memberEmail,
+        ownerEmail,
+        ownerName,
+      })
+
+      emailSent = emailResult.sent
+    } catch (e) {
+      console.warn('[family-members-remove] Email send error:', e)
+    }
+
+    return NextResponse.json({
+      success: true,
+      memberUserId: member.user_id,
+      memberEmail,
+      profileDowngraded,
+      coveredSubscriptionCancelled,
+      emailSent,
+    })
   } catch (error) {
     console.error('[family-members-remove] Error:', error)
     return NextResponse.json(
