@@ -167,14 +167,79 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Return safe intent (no DB mutation in F6A)
+    // Check: reuse existing pending unexpired intent for same owner + family + email
+    const now = new Date()
+    const { data: existingIntent } = await supabase
+      .from('family_extra_seat_payment_intents')
+      .select('id, status, expires_at, created_at')
+      .eq('owner_user_id', user.id)
+      .eq('family_group_id', familyGroup.id)
+      .ilike('invited_email', invitedEmail)
+      .eq('status', 'pending')
+      .gt('expires_at', now.toISOString())
+      .single()
+
+    let intentId: string
+    let intentExpiresAt: string
+
+    if (existingIntent) {
+      // Reuse existing intent
+      intentId = existingIntent.id
+      intentExpiresAt = existingIntent.expires_at
+    } else {
+      // Create new pending intent
+      const newExpiresAt = new Date(Date.now() + 30 * 60 * 1000) // 30 minutes
+      const { data: newIntent, error: insertError } = await supabase
+        .from('family_extra_seat_payment_intents')
+        .insert({
+          family_group_id: familyGroup.id,
+          owner_user_id: user.id,
+          invited_email: invitedEmail,
+          amount_inr: FAMILY_EXTRA_MEMBER_PRICE_INR,
+          currency: 'INR',
+          status: 'pending',
+          source: 'family_extra_seat',
+          metadata: {},
+          expires_at: newExpiresAt.toISOString(),
+        })
+        .select('id, expires_at')
+        .single()
+
+      if (insertError || !newIntent) {
+        console.error('[extra-seat-intent] Insert error:', insertError)
+        return NextResponse.json(
+          { error: 'Failed to create payment intent' },
+          { status: 500 }
+        )
+      }
+
+      intentId = newIntent.id
+      intentExpiresAt = newIntent.expires_at
+    }
+
+    // F6B-production: TODO - Create Razorpay order/subscription for ₹99/member/month
+    // TODO: Store razorpay_order_id in metadata
+    // TODO: Verify payment server-side
+    // TODO: Mark intent paid only after Razorpay verification
+
+    // F6C: TODO - Create family_invite with seat_type = extra only after intent status is paid or qa_confirmed
+    // TODO: Send invite email after payment success
+
+    // Determine if QA is enabled
+    const isQaEnabled = process.env.QA_PLAN_OVERRIDE_ENABLED === 'true'
+
     return NextResponse.json({
       success: true,
       intent: {
+        id: intentId,
         email: invitedEmail,
         extraSeatRequired: true,
         priceINR: FAMILY_EXTRA_MEMBER_PRICE_INR,
+        currency: 'INR',
         billingCycle: 'monthly',
+        status: 'pending',
+        expiresAt: intentExpiresAt,
+        previewQaEnabled: isQaEnabled,
         copy: `Adding this member requires an extra seat at ₹${FAMILY_EXTRA_MEMBER_PRICE_INR}/month.`,
       },
     })
