@@ -191,7 +191,7 @@ export async function GET() {
     }
 
     // If removed from family, return removed membership state
-    if (removedMembership && removedMembershipError?.code !== 'PGRST116') {
+    if (removedMembership) {
       return NextResponse.json({
         ...defaultResponse,
         removedMembership: {
