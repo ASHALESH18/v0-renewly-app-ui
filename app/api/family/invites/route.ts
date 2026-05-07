@@ -180,7 +180,11 @@ export async function POST(request: NextRequest) {
     if (currentIncludedCount >= FAMILY_INCLUDED_MEMBER_COUNT) {
       return NextResponse.json(
         {
-          error: 'Included family seats are full. Extra seats will be added in a later batch.',
+          error: 'included_seats_full',
+          message: `You've used all ${FAMILY_INCLUDED_MEMBER_COUNT} included Family seats.`,
+          extraSeatRequired: true,
+          extraSeatPriceINR: 99,
+          nextAction: 'create_extra_seat_intent',
         },
         { status: 402 }
       )

@@ -55,6 +55,9 @@ export function FamilyMembersScreen() {
   const [isRefreshingStatus, setIsRefreshingStatus] = useState(false)
   const [invitationState, setInvitationState] = useState<InvitationState>({ email: '', status: 'idle' })
   const [isSeatsFullError, setIsSeatsFullError] = useState(false)
+  const [showExtraSeatsModal, setShowExtraSeatsModal] = useState(false)
+  const [extraSeatsModalEmail, setExtraSeatsModalEmail] = useState('')
+  const [isCreatingExtraSeatsIntent, setIsCreatingExtraSeatsIntent] = useState(false)
   const [memberToRemove, setMemberToRemove] = useState<{ id: string; email: string } | null>(null)
   const [isRemovingMember, setIsRemovingMember] = useState(false)
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false)
@@ -141,7 +144,15 @@ export function FamilyMembersScreen() {
       const data = await res.json()
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to send invite')
+        // Handle extra-seat required response (402 Payment Required)
+        if (res.status === 402 && data.extraSeatRequired) {
+          setExtraSeatsModalEmail(invitationState.email)
+          setShowExtraSeatsModal(true)
+          setInvitationState((prev) => ({ ...prev, status: 'idle' }))
+          return
+        }
+
+        throw new Error(data.message || data.error || 'Failed to send invite')
       }
 
       // Handle QA mode with inviteUrl but no email
@@ -173,17 +184,56 @@ export function FamilyMembersScreen() {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred'
       
-      // Check if this is the "seats full" error
-      if (errorMessage.includes('Included family seats are full')) {
-        setIsSeatsFullError(true)
-      }
-      
       setInvitationState((prev) => ({ ...prev, status: 'error', errorMessage }))
+      
       addToast({
         type: 'error',
-        title: 'Error sending invite',
+        title: 'Error',
         message: errorMessage,
       })
+    }
+  }
+
+  const handleContinueAddExtraSeat = async () => {
+    if (!extraSeatsModalEmail) return
+
+    setIsCreatingExtraSeatsIntent(true)
+
+    try {
+      const res = await fetch('/api/family/extra-seat/intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: extraSeatsModalEmail }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.message || data.error || 'Failed to create extra-seat intent')
+      }
+
+      // Successfully created intent, show confirmation
+      addToast({
+        type: 'success',
+        title: 'Extra seat intent created',
+        message: `Ready to add ${extraSeatsModalEmail} at ₹${data.intent.priceINR}/month. Payment will be the next step.`,
+      })
+
+      // Close modal and reset
+      setTimeout(() => {
+        setShowExtraSeatsModal(false)
+        setExtraSeatsModalEmail('')
+      }, 1500)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: errorMessage,
+      })
+    } finally {
+      setIsCreatingExtraSeatsIntent(false)
     }
   }
 
@@ -1059,6 +1109,83 @@ export function FamilyMembersScreen() {
                       className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {isLeavingFamily ? 'Leaving...' : 'Leave Family'}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Extra Seats Required Modal */}
+      <AnimatePresence mode="wait">
+        {showExtraSeatsModal && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              key="extra-seats-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !isCreatingExtraSeatsIntent && setShowExtraSeatsModal(false)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200]"
+            />
+
+            {/* Modal */}
+            <motion.div
+              key="extra-seats-modal"
+              initial={{ opacity: 0, y: 18, scale: 0.975 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.985 }}
+              className="fixed inset-0 z-[210] flex items-center justify-center p-4 pointer-events-none"
+            >
+              <motion.div
+                className="relative rounded-2xl bg-slate-950/95 border border-white/10 shadow-2xl pointer-events-auto max-w-md w-full"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-white/10">
+                  <h2 className="text-xl font-semibold text-white">Extra seat required</h2>
+                  {!isCreatingExtraSeatsIntent && (
+                    <button
+                      onClick={() => setShowExtraSeatsModal(false)}
+                      className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                      aria-label="Close dialog"
+                    >
+                      <X className="w-5 h-5 text-slate-300" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Content */}
+                <div className="p-6 space-y-6">
+                  <div className="space-y-3">
+                    <p className="text-sm text-slate-300">
+                      Your Family plan includes 4 members. You&apos;ve used all included seats.
+                    </p>
+                    <p className="text-sm text-slate-300">
+                      To invite <span className="font-medium text-white">{extraSeatsModalEmail}</span>, you&apos;ll need to add an extra seat for <span className="font-medium text-emerald-400">₹99/month</span>.
+                    </p>
+                    <p className="text-xs text-slate-400 mt-4">
+                      Pending invitations reserve included seats until they are accepted, cancelled, or expired.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      onClick={() => setShowExtraSeatsModal(false)}
+                      disabled={isCreatingExtraSeatsIntent}
+                      className="px-4 py-2 text-sm font-medium rounded-lg bg-slate-700 text-white hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Not Now
+                    </button>
+                    <button
+                      onClick={handleContinueAddExtraSeat}
+                      disabled={isCreatingExtraSeatsIntent}
+                      className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isCreatingExtraSeatsIntent ? 'Loading...' : 'Continue to Add Seat'}
                     </button>
                   </div>
                 </div>
