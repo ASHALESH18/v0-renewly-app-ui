@@ -3,7 +3,8 @@
 import { NextResponse } from 'next/server'
 import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
-import { FAMILY_INCLUDED_MEMBER_COUNT } from '@/lib/family/family-config'
+import { FAMILY_INCLUDED_MEMBER_COUNT, FAMILY_EXTRA_MEMBER_PRICE_INR } from '@/lib/family/family-config'
+import { calculateSeatUsage } from '@/lib/family/family-seat-utils'
 
 /**
  * GET /api/family/status
@@ -141,6 +142,13 @@ export async function GET() {
       const includedInviteCount = pendingIncludedInvites.length
       const availableSeats = Math.max(0, maxMembers - currentMemberCount - includedInviteCount)
 
+      // Calculate detailed seat usage
+      const seatUsage = calculateSeatUsage({
+        activeMembers: (members || []),
+        pendingInvites: (invites || []),
+        familyGroup: ownerGroup,
+      })
+
       return NextResponse.json({
         profilePlan: profile?.plan || 'free',
         isFamilyOwner: true,
@@ -151,8 +159,8 @@ export async function GET() {
           includedMemberLimit: ownerGroup.included_member_limit,
         },
         familyGroupId: ownerGroup.id,
-        membership: null, // Owner is not a "member"
-        pendingInvite: null, // Owner doesn't have pending invites
+        membership: null,
+        pendingInvite: null,
         members: (activeMembers || []).map(m => ({
           id: m.id,
           userId: m.user_id,
@@ -173,6 +181,16 @@ export async function GET() {
         maxMembers,
         currentMemberCount,
         availableSeats,
+        // F6A: Detailed seat usage for extra-seat UI
+        seatUsage: {
+          includedLimit: seatUsage.includedLimit,
+          includedSeatsUsed: seatUsage.includedSeatsUsed,
+          availableIncludedSeats: seatUsage.availableIncludedSeats,
+          extraSeatCount: seatUsage.extraSeatCount,
+          activeExtraMembers: seatUsage.activeExtraMembers,
+          pendingExtraInvites: seatUsage.pendingExtraInvites,
+          extraSeatPriceINR: FAMILY_EXTRA_MEMBER_PRICE_INR,
+        },
       })
     }
 
