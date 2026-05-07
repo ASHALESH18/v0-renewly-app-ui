@@ -139,3 +139,20 @@ export interface FamilySeatAddonRow {
   created_at: string
   updated_at: string
 }
+
+export interface FamilyExtraSeatPaymentIntentRow {
+  id: string
+  family_group_id: string
+  owner_user_id: string
+  invited_email: string
+  amount_inr: number
+  currency: string
+  status: 'pending' | 'qa_confirmed' | 'paid' | 'cancelled' | 'expired' | 'failed'
+  source: string
+  metadata: Record<string, unknown>
+  created_at: string
+  updated_at: string
+  expires_at: string
+  qa_confirmed_at: string | null
+  paid_at: string | null
+}

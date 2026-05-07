@@ -58,6 +58,14 @@ export function FamilyMembersScreen() {
   const [showExtraSeatsModal, setShowExtraSeatsModal] = useState(false)
   const [extraSeatsModalEmail, setExtraSeatsModalEmail] = useState('')
   const [isCreatingExtraSeatsIntent, setIsCreatingExtraSeatsIntent] = useState(false)
+  const [paymentIntent, setPaymentIntent] = useState<{
+    id: string
+    email: string
+    status: string
+    expiresAt: string
+    previewQaEnabled: boolean
+  } | null>(null)
+  const [isConfirmingQaPayment, setIsConfirmingQaPayment] = useState(false)
   const [memberToRemove, setMemberToRemove] = useState<{ id: string; email: string } | null>(null)
   const [isRemovingMember, setIsRemovingMember] = useState(false)
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false)
@@ -212,18 +220,23 @@ export function FamilyMembersScreen() {
         throw new Error(data.message || data.error || 'Failed to create extra-seat intent')
       }
 
-      // Successfully created intent, show confirmation
-      addToast({
-        type: 'success',
-        title: 'Extra seat intent created',
-        message: `Ready to add ${extraSeatsModalEmail} at ₹${data.intent.priceINR}/month. Payment will be the next step.`,
+      // Store intent and show payment state
+      setPaymentIntent({
+        id: data.intent.id,
+        email: data.intent.email,
+        status: data.intent.status,
+        expiresAt: data.intent.expiresAt,
+        previewQaEnabled: data.intent.previewQaEnabled,
       })
 
-      // Close modal and reset
-      setTimeout(() => {
-        setShowExtraSeatsModal(false)
-        setExtraSeatsModalEmail('')
-      }, 1500)
+      setShowExtraSeatsModal(false)
+      setExtraSeatsModalEmail('')
+
+      addToast({
+        type: 'success',
+        title: 'Intent created',
+        message: `Ready to add ${extraSeatsModalEmail} at ₹99/month. Payment required.`,
+      })
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred'
 
@@ -234,6 +247,47 @@ export function FamilyMembersScreen() {
       })
     } finally {
       setIsCreatingExtraSeatsIntent(false)
+    }
+  }
+
+  const handleConfirmQaPayment = async () => {
+    if (!paymentIntent) return
+
+    setIsConfirmingQaPayment(true)
+
+    try {
+      const res = await fetch('/api/family/extra-seat/confirm-qa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ intentId: paymentIntent.id }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.message || data.error || 'Failed to confirm payment')
+      }
+
+      addToast({
+        type: 'success',
+        title: 'Payment confirmed in QA',
+        message: 'The next step will send the extra-seat invite.',
+      })
+
+      // Clear intent state after QA confirmation
+      setTimeout(() => {
+        setPaymentIntent(null)
+      }, 2000)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: errorMessage,
+      })
+    } finally {
+      setIsConfirmingQaPayment(false)
     }
   }
 
@@ -1215,6 +1269,95 @@ export function FamilyMembersScreen() {
                       {isCreatingExtraSeatsIntent ? 'Loading...' : 'Continue to Add Seat'}
                     </button>
                   </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Payment Intent State Modal */}
+      <AnimatePresence mode="wait">
+        {paymentIntent && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              key="payment-intent-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !isConfirmingQaPayment && setPaymentIntent(null)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200]"
+            />
+
+            {/* Modal */}
+            <motion.div
+              key="payment-intent-modal"
+              initial={{ opacity: 0, y: 18, scale: 0.975 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.985 }}
+              className="fixed inset-0 z-[210] flex items-center justify-center p-4 pointer-events-none"
+            >
+              <motion.div
+                className="relative rounded-2xl bg-slate-950/95 border border-white/10 shadow-2xl pointer-events-auto max-w-md w-full"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-white/10">
+                  <h2 className="text-xl font-semibold text-white">Extra-seat checkout</h2>
+                  {!isConfirmingQaPayment && (
+                    <button
+                      onClick={() => setPaymentIntent(null)}
+                      className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                      aria-label="Close dialog"
+                    >
+                      <X className="w-5 h-5 text-slate-300" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Content */}
+                <div className="p-6 space-y-6">
+                  <div className="space-y-3">
+                    <p className="text-sm text-slate-300">
+                      To invite <span className="font-medium text-white">{paymentIntent.email}</span>, add one extra Family seat for <span className="font-medium text-emerald-400">₹99/month</span>.
+                    </p>
+                    <div className="mt-4 p-3 bg-slate-800 rounded-lg border border-slate-700">
+                      <p className="text-xs text-slate-400 font-medium">Status</p>
+                      <p className="text-sm text-slate-200 mt-1">Payment required</p>
+                    </div>
+                  </div>
+
+                  {/* QA Simulate Payment Button */}
+                  {paymentIntent.previewQaEnabled && (
+                    <div>
+                      <button
+                        onClick={handleConfirmQaPayment}
+                        disabled={isConfirmingQaPayment}
+                        className="w-full px-4 py-3 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {isConfirmingQaPayment ? 'Simulating payment...' : 'Simulate Payment Success'}
+                      </button>
+                      <p className="text-xs text-slate-400 mt-2 text-center">
+                        Preview QA mode: This simulates successful payment
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Production Message */}
+                  {!paymentIntent.previewQaEnabled && (
+                    <div className="space-y-3">
+                      <p className="text-sm text-slate-300">
+                        Extra-seat checkout is being finalized. Please contact <span className="font-medium text-white">contact@renewly.in</span> if you need to add more members right now.
+                      </p>
+                      <button
+                        onClick={() => setPaymentIntent(null)}
+                        className="w-full px-4 py-2 text-sm font-medium rounded-lg bg-slate-700 text-white hover:bg-slate-600 transition-colors"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             </motion.div>
