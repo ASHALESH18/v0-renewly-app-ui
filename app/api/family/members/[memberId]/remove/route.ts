@@ -142,13 +142,31 @@ export async function POST(
         .in('managed_plan', ['pro', 'family'])
         .single()
 
-      if (subError?.code !== 'PGRST116') {
+      // Also check for null covered_by_family (independent subscriptions)
+      let hasIndependentSub = !!independentSubscription
+
+      if (!hasIndependentSub && !subError) {
+        const { data: nullCoveredSub } = await supabase
+          .from('subscriptions')
+          .select('id')
+          .eq('user_id', member.user_id)
+          .eq('is_system_managed', true)
+          .eq('system_source', 'renewly_billing')
+          .eq('status', 'active')
+          .is('covered_by_family', null)
+          .in('managed_plan', ['pro', 'family'])
+          .single()
+
+        hasIndependentSub = !!nullCoveredSub
+      }
+
+      if (subError?.code !== 'PGRST116' && subError) {
         // Error other than not found
         console.warn('[family-members-remove] Error checking independent subscription:', subError)
       }
 
       // Only downgrade if no independent paid subscription exists
-      if (!independentSubscription) {
+      if (!hasIndependentSub) {
         const { error: updateProfileError } = await supabase
           .from('profiles')
           .update({
