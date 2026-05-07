@@ -1,6 +1,7 @@
 import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
 import { hasHitSubscriptionLimit, type PlanType } from '@/lib/plan-capabilities'
+import { resolveEffectiveEntitlement } from '@/lib/entitlements/effective-plan'
 
 /**
  * Get Supabase client for plan validation operations
@@ -64,6 +65,7 @@ export async function getUserPlanAndSubscriptionCount() {
 
 /**
  * Check if user can add another subscription
+ * Uses effective entitlement instead of just profile.plan
  * Returns: { allowed: boolean, reason?: string }
  */
 export async function canAddSubscription() {
@@ -71,38 +73,43 @@ export async function canAddSubscription() {
     const user = await getUser()
     if (!user) throw new Error('Unauthorized')
 
-    const result = await getUserPlanAndSubscriptionCount()
-    if (!result.success) throw new Error(result.error)
+    const supabase = getSupabaseClient()
 
-    const { plan, subscriptionCount } = result
+    // Count user-created subscriptions (excluding system-managed)
+    const { count, error: countError } = await supabase
+      .from('subscriptions')
+      .select('id', { count: 'exact' })
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .eq('is_system_managed', false)
 
-    if (hasHitSubscriptionLimit(plan, subscriptionCount)) {
+    if (countError) throw countError
+
+    const subscriptionCount = count || 0
+
+    // Resolve effective entitlement
+    const entitlement = await resolveEffectiveEntitlement(user.id)
+    const effectivePlan = entitlement.effectivePlan
+
+    // Check subscription limit
+    if (hasHitSubscriptionLimit(effectivePlan, subscriptionCount)) {
+      const reason =
+        effectivePlan === 'free'
+          ? 'Your Family access has ended. Free accounts can track up to 2 subscriptions. Upgrade to continue adding more.'
+          : `You have reached the subscription limit for your ${effectivePlan} plan.`
+
       return {
         allowed: false,
-        plan,
-        limit: plan === 'free' ? 2 : -1,
-        current: subscriptionCount,
-        reason:
-          plan === 'free'
-            ? 'You have reached the 2 subscription limit on the Free plan. Upgrade to Pro to add unlimited subscriptions.'
-            : 'Subscription limit reached',
+        reason,
       }
     }
 
-    return {
-      allowed: true,
-      plan,
-      limit: plan === 'free' ? 2 : -1,
-      current: subscriptionCount,
-    }
+    return { allowed: true }
   } catch (error) {
-    console.error('[v0] Can add subscription error:', error)
+    console.error('[plan-validation] Can add subscription error:', error)
     return {
       allowed: false,
-      error: (error as Error).message,
-      plan: 'free' as PlanType,
-      current: 0,
-      limit: 2,
+      reason: 'Could not validate subscription limit',
     }
   }
 }

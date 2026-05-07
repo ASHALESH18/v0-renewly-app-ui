@@ -13,6 +13,7 @@ import {
 } from '@/lib/family/family-invite-utils'
 import { sendFamilyInviteEmail } from '@/lib/email/family-invite-email'
 import { FAMILY_INCLUDED_MEMBER_COUNT } from '@/lib/family/family-config'
+import { resolveEffectiveEntitlement } from '@/lib/entitlements/effective-plan'
 
 /**
  * POST /api/family/invites
@@ -113,6 +114,15 @@ export async function POST(request: NextRequest) {
     if (!familyGroup) {
       return NextResponse.json(
         { error: 'No active family group found' },
+        { status: 403 }
+      )
+    }
+
+    // Verify user is effective family owner (additional safety check)
+    const entitlement = await resolveEffectiveEntitlement(user.id)
+    if (!entitlement.isFamilyOwner) {
+      return NextResponse.json(
+        { error: 'Only the Family owner can invite members' },
         { status: 403 }
       )
     }
