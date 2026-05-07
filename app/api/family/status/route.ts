@@ -142,10 +142,12 @@ export async function GET() {
       const includedInviteCount = pendingIncludedInvites.length
       const availableSeats = Math.max(0, maxMembers - currentMemberCount - includedInviteCount)
 
-      // Calculate detailed seat usage
+      // Calculate detailed seat usage - only pending invites reserve seats
+      const pendingInvitesForSeatUsage = (invites || []).filter((i) => i.status === 'pending')
+      
       const seatUsage = calculateSeatUsage({
         activeMembers: (members || []),
-        pendingInvites: (invites || []),
+        pendingInvites: pendingInvitesForSeatUsage,
         familyGroup: ownerGroup,
       })
 
