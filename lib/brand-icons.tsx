@@ -68,7 +68,7 @@ const brandEntries: BrandEntry[] = [
   { aliases: ['kindle unlimited', 'kindle'], displayName: 'Kindle Unlimited', color: '#FF9900', simpleIcon: 'amazonkindle', domain: 'amazon.com' },
 
   // AI & tools
-  { aliases: ['chatgpt', 'chatgpt plus', 'openai'], displayName: 'ChatGPT', color: '#10A37F', simpleIcon: 'openai', domain: 'openai.com' },
+  { aliases: ['chatgpt', 'chatgpt plus', 'openai'], displayName: 'ChatGPT', color: '#10A37F', simpleIcon: 'openai', domain: 'openai.com', logoBackground: '#F7F7F7' },
   { aliases: ['claude', 'anthropic'], displayName: 'Claude', color: '#D97757', simpleIcon: 'anthropic', domain: 'anthropic.com' },
   { aliases: ['perplexity'], displayName: 'Perplexity', color: '#1FB8CD', simpleIcon: 'perplexity', domain: 'perplexity.ai' },
   { aliases: ['gemini advanced', 'gemini', 'google gemini'], displayName: 'Gemini', color: '#4285F4', simpleIcon: 'googlegemini', domain: 'gemini.google.com' },
@@ -326,6 +326,38 @@ function getSizeStyle(size: SubscriptionIconSize): CSSProperties {
   return { width: size, height: size }
 }
 
+// OpenAI icon SVG fallback for ChatGPT
+function OpenAIIconFallback({ size = 'md' }: { size?: SubscriptionIconSize }) {
+  let sizePixels = 40
+  if (size === 'sm') sizePixels = 32
+  else if (size === 'md') sizePixels = 40
+  else if (size === 'lg') sizePixels = 48
+  else if (typeof size === 'number') sizePixels = size
+
+  return (
+    <svg
+      width={sizePixels}
+      height={sizePixels}
+      viewBox="0 0 40 40"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="shrink-0"
+    >
+      {/* OpenAI swirl/knot pattern */}
+      <circle cx="20" cy="20" r="20" fill="#F7F7F7" />
+      <path
+        d="M20 8C13.37 8 8 13.37 8 20s5.37 12 12 12 12-5.37 12-12-5.37-12-12-12zm0 21c-4.97 0-9-4.03-9-9s4.03-9 9-9 9 4.03 9 9-4.03 9-9 9z"
+        fill="#10A37F"
+      />
+      <path
+        d="M20 14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6z"
+        fill="#10A37F"
+        opacity="0.6"
+      />
+    </svg>
+  )
+}
+
 function handleLogoError(event: SyntheticEvent<HTMLImageElement>) {
   const image = event.currentTarget
   const urls = (image.dataset.logoUrls || '').split('|').filter(Boolean)
@@ -354,6 +386,7 @@ function BrandLogoImage({
   const fallbackColor = config.color || '#6B7280'
   const fallbackTextColor = getReadableTextColor(fallbackColor)
   const initials = getInitials(config.displayName)
+  const isOpenAI = config.displayName === 'ChatGPT'
 
   if (!logoUrls.length) {
     return <FallbackBadge name={config.displayName} color={fallbackColor} size={size} />
@@ -376,13 +409,19 @@ function BrandLogoImage({
         onError={handleLogoError}
         className="h-full w-full object-contain"
       />
-      <span
-        className="absolute inset-0 hidden items-center justify-center font-bold"
-        style={{ backgroundColor: fallbackColor, color: fallbackTextColor }}
-        aria-hidden="true"
-      >
-        {initials}
-      </span>
+      {isOpenAI ? (
+        <span className="absolute inset-0 hidden items-center justify-center" aria-hidden="true">
+          <OpenAIIconFallback size={size} />
+        </span>
+      ) : (
+        <span
+          className="absolute inset-0 hidden items-center justify-center font-bold"
+          style={{ backgroundColor: fallbackColor, color: fallbackTextColor }}
+          aria-hidden="true"
+        >
+          {initials}
+        </span>
+      )}
     </div>
   )
 }
