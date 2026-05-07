@@ -653,6 +653,15 @@ export function FamilyMembersScreen() {
                       Invite Member
                     </button>
                   )}
+                  {availableSeats <= 0 && (
+                    <button
+                      onClick={() => setShowInviteForm(!showInviteForm)}
+                      className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-white font-medium hover:bg-emerald-700 transition-colors cursor-pointer"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Extra Seat
+                    </button>
+                  )}
                   <button
                     onClick={handleManualRefresh}
                     disabled={isRefreshingStatus}
@@ -663,6 +672,24 @@ export function FamilyMembersScreen() {
                     {!isRefreshingStatus && 'Refresh'}
                   </button>
                 </div>
+
+                {/* Full-seat info panel */}
+                {availableSeats <= 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    className="rounded-lg bg-amber-50 border border-amber-200 p-4 space-y-2"
+                  >
+                    <h4 className="font-semibold text-amber-900">All included seats are used</h4>
+                    <p className="text-sm text-amber-800">
+                      Your Family plan includes 4 members. To invite another member, you&apos;ll need an extra seat for <span className="font-semibold">₹99/month</span>.
+                    </p>
+                    <p className="text-xs text-amber-700 mt-3">
+                      Pending invitations reserve seats until accepted, cancelled, or expired.
+                    </p>
+                  </motion.div>
+                )}
 
                 {/* Invite Form */}
                 <AnimatePresence>

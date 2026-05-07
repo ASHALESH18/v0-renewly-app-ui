@@ -177,11 +177,13 @@ export async function POST(request: NextRequest) {
 
     const currentIncludedCount = (activeMembers?.length || 0) + (pendingIncludes?.length || 0)
 
-    if (currentIncludedCount >= FAMILY_INCLUDED_MEMBER_COUNT) {
+    // Check if included seats are full using family group's limit
+    const includedMemberLimit = familyGroup.included_member_limit ?? FAMILY_INCLUDED_MEMBER_COUNT
+    if (currentIncludedCount >= includedMemberLimit) {
       return NextResponse.json(
         {
           error: 'included_seats_full',
-          message: `You've used all ${FAMILY_INCLUDED_MEMBER_COUNT} included Family seats.`,
+          message: `You've used all ${includedMemberLimit} included Family seats.`,
           extraSeatRequired: true,
           extraSeatPriceINR: 99,
           nextAction: 'create_extra_seat_intent',
