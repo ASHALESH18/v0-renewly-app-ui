@@ -159,8 +159,8 @@ export async function POST(request: NextRequest) {
       success: true,
       intentId,
       status: 'qa_confirmed',
-      nextAction: 'create_extra_seat_invite',
-      message: 'Payment confirmed in QA. The next step will send the extra-seat invite.',
+      nextAction: 'finalize_payment',
+      message: 'Payment confirmed in QA. Extra-seat invite is being created.',
     })
   } catch (error) {
     console.error('[confirm-qa] Error:', error)
@@ -170,3 +170,4 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
