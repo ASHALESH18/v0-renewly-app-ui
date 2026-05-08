@@ -190,6 +190,38 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Blocker #9: F10 MVP maximum enforcement - owner + 4 included + 4 extra = 8 max
+    const totalMembers = 1 + currentIncludedCount // owner + included
+    const { data: extraMembers } = await supabase
+      .from('family_members')
+      .select('id')
+      .eq('family_group_id', familyGroup.id)
+      .eq('seat_type', 'extra')
+      .eq('status', 'active')
+
+    const { data: pendingExtra } = await supabase
+      .from('family_invites')
+      .select('id')
+      .eq('family_group_id', familyGroup.id)
+      .eq('status', 'pending')
+      .eq('seat_type', 'extra')
+
+    const totalExtraCount = (extraMembers?.length || 0) + (pendingExtra?.length || 0)
+    const totalFamilyMembers = totalMembers + totalExtraCount
+    const MVP_MAX_MEMBERS = 8 // 1 owner + 4 included + 3 extra pending = 8
+
+    if (totalFamilyMembers >= MVP_MAX_MEMBERS) {
+      return NextResponse.json(
+        {
+          error: 'MVP_max_members_exceeded',
+          message: `Family plan MVP maximum of ${MVP_MAX_MEMBERS} members reached. Current: owner + ${currentIncludedCount} included + ${totalExtraCount} extra.`,
+          currentTotal: totalFamilyMembers,
+          mvpMax: MVP_MAX_MEMBERS,
+        },
+        { status: 400 }
+      )
+    }
+
     // Generate secure token
     const rawToken = generateInviteToken()
     const tokenHash = hashInviteToken(rawToken)

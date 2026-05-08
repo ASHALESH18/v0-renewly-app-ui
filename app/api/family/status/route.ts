@@ -5,6 +5,7 @@ import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
 import { FAMILY_INCLUDED_MEMBER_COUNT, FAMILY_EXTRA_MEMBER_PRICE_INR } from '@/lib/family/family-config'
 import { calculateSeatUsage, calculateExtraSeatReuseState } from '@/lib/family/family-seat-utils'
+import { calculateFamilyBillingDisplay, getFamilyBillingCurrency } from '@/lib/billing/family-billing-utils'
 
 /**
  * GET /api/family/status
@@ -170,6 +171,17 @@ export async function GET() {
       const includedInviteCount = pendingIncludedInvites.length
       const availableSeats = Math.max(0, maxMembers - currentMemberCount - includedInviteCount)
 
+      // Blocker #6: Calculate Plan & Billing display (F6C)
+      const userCurrency = profile?.currency || 'INR'
+      const billingCurrency = getFamilyBillingCurrency(userCurrency)
+      const billingDisplay = calculateFamilyBillingDisplay({
+        activeMemberCount: currentMemberCount,
+        activeExtraMembers: seatUsage.activeExtraMembers,
+        pendingIncludedInvites: includedInviteCount,
+        pendingExtraInvites: seatUsage.pendingExtraInvites,
+        currency: billingCurrency,
+      })
+
       return NextResponse.json({
         profilePlan: profile?.plan || 'free',
         isFamilyOwner: true,
@@ -227,6 +239,8 @@ export async function GET() {
           scheduledFor: ownerGroup.current_period_end,
           canScheduleNewInvites: ownerGroup.scheduled_action !== 'cancel_at_period_end',
         },
+        // Blocker #6: Plan & Billing display (F6C)
+        billingDisplay,
       })
     }
 
