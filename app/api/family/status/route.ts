@@ -80,7 +80,7 @@ export async function GET() {
     // Fetch active family group where user is owner
     const { data: ownerGroup, error: ownerGroupError } = await supabase
       .from('family_groups')
-      .select('id, status, included_member_limit, extra_member_price_inr, current_period_end')
+      .select('id, status, included_member_limit, extra_member_price_inr, current_period_end, scheduled_action, scheduled_action_reason')
       .eq('owner_user_id', user.id)
       .in('status', ['active', 'past_due'])
       .single()
@@ -219,6 +219,13 @@ export async function GET() {
           reusableExtraSeats: extraSeatReuseState.reusableExtraSeats,
           surplusExtraSeats: extraSeatReuseState.surplusExtraSeats,
           extraSeatsScheduledToEnd,
+        },
+        // F8-lite: Lifecycle scheduling
+        lifecycle: {
+          scheduledAction: ownerGroup.scheduled_action,
+          scheduledActionReason: ownerGroup.scheduled_action_reason,
+          scheduledFor: ownerGroup.current_period_end,
+          canScheduleNewInvites: ownerGroup.scheduled_action !== 'cancel_at_period_end',
         },
       })
     }

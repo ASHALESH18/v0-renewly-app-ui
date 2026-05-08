@@ -92,6 +92,10 @@ export interface FamilyGroupRow {
   extra_seat_count: number
   current_period_start: string | null
   current_period_end: string | null
+  // F8-lite: Lifecycle scheduling
+  scheduled_action: 'none' | 'cancel_at_period_end' | 'downgrade_to_pro_at_period_end' | null
+  scheduled_action_reason: string | null
+  scheduled_action_at: string | null
   created_at: string
   updated_at: string
 }
