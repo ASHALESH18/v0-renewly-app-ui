@@ -256,25 +256,42 @@ export function FamilyMembersScreen() {
     setIsConfirmingQaPayment(true)
 
     try {
-      const res = await fetch('/api/family/extra-seat/confirm-qa', {
+      // Step 1: Mark intent as qa_confirmed
+      const confirmRes = await fetch('/api/family/extra-seat/confirm-qa', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ intentId: paymentIntent.id }),
       })
 
-      const data = await res.json()
+      const confirmData = await confirmRes.json()
 
-      if (!res.ok) {
-        throw new Error(data.message || data.error || 'Failed to confirm payment')
+      if (!confirmRes.ok) {
+        throw new Error(confirmData.message || confirmData.error || 'Failed to confirm payment')
+      }
+
+      // Step 2: Finalize payment and create extra-seat invite
+      const finalizeRes = await fetch('/api/family/extra-seat/finalize-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ intentId: paymentIntent.id }),
+      })
+
+      const finalizeData = await finalizeRes.json()
+
+      if (!finalizeRes.ok) {
+        throw new Error(finalizeData.message || finalizeData.error || 'Failed to finalize payment')
       }
 
       addToast({
         type: 'success',
-        title: 'Payment confirmed in QA',
-        message: 'The next step will send the extra-seat invite.',
+        title: 'Extra-seat invite created',
+        message: `Invite sent to ${paymentIntent.email}. They can now accept to join the Family plan.`,
       })
 
-      // Clear intent state after QA confirmation
+      // Refresh family status
+      await refreshFamilyStatus({ silent: true })
+
+      // Clear intent state after success
       setTimeout(() => {
         setPaymentIntent(null)
       }, 2000)
