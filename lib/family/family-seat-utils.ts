@@ -18,12 +18,6 @@ export function getExtraSeatPriceINR(): number {
   return FAMILY_EXTRA_MEMBER_PRICE_INR
 }
 
-interface SeatCalculationInput {
-  activeMembers: Array<{ id: string; role: string; seat_type: string }>
-  pendingInvites: Array<{ id: string; seat_type: string }>
-  familyGroup: { included_member_limit?: number; extra_seat_count?: number } | null
-}
-
 export interface SeatUsage {
   includedLimit: number
   activeIncludedMembers: number
@@ -34,6 +28,19 @@ export interface SeatUsage {
   activeExtraMembers: number
   pendingExtraInvites: number
   totalSeatsUsed: number
+}
+
+export interface ExtraSeatReuseState {
+  requiredExtraSeats: number
+  paidActiveExtraSeats: number
+  reusableExtraSeats: number
+  surplusExtraSeats: number
+}
+
+interface SeatCalculationInput {
+  activeMembers: Array<{ id: string; role: string; seat_type: string }>
+  pendingInvites: Array<{ id: string; seat_type: string }>
+  familyGroup: { included_member_limit?: number; extra_seat_count?: number } | null
 }
 
 /**
@@ -100,4 +107,41 @@ export function areIncludedSeatsFull(seatUsage: SeatUsage): boolean {
  */
 export function canInviteWithIncludedSeat(seatUsage: SeatUsage): boolean {
   return seatUsage.availableIncludedSeats > 0
+}
+
+/**
+ * Calculate extra-seat reuse and surplus state (F7)
+ * 
+ * Rules:
+ * - requiredExtraSeats = max(0, activeExtraMembers + pendingExtraInvites - includedLimit)
+ *   but must satisfy: activeIncludedMembers + activeExtraMembers <= paidExtraSeats
+ * - reusableExtraSeats = paid seats currently unused (has capacity)
+ * - surplusExtraSeats = paid seats not needed and should schedule cancellation
+ * 
+ * Examples:
+ * - 4 included + 1 active extra + 1 pending extra: requires 2 extra seats
+ * - 4 included + 2 paid extra + 0 active/pending: 2 surplus extra seats
+ * - 3 included + 1 removed + 2 paid extra: 1 surplus extra seat after recalc
+ */
+export function calculateExtraSeatReuseState(
+  seatUsage: SeatUsage
+): ExtraSeatReuseState {
+  // Required extra seats = total active + pending extra members beyond included limit
+  const activeAndPendingExtra = seatUsage.activeExtraMembers + seatUsage.pendingExtraInvites
+  const extraMembersOverIncluded = Math.max(
+    0,
+    activeAndPendingExtra - (seatUsage.includedLimit - seatUsage.activeIncludedMembers)
+  )
+  const requiredExtraSeats = Math.max(0, extraMembersOverIncluded)
+
+  const paidActiveExtraSeats = seatUsage.extraSeatCount
+  const reusableExtraSeats = Math.max(0, paidActiveExtraSeats - requiredExtraSeats)
+  const surplusExtraSeats = reusableExtraSeats
+
+  return {
+    requiredExtraSeats,
+    paidActiveExtraSeats,
+    reusableExtraSeats,
+    surplusExtraSeats,
+  }
 }

@@ -14,6 +14,11 @@ import {
 import { sendFamilyInviteEmail } from '@/lib/email/family-invite-email'
 import { FAMILY_INCLUDED_MEMBER_COUNT } from '@/lib/family/family-config'
 import { resolveEffectiveEntitlement } from '@/lib/entitlements/effective-plan'
+import {
+  checkOwnerCannotInviteSelf,
+  checkNoDuplicatePendingInvite,
+  checkNotAlreadyActiveMember,
+} from '@/lib/family/family-abuse-prevention'
 
 /**
  * POST /api/family/invites
@@ -74,16 +79,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check: owner cannot invite self
-    const { data: ownerProfile } = await supabase
-      .from('profiles')
-      .select('email')
-      .eq('id', user.id)
-      .single()
-
-    if (ownerProfile && normalizeInviteEmail(ownerProfile.email) === invitedEmail) {
+    // Verify user is effective family owner (additional safety check)
+    const entitlement = await resolveEffectiveEntitlement(user.id)
+    if (!entitlement.isFamilyOwner) {
       return NextResponse.json(
-        { error: 'Cannot invite yourself' },
+        { error: 'Only the Family owner can invite members' },
+        { status: 403 }
+      )
+    }
+
+    // F10-1: Check owner cannot invite self
+    const selfCheck = await checkOwnerCannotInviteSelf(supabase, user.id, invitedEmail)
+    if (!selfCheck.valid) {
+      return NextResponse.json(
+        { error: selfCheck.error },
         { status: 400 }
       )
     }
@@ -98,7 +107,7 @@ export async function POST(request: NextRequest) {
     // Fetch active family group for owner
     const { data: familyGroup } = await supabase
       .from('family_groups')
-      .select('id, status, included_member_limit')
+      .select('id, status, included_member_limit, scheduled_action')
       .eq('owner_user_id', user.id)
       .in('status', ['active', 'past_due'])
       .single()
@@ -118,44 +127,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify user is effective family owner (additional safety check)
-    const entitlement = await resolveEffectiveEntitlement(user.id)
-    if (!entitlement.isFamilyOwner) {
+    // F10-2: Check duplicate pending invite
+    const dupCheck = await checkNoDuplicatePendingInvite(supabase, familyGroup.id, invitedEmail)
+    if (!dupCheck.valid) {
       return NextResponse.json(
-        { error: 'Only the Family owner can invite members' },
-        { status: 403 }
-      )
-    }
-
-    // Check: duplicate pending invite
-    const { data: existingPending } = await supabase
-      .from('family_invites')
-      .select('id')
-      .eq('family_group_id', familyGroup.id)
-      .ilike('invited_email', invitedEmail)
-      .eq('status', 'pending')
-      .single()
-
-    if (existingPending) {
-      return NextResponse.json(
-        { error: 'Invite already sent to this email' },
+        { error: dupCheck.error },
         { status: 409 }
       )
     }
 
-    // Check: no active member with same email
-    const { data: existingMember } = await supabase
-      .from('family_members')
-      .select('id')
-      .eq('family_group_id', familyGroup.id)
-      .ilike('email', invitedEmail)
-      .eq('status', 'active')
-      .single()
-
-    if (existingMember) {
+    // F10-3: Check not already active member
+    const activeCheck = await checkNotAlreadyActiveMember(supabase, familyGroup.id, invitedEmail)
+    if (!activeCheck.valid) {
       return NextResponse.json(
-        { error: 'This email is already a member of the family group' },
+        { error: activeCheck.error },
         { status: 409 }
+      )
+    }
+
+    // F8-lite: Check if Family cancellation is scheduled (block new invites)
+    if (familyGroup.scheduled_action === 'cancel_at_period_end') {
+      return NextResponse.json(
+        {
+          error: 'cannot_invite_during_cancellation',
+          message: 'Cannot create new invites while Family plan cancellation is scheduled.',
+          nextAction: 'cancel_scheduled_cancellation',
+        },
+        { status: 400 }
       )
     }
 
