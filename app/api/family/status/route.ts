@@ -59,6 +59,12 @@ export async function GET() {
       )
     }
 
+    const { data: userSettings } = await supabase
+      .from('user_settings')
+      .select('currency_code')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
     const userEmail = profile?.email || user.email || ''
     const maxMembers = FAMILY_INCLUDED_MEMBER_COUNT
 
@@ -137,19 +143,7 @@ export async function GET() {
         console.error('[family-status] Invites fetch error:', invitesError)
       }
 
-      // Calculate detailed seat usage - only pending invites reserve seats
-      const pendingInvitesForSeatUsage = (invites || []).filter((i) => i.status === 'pending')
-      
-      const seatUsage = calculateSeatUsage({
-        activeMembers: (members || []),
-        pendingInvites: pendingInvitesForSeatUsage,
-        familyGroup: ownerGroup,
-      })
-
-      // Calculate extra-seat reuse state (F7)
-      const extraSeatReuseState = calculateExtraSeatReuseState(seatUsage)
-
-      // Fetch family seat add-ons to check cancellation scheduling
+      // Fetch family seat add-ons before calculating seat usage.
       const { data: seatAddons = [], error: seatsError } = await supabase
         .from('family_seat_addons')
         .select('id, quantity, status, cancel_at_period_end, current_period_end')
@@ -160,9 +154,21 @@ export async function GET() {
         console.error('[family-status] Seat addons fetch error:', seatsError)
       }
 
-      // Count total active extra seat quantity from add-ons
-      const totalActiveExtraSeats = seatAddons.reduce((sum, addon) => sum + addon.quantity, 0)
-      const extraSeatsScheduledToEnd = seatAddons.filter(a => a.cancel_at_period_end).length
+      // Calculate detailed seat usage - only pending invites reserve seats.
+      const pendingInvitesForSeatUsage = (invites || []).filter((i) => i.status === 'pending')
+
+      const seatUsage = calculateSeatUsage({
+        activeMembers: (members || []),
+        pendingInvites: pendingInvitesForSeatUsage,
+        familyGroup: ownerGroup,
+        seatAddons: seatAddons || [],
+      })
+
+      // Calculate extra-seat reuse state (F7)
+      const extraSeatReuseState = calculateExtraSeatReuseState(seatUsage)
+
+      const totalActiveExtraSeats = seatUsage.paidActiveExtraSeats
+      const extraSeatsScheduledToEnd = seatUsage.extraSeatsEndingAtPeriodEnd
 
       // Separate active members for display
       const activeMembers = (members || []).filter(m => m.status === 'active')
@@ -172,7 +178,7 @@ export async function GET() {
       const availableSeats = Math.max(0, maxMembers - currentMemberCount - includedInviteCount)
 
       // Blocker #6: Calculate Plan & Billing display (F6C)
-      const userCurrency = profile?.currency || 'INR'
+      const userCurrency = userSettings?.currency_code || 'INR'
       const billingCurrency = getFamilyBillingCurrency(userCurrency)
       const billingDisplay = calculateFamilyBillingDisplay({
         activeMemberCount: currentMemberCount,
@@ -220,6 +226,7 @@ export async function GET() {
           includedSeatsUsed: seatUsage.includedSeatsUsed,
           availableIncludedSeats: seatUsage.availableIncludedSeats,
           extraSeatCount: seatUsage.extraSeatCount,
+          paidActiveExtraSeats: seatUsage.paidActiveExtraSeats,
           activeExtraMembers: seatUsage.activeExtraMembers,
           pendingExtraInvites: seatUsage.pendingExtraInvites,
           extraSeatPriceINR: FAMILY_EXTRA_MEMBER_PRICE_INR,

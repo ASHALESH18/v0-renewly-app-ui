@@ -86,6 +86,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // F8-lite: extra-seat add-ons stop renewing with Family cancellation.
+    const { error: addonCancelError } = await supabase
+      .from('family_seat_addons')
+      .update({
+        cancel_at_period_end: true,
+        updated_at: now,
+      })
+      .eq('family_group_id', familyGroup.id)
+      .eq('status', 'active')
+
+    if (addonCancelError) {
+      console.warn('[schedule-cancellation] Failed to schedule extra-seat add-ons to end:', addonCancelError)
+    }
+
     // F9: Send cancellation scheduled notification (non-blocking)
     const ownerProfile = await supabase
       .from('profiles')
@@ -97,7 +111,7 @@ export async function POST(request: NextRequest) {
       sendFamilyCancellationScheduledEmail({
         email: ownerProfile.data.email,
         scheduledDate: new Date(familyGroup.current_period_end || '').toLocaleDateString(),
-      }).catch(err => console.warn('[F9] Cancellation email hook failed:', err))
+      }).catch((err) => console.warn('[F9] Cancellation email hook failed:', err))
     }
 
     return NextResponse.json({

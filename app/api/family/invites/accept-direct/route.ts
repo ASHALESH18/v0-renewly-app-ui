@@ -7,6 +7,7 @@ import { normalizeInviteEmail, isInviteExpired } from '@/lib/family/family-invit
 import { syncRenewlyFamilyMemberSubscription } from '@/lib/billing/renewly-subscription-sync'
 import { invalidateCache } from '@/lib/redis'
 import { revalidateTag } from 'next/cache'
+import { checkUserNotInMultipleFamilies } from '@/lib/family/family-abuse-prevention'
 
 /**
  * POST /api/family/invites/accept-direct
@@ -206,6 +207,14 @@ export async function POST(request: Request) {
     if (duplicateMember) {
       return NextResponse.json(
         { error: 'You are already a member of this family group' },
+        { status: 409 }
+      )
+    }
+
+    const multiFamilyCheck = await checkUserNotInMultipleFamilies(supabase, user.id)
+    if (!multiFamilyCheck.valid) {
+      return NextResponse.json(
+        { error: multiFamilyCheck.error },
         { status: 409 }
       )
     }

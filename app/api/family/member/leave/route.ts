@@ -3,6 +3,7 @@ import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
 import { invalidateCache } from '@/lib/redis'
 import { revalidateTag } from 'next/cache'
+import { calculateSeatUsage, calculateExtraSeatReuseState } from '@/lib/family/family-seat-utils'
 
 /**
  * POST /api/family/member/leave
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
     // Fetch active membership for current user
     const { data: membership, error: membershipError } = await supabase
       .from('family_members')
-      .select('id, family_group_id, user_id, status, role')
+      .select('id, family_group_id, user_id, status, role, seat_type')
       .eq('user_id', user.id)
       .eq('status', 'active')
       .single()
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
     // Fetch family group to verify it's active or past_due
     const { data: familyGroup, error: groupError } = await supabase
       .from('family_groups')
-      .select('id, owner_user_id, status')
+      .select('id, owner_user_id, status, included_member_limit, extra_seat_count, current_period_end')
       .eq('id', membership.family_group_id)
       .single()
 
@@ -209,6 +210,60 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // F7: if an extra-seat member leaves voluntarily, release/reuse the paid seat until period end.
+    let extraSeatMetadata: Record<string, unknown> = {}
+    if (membership.seat_type === 'extra') {
+      const { data: allMembers = [] } = await supabase
+        .from('family_members')
+        .select('id, role, seat_type')
+        .eq('family_group_id', membership.family_group_id)
+        .eq('status', 'active')
+
+      const { data: pendingInvites = [] } = await supabase
+        .from('family_invites')
+        .select('id, seat_type')
+        .eq('family_group_id', membership.family_group_id)
+        .eq('status', 'pending')
+
+      const { data: seatAddons = [] } = await supabase
+        .from('family_seat_addons')
+        .select('id, quantity, status, cancel_at_period_end, current_period_end')
+        .eq('family_group_id', membership.family_group_id)
+        .eq('status', 'active')
+
+      const seatUsage = calculateSeatUsage({
+        activeMembers: allMembers || [],
+        pendingInvites: pendingInvites || [],
+        familyGroup,
+        seatAddons: seatAddons || [],
+      })
+
+      const extraSeatReuse = calculateExtraSeatReuseState(seatUsage)
+
+      if (extraSeatReuse.surplusExtraSeats > 0) {
+        const { error: updateAddonError } = await supabase
+          .from('family_seat_addons')
+          .update({
+            cancel_at_period_end: true,
+            updated_at: now,
+          })
+          .eq('family_group_id', membership.family_group_id)
+          .eq('status', 'active')
+
+        if (updateAddonError) {
+          console.warn('[family-member-leave] Failed to mark surplus add-ons for period-end cancellation:', updateAddonError)
+        }
+      }
+
+      extraSeatMetadata = {
+        requiredExtraSeats: extraSeatReuse.requiredExtraSeats,
+        paidActiveExtraSeats: extraSeatReuse.paidActiveExtraSeats,
+        reusableExtraSeats: extraSeatReuse.reusableExtraSeats,
+        surplusSeatsScheduledToEnd: extraSeatReuse.surplusExtraSeats,
+        currentPeriodEnd: extraSeatReuse.currentPeriodEnd,
+      }
+    }
+
     // Invalidate caches for the member
     try {
       await invalidateCache(`subscriptions:${user.id}`)
@@ -237,6 +292,8 @@ export async function POST(request: NextRequest) {
       success: true,
       profileDowngraded,
       coveredSubscriptionCancelled,
+      removedSeatType: membership.seat_type,
+      ...extraSeatMetadata,
     })
   } catch (error) {
     console.error('[family-member-leave] Error:', error)
