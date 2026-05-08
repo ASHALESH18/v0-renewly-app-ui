@@ -81,7 +81,7 @@ export async function POST(
     // Fetch family group and verify ownership
     const { data: familyGroup, error: groupError } = await supabase
       .from('family_groups')
-      .select('id, owner_user_id, included_member_limit')
+      .select('id, owner_user_id, included_member_limit, extra_seat_count, current_period_end')
       .eq('id', invite.family_group_id)
       .single()
 
@@ -112,60 +112,57 @@ export async function POST(
       throw updateError
     }
 
-    // F7: If extra-seat invite, handle reuse logic
+    // F7: If an extra-seat invite is cancelled, the paid seat becomes reusable until period end.
     let extraSeatMetadata: Record<string, unknown> = {}
     if (invite.seat_type === 'extra') {
-      // Fetch all active members and pending invites to recalculate required extra seats
       const { data: allMembers = [] } = await supabase
         .from('family_members')
-        .select('id, role, seat_type, status')
+        .select('id, role, seat_type')
         .eq('family_group_id', familyGroup.id)
         .eq('status', 'active')
-        .not('role', 'eq', 'owner')
 
-      const { data: allInvites = [] } = await supabase
+      const { data: pendingInvites = [] } = await supabase
         .from('family_invites')
-        .select('id, seat_type, status')
+        .select('id, seat_type')
         .eq('family_group_id', familyGroup.id)
+        .eq('status', 'pending')
 
-      const pendingInvites = (allInvites || []).filter(
-        i => i.status === 'pending' && i.id !== normalizedInviteId // Exclude the invite we just cancelled
-      )
+      const { data: seatAddons = [] } = await supabase
+        .from('family_seat_addons')
+        .select('id, quantity, status, cancel_at_period_end, current_period_end')
+        .eq('family_group_id', familyGroup.id)
+        .eq('status', 'active')
 
       const seatUsage = calculateSeatUsage({
-        activeMembers: allMembers,
-        pendingInvites: pendingInvites,
-        familyGroup: familyGroup,
+        activeMembers: allMembers || [],
+        pendingInvites: pendingInvites || [],
+        familyGroup,
+        seatAddons: seatAddons || [],
       })
 
       const extraSeatReuse = calculateExtraSeatReuseState(seatUsage)
 
-      // If there are now surplus extra seats, mark them for cancellation at period end
       if (extraSeatReuse.surplusExtraSeats > 0) {
-        const { data: addons = [] } = await supabase
+        const { error: updateAddonError } = await supabase
           .from('family_seat_addons')
-          .select('id, quantity, cancel_at_period_end')
+          .update({
+            cancel_at_period_end: true,
+            updated_at: now,
+          })
           .eq('family_group_id', familyGroup.id)
           .eq('status', 'active')
-          .eq('cancel_at_period_end', false)
 
-        for (const addon of addons || []) {
-          if (extraSeatReuse.surplusExtraSeats > 0) {
-            const { error: updateAddonError } = await supabase
-              .from('family_seat_addons')
-              .update({
-                cancel_at_period_end: true,
-                updated_at: now,
-              })
-              .eq('id', addon.id)
-
-            if (updateAddonError) {
-              console.warn('[family-invites-cancel] Failed to mark add-on for cancellation:', updateAddonError)
-            } else {
-              extraSeatMetadata.surplusSeatsScheduledToEnd = extraSeatReuse.surplusExtraSeats
-            }
-          }
+        if (updateAddonError) {
+          console.warn('[family-invites-cancel] Failed to mark surplus add-ons for period-end cancellation:', updateAddonError)
         }
+      }
+
+      extraSeatMetadata = {
+        requiredExtraSeats: extraSeatReuse.requiredExtraSeats,
+        paidActiveExtraSeats: extraSeatReuse.paidActiveExtraSeats,
+        reusableExtraSeats: extraSeatReuse.reusableExtraSeats,
+        surplusSeatsScheduledToEnd: extraSeatReuse.surplusExtraSeats,
+        currentPeriodEnd: extraSeatReuse.currentPeriodEnd,
       }
     }
 
