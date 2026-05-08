@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
     const tokenHash = hashInviteToken(rawToken)
     const expiryDate = getInviteExpiryDate()
 
-    // Create extra-seat invite
+    // Create extra-seat invite (without metadata - use idempotency by email+family+seat_type instead)
     const { data: newInvite, error: insertError } = await supabase
       .from('family_invites')
       .insert({
@@ -176,10 +176,6 @@ export async function POST(request: NextRequest) {
         status: 'pending',
         seat_type: 'extra',
         expires_at: expiryDate.toISOString(),
-        metadata: {
-          payment_intent_id: intentId,
-          created_after_payment: true,
-        },
       })
       .select('id')
       .single()
@@ -190,6 +186,80 @@ export async function POST(request: NextRequest) {
         { error: 'Failed to create invite' },
         { status: 500 }
       )
+    }
+
+    // Record paid extra seat capacity (F6C: After successful payment, record the seat)
+    // Check if we need to create or update family_seat_addons
+    const { data: existingAddons } = await supabase
+      .from('family_seat_addons')
+      .select('id, quantity, status')
+      .eq('family_group_id', familyGroup.id)
+      .eq('status', 'active')
+      .limit(1)
+
+    const nowIso = now.toISOString()
+    const periodStart = nowIso
+    const periodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+
+    if (!existingAddons || existingAddons.length === 0) {
+      // Create new family_seat_addons record with quantity 1
+      const { error: addonCreateError } = await supabase
+        .from('family_seat_addons')
+        .insert({
+          family_group_id: familyGroup.id,
+          quantity: 1,
+          price_inr_per_seat: 99,
+          status: 'active',
+          current_period_start: periodStart,
+          current_period_end: periodEnd,
+          cancel_at_period_end: false,
+        })
+
+      if (addonCreateError) {
+        console.warn('[finalize-payment] Failed to create seat addon:', addonCreateError)
+        // Don't fail - invite was created successfully, addon tracking is secondary
+      } else {
+        // Update family_groups.extra_seat_count to 1
+        await supabase
+          .from('family_groups')
+          .update({
+            extra_seat_count: 1,
+            current_period_start: periodStart,
+            current_period_end: periodEnd,
+            updated_at: nowIso,
+          })
+          .eq('id', familyGroup.id)
+          .catch(err => console.warn('[finalize-payment] Failed to update extra_seat_count:', err))
+      }
+    } else {
+      // Increment existing addon quantity if still in period
+      const addon = existingAddons[0]
+      const newQuantity = (addon.quantity || 0) + 1
+
+      const { error: addonUpdateError } = await supabase
+        .from('family_seat_addons')
+        .update({
+          quantity: newQuantity,
+          current_period_end: periodEnd,
+          cancel_at_period_end: false, // Clear cancel flag if reusing
+          updated_at: nowIso,
+        })
+        .eq('id', addon.id)
+
+      if (addonUpdateError) {
+        console.warn('[finalize-payment] Failed to update seat addon:', addonUpdateError)
+      } else {
+        // Update family_groups.extra_seat_count
+        await supabase
+          .from('family_groups')
+          .update({
+            extra_seat_count: newQuantity,
+            current_period_end: periodEnd,
+            updated_at: nowIso,
+          })
+          .eq('id', familyGroup.id)
+          .catch(err => console.warn('[finalize-payment] Failed to update extra_seat_count:', err))
+      }
     }
 
     // Fetch owner profile for email
@@ -237,7 +307,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       inviteId: newInvite.id,
-      emailSent: emailResult.success,
+      emailSent: emailResult.sent,
       message: `Extra-seat invite created for ${intent.invited_email}`,
     })
   } catch (error) {
