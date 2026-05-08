@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
+import { calculateSeatUsage, calculateExtraSeatReuseState } from '@/lib/family/family-seat-utils'
 
 /**
  * POST /api/family/invites/[inviteId]/cancel
@@ -55,10 +56,10 @@ export async function POST(
       })
     }
 
-    // Fetch the invite
+    // Fetch the invite with seat_type for F7 logic
     const { data: invite, error: inviteError } = await supabase
       .from('family_invites')
-      .select('id, family_group_id, status')
+      .select('id, family_group_id, status, seat_type')
       .eq('id', normalizedInviteId)
       .single()
 
@@ -80,7 +81,7 @@ export async function POST(
     // Fetch family group and verify ownership
     const { data: familyGroup, error: groupError } = await supabase
       .from('family_groups')
-      .select('id, owner_user_id')
+      .select('id, owner_user_id, included_member_limit')
       .eq('id', invite.family_group_id)
       .single()
 
@@ -95,13 +96,15 @@ export async function POST(
       )
     }
 
+    const now = new Date().toISOString()
+
     // Cancel the invite
     const { error: updateError } = await supabase
       .from('family_invites')
       .update({
         status: 'cancelled',
-        cancelled_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        cancelled_at: now,
+        updated_at: now,
       })
       .eq('id', normalizedInviteId)
 
@@ -109,7 +112,68 @@ export async function POST(
       throw updateError
     }
 
-    return NextResponse.json({ success: true })
+    // F7: If extra-seat invite, handle reuse logic
+    let extraSeatMetadata: Record<string, unknown> = {}
+    if (invite.seat_type === 'extra') {
+      // Fetch all active members and pending invites to recalculate required extra seats
+      const { data: allMembers = [] } = await supabase
+        .from('family_members')
+        .select('id, role, seat_type, status')
+        .eq('family_group_id', familyGroup.id)
+        .eq('status', 'active')
+        .not('role', 'eq', 'owner')
+
+      const { data: allInvites = [] } = await supabase
+        .from('family_invites')
+        .select('id, seat_type, status')
+        .eq('family_group_id', familyGroup.id)
+
+      const pendingInvites = (allInvites || []).filter(
+        i => i.status === 'pending' && i.id !== normalizedInviteId // Exclude the invite we just cancelled
+      )
+
+      const seatUsage = calculateSeatUsage({
+        activeMembers: allMembers,
+        pendingInvites: pendingInvites,
+        familyGroup: familyGroup,
+      })
+
+      const extraSeatReuse = calculateExtraSeatReuseState(seatUsage)
+
+      // If there are now surplus extra seats, mark them for cancellation at period end
+      if (extraSeatReuse.surplusExtraSeats > 0) {
+        const { data: addons = [] } = await supabase
+          .from('family_seat_addons')
+          .select('id, quantity, cancel_at_period_end')
+          .eq('family_group_id', familyGroup.id)
+          .eq('status', 'active')
+          .eq('cancel_at_period_end', false)
+
+        for (const addon of addons || []) {
+          if (extraSeatReuse.surplusExtraSeats > 0) {
+            const { error: updateAddonError } = await supabase
+              .from('family_seat_addons')
+              .update({
+                cancel_at_period_end: true,
+                updated_at: now,
+              })
+              .eq('id', addon.id)
+
+            if (updateAddonError) {
+              console.warn('[family-invites-cancel] Failed to mark add-on for cancellation:', updateAddonError)
+            } else {
+              extraSeatMetadata.surplusSeatsScheduledToEnd = extraSeatReuse.surplusExtraSeats
+            }
+          }
+        }
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      cancelledSeatType: invite.seat_type,
+      ...extraSeatMetadata,
+    })
   } catch (error) {
     console.error('[family-invites-cancel] Error:', error)
     return NextResponse.json(

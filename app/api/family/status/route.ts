@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
 import { FAMILY_INCLUDED_MEMBER_COUNT, FAMILY_EXTRA_MEMBER_PRICE_INR } from '@/lib/family/family-config'
-import { calculateSeatUsage } from '@/lib/family/family-seat-utils'
+import { calculateSeatUsage, calculateExtraSeatReuseState } from '@/lib/family/family-seat-utils'
 
 /**
  * GET /api/family/status
@@ -129,18 +129,12 @@ export async function GET() {
         .from('family_invites')
         .select('id, invited_email, status, expires_at, seat_type')
         .eq('family_group_id', ownerGroup.id)
-        .eq('seat_type', 'included') // Only show included seat invites
+        // Get both included and extra invites (don't filter by seat_type)
+        .in('status', ['pending', 'cancelled', 'expired', 'accepted'])
 
       if (invitesError) {
         console.error('[family-status] Invites fetch error:', invitesError)
       }
-
-      // Calculate capacity
-      const activeMembers = (members || []).filter(m => m.status === 'active')
-      const pendingIncludedInvites = (invites || []).filter(i => i.status === 'pending' && i.seat_type === 'included')
-      const currentMemberCount = activeMembers.length
-      const includedInviteCount = pendingIncludedInvites.length
-      const availableSeats = Math.max(0, maxMembers - currentMemberCount - includedInviteCount)
 
       // Calculate detailed seat usage - only pending invites reserve seats
       const pendingInvitesForSeatUsage = (invites || []).filter((i) => i.status === 'pending')
@@ -150,6 +144,31 @@ export async function GET() {
         pendingInvites: pendingInvitesForSeatUsage,
         familyGroup: ownerGroup,
       })
+
+      // Calculate extra-seat reuse state (F7)
+      const extraSeatReuseState = calculateExtraSeatReuseState(seatUsage)
+
+      // Fetch family seat add-ons to check cancellation scheduling
+      const { data: seatAddons = [], error: seatsError } = await supabase
+        .from('family_seat_addons')
+        .select('id, quantity, status, cancel_at_period_end, current_period_end')
+        .eq('family_group_id', ownerGroup.id)
+        .eq('status', 'active')
+
+      if (seatsError) {
+        console.error('[family-status] Seat addons fetch error:', seatsError)
+      }
+
+      // Count total active extra seat quantity from add-ons
+      const totalActiveExtraSeats = seatAddons.reduce((sum, addon) => sum + addon.quantity, 0)
+      const extraSeatsScheduledToEnd = seatAddons.filter(a => a.cancel_at_period_end).length
+
+      // Separate active members for display
+      const activeMembers = (members || []).filter(m => m.status === 'active')
+      const currentMemberCount = activeMembers.length
+      const pendingIncludedInvites = (invites || []).filter(i => i.status === 'pending' && i.seat_type === 'included')
+      const includedInviteCount = pendingIncludedInvites.length
+      const availableSeats = Math.max(0, maxMembers - currentMemberCount - includedInviteCount)
 
       return NextResponse.json({
         profilePlan: profile?.plan || 'free',
@@ -192,6 +211,14 @@ export async function GET() {
           activeExtraMembers: seatUsage.activeExtraMembers,
           pendingExtraInvites: seatUsage.pendingExtraInvites,
           extraSeatPriceINR: FAMILY_EXTRA_MEMBER_PRICE_INR,
+        },
+        // F7: Extra-seat reuse and surplus state
+        extraSeatReuse: {
+          requiredExtraSeats: extraSeatReuseState.requiredExtraSeats,
+          paidActiveExtraSeats: totalActiveExtraSeats,
+          reusableExtraSeats: extraSeatReuseState.reusableExtraSeats,
+          surplusExtraSeats: extraSeatReuseState.surplusExtraSeats,
+          extraSeatsScheduledToEnd,
         },
       })
     }
