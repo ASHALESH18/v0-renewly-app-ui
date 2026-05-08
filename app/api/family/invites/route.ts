@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     // Check: owner must be Family plan or have family group
     const { data: ownerProfilePlan } = await supabase
       .from('profiles')
-      .select('plan')
+      .select('plan, email, full_name')
       .eq('id', user.id)
       .single()
 

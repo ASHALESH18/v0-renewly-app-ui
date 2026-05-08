@@ -55,7 +55,7 @@ export async function POST(
     // Fetch the family member record
     const { data: member, error: memberError } = await supabase
       .from('family_members')
-      .select('id, family_group_id, user_id, status, role, email')
+      .select('id, family_group_id, user_id, status, role, email, seat_type')
       .eq('id', normalizedMemberId)
       .single()
 
@@ -85,7 +85,7 @@ export async function POST(
     // Fetch family group and verify ownership
     const { data: familyGroup, error: groupError } = await supabase
       .from('family_groups')
-      .select('id, owner_user_id')
+      .select('id, owner_user_id, current_period_end')
       .eq('id', member.family_group_id)
       .single()
 

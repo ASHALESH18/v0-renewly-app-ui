@@ -187,7 +187,54 @@ export async function POST(request: NextRequest) {
       intentId = existingIntent.id
       intentExpiresAt = existingIntent.expires_at
     } else {
-      // Create new pending intent
+      // F7-F10: Check for reusable paid extra seats before requiring new payment
+      const { data: seatAddons } = await supabase
+        .from('family_seat_addons')
+        .select('id, quantity, cancel_at_period_end, current_period_end')
+        .eq('family_group_id', familyGroup.id)
+        .eq('status', 'active')
+        .single()
+
+      // Calculate if we have reusable capacity
+      let hasReusableSeats = false
+      if (seatAddons && seatAddons.quantity > 0) {
+        // Count active extra members to see if we have spare capacity
+        const activeExtraMembers = (activeMembers || []).filter(m => m.seat_type === 'extra')
+        const pendingExtraInvites = (pendingInvites || []).filter(i => i.seat_type === 'extra')
+        const totalExtraNeeded = activeExtraMembers.length + pendingExtraInvites.length + 1 // +1 for this new invite
+
+        if (totalExtraNeeded <= seatAddons.quantity) {
+          // We have a reusable seat! Clear the cancel flag if set
+          if (seatAddons.cancel_at_period_end) {
+            await supabase
+              .from('family_seat_addons')
+              .update({ cancel_at_period_end: false, updated_at: now.toISOString() })
+              .eq('id', seatAddons.id)
+              .catch(err => console.warn('[intent] Failed to clear cancel flag:', err))
+          }
+          hasReusableSeats = true
+        }
+      }
+
+      // If reusable seat exists, create invite directly without payment intent
+      if (hasReusableSeats) {
+        return NextResponse.json({
+          success: true,
+          intent: {
+            id: null,
+            email: invitedEmail,
+            extraSeatRequired: true,
+            priceINR: 0,
+            currency: 'INR',
+            billingCycle: 'monthly',
+            status: 'reusable_seat_available',
+            reusingSeat: true,
+            copy: `Adding this member will reuse an existing paid extra seat (no additional charge).`,
+          },
+        })
+      }
+
+      // Create new pending intent (payment required)
       const newExpiresAt = new Date(Date.now() + 30 * 60 * 1000) // 30 minutes
       const { data: newIntent, error: insertError } = await supabase
         .from('family_extra_seat_payment_intents')
