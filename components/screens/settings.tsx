@@ -170,19 +170,13 @@ export function SettingsScreen() {
           })
         }
       } catch (error) {
-        console.error('[v0] Error fetching family status:', error)
+        console.error('[settings] Error fetching family status:', error)
+      } finally {
+        setFamilyStatusLoading(false)
       }
     }
 
-    if (isMounted) {
-      fetchFamilyStatus()
-    }
-  }, [isMounted])
-
-  // Check if QA mode is enabled (production-safe check)
-  const isQAMode = useMemo(() => {
-    if (typeof window === 'undefined') return false
-    return process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_QA_ENABLED !== 'false'
+    fetchFamilyStatus()
   }, [])
 
   // Determine if user is a Family member (not owner)
@@ -650,6 +644,16 @@ export function SettingsScreen() {
               description={pendingBillingBadgeText || (userProfile?.plan === 'pro' ? 'Pro - Active' : planName)}
               onClick={() => setActiveSheet('billing')}
             />
+            {/* Show Family Members loading state while fetching */}
+            {userProfile?.plan === 'family' && familyStatusLoading && (
+              <SettingsItem
+                icon={Users}
+                label="Family Members"
+                description="Loading family access…"
+                onClick={() => {}}
+              />
+            )}
+            {/* Show Family Members when owner and not removed */}
             {isFamilyOwner && !wasRemovedFromFamily && (
               <SettingsItem
                 icon={Users}
@@ -999,7 +1003,7 @@ export function SettingsScreen() {
         <SettingsSheet
           isOpen={activeSheet === 'billing'}
           onClose={() => setActiveSheet(null)}
-          title={wasRemovedFromFamily ? 'Billing & Plan' : isFamilyMember ? 'Family Access' : 'Billing & Plan'}
+          title={wasRemovedFromFamily && userProfile?.plan === 'free' ? 'Billing & Plan' : isFamilyMember ? 'Family Access' : 'Billing & Plan'}
         >
           <div className="space-y-6">
             {/* Removed from Family - Show Free Plan */}
