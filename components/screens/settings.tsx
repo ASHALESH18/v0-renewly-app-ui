@@ -8,7 +8,7 @@ import {
   Bell, CreditCard, Shield, Globe,
   HelpCircle, FileText, LogOut, ChevronRight, ChevronLeft, Crown,
   Smartphone, Mail, Lock, Download, FileJson, X,
-  Check, AlertCircle, Eye, EyeOff, RefreshCw, Users
+  Check, AlertCircle, Eye, EyeOff, RefreshCw, Users,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from '@/components/motion'
@@ -25,12 +25,11 @@ import { currencies } from '@/lib/locale-utils'
 import { ThemeSelectorCards } from '@/components/theme-selector-cards'
 import { languageNames, type SupportedLanguage } from '@/lib/i18n'
 
-// Sheet component for settings modals
 function SettingsSheet({
   isOpen,
   onClose,
   title,
-  children
+  children,
 }: {
   isOpen: boolean
   onClose: () => void
@@ -117,7 +116,6 @@ export function SettingsScreen() {
   const searchParams = useSearchParams()
   const section = searchParams.get('section')
 
-  // Sheet states
   const [activeSheet, setActiveSheet] = useState<string | null>(null)
   const [showPlanSheet, setShowPlanSheet] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
@@ -127,91 +125,83 @@ export function SettingsScreen() {
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false)
   const [isCancellingPlan, setIsCancellingPlan] = useState(false)
 
-  // Store
   const userProfile = useStore((state) => state.userProfile)
   const currentUserEmail = useStore((state) => state.currentUserEmail)
   const notificationSettings = useStore((state) => state.notificationSettings)
   const subscriptions = useStore((state) => state.subscriptions)
   const addToast = useStore((state) => state.addToast)
+  const updateNotificationSettings = useStore((state) => state.updateNotificationSettings)
+  const setUserProfile = useStore((state) => state.setUserProfile)
 
-  const safeNotificationSettings = notificationSettings || {
+  const safeNotificationSettings = {
     pushNotifications: false,
     emailNotifications: false,
     reminderDays: 7,
     currencyCode: 'INR',
     language: 'en',
+    ...(notificationSettings || {}),
   }
 
   const safeSubscriptions = Array.isArray(subscriptions) ? subscriptions : []
-  const updateNotificationSettings = useStore((state) => state.updateNotificationSettings)
-  const setUserProfile = useStore((state) => state.setUserProfile)
 
-  // Family status for member/owner distinction
   const [familyStatus, setFamilyStatus] = useState<any>(null)
   const [familyStatusLoading, setFamilyStatusLoading] = useState(true)
 
-  // Track client-side mounting to prevent hydration mismatch
   const [isMounted, setIsMounted] = useState(false)
+
   useEffect(() => {
     setIsMounted(true)
   }, [])
 
-  // Fetch family status to check if user is owner or member
   useEffect(() => {
     const fetchFamilyStatus = async () => {
+      setFamilyStatusLoading(true)
+
       try {
-        const res = await fetch('/api/family/status')
+        const res = await fetch('/api/family/status', { cache: 'no-store' })
+
         if (res.ok) {
           const data = await res.json()
+
           setFamilyStatus({
             ...data,
             members: Array.isArray(data?.members) ? data.members : [],
             invites: Array.isArray(data?.invites) ? data.invites : [],
           })
+        } else {
+          setFamilyStatus(null)
         }
       } catch (error) {
-        console.error('[settings] Error fetching family status:', error)
+        console.error('[v0] Error fetching family status:', error)
+        setFamilyStatus(null)
       } finally {
         setFamilyStatusLoading(false)
       }
     }
 
-    fetchFamilyStatus()
-  }, [])
+    if (isMounted) {
+      fetchFamilyStatus()
+    }
+  }, [isMounted])
 
-  // Determine if user is a Family member (not owner)
-  const isFamilyMember = useMemo(() => {
-    return userProfile?.plan === 'family' && familyStatus?.membership?.role === 'member'
-  }, [userProfile?.plan, familyStatus?.membership?.role])
-
-  // Safer derived billing state
   const isFamilyOwner = useMemo(() => {
     return familyStatus?.isFamilyOwner === true
   }, [familyStatus?.isFamilyOwner])
 
-  const isActiveFamilyMember = useMemo(() => {
-    return familyStatus?.membership?.role === 'member'
-  }, [familyStatus?.membership?.role])
+  const isFamilyMember = useMemo(() => {
+    return familyStatus?.membership?.role === 'member' && familyStatus?.isFamilyOwner !== true
+  }, [familyStatus?.membership?.role, familyStatus?.isFamilyOwner])
 
   const wasRemovedFromFamily = useMemo(() => {
     return Boolean(familyStatus?.removedMembership)
   }, [familyStatus?.removedMembership])
 
-  const effectivePlan = useMemo(() => {
-    if (wasRemovedFromFamily && userProfile?.plan === 'family') {
-      return 'free'
-    }
-    return userProfile?.plan || 'free'
-  }, [userProfile?.plan, wasRemovedFromFamily])
-
-  // Open profile sheet if coming from dropdown
   useEffect(() => {
     if (section === 'profile') {
       setActiveSheet('profile')
     }
   }, [section])
 
-  // Avatar URL - use persisted URL if available, otherwise generate
   const avatarUrl = useMemo(() => {
     return getStableProfileAvatar({
       profileAvatarUrl: userProfile?.avatarUrl || null,
@@ -223,19 +213,24 @@ export function SettingsScreen() {
       generateAvatar: (args) => generateAvatar(args.seed, args.size),
       size: 128,
     })
-  }, [userProfile?.email, userProfile?.avatarSeed, userProfile?.avatarUrl, userProfile?.avatarSource, userProfile?.picture])
+  }, [
+    userProfile?.email,
+    userProfile?.avatarSeed,
+    userProfile?.avatarUrl,
+    userProfile?.avatarSource,
+    userProfile?.picture,
+  ])
 
-  // Plan display
   const planNames: Record<string, string> = {
     free: 'Free Plan',
     pro: 'Renewly Pro',
     family: 'Renewly Family',
     enterprise: 'Enterprise',
   }
-  const planName = userProfile?.plan ? planNames[userProfile.plan] : 'Free Plan'
-  const isPremium = userProfile?.plan && userProfile.plan !== 'free'
 
-  // Find active managed Renewly Pro/Family subscription for pending billing badge
+  const planName = userProfile?.plan ? planNames[userProfile.plan] : 'Free Plan'
+  const isPremium = Boolean(userProfile?.plan && userProfile.plan !== 'free')
+
   const currentRenewlyManagedSubscription = useMemo(() => {
     return safeSubscriptions.find((subscription: any) =>
       subscription?.isSystemManaged === true &&
@@ -260,7 +255,6 @@ export function SettingsScreen() {
       symbol: safeNotificationSettings.currencyCode,
     }
 
-  // Handlers
   const handleSignOut = async () => {
     if (isSigningOut) return
 
@@ -281,11 +275,16 @@ export function SettingsScreen() {
 
   const handleChangeEmail = async () => {
     if (!newEmail || newEmail === currentUserEmail) {
-      addToast({ type: 'error', title: 'Invalid email', message: 'Please enter a different email address' })
+      addToast({
+        type: 'error',
+        title: 'Invalid email',
+        message: 'Please enter a different email address',
+      })
       return
     }
 
     setIsChangingEmail(true)
+
     try {
       const { changeUserEmail } = await import('@/lib/supabase/settings-actions')
       const result = await changeUserEmail(newEmail)
@@ -294,7 +293,7 @@ export function SettingsScreen() {
         addToast({
           type: 'success',
           title: 'Verification email sent',
-          message: 'Check your new email address to verify the change'
+          message: 'Check your new email address to verify the change',
         })
         setNewEmail('')
         setActiveSheet(null)
@@ -302,12 +301,16 @@ export function SettingsScreen() {
         addToast({
           type: 'error',
           title: 'Failed to change email',
-          message: result.error || 'Please try again'
+          message: result.error || 'Please try again',
         })
       }
     } catch (error) {
       console.error('[v0] Email change error:', error)
-      addToast({ type: 'error', title: 'Error', message: 'Failed to change email address' })
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to change email address',
+      })
     } finally {
       setIsChangingEmail(false)
     }
@@ -374,9 +377,36 @@ export function SettingsScreen() {
     }
   }
 
-  // Toggle handlers that properly await async store updates
+  const callBrowserPushAPI = async (pushEnabled: boolean, markSeen: boolean) => {
+    try {
+      const response = await fetch('/api/notifications/browser-push-preference', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pushNotifications: pushEnabled,
+          markPromptSeen: markSeen,
+        }),
+      })
+
+      if (!response.ok) {
+        console.warn('[v0] Failed to update push preference:', response.status)
+        return
+      }
+
+      const data = await response.json()
+
+      if (data.success) {
+        updateNotificationSettings({
+          pushNotifications: data.pushNotifications,
+          pushPromptSeenAt: data.pushPromptSeenAt,
+        })
+      }
+    } catch (err) {
+      console.error('[v0] Error calling browser push API:', err)
+    }
+  }
+
   const handleTogglePushNotifications = async () => {
-    // Browser push notifications - check browser support and request permission
     if (typeof window === 'undefined') {
       addToast({
         type: 'error',
@@ -396,12 +426,10 @@ export function SettingsScreen() {
     }
 
     if (!safeNotificationSettings.pushNotifications) {
-      // User wants to turn ON push notifications - request permission
       try {
         const permission = Notification.permission
 
         if (permission === 'granted') {
-          // Already have permission - save via API
           await callBrowserPushAPI(true, true)
           addToast({
             type: 'success',
@@ -409,8 +437,8 @@ export function SettingsScreen() {
             message: 'You will receive renewal reminders on this browser.',
           })
         } else if (permission === 'default') {
-          // Request permission from user
           const result = await Notification.requestPermission()
+
           if (result === 'granted') {
             await callBrowserPushAPI(true, true)
             addToast({
@@ -419,7 +447,6 @@ export function SettingsScreen() {
               message: 'You will receive renewal reminders on this browser.',
             })
           } else {
-            // User denied - save as disabled via API
             await callBrowserPushAPI(false, true)
             addToast({
               type: 'info',
@@ -428,7 +455,6 @@ export function SettingsScreen() {
             })
           }
         } else if (permission === 'denied') {
-          // Permission previously denied
           addToast({
             type: 'error',
             title: 'Notifications blocked',
@@ -445,7 +471,6 @@ export function SettingsScreen() {
         })
       }
     } else {
-      // User wants to turn OFF push notifications
       await callBrowserPushAPI(false, false)
       addToast({
         type: 'success',
@@ -455,47 +480,18 @@ export function SettingsScreen() {
     }
   }
 
-  const callBrowserPushAPI = async (pushEnabled: boolean, markSeen: boolean) => {
-    try {
-      const response = await fetch('/api/notifications/browser-push-preference', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          pushNotifications: pushEnabled,
-          markPromptSeen: markSeen,
-        }),
-      })
-
-      if (!response.ok) {
-        console.warn('[v0] Failed to update push preference:', response.status)
-        return
-      }
-
-      const data = await response.json()
-      if (data.success) {
-        updateNotificationSettings({
-          pushNotifications: data.pushNotifications,
-          pushPromptSeenAt: data.pushPromptSeenAt,
-        })
-      }
-    } catch (err) {
-      console.error('[v0] Error calling browser push API:', err)
-    }
-  }
-
   const handleToggleEmailNotifications = async () => {
-    await updateNotificationSettings({ emailNotifications: !safeNotificationSettings.emailNotifications })
+    await updateNotificationSettings({
+      emailNotifications: !safeNotificationSettings.emailNotifications,
+    })
   }
 
   const handleCancelPlan = async () => {
-    // TODO: Real production cancellation should use Razorpay Subscriptions API with 
-    // cancel_at_cycle_end=true, stored razorpay_subscription_id, subscription webhook lifecycle, 
-    // and period-end entitlement enforcement.
     if (isCancellingPlan) return
+
     setIsCancellingPlan(true)
 
     try {
-      // Use QA schedule-change endpoint for period-end cancellation
       const response = await fetch('/api/qa/billing/schedule-change', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -505,20 +501,20 @@ export function SettingsScreen() {
         }),
       })
 
-      const data = await response.json()
+      const data = await response.json().catch(() => ({}))
 
       if (!response.ok) {
         addToast({
           type: 'error',
           title: 'Cancellation error',
-          message: 'We could not schedule your cancellation right now. Please try again.',
+          message: data?.error || 'We could not schedule your cancellation right now. Please try again.',
         })
         setIsCancellingPlan(false)
         return
       }
 
-      // Refresh subscriptions from server
       const subResponse = await fetch('/api/subscriptions', { cache: 'no-store' })
+
       if (subResponse.ok) {
         const subData = await subResponse.json()
         const rows = Array.isArray(subData?.subscriptions)
@@ -528,21 +524,20 @@ export function SettingsScreen() {
             : []
 
         const { mapSubscriptionRowToUI } = await import('@/lib/supabase/mappers')
-        const { filterDisplayableSubscriptionsForCurrentPlan } = await import(
-          '@/lib/billing/billing-lifecycle-utils'
-        )
-
-        const subscriptions = rows
+        const mappedSubscriptions = rows
           .map(mapSubscriptionRowToUI)
           .filter((sub: any) => sub && sub.id)
+
         const { setSubscriptions } = useStore.getState()
-        setSubscriptions(subscriptions)
+        setSubscriptions(mappedSubscriptions)
       }
 
-      // Get the renewal date for the toast message
       const renewalDate = getSubscriptionRenewalDate(userProfile)
       const dateStr = renewalDate
-        ? new Date(renewalDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        ? new Date(renewalDate).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        })
         : 'your renewal date'
 
       addToast({
@@ -567,11 +562,9 @@ export function SettingsScreen() {
 
   const handleChangePlan = () => {
     setActiveSheet(null)
-    // Navigate to upgrade page with optional plan parameter
     router.push('/app/upgrade')
   }
 
-  // Show premium skeleton while store hydrates
   if (!isMounted) {
     return <SettingsSkeleton />
   }
@@ -579,7 +572,6 @@ export function SettingsScreen() {
   return (
     <>
       <div className="min-h-screen bg-transparent pb-24">
-        {/* Header */}
         <div className="px-4 pt-8 pb-6 lg:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -591,7 +583,6 @@ export function SettingsScreen() {
           </motion.div>
         </div>
 
-        {/* Profile Card */}
         <motion.button
           id="profile"
           initial={{ opacity: 0, y: 20 }}
@@ -615,6 +606,7 @@ export function SettingsScreen() {
                   </span>
                 </div>
               )}
+
               <div className="flex-1 min-w-0">
                 <h2 className="text-lg font-semibold text-foreground truncate">
                   {userProfile?.name || 'User'}
@@ -623,20 +615,19 @@ export function SettingsScreen() {
                   {currentUserEmail || 'No email'}
                 </p>
                 <div className="flex items-center gap-2 mt-1">
-                  <Crown className={cn("w-4 h-4", isPremium ? "text-gold" : "text-muted-foreground")} />
-                  <span className={cn("text-xs font-medium", isPremium ? "text-gold" : "text-muted-foreground")}>
+                  <Crown className={cn('w-4 h-4', isPremium ? 'text-gold' : 'text-muted-foreground')} />
+                  <span className={cn('text-xs font-medium', isPremium ? 'text-gold' : 'text-muted-foreground')}>
                     {planName}
                   </span>
                 </div>
               </div>
+
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </div>
           </div>
         </motion.button>
 
-        {/* Settings Sections */}
         <div className="px-4 lg:px-6 space-y-6">
-          {/* Account Section */}
           <SettingsSection title="Account" delay={0.15}>
             <SettingsItem
               icon={CreditCard}
@@ -644,27 +635,20 @@ export function SettingsScreen() {
               description={pendingBillingBadgeText || (userProfile?.plan === 'pro' ? 'Pro - Active' : planName)}
               onClick={() => setActiveSheet('billing')}
             />
-            {/* Show Family Members loading state while fetching */}
-            {userProfile?.plan === 'family' && familyStatusLoading && (
+
+            {((isFamilyOwner && !wasRemovedFromFamily) || (userProfile?.plan === 'family' && familyStatusLoading)) && (
               <SettingsItem
                 icon={Users}
                 label="Family Members"
-                description="Loading family access…"
-                onClick={() => {}}
-              />
-            )}
-            {/* Show Family Members when owner and not removed */}
-            {isFamilyOwner && !wasRemovedFromFamily && (
-              <SettingsItem
-                icon={Users}
-                label="Family Members"
-                description="Manage members and invitations"
-                onClick={() => window.location.href = '/app/family'}
+                description={familyStatusLoading ? 'Loading family access…' : 'Manage members and invitations'}
+                onClick={() => {
+                  if (!familyStatusLoading) window.location.href = '/app/family'
+                }}
+                disabled={familyStatusLoading}
               />
             )}
           </SettingsSection>
 
-          {/* Notifications Section */}
           <SettingsSection title="Notifications" delay={0.2}>
             <SettingsToggle
               icon={Bell}
@@ -695,7 +679,6 @@ export function SettingsScreen() {
             />
           </SettingsSection>
 
-          {/* Security Section */}
           <SettingsSection title="Security" delay={0.25}>
             <SettingsItem
               icon={Lock}
@@ -724,7 +707,6 @@ export function SettingsScreen() {
             <BiometricSettingsItem />
           </SettingsSection>
 
-          {/* Data Section */}
           <SettingsSection title="Data & Storage" delay={0.3}>
             <SettingsItem
               icon={Download}
@@ -734,9 +716,7 @@ export function SettingsScreen() {
             />
           </SettingsSection>
 
-          {/* Appearance Section */}
           <SettingsSection title="Appearance" delay={0.3}>
-            {/* Premium 3-card theme selector (Light / Dark / Glass) */}
             <div className="p-4 sm:p-5 rounded-2xl bg-card border border-border">
               <ThemeSelectorCards />
             </div>
@@ -756,7 +736,6 @@ export function SettingsScreen() {
             />
           </SettingsSection>
 
-          {/* Support Section */}
           <SettingsSection title="Support" delay={0.4}>
             <SettingsItem
               icon={HelpCircle}
@@ -775,7 +754,6 @@ export function SettingsScreen() {
             />
           </SettingsSection>
 
-          {/* Sign Out Button */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -786,10 +764,10 @@ export function SettingsScreen() {
               disabled={isSigningOut}
               whileTap={{ scale: 0.98 }}
               className={cn(
-                "w-full flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer",
+                'w-full flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer',
                 isSigningOut
-                  ? "border-gold/20 bg-gold/6 text-gold/70 opacity-70 cursor-not-allowed"
-                  : "border-gold/30 bg-[linear-gradient(135deg,rgba(199,163,106,0.14),rgba(199,163,106,0.06),rgba(255,255,255,0.02))] text-gold hover:border-gold/55 hover:bg-gold/16 hover:text-ivory hover:shadow-[0_16px_40px_rgba(199,163,106,0.16)]"
+                  ? 'border-gold/20 bg-gold/6 text-gold/70 opacity-70 cursor-not-allowed'
+                  : 'border-gold/30 bg-[linear-gradient(135deg,rgba(199,163,106,0.14),rgba(199,163,106,0.06),rgba(255,255,255,0.02))] text-gold hover:border-gold/55 hover:bg-gold/16 hover:text-ivory hover:shadow-[0_16px_40px_rgba(199,163,106,0.16)]'
               )}
             >
               {isSigningOut ? (
@@ -806,13 +784,11 @@ export function SettingsScreen() {
             </motion.button>
           </motion.div>
 
-          {/* Version */}
           <p className="text-center text-xs text-muted-foreground py-4">
             Renewly v1.0.0
           </p>
         </div>
 
-        {/* Plan Selection Sheet - wrapped in proper modal */}
         <SettingsSheet
           isOpen={showPlanSheet}
           onClose={() => setShowPlanSheet(false)}
@@ -824,7 +800,6 @@ export function SettingsScreen() {
           />
         </SettingsSheet>
 
-        {/* Profile Sheet */}
         <SettingsSheet
           isOpen={activeSheet === 'profile'}
           onClose={() => setActiveSheet(null)}
@@ -835,7 +810,6 @@ export function SettingsScreen() {
             avatarUrl={avatarUrl}
             onSave={(data) => {
               if (userProfile) {
-                // Update store with new profile data including avatar
                 setUserProfile({
                   ...userProfile,
                   name: data.name,
@@ -849,7 +823,6 @@ export function SettingsScreen() {
           />
         </SettingsSheet>
 
-        {/* Reminder Sheet */}
         <SettingsSheet
           isOpen={activeSheet === 'reminder'}
           onClose={() => setActiveSheet(null)}
@@ -862,24 +835,27 @@ export function SettingsScreen() {
                 key={days}
                 onClick={async () => {
                   await updateNotificationSettings({ reminderDays: days })
-                  addToast({ type: 'success', title: 'Reminder updated', message: `You'll be reminded ${days} day${days > 1 ? 's' : ''} before renewal.` })
+                  addToast({
+                    type: 'success',
+                    title: 'Reminder updated',
+                    message: `You'll be reminded ${days} day${days > 1 ? 's' : ''} before renewal.`,
+                  })
                   setActiveSheet(null)
                 }}
                 className={cn(
-                  "w-full flex items-center justify-between p-4 rounded-xl transition-colors",
-                  notificationSettings.reminderDays === days
-                    ? "bg-gold/10 text-gold border border-gold/30"
-                    : "bg-muted hover:bg-secondary"
+                  'w-full flex items-center justify-between p-4 rounded-xl transition-colors',
+                  safeNotificationSettings.reminderDays === days
+                    ? 'bg-gold/10 text-gold border border-gold/30'
+                    : 'bg-muted hover:bg-secondary'
                 )}
               >
                 <span>{days} day{days > 1 ? 's' : ''} before</span>
-                {notificationSettings.reminderDays === days && <Check className="w-5 h-5" />}
+                {safeNotificationSettings.reminderDays === days && <Check className="w-5 h-5" />}
               </button>
             ))}
           </div>
         </SettingsSheet>
 
-        {/* Password Sheet */}
         <SettingsSheet
           isOpen={activeSheet === 'password'}
           onClose={() => setActiveSheet(null)}
@@ -893,7 +869,6 @@ export function SettingsScreen() {
           />
         </SettingsSheet>
 
-        {/* Email Sheet */}
         <SettingsSheet
           isOpen={activeSheet === 'email'}
           onClose={() => {
@@ -927,7 +902,6 @@ export function SettingsScreen() {
           </div>
         </SettingsSheet>
 
-        {/* Phone Number Sheet */}
         <SettingsSheet
           isOpen={activeSheet === 'phone'}
           onClose={() => setActiveSheet(null)}
@@ -941,7 +915,6 @@ export function SettingsScreen() {
           />
         </SettingsSheet>
 
-        {/* Export Sheet */}
         <SettingsSheet
           isOpen={activeSheet === 'export'}
           onClose={() => setActiveSheet(null)}
@@ -952,6 +925,7 @@ export function SettingsScreen() {
               Download your subscriptions as CSV or JSON, or export a full account backup including profile,
               settings, notifications, and subscriptions.
             </p>
+
             <button
               onClick={() => handleExport('csv')}
               className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors cursor-pointer"
@@ -964,6 +938,7 @@ export function SettingsScreen() {
                 <p className="text-sm text-muted-foreground">Spreadsheet format</p>
               </div>
             </button>
+
             <button
               onClick={() => handleExport('json')}
               className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors cursor-pointer"
@@ -976,6 +951,7 @@ export function SettingsScreen() {
                 <p className="text-sm text-muted-foreground">For backup & import</p>
               </div>
             </button>
+
             <button
               onClick={() => handleExport('account')}
               disabled={isExportingAccount}
@@ -999,14 +975,12 @@ export function SettingsScreen() {
           </div>
         </SettingsSheet>
 
-        {/* Billing & Plan Sheet */}
         <SettingsSheet
           isOpen={activeSheet === 'billing'}
           onClose={() => setActiveSheet(null)}
-          title={wasRemovedFromFamily && userProfile?.plan === 'free' ? 'Billing & Plan' : isFamilyMember ? 'Family Access' : 'Billing & Plan'}
+          title={isFamilyMember ? 'Family Access' : 'Billing & Plan'}
         >
           <div className="space-y-6">
-            {/* Removed from Family - Show Free Plan */}
             {wasRemovedFromFamily && userProfile?.plan === 'free' ? (
               <>
                 <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20">
@@ -1030,21 +1004,24 @@ export function SettingsScreen() {
                 </button>
               </>
             ) : isFamilyMember ? (
-              /* Active Family Member */
               <>
-                {/* Current Plan Display */}
                 <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20">
                   <p className="text-sm text-muted-foreground">Status</p>
                   <p className="text-2xl font-semibold text-blue-600 dark:text-blue-400 mt-1">Included in Family</p>
                   <p className="text-xs text-muted-foreground mt-2">You are not paying for this subscription</p>
                 </div>
 
-                {/* Family Member Description */}
                 <p className="text-sm text-muted-foreground">
                   You are included in a Renewly Family plan. You are not the billing owner, so there is no paid subscription to cancel here.
                 </p>
 
-                {/* Period End Info */}
+                {familyStatus?.familyOwner?.email && (
+                  <div className="p-4 rounded-xl bg-muted/50 border border-border">
+                    <p className="text-xs font-medium text-foreground mb-1">Family owner</p>
+                    <p className="text-sm text-muted-foreground">{familyStatus.familyOwner.email}</p>
+                  </div>
+                )}
+
                 {familyStatus?.familyGroup?.currentPeriodEnd && (
                   <div className="p-4 rounded-xl bg-muted/50 border border-border">
                     <p className="text-xs font-medium text-foreground mb-1">Your Family access expires</p>
@@ -1054,7 +1031,6 @@ export function SettingsScreen() {
                   </div>
                 )}
 
-                {/* Action Buttons */}
                 <div className="space-y-3 pt-2">
                   <button
                     onClick={() => {
@@ -1065,6 +1041,7 @@ export function SettingsScreen() {
                   >
                     Manage Family Access
                   </button>
+
                   <button
                     onClick={() => {
                       window.location.href = '/app/upgrade'
@@ -1074,6 +1051,7 @@ export function SettingsScreen() {
                   >
                     Start Your Own Plan
                   </button>
+
                   <p className="text-xs text-muted-foreground">
                     You can start your own Pro or Family plan anytime. This will be separate from the Family access you currently receive.
                   </p>
@@ -1084,22 +1062,22 @@ export function SettingsScreen() {
                 </p>
               </>
             ) : (
-              /* Owner or Non-Family - Original UI */
               <>
-                {/* Current Plan Display */}
                 <div className="p-4 rounded-xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
                   <p className="text-sm text-muted-foreground">Current Plan</p>
                   <p className="text-2xl font-semibold text-gold mt-1">{planName}</p>
+
                   {pendingBillingBadgeText ? (
                     <p className="text-xs font-medium text-amber-600 dark:text-amber-400 mt-2">
                       {pendingBillingBadgeText}
                     </p>
                   ) : isPremium ? (
                     <p className="text-xs text-muted-foreground mt-2">Your subscription is active</p>
-                  ) : null}
+                  ) : (
+                    <p className="text-xs text-muted-foreground mt-2">Upgrade to unlock premium features</p>
+                  )}
                 </div>
 
-                {/* Free Plan - Show Upgrade CTA */}
                 {!isPremium && (
                   <>
                     <p className="text-sm text-muted-foreground">
@@ -1114,39 +1092,36 @@ export function SettingsScreen() {
                   </>
                 )}
 
-                {/* Premium Plans - Show Manage Plan & Cancel Plan */}
                 {isPremium && userProfile?.plan !== 'enterprise' && (
-                  <>
-                    <div className="space-y-3 pt-2">
+                  <div className="space-y-3 pt-2">
+                    <button
+                      onClick={handleChangePlan}
+                      className="w-full px-4 py-3 rounded-xl bg-gold/10 text-gold font-medium hover:bg-gold/20 border border-gold/30 transition-colors cursor-pointer"
+                    >
+                      Change Plan
+                    </button>
+
+                    {hasPendingBillingChange ? (
                       <button
-                        onClick={handleChangePlan}
-                        className="w-full px-4 py-3 rounded-xl bg-gold/10 text-gold font-medium hover:bg-gold/20 border border-gold/30 transition-colors cursor-pointer"
+                        disabled
+                        className="w-full px-4 py-3 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium border border-amber-500/30 opacity-80 cursor-not-allowed"
                       >
-                        Change Plan
+                        {hasPendingCancellation ? 'Cancellation Scheduled' : hasPendingDowngrade ? 'Downgrade Scheduled' : 'Billing Change Scheduled'}
                       </button>
-                      {hasPendingBillingChange ? (
-                        <button
-                          disabled
-                          className="w-full px-4 py-3 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium border border-amber-500/30 opacity-80 cursor-not-allowed"
-                        >
-                          {hasPendingCancellation ? 'Cancellation Scheduled' : hasPendingDowngrade ? 'Downgrade Scheduled' : 'Billing Change Scheduled'}
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            setActiveSheet(null)
-                            requestAnimationFrame(() => setShowCancelConfirmation(true))
-                          }}
-                          className="w-full px-4 py-3 rounded-xl bg-red-500/10 text-red-600 font-medium hover:bg-red-500/20 border border-red-500/30 transition-colors cursor-pointer"
-                        >
-                          Cancel Plan
-                        </button>
-                      )}
-                    </div>
-                  </>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setActiveSheet(null)
+                          requestAnimationFrame(() => setShowCancelConfirmation(true))
+                        }}
+                        className="w-full px-4 py-3 rounded-xl bg-red-500/10 text-red-600 font-medium hover:bg-red-500/20 border border-red-500/30 transition-colors cursor-pointer"
+                      >
+                        Cancel Plan
+                      </button>
+                    )}
+                  </div>
                 )}
 
-                {/* Enterprise Plan */}
                 {userProfile?.plan === 'enterprise' && (
                   <>
                     <p className="text-sm text-muted-foreground">
@@ -1163,7 +1138,6 @@ export function SettingsScreen() {
                   </>
                 )}
 
-                {/* Support Section */}
                 <div className="p-4 rounded-xl bg-muted space-y-2">
                   <p className="text-xs font-medium text-muted-foreground">Questions about billing?</p>
                   <p className="text-sm text-foreground">Contact our support team for assistance with your account or subscription.</p>
@@ -1181,8 +1155,6 @@ export function SettingsScreen() {
           </div>
         </SettingsSheet>
 
-        {/* Language Sheet */}
-        {/* Currency Sheet */}
         <SettingsSheet
           isOpen={activeSheet === 'currency'}
           onClose={() => setActiveSheet(null)}
@@ -1202,10 +1174,10 @@ export function SettingsScreen() {
                   setActiveSheet(null)
                 }}
                 className={cn(
-                  "w-full flex items-center justify-between p-4 rounded-xl transition-colors cursor-pointer",
-                  notificationSettings.currencyCode === currency.code
-                    ? "bg-gold/10 text-gold border border-gold/30"
-                    : "bg-muted hover:bg-secondary"
+                  'w-full flex items-center justify-between p-4 rounded-xl transition-colors cursor-pointer',
+                  safeNotificationSettings.currencyCode === currency.code
+                    ? 'bg-gold/10 text-gold border border-gold/30'
+                    : 'bg-muted hover:bg-secondary'
                 )}
               >
                 <div className="flex items-center gap-3">
@@ -1216,11 +1188,12 @@ export function SettingsScreen() {
                   </div>
                 </div>
 
-                {notificationSettings.currencyCode === currency.code && <Check className="w-5 h-5" />}
+                {safeNotificationSettings.currencyCode === currency.code && <Check className="w-5 h-5" />}
               </button>
             ))}
           </div>
         </SettingsSheet>
+
         <SettingsSheet
           isOpen={activeSheet === 'language'}
           onClose={() => setActiveSheet(null)}
@@ -1230,6 +1203,7 @@ export function SettingsScreen() {
             <p className="text-sm text-muted-foreground">
               Select your preferred language. Settings labels, common UI text, and notification messages will be displayed in your chosen language.
             </p>
+
             <div className="space-y-2">
               {[
                 { code: 'en', name: 'English', nativeName: 'English' },
@@ -1245,25 +1219,26 @@ export function SettingsScreen() {
                     addToast({
                       type: 'success',
                       title: 'Language updated',
-                      message: `App language changed to ${lang.nativeName}`
+                      message: `App language changed to ${lang.nativeName}`,
                     })
                     setActiveSheet(null)
                   }}
                   className={cn(
-                    "w-full flex items-center justify-between p-4 rounded-xl transition-colors cursor-pointer",
+                    'w-full flex items-center justify-between p-4 rounded-xl transition-colors cursor-pointer',
                     safeNotificationSettings.language === lang.code
-                      ? "bg-gold/10 text-gold border border-gold/30"
-                      : "bg-muted hover:bg-secondary"
+                      ? 'bg-gold/10 text-gold border border-gold/30'
+                      : 'bg-muted hover:bg-secondary'
                   )}
                 >
                   <div className="text-left">
                     <span className="block font-medium">{lang.nativeName}</span>
                     <span className="text-sm opacity-70">{lang.name}</span>
                   </div>
-                  {notificationSettings.language === lang.code && <Check className="w-5 h-5" />}
+                  {safeNotificationSettings.language === lang.code && <Check className="w-5 h-5" />}
                 </button>
               ))}
             </div>
+
             <p className="text-xs text-muted-foreground pt-2">
               Note: Some content like legal pages may remain in English.
             </p>
@@ -1271,15 +1246,18 @@ export function SettingsScreen() {
         </SettingsSheet>
       </div>
 
-      {/* Cancel Plan Confirmation Modal */}
       <AnimatePresence>
         {showCancelConfirmation && (() => {
           const renewalDate = getSubscriptionRenewalDate(userProfile)
           const dateStr = renewalDate
-            ? new Date(renewalDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            ? new Date(renewalDate).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+            })
             : 'your renewal date'
+
           const isPro = userProfile?.plan === 'pro'
-          const planName = isPro ? 'Renewly Pro' : 'Renewly Family'
+          const cancelPlanName = isPro ? 'Renewly Pro' : 'Renewly Family'
 
           return (
             <>
@@ -1298,12 +1276,14 @@ export function SettingsScreen() {
                 className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[150] max-w-md mx-auto bg-card rounded-2xl border border-border p-6 shadow-xl"
               >
                 <h2 className="text-lg font-semibold text-foreground mb-4">
-                  Cancel {planName}?
+                  Cancel {cancelPlanName}?
                 </h2>
+
                 <div className="space-y-4 mb-6 text-sm text-muted-foreground">
                   <p>
-                    Your {planName} access is paid until <span className="font-semibold text-foreground">{dateStr}</span>.
+                    Your {cancelPlanName} access is paid until <span className="font-semibold text-foreground">{dateStr}</span>.
                   </p>
+
                   <div>
                     <p className="font-medium text-foreground mb-2">If you schedule cancellation now:</p>
                     <ul className="space-y-2 pl-4 list-disc">
@@ -1321,6 +1301,7 @@ export function SettingsScreen() {
                   >
                     Keep Plan
                   </button>
+
                   <button
                     onClick={handleCancelPlan}
                     disabled={isCancellingPlan}
@@ -1338,11 +1319,10 @@ export function SettingsScreen() {
   )
 }
 
-// Settings Section Component - Premium styled
 function SettingsSection({
   title,
   children,
-  delay = 0
+  delay = 0,
 }: {
   title: string
   children: React.ReactNode
@@ -1364,7 +1344,6 @@ function SettingsSection({
   )
 }
 
-// Settings Item Component - Premium styled
 function SettingsItem({
   icon: Icon,
   label,
@@ -1385,32 +1364,37 @@ function SettingsItem({
       whileHover={!disabled ? { x: 4, backgroundColor: 'rgba(199,163,106,0.05)' } : undefined}
       whileTap={!disabled ? { scale: 0.995 } : undefined}
       className={cn(
-        "w-full flex items-center gap-4 p-4 transition-all text-left group",
+        'w-full flex items-center gap-4 p-4 transition-all text-left group',
         disabled
-          ? "opacity-60 cursor-not-allowed bg-muted/10"
-          : "hover:bg-gold/5 cursor-pointer"
+          ? 'opacity-60 cursor-not-allowed bg-muted/10'
+          : 'hover:bg-gold/5 cursor-pointer'
       )}
     >
       <div className={cn(
-        "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all",
+        'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all',
         disabled
-          ? "bg-muted/30"
-          : "bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/10 group-hover:border-gold/20"
+          ? 'bg-muted/30'
+          : 'bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/10 group-hover:border-gold/20'
       )}>
         <Icon className="w-5 h-5 text-gold" />
       </div>
+
       <div className="flex-1 min-w-0">
-        <span className="text-foreground font-medium block group-hover:text-gold transition-colors">{label}</span>
+        <span className="text-foreground font-medium block group-hover:text-gold transition-colors">
+          {label}
+        </span>
         {description && (
           <p className="text-sm text-muted-foreground truncate">{description}</p>
         )}
       </div>
-      {!disabled && <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-gold transition-colors flex-shrink-0" />}
+
+      {!disabled && (
+        <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-gold transition-colors flex-shrink-0" />
+      )}
     </motion.button>
   )
 }
 
-// Settings Toggle Component
 function SettingsToggle({
   icon: Icon,
   label,
@@ -1434,10 +1418,10 @@ function SettingsToggle({
         if (!disabled) void onToggle()
       }}
       className={cn(
-        "w-full flex items-center gap-4 p-4 transition-colors text-left",
+        'w-full flex items-center gap-4 p-4 transition-colors text-left',
         disabled
-          ? "opacity-60 cursor-not-allowed bg-muted/10"
-          : "hover:bg-secondary/30 cursor-pointer"
+          ? 'opacity-60 cursor-not-allowed bg-muted/10'
+          : 'hover:bg-secondary/30 cursor-pointer'
       )}
     >
       <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
@@ -1467,8 +1451,6 @@ function SettingsToggle({
   )
 }
 
-// Common timezones for the dropdown
-
 const COMMON_TIMEZONES = [
   { value: 'America/New_York', label: 'Eastern Time (ET)', offset: 'UTC-5' },
   { value: 'America/Chicago', label: 'Central Time (CT)', offset: 'UTC-6' },
@@ -1487,7 +1469,6 @@ const COMMON_TIMEZONES = [
   { value: 'Australia/Sydney', label: 'Sydney (AEST)', offset: 'UTC+10' },
 ]
 
-// DiceBear avatar styles - premium, varied options
 const AVATAR_STYLES = [
   'thumbs',
   'shapes',
@@ -1499,29 +1480,20 @@ const AVATAR_STYLES = [
   'fun-emoji',
 ] as const
 
-type AvatarStyle = typeof AVATAR_STYLES[number]
-
-// Generate avatar URL with variety - each click produces a genuinely new avatar
 function generateAvatarUrl(baseSeed: string, variation: number = 0): string {
-  // Combine seed with variation number to create unique avatars
-  const uniqueSeed = `${baseSeed}-v${variation}-${Date.now()}`
+  const safeSeed = baseSeed?.trim() || 'user'
+  const uniqueSeed = `${safeSeed}-v${variation}-${Date.now()}`
   const encodedSeed = encodeURIComponent(uniqueSeed)
-
-  // Cycle through different styles based on variation
   const styleIndex = variation % AVATAR_STYLES.length
   const style = AVATAR_STYLES[styleIndex]
 
-  // DiceBear v7 API with Renewly gold accent
   if (style === 'initials') {
-    // Use UI Avatars for initials style - cleaner look
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(baseSeed)}&background=c7a36a&color=0a0d12&size=128&bold=true&format=svg`
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(safeSeed)}&background=c7a36a&color=0a0d12&size=128&bold=true&format=svg`
   }
 
-  // DiceBear styles with gold background
   return `https://api.dicebear.com/7.x/${style}/svg?seed=${encodedSeed}&backgroundColor=c7a36a&size=128`
 }
 
-// Profile Form Component with avatar regeneration and timezone
 function ProfileForm({
   userProfile,
   avatarUrl: initialAvatarUrl,
@@ -1532,12 +1504,9 @@ function ProfileForm({
   onSave: (data: any) => void
 }) {
   const [name, setName] = useState(userProfile?.name || '')
-  // Use saved timezone from profile, fall back to browser timezone only if no saved value
   const [timezone, setTimezone] = useState(() => {
-    // Check if userProfile has a saved timezone
     if (userProfile?.timeZone) return userProfile.timeZone
     if (userProfile?.timezone) return userProfile.timezone
-    // Only use browser timezone as initial fallback
     return Intl.DateTimeFormat().resolvedOptions().timeZone
   })
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl)
@@ -1548,12 +1517,10 @@ function ProfileForm({
   const [error, setError] = useState<string | null>(null)
   const addToast = useStore((state) => state.addToast)
 
-  // Generate a new unique avatar on each click
   const handleRegenerateAvatar = () => {
     setIsRegenerating(true)
     setAvatarError(false)
 
-    // Increment variation to get a genuinely new avatar
     const newVariation = avatarVariation + 1
     const seed = name || userProfile?.email || 'user'
     const newUrl = generateAvatarUrl(seed, newVariation)
@@ -1561,11 +1528,9 @@ function ProfileForm({
     setAvatarVariation(newVariation)
     setAvatarUrl(newUrl)
 
-    // Brief delay for visual feedback
     setTimeout(() => setIsRegenerating(false), 400)
   }
 
-  // Handle avatar image load error - fallback to initials
   const handleAvatarError = () => {
     setAvatarError(true)
   }
@@ -1614,7 +1579,6 @@ function ProfileForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Avatar with regeneration */}
       <div className="flex flex-col items-center gap-4">
         <div className="relative">
           {avatarUrl && !avatarError ? (
@@ -1623,24 +1587,25 @@ function ProfileForm({
               alt="Your avatar"
               onError={handleAvatarError}
               className={cn(
-                "w-24 h-24 rounded-full border-2 border-gold/30 object-cover transition-all bg-gold/10",
-                isRegenerating && "opacity-50 scale-95"
+                'w-24 h-24 rounded-full border-2 border-gold/30 object-cover transition-all bg-gold/10',
+                isRegenerating && 'opacity-50 scale-95'
               )}
             />
           ) : (
-            // Fallback initials avatar - always renders cleanly
             <div className="w-24 h-24 rounded-full bg-gold/20 flex items-center justify-center border-2 border-gold/30">
               <span className="text-3xl font-semibold text-gold">
                 {name?.charAt(0).toUpperCase() || 'U'}
               </span>
             </div>
           )}
+
           {isRegenerating && (
             <div className="absolute inset-0 flex items-center justify-center rounded-full bg-obsidian/50">
               <RefreshCw className="w-6 h-6 text-gold animate-spin" />
             </div>
           )}
         </div>
+
         <div className="flex flex-col items-center gap-1">
           <button
             type="button"
@@ -1648,7 +1613,7 @@ function ProfileForm({
             disabled={isRegenerating}
             className="flex items-center gap-2 text-sm text-gold hover:text-gold/80 transition-colors disabled:opacity-50"
           >
-            <RefreshCw className={cn("w-4 h-4", isRegenerating && "animate-spin")} />
+            <RefreshCw className={cn('w-4 h-4', isRegenerating && 'animate-spin')} />
             Generate new avatar
           </button>
           <p className="text-[10px] text-muted-foreground">
@@ -1657,7 +1622,6 @@ function ProfileForm({
         </div>
       </div>
 
-      {/* Name */}
       <div>
         <label className="block text-sm font-medium text-foreground mb-2">
           Full Name
@@ -1671,7 +1635,6 @@ function ProfileForm({
         />
       </div>
 
-      {/* Timezone */}
       <div>
         <label className="block text-sm font-medium text-foreground mb-2">
           Timezone
@@ -1707,10 +1670,10 @@ function ProfileForm({
         type="submit"
         disabled={isLoading || !name.trim()}
         className={cn(
-          "w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2",
+          'w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2',
           isLoading || !name.trim()
-            ? "bg-gold/40 text-obsidian/70 cursor-not-allowed"
-            : "bg-gold text-obsidian hover:bg-gold/90 shadow-[0_4px_16px_rgba(199,163,106,0.25)]"
+            ? 'bg-gold/40 text-obsidian/70 cursor-not-allowed'
+            : 'bg-gold text-obsidian hover:bg-gold/90 shadow-[0_4px_16px_rgba(199,163,106,0.25)]'
         )}
       >
         {isLoading ? (
@@ -1726,7 +1689,6 @@ function ProfileForm({
   )
 }
 
-// Password validation rules
 const passwordRules = {
   minLength: { test: (p: string) => p.length >= 8, label: 'At least 8 characters' },
   hasUppercase: { test: (p: string) => /[A-Z]/.test(p), label: 'One uppercase letter' },
@@ -1735,7 +1697,6 @@ const passwordRules = {
   hasSpecial: { test: (p: string) => /[!@#$%^&*(),.?":{}|<>]/.test(p), label: 'One special character' },
 }
 
-// Password Form Component with real re-authentication
 function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -1748,7 +1709,6 @@ function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
   const [errorType, setErrorType] = useState<string | null>(null)
   const addToast = useStore((state) => state.addToast)
 
-  // Calculate which rules pass
   const ruleResults = useMemo(() => {
     return Object.entries(passwordRules).map(([key, rule]) => ({
       key,
@@ -1781,6 +1741,7 @@ function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
     }
 
     setIsLoading(true)
+
     try {
       const { changeUserPassword } = await import('@/lib/supabase/settings-actions')
       const result = await changeUserPassword(currentPassword, newPassword)
@@ -1805,7 +1766,6 @@ function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Current Password */}
       <div>
         <label className="block text-sm font-medium text-foreground mb-2">
           Current Password
@@ -1823,10 +1783,10 @@ function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
             }}
             placeholder="Enter your current password"
             className={cn(
-              "w-full px-4 py-3 pr-12 rounded-xl bg-muted border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-colors",
+              'w-full px-4 py-3 pr-12 rounded-xl bg-muted border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-colors',
               errorType === 'invalid_current_password'
-                ? "border-destructive focus:ring-destructive/50"
-                : "border-border focus:ring-gold/50"
+                ? 'border-destructive focus:ring-destructive/50'
+                : 'border-border focus:ring-gold/50'
             )}
           />
           <button
@@ -1845,7 +1805,6 @@ function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
         )}
       </div>
 
-      {/* New Password */}
       <div>
         <label className="block text-sm font-medium text-foreground mb-2">
           New Password
@@ -1867,7 +1826,6 @@ function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
           </button>
         </div>
 
-        {/* Password Rules */}
         <div className="mt-3 p-3 rounded-xl bg-secondary/50 border border-border">
           <p className="text-xs font-medium text-muted-foreground mb-2">Password Requirements</p>
           <div className="space-y-1.5">
@@ -1875,12 +1833,12 @@ function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
               <div
                 key={rule.key}
                 className={cn(
-                  "flex items-center gap-2 text-sm transition-colors",
+                  'flex items-center gap-2 text-sm transition-colors',
                   newPassword.length === 0
-                    ? "text-muted-foreground"
+                    ? 'text-muted-foreground'
                     : rule.passes
-                      ? "text-emerald-500"
-                      : "text-muted-foreground"
+                      ? 'text-emerald-500'
+                      : 'text-muted-foreground'
                 )}
               >
                 {newPassword.length > 0 && rule.passes ? (
@@ -1895,7 +1853,6 @@ function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
       </div>
 
-      {/* Confirm Password */}
       <div>
         <label className="block text-sm font-medium text-foreground mb-2">
           Confirm New Password
@@ -1907,10 +1864,10 @@ function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Confirm your new password"
             className={cn(
-              "w-full px-4 py-3 pr-12 rounded-xl bg-muted border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-colors",
+              'w-full px-4 py-3 pr-12 rounded-xl bg-muted border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-colors',
               confirmPassword.length > 0 && !passwordsMatch
-                ? "border-destructive focus:ring-destructive/50"
-                : "border-border focus:ring-gold/50"
+                ? 'border-destructive focus:ring-destructive/50'
+                : 'border-border focus:ring-gold/50'
             )}
           />
           <button
@@ -1921,10 +1878,11 @@ function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
             {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
         </div>
+
         {confirmPassword.length > 0 && (
           <p className={cn(
-            "mt-2 text-sm flex items-center gap-1.5",
-            passwordsMatch ? "text-emerald-500" : "text-destructive"
+            'mt-2 text-sm flex items-center gap-1.5',
+            passwordsMatch ? 'text-emerald-500' : 'text-destructive'
           )}>
             {passwordsMatch ? (
               <>
@@ -1941,7 +1899,6 @@ function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
         )}
       </div>
 
-      {/* General Error */}
       {error && errorType !== 'invalid_current_password' && (
         <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -1949,15 +1906,14 @@ function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
       )}
 
-      {/* Submit Button */}
       <button
         type="submit"
         disabled={isLoading || !isFormValid}
         className={cn(
-          "w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2",
+          'w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2',
           isLoading || !isFormValid
-            ? "bg-gold/40 text-obsidian/70 cursor-not-allowed"
-            : "bg-gold text-obsidian hover:bg-gold/90 shadow-[0_4px_16px_rgba(199,163,106,0.25)] hover:shadow-[0_6px_20px_rgba(199,163,106,0.35)]"
+            ? 'bg-gold/40 text-obsidian/70 cursor-not-allowed'
+            : 'bg-gold text-obsidian hover:bg-gold/90 shadow-[0_4px_16px_rgba(199,163,106,0.25)] hover:shadow-[0_6px_20px_rgba(199,163,106,0.35)]'
         )}
       >
         {isLoading ? (
@@ -1973,7 +1929,6 @@ function PasswordForm({ onSuccess }: { onSuccess: () => void }) {
   )
 }
 
-// Phone Number Form Component with OTP Verification
 type PhoneStep = 'input' | 'verify'
 
 function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
@@ -1989,20 +1944,18 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
   const [smsAvailable, setSmsAvailable] = useState(true)
   const addToast = useStore((state) => state.addToast)
 
-  // Fetch existing phone and check SMS availability on mount
   useEffect(() => {
     const init = async () => {
       try {
-        // Check SMS service status
         const statusRes = await fetch('/api/otp/status')
         if (statusRes.ok) {
           const status = await statusRes.json()
           setSmsAvailable(status.available !== false)
         }
 
-        // Fetch existing phone
         const { getUserPhone } = await import('@/lib/supabase/settings-actions')
         const result = await getUserPhone()
+
         if (result.success) {
           setExistingPhone(result.phone)
           setPhoneNumber(result.phone || '')
@@ -2014,10 +1967,10 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
         setIsFetching(false)
       }
     }
+
     init()
   }, [])
 
-  // Cooldown timer
   useEffect(() => {
     if (cooldown > 0) {
       const timer = setTimeout(() => setCooldown(cooldown - 1), 1000)
@@ -2026,8 +1979,7 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
   }, [cooldown])
 
   const formatPhoneNumber = (value: string) => {
-    const cleaned = value.replace(/[^\d+]/g, '')
-    return cleaned
+    return value.replace(/[^\d+]/g, '')
   }
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -2045,6 +1997,7 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
     }
 
     setIsLoading(true)
+
     try {
       const res = await fetch('/api/otp/send', {
         method: 'POST',
@@ -2084,6 +2037,7 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
     }
 
     setIsLoading(true)
+
     try {
       const res = await fetch('/api/otp/verify', {
         method: 'POST',
@@ -2113,6 +2067,7 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
   const handleSaveWithoutVerification = async () => {
     setError(null)
     setIsLoading(true)
+
     try {
       const { updateUserPhone } = await import('@/lib/supabase/settings-actions')
       const result = await updateUserPhone(phoneNumber || null)
@@ -2136,6 +2091,7 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
 
   const handleRemove = async () => {
     setIsLoading(true)
+
     try {
       const { updateUserPhone } = await import('@/lib/supabase/settings-actions')
       const result = await updateUserPhone(null)
@@ -2161,7 +2117,6 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
     )
   }
 
-  // OTP Verification Step
   if (step === 'verify') {
     return (
       <div className="space-y-5">
@@ -2188,7 +2143,6 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
           </p>
         </div>
 
-        {/* OTP Input */}
         <div className="space-y-3">
           <div className="flex justify-center gap-2">
             {[...Array(6)].map((_, i) => (
@@ -2204,7 +2158,6 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
                     const newCode = otpCode.split('')
                     newCode[i] = val
                     setOtpCode(newCode.join(''))
-                    // Auto-focus next input
                     if (val && i < 5) {
                       const nextInput = e.target.parentElement?.children[i + 1] as HTMLInputElement
                       nextInput?.focus()
@@ -2212,7 +2165,6 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
                   }
                 }}
                 onKeyDown={(e) => {
-                  // Handle backspace to go to previous input
                   if (e.key === 'Backspace' && !otpCode[i] && i > 0) {
                     const prevInput = (e.target as HTMLElement).parentElement?.children[i - 1] as HTMLInputElement
                     prevInput?.focus()
@@ -2224,10 +2176,10 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
                   setOtpCode(paste)
                 }}
                 className={cn(
-                  "w-12 h-14 text-center text-xl font-semibold rounded-xl border transition-all focus:outline-none focus:ring-2",
+                  'w-12 h-14 text-center text-xl font-semibold rounded-xl border transition-all focus:outline-none focus:ring-2',
                   error
-                    ? "border-destructive bg-destructive/5 focus:ring-destructive/50"
-                    : "border-border bg-muted focus:ring-gold/50 focus:border-gold"
+                    ? 'border-destructive bg-destructive/5 focus:ring-destructive/50'
+                    : 'border-border bg-muted focus:ring-gold/50 focus:border-gold'
                 )}
               />
             ))}
@@ -2238,16 +2190,15 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
           )}
         </div>
 
-        {/* Verify Button */}
         <button
           type="button"
           onClick={handleVerifyOTP}
           disabled={isLoading || otpCode.length !== 6}
           className={cn(
-            "w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2",
+            'w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2',
             isLoading || otpCode.length !== 6
-              ? "bg-gold/40 text-obsidian/70 cursor-not-allowed"
-              : "bg-gold text-obsidian hover:bg-gold/90 shadow-[0_4px_16px_rgba(199,163,106,0.25)]"
+              ? 'bg-gold/40 text-obsidian/70 cursor-not-allowed'
+              : 'bg-gold text-obsidian hover:bg-gold/90 shadow-[0_4px_16px_rgba(199,163,106,0.25)]'
           )}
         >
           {isLoading ? (
@@ -2260,7 +2211,6 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
           )}
         </button>
 
-        {/* Resend */}
         <div className="text-center">
           {cooldown > 0 ? (
             <p className="text-sm text-muted-foreground">
@@ -2281,10 +2231,8 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
     )
   }
 
-  // Phone Input Step
   return (
     <div className="space-y-5">
-      {/* Existing Phone Display */}
       {existingPhone && (
         <div className="p-4 rounded-xl bg-secondary/50 border border-border">
           <div className="flex items-center justify-between">
@@ -2293,10 +2241,10 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
               <p className="font-medium text-foreground">{existingPhone}</p>
             </div>
             <div className={cn(
-              "px-2.5 py-1 rounded-full text-xs font-medium",
+              'px-2.5 py-1 rounded-full text-xs font-medium',
               isVerified
-                ? "bg-emerald-500/20 text-emerald-500"
-                : "bg-amber-500/20 text-amber-500"
+                ? 'bg-emerald-500/20 text-emerald-500'
+                : 'bg-amber-500/20 text-amber-500'
             )}>
               {isVerified ? 'Verified' : 'Not verified'}
             </div>
@@ -2304,7 +2252,6 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
       )}
 
-      {/* SMS Availability Banner */}
       {!smsAvailable && (
         <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
           <div className="flex gap-3">
@@ -2319,7 +2266,6 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
       )}
 
-      {/* Phone Input */}
       <div>
         <label className="block text-sm font-medium text-foreground mb-2">
           {existingPhone ? 'Update Phone Number' : 'Add Phone Number'}
@@ -2339,7 +2285,6 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
         </p>
       </div>
 
-      {/* Error */}
       {error && (
         <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -2347,7 +2292,6 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
       )}
 
-      {/* Action Buttons */}
       <div className="space-y-3">
         {smsAvailable ? (
           <button
@@ -2355,10 +2299,10 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
             onClick={handleSendOTP}
             disabled={isLoading || !phoneNumber || phoneNumber.length < 10}
             className={cn(
-              "w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2",
+              'w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2',
               isLoading || !phoneNumber || phoneNumber.length < 10
-                ? "bg-gold/40 text-obsidian/70 cursor-not-allowed"
-                : "bg-gold text-obsidian hover:bg-gold/90 shadow-[0_4px_16px_rgba(199,163,106,0.25)]"
+                ? 'bg-gold/40 text-obsidian/70 cursor-not-allowed'
+                : 'bg-gold text-obsidian hover:bg-gold/90 shadow-[0_4px_16px_rgba(199,163,106,0.25)]'
             )}
           >
             {isLoading ? (
@@ -2376,10 +2320,10 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
             onClick={handleSaveWithoutVerification}
             disabled={isLoading || !phoneNumber}
             className={cn(
-              "w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2",
+              'w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2',
               isLoading || !phoneNumber
-                ? "bg-gold/40 text-obsidian/70 cursor-not-allowed"
-                : "bg-gold text-obsidian hover:bg-gold/90 shadow-[0_4px_16px_rgba(199,163,106,0.25)]"
+                ? 'bg-gold/40 text-obsidian/70 cursor-not-allowed'
+                : 'bg-gold text-obsidian hover:bg-gold/90 shadow-[0_4px_16px_rgba(199,163,106,0.25)]'
             )}
           >
             {isLoading ? (
@@ -2408,7 +2352,6 @@ function PhoneNumberForm({ onSuccess }: { onSuccess: () => void }) {
   )
 }
 
-// Biometric Settings Item - shows honest "not supported" state
 function BiometricSettingsItem() {
   const [showInfo, setShowInfo] = useState(false)
 
@@ -2432,7 +2375,6 @@ function BiometricSettingsItem() {
         <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
       </button>
 
-      {/* Info Modal */}
       <AnimatePresence>
         {showInfo && (
           <motion.div
