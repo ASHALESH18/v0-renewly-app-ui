@@ -668,12 +668,6 @@ export function FamilyMembersScreen() {
                       <p className="text-emerald-700 dark:text-emerald-300">
                         <span className="font-medium">Seat Type:</span> {familyStatus.membership.seatType === 'included' ? 'Included' : 'Extra'}
                       </p>
-                      {/* F10.1: Show Family owner email to members */}
-                      {familyStatus?.members && familyStatus.members.length > 0 && (
-                        <p className="text-emerald-700 dark:text-emerald-300">
-                          <span className="font-medium">Family Owner:</span> {familyStatus.members.find(m => m.role === 'owner')?.email || 'N/A'}
-                        </p>
-                      )}
                       {/* Refresh Family Access Button */}
                       <button
                         onClick={handleResyncFamily}
@@ -760,10 +754,9 @@ export function FamilyMembersScreen() {
                   >
                     <h4 className="font-semibold text-amber-900">All included seats are used</h4>
                     <p className="text-sm text-amber-800">
-                      Your Family plan includes 4 members. To invite another member, you&apos;ll need an extra seat for <span className="font-semibold">₹99/month</span> or <span className="font-semibold">$1.49/month</span>.
+                      Your Family plan includes 4 members. To invite another member, you&apos;ll need an extra seat for <span className="font-semibold">₹99/month</span>.
                     </p>
                     <p className="text-xs text-amber-700 mt-3">
-                      Maximum 8 invited members per Family group
                       Pending invitations reserve seats until accepted, cancelled, or expired.
                     </p>
                   </motion.div>
@@ -887,13 +880,7 @@ export function FamilyMembersScreen() {
                           </div>
                           <div>
                             <p className="font-medium text-foreground">{member.email}</p>
-                            <div className="flex gap-3 text-xs text-muted-foreground">
-                              {/* F10.1: Show seat type and joined date */}
-                              <span>{member.seatType === 'included' ? 'Included Seat' : 'Extra Seat'}</span>
-                              {member.joinedAt && (
-                                <span>• Joined {new Date(member.joinedAt).toLocaleDateString()}</span>
-                              )}
-                            </div>
+                            <p className="text-xs text-muted-foreground">Member</p>
                           </div>
                         </div>
                         {familyStatus?.isFamilyOwner && (
