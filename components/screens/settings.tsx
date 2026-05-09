@@ -136,6 +136,10 @@ export function SettingsScreen() {
   const updateNotificationSettings = useStore((state) => state.updateNotificationSettings)
   const setUserProfile = useStore((state) => state.setUserProfile)
 
+  // Defensive: Normalize potentially undefined arrays/objects to prevent runtime crashes
+  const safeSubscriptions = Array.isArray(subscriptions) ? subscriptions : []
+  const safeNotificationSettings = notificationSettings || {}
+
   // Family status for member/owner distinction
   const [familyStatus, setFamilyStatus] = useState<any>(null)
 
@@ -228,13 +232,13 @@ export function SettingsScreen() {
 
   // Find active managed Renewly Pro/Family subscription for pending billing badge
   const currentRenewlyManagedSubscription = useMemo(() => {
-    return subscriptions.find((subscription: any) =>
+    return safeSubscriptions.find((subscription: any) =>
       subscription?.isSystemManaged === true &&
       subscription?.systemSource === 'renewly_billing' &&
       (subscription?.managedPlan === 'pro' || subscription?.managedPlan === 'family') &&
       subscription?.status === 'active'
     )
-  }, [subscriptions])
+  }, [safeSubscriptions])
 
   const pendingBillingBadgeText = currentRenewlyManagedSubscription
     ? getPendingBillingBadgeText(currentRenewlyManagedSubscription)
@@ -245,10 +249,10 @@ export function SettingsScreen() {
   const hasPendingBillingChange = Boolean(pendingBillingBadgeText)
 
   const currentCurrency =
-    currencies.find((currency) => currency.code === notificationSettings.currencyCode) || {
-      code: notificationSettings.currencyCode,
-      name: notificationSettings.currencyCode,
-      symbol: notificationSettings.currencyCode,
+    currencies.find((currency) => currency.code === safeNotificationSettings.currencyCode) || {
+      code: safeNotificationSettings.currencyCode || 'USD',
+      name: safeNotificationSettings.currencyCode || 'USD',
+      symbol: safeNotificationSettings.currencyCode || '$',
     }
 
   // Handlers
@@ -343,7 +347,7 @@ export function SettingsScreen() {
           message: 'Your full account backup has been downloaded as JSON.',
         })
       } else {
-        exportSubscriptions(subscriptions, format)
+        exportSubscriptions(safeSubscriptions, format)
 
         addToast({
           type: 'success',
@@ -386,7 +390,7 @@ export function SettingsScreen() {
       return
     }
 
-    if (!notificationSettings.pushNotifications) {
+    if (!safeNotificationSettings.pushNotifications) {
       // User wants to turn ON push notifications - request permission
       try {
         const permission = Notification.permission
@@ -475,7 +479,7 @@ export function SettingsScreen() {
   }
 
   const handleToggleEmailNotifications = async () => {
-    await updateNotificationSettings({ emailNotifications: !notificationSettings.emailNotifications })
+    await updateNotificationSettings({ emailNotifications: !safeNotificationSettings.emailNotifications })
   }
 
   const handleCancelPlan = async () => {
