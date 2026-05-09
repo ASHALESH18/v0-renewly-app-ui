@@ -30,7 +30,8 @@ const comparisonRows: Array<{ label: string; pro: string; family: string; enterp
   { label: 'Subscription limit', pro: 'Unlimited', family: 'Unlimited shared', enterprise: 'Unlimited team' },
   { label: 'Advanced analytics', pro: 'Included', family: 'Included', enterprise: 'Advanced reporting' },
   { label: 'Renewal calendar', pro: 'Included', family: 'Shared calendar', enterprise: 'Team calendar' },
-  { label: 'Members', pro: '1 user', family: 'Up to 4 members', enterprise: 'Custom seats' },
+  { label: 'Members', pro: '1 user', family: 'Owner + 4 included members', enterprise: 'Custom seats' },
+  { label: 'Extra members', pro: 'Not available', family: 'Up to 4 extra members at ₹99 / $1.49 each', enterprise: 'Custom seats' },
   { label: 'Support', pro: 'Priority', family: 'Priority', enterprise: 'Dedicated' },
 ]
 
@@ -114,7 +115,7 @@ function UpgradeContent() {
 
   useEffect(() => {
     clearUpgradeIntent()
-    
+
     const fetchQaStatus = async () => {
       try {
         const res = await fetch('/api/qa/plan-override/status')
@@ -126,7 +127,7 @@ function UpgradeContent() {
         console.error('[v0] Failed to fetch QA status:', err)
       }
     }
-    
+
     fetchQaStatus()
   }, [])
 
@@ -159,7 +160,7 @@ function UpgradeContent() {
           : Array.isArray(data)
             ? data
             : []
-        
+
         const { isDisplayableSubscription } = await import('@/lib/billing/subscription-display-utils')
         const subscriptions = rows
           .map(mapSubscriptionRowToUI)
@@ -382,11 +383,10 @@ function UpgradeContent() {
                 whileHover={{ y: -4 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleSelectPlan(plan.id)}
-                className={`relative rounded-2xl border p-5 text-left transition-all ${
-                  isSelected
+                className={`relative rounded-2xl border p-5 text-left transition-all ${isSelected
                     ? 'border-gold bg-gold/10 shadow-luxury'
                     : 'border-border bg-card/80 hover:border-gold/40'
-                }`}
+                  }`}
                 type="button"
               >
                 {plan.badge === 'popular' && (
