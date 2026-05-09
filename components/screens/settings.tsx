@@ -18,6 +18,7 @@ import useStore from '@/lib/store'
 import { exportSubscriptions } from '@/lib/export'
 import { PlanSelectionSheet } from '@/components/plan-selection-sheet'
 import { generateAvatar } from '@/lib/avatar-utils'
+import { getStableProfileAvatar } from '@/lib/profile/avatar-source'
 import { getSubscriptionRenewalDate, getPendingBillingBadgeText } from '@/lib/billing/billing-lifecycle-utils'
 import { signOutAndRedirectHome } from '@/lib/auth/sign-out'
 import { currencies } from '@/lib/locale-utils'
@@ -203,17 +204,17 @@ export function SettingsScreen() {
 
   // Avatar URL - use persisted URL if available, otherwise generate
   const avatarUrl = useMemo(() => {
-    if (!userProfile) return null
-
-    // Prefer persisted avatar URL from database
-    if (userProfile.avatarUrl) {
-      return userProfile.avatarUrl
-    }
-
-    // Fall back to generated avatar
-    const seed = userProfile.avatarSeed || userProfile.email || 'default'
-    return generateAvatar({ seed, size: 128 })
-  }, [userProfile?.email, userProfile?.avatarSeed, userProfile?.avatarUrl])
+    return getStableProfileAvatar({
+      profileAvatarUrl: userProfile?.avatarUrl || null,
+      avatarSource: userProfile?.avatarSource || null,
+      authAvatarUrl: userProfile?.picture || null,
+      authPicture: userProfile?.picture || null,
+      avatarSeed: userProfile?.avatarSeed || null,
+      email: userProfile?.email || null,
+      generateAvatar: (args) => generateAvatar(args.seed, args.size),
+      size: 128,
+    })
+  }, [userProfile?.email, userProfile?.avatarSeed, userProfile?.avatarUrl, userProfile?.avatarSource, userProfile?.picture])
 
   // Plan display
   const planNames: Record<string, string> = {
@@ -238,6 +239,11 @@ export function SettingsScreen() {
   const pendingBillingBadgeText = currentRenewlyManagedSubscription
     ? getPendingBillingBadgeText(currentRenewlyManagedSubscription)
     : null
+
+  const hasPendingCancellation = pendingBillingBadgeText?.toLowerCase().includes('cancels on') === true
+  const hasPendingDowngrade = pendingBillingBadgeText?.toLowerCase().includes('downgrades to') === true
+  const hasPendingBillingChange = Boolean(pendingBillingBadgeText)
+
   const currentCurrency =
     currencies.find((currency) => currency.code === notificationSettings.currencyCode) || {
       code: notificationSettings.currencyCode,
@@ -1099,16 +1105,24 @@ export function SettingsScreen() {
                       >
                         Change Plan
                       </button>
-                      <button
-                        onClick={() => {
-                          setActiveSheet(null)
-                          // Use requestAnimationFrame to ensure sheet closes before modal opens
-                          requestAnimationFrame(() => setShowCancelConfirmation(true))
-                        }}
-                        className="w-full px-4 py-3 rounded-xl bg-red-500/10 text-red-600 font-medium hover:bg-red-500/20 border border-red-500/30 transition-colors cursor-pointer"
-                      >
-                        Cancel Plan
-                      </button>
+                      {hasPendingBillingChange ? (
+                        <button
+                          disabled
+                          className="w-full px-4 py-3 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium border border-amber-500/30 opacity-80 cursor-not-allowed"
+                        >
+                          {hasPendingCancellation ? 'Cancellation Scheduled' : hasPendingDowngrade ? 'Downgrade Scheduled' : 'Billing Change Scheduled'}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setActiveSheet(null)
+                            requestAnimationFrame(() => setShowCancelConfirmation(true))
+                          }}
+                          className="w-full px-4 py-3 rounded-xl bg-red-500/10 text-red-600 font-medium hover:bg-red-500/20 border border-red-500/30 transition-colors cursor-pointer"
+                        >
+                          Cancel Plan
+                        </button>
+                      )}
                     </div>
                   </>
                 )}
