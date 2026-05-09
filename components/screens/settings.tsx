@@ -146,10 +146,6 @@ export function SettingsScreen() {
   const updateNotificationSettings = useStore((state) => state.updateNotificationSettings)
   const setUserProfile = useStore((state) => state.setUserProfile)
 
-  // Defensive: Normalize potentially undefined arrays/objects to prevent runtime crashes
-  const safeSubscriptions = Array.isArray(subscriptions) ? subscriptions : []
-  const safeNotificationSettings = notificationSettings || {}
-
   // Family status for member/owner distinction
   const [familyStatus, setFamilyStatus] = useState<any>(null)
 
