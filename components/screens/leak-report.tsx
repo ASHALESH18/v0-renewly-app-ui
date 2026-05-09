@@ -21,6 +21,7 @@ import useStore from '@/lib/store'
 import { useCountUp } from '@/lib/hooks/use-count-up'
 import { cn } from '@/lib/utils'
 import { getLeakStatusConfig, getLeakStatusLabel } from '@/lib/leak-status-config'
+import { AlertCircle, ExternalLink } from 'lucide-react'
 
 export function LeakReportScreen({
   onNavigateTab,
@@ -31,10 +32,43 @@ export function LeakReportScreen({
 } = {}) {
   const [mounted, setMounted] = useState(false)
   const [copied, setCopied] = useState(false)
+  const userProfile = useStore((state) => state.userProfile)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // F10.1: Access control - Free users without family entitlement cannot access Leak Report
+  if (mounted && userProfile?.plan === 'free') {
+    return (
+      <>
+        <Header
+          title="Leak Report"
+          onProfileClick={onProfileClick}
+        />
+        <PageTransition className="px-6 py-8 lg:px-8">
+          <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-6">
+            <div className="flex items-start gap-4">
+              <AlertCircle className="h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+              <div>
+                <p className="font-medium text-amber-900 dark:text-amber-100">Pro or Family Plan Required</p>
+                <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">
+                  Leak Report is available for Pro and Family plan subscribers. Upgrade your plan to identify unused subscriptions and savings opportunities.
+                </p>
+                <a
+                  href="/app/upgrade?plan=pro"
+                  className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-300 hover:underline"
+                >
+                  Upgrade to Pro
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </PageTransition>
+      </>
+    )
+  }
 
   // Get live data from store
   const subscriptions = useStore((state) => state.subscriptions)

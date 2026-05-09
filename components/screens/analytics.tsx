@@ -31,6 +31,7 @@ import { formatMoney, formatSubscriptionMoney } from '@/lib/preferences-format'
 import { useExchangeRates } from '@/lib/hooks/use-exchange-rates'
 import { buildCategoryBreakdown, buildProjectedSpendTrend, toMonthlyAmount } from '@/lib/subscription-math'
 import { AnalyticsSkeleton } from '@/components/skeletons'
+import { AlertCircle, ExternalLink } from 'lucide-react'
 
 const timeSegments = [
   { id: '3m', label: '3M' },
@@ -130,6 +131,7 @@ export function AnalyticsScreen({
   const { monthlySpendData, categoryBreakdown, isLoading, error } = useAnalyticsData()
   const subscriptions = useStore((state) => state.subscriptions)
   const notificationSettings = useStore((state) => state.notificationSettings)
+  const userProfile = useStore((state) => state.userProfile)
 
   const preferredLanguage = notificationSettings.language || 'en'
   const preferredCurrency = notificationSettings.currencyCode || 'INR'
@@ -211,6 +213,39 @@ export function AnalyticsScreen({
           onProfileClick={onProfileClick}
         />
         <AnalyticsSkeleton />
+      </>
+    )
+  }
+
+  // F10.1: Access control - Free users without family entitlement cannot access Analytics
+  if (userProfile?.plan === 'free' && userProfile?.plan !== 'pro' && userProfile?.plan !== 'family') {
+    return (
+      <>
+        <Header
+          title="Analytics"
+          subtitle="Spending trends and subscription intelligence"
+          onProfileClick={onProfileClick}
+        />
+        <PageTransition className="px-6 py-8 lg:px-8">
+          <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-6">
+            <div className="flex items-start gap-4">
+              <AlertCircle className="h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+              <div>
+                <p className="font-medium text-amber-900 dark:text-amber-100">Pro or Family Plan Required</p>
+                <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">
+                  Analytics is available for Pro and Family plan subscribers. Upgrade your plan to access detailed spending insights.
+                </p>
+                <a
+                  href="/app/upgrade?plan=pro"
+                  className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-300 hover:underline"
+                >
+                  Upgrade to Pro
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </PageTransition>
       </>
     )
   }

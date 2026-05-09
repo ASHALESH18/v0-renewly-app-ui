@@ -340,7 +340,7 @@ const sidebarItems = [
   { id: 'inbox', icon: Inbox, label: 'Smart Inbox', href: '/app/inbox' },
   { id: 'integrations', icon: Link2, label: 'Integrations', href: '/app/integrations' },
   { id: 'notifications', icon: Bell, label: 'Notifications', href: '/app/notifications' },
-  { id: 'family', icon: Users, label: 'Family Members', href: '/app/family' },
+  // F10.1: Family Members hidden from sidebar, accessible via Settings/Plan & Billing only
   { id: 'settings', icon: Settings, label: 'Settings', href: '/app/settings' },
 ]
 
