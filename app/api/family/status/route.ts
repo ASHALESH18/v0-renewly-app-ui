@@ -91,15 +91,16 @@ export async function GET() {
       .select('id, status, included_member_limit, extra_member_price_inr, current_period_end, scheduled_action, scheduled_action_reason')
       .eq('owner_user_id', user.id)
       .in('status', ['active', 'past_due'])
-      .single()
+      .maybeSingle()
 
     // Fetch active family membership where user is member
     const { data: membership, error: membershipError } = await supabase
-      .from('family_members')
-      .select('id, family_group_id, role, seat_type, joined_at')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .single()
+  .from('family_members')
+  .select('id, family_group_id, role, seat_type, joined_at')
+  .eq('user_id', user.id)
+  .eq('status', 'active')
+  .eq('role', 'member')
+  .maybeSingle()
 
     // Fetch removed membership (lightweight check for recently removed members)
     const { data: removedMembership, error: removedMembershipError } = await supabase
