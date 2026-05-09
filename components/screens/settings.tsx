@@ -218,8 +218,8 @@ export function SettingsScreen() {
   // Plan display
   const planNames: Record<string, string> = {
     free: 'Free Plan',
-    pro: 'Pro Member',
-    family: 'Family Plan',
+    pro: 'Renewly Pro',
+    family: 'Renewly Family',
     enterprise: 'Enterprise',
   }
   const planName = userProfile?.plan ? planNames[userProfile.plan] : 'Free Plan'
@@ -550,739 +550,739 @@ export function SettingsScreen() {
   return (
     <>
       <div className="min-h-screen bg-transparent pb-24">
-      {/* Header */}
-      <div className="px-4 pt-8 pb-6 lg:px-6">
-        <motion.div
+        {/* Header */}
+        <div className="px-4 pt-8 pb-6 lg:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={springs.gentle}
+          >
+            <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage your account and preferences</p>
+          </motion.div>
+        </div>
+
+        {/* Profile Card */}
+        <motion.button
+          id="profile"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={springs.gentle}
+          transition={{ ...springs.gentle, delay: 0.1 }}
+          onClick={() => setActiveSheet('profile')}
+          className="mx-4 mb-6 w-[calc(100%-2rem)] lg:mx-6 lg:w-[calc(100%-3rem)] text-left cursor-pointer"
         >
-          <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage your account and preferences</p>
-        </motion.div>
-      </div>
-
-      {/* Profile Card */}
-      <motion.button
-        id="profile"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ ...springs.gentle, delay: 0.1 }}
-        onClick={() => setActiveSheet('profile')}
-        className="mx-4 mb-6 w-[calc(100%-2rem)] lg:mx-6 lg:w-[calc(100%-3rem)] text-left cursor-pointer"
-      >
-        <div className="p-4 rounded-2xl glass hover:bg-secondary/30 transition-colors">
-          <div className="flex items-center gap-4">
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={userProfile?.name || 'Profile'}
-                className="w-16 h-16 rounded-full object-cover border-2 border-gold/30"
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-gold/20 flex items-center justify-center border-2 border-gold/30">
-                <span className="text-2xl font-semibold text-gold">
-                  {userProfile?.name?.charAt(0).toUpperCase() || 'U'}
-                </span>
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-semibold text-foreground truncate">
-                {userProfile?.name || 'User'}
-              </h2>
-              <p className="text-sm text-muted-foreground truncate">
-                {currentUserEmail || 'No email'}
-              </p>
-              <div className="flex items-center gap-2 mt-1">
-                <Crown className={cn("w-4 h-4", isPremium ? "text-gold" : "text-muted-foreground")} />
-                <span className={cn("text-xs font-medium", isPremium ? "text-gold" : "text-muted-foreground")}>
-                  {planName}
-                </span>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground" />
-          </div>
-        </div>
-      </motion.button>
-
-      {/* Settings Sections */}
-      <div className="px-4 lg:px-6 space-y-6">
-        {/* Account Section */}
-        <SettingsSection title="Account" delay={0.15}>
-          <SettingsItem
-            icon={CreditCard}
-            label="Plan & Billing"
-            description={userProfile?.plan === 'pro' ? 'Pro - Active' : planName}
-            onClick={() => setActiveSheet('billing')}
-          />
-          {(isFamilyOwner || isActiveFamilyMember || familyStatus?.pendingInvite) && !wasRemovedFromFamily && (
-            <SettingsItem
-              icon={Users}
-              label="Family Members"
-              description="Manage members and invitations"
-              onClick={() => window.location.href = '/app/family'}
-            />
-          )}
-        </SettingsSection>
-
-        {/* Notifications Section */}
-        <SettingsSection title="Notifications" delay={0.2}>
-          <SettingsToggle
-            icon={Bell}
-            label="Browser Push Notifications"
-            description="Receive renewal reminders on this browser/device"
-            checked={notificationSettings.pushNotifications}
-            disabled={false}
-            onToggle={handleTogglePushNotifications}
-          />
-          <div className="px-4 py-2 text-xs text-muted-foreground/70">
-            For iPhone/iPad, add Renewly to your Home Screen to enable web push. Push delivery setup is being finalized.
-          </div>
-          <SettingsToggle
-            icon={Mail}
-            label="Email Notifications"
-            description="Welcome emails, renewal updates, and account alerts"
-            checked={notificationSettings.emailNotifications}
-            onToggle={handleToggleEmailNotifications}
-          />
-          <div className="px-4 py-2 text-xs text-muted-foreground/70">
-            We'll use email for important account updates, upcoming renewal reminders, and useful subscription summaries — no spam.
-          </div>
-          <SettingsItem
-            icon={Smartphone}
-            label="Reminder Timing"
-            description={`${notificationSettings.reminderDays} days before renewal`}
-            onClick={() => setActiveSheet('reminder')}
-          />
-        </SettingsSection>
-
-        {/* Security Section */}
-        <SettingsSection title="Security" delay={0.25}>
-          <SettingsItem
-            icon={Lock}
-            label="Change Password"
-            onClick={() => setActiveSheet('password')}
-          />
-          <SettingsItem
-            icon={Mail}
-            label="Email Address"
-            description={currentUserEmail || 'Not set'}
-            onClick={() => setActiveSheet('email')}
-          />
-          <SettingsItem
-            icon={Smartphone}
-            label="Phone Number"
-            description="Coming soon"
-            onClick={() => {
-              addToast({
-                type: 'info',
-                title: 'Phone reminders coming soon',
-                message: 'Phone number settings are not available yet. Email reminders are working now.',
-              })
-            }}
-            disabled={true}
-          />
-          <BiometricSettingsItem />
-        </SettingsSection>
-
-        {/* Data Section */}
-        <SettingsSection title="Data & Storage" delay={0.3}>
-          <SettingsItem
-            icon={Download}
-            label="Export Data"
-            description="Subscriptions as CSV/JSON or full account backup"
-            onClick={() => setActiveSheet('export')}
-          />
-        </SettingsSection>
-
-        {/* Appearance Section */}
-        <SettingsSection title="Appearance" delay={0.3}>
-          {/* Premium 3-card theme selector (Light / Dark / Glass) */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-card border border-border">
-            <ThemeSelectorCards />
-          </div>
-
-          <SettingsItem
-            icon={Globe}
-            label="Currency"
-            description={`${currentCurrency.symbol} ${currentCurrency.name}`}
-            onClick={() => setActiveSheet('currency')}
-          />
-
-          <SettingsItem
-            icon={Globe}
-            label="Language"
-            description={languageNames[(notificationSettings.language || 'en') as SupportedLanguage]}
-            onClick={() => setActiveSheet('language')}
-          />
-        </SettingsSection>
-
-        {/* Support Section */}
-        <SettingsSection title="Support" delay={0.4}>
-          <SettingsItem
-            icon={HelpCircle}
-            label="Help Center"
-            onClick={() => router.push('/help')}
-          />
-          <SettingsItem
-            icon={FileText}
-            label="Terms of Service"
-            onClick={() => router.push('/terms')}
-          />
-          <SettingsItem
-            icon={FileText}
-            label="Privacy Policy"
-            onClick={() => router.push('/privacy')}
-          />
-        </SettingsSection>
-
-        {/* Sign Out Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ ...springs.gentle, delay: 0.45 }}
-        >
-          <motion.button
-            onClick={handleSignOut}
-            disabled={isSigningOut}
-            whileTap={{ scale: 0.98 }}
-            className={cn(
-              "w-full flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer",
-              isSigningOut
-                ? "border-gold/20 bg-gold/6 text-gold/70 opacity-70 cursor-not-allowed"
-                : "border-gold/30 bg-[linear-gradient(135deg,rgba(199,163,106,0.14),rgba(199,163,106,0.06),rgba(255,255,255,0.02))] text-gold hover:border-gold/55 hover:bg-gold/16 hover:text-ivory hover:shadow-[0_16px_40px_rgba(199,163,106,0.16)]"
-            )}
-          >
-            {isSigningOut ? (
-              <>
-                <RefreshCw className="w-5 h-5 animate-spin" />
-                <span className="font-medium">Signing out...</span>
-              </>
-            ) : (
-              <>
-                <LogOut className="w-5 h-5" />
-                <span className="font-medium">Sign Out</span>
-              </>
-            )}
-          </motion.button>
-        </motion.div>
-
-        {/* Version */}
-        <p className="text-center text-xs text-muted-foreground py-4">
-          Renewly v1.0.0
-        </p>
-      </div>
-
-      {/* Plan Selection Sheet - wrapped in proper modal */}
-      <SettingsSheet
-        isOpen={showPlanSheet}
-        onClose={() => setShowPlanSheet(false)}
-        title="Choose Your Plan"
-      >
-        <PlanSelectionSheet
-          onClose={() => setShowPlanSheet(false)}
-          currentPlan={userProfile?.plan || 'free'}
-        />
-      </SettingsSheet>
-
-      {/* Profile Sheet */}
-      <SettingsSheet
-        isOpen={activeSheet === 'profile'}
-        onClose={() => setActiveSheet(null)}
-        title="Edit Profile"
-      >
-        <ProfileForm
-          userProfile={userProfile}
-          avatarUrl={avatarUrl}
-          onSave={(data) => {
-            if (userProfile) {
-              // Update store with new profile data including avatar
-              setUserProfile({
-                ...userProfile,
-                name: data.name,
-                avatarUrl: data.avatarUrl,
-                timeZone: data.timezone,
-              })
-            }
-            addToast({ type: 'success', title: 'Profile updated' })
-            setActiveSheet(null)
-          }}
-        />
-      </SettingsSheet>
-
-      {/* Reminder Sheet */}
-      <SettingsSheet
-        isOpen={activeSheet === 'reminder'}
-        onClose={() => setActiveSheet(null)}
-        title="Reminder Timing"
-      >
-        <div className="space-y-4">
-          <p className="text-muted-foreground">Choose when to receive renewal reminders.</p>
-          {[1, 3, 7, 14, 30].map((days) => (
-            <button
-              key={days}
-              onClick={async () => {
-                await updateNotificationSettings({ reminderDays: days })
-                addToast({ type: 'success', title: 'Reminder updated', message: `You'll be reminded ${days} day${days > 1 ? 's' : ''} before renewal.` })
-                setActiveSheet(null)
-              }}
-              className={cn(
-                "w-full flex items-center justify-between p-4 rounded-xl transition-colors",
-                notificationSettings.reminderDays === days
-                  ? "bg-gold/10 text-gold border border-gold/30"
-                  : "bg-muted hover:bg-secondary"
-              )}
-            >
-              <span>{days} day{days > 1 ? 's' : ''} before</span>
-              {notificationSettings.reminderDays === days && <Check className="w-5 h-5" />}
-            </button>
-          ))}
-        </div>
-      </SettingsSheet>
-
-      {/* Password Sheet */}
-      <SettingsSheet
-        isOpen={activeSheet === 'password'}
-        onClose={() => setActiveSheet(null)}
-        title="Change Password"
-      >
-        <PasswordForm
-          onSuccess={() => {
-            addToast({ type: 'success', title: 'Password updated' })
-            setActiveSheet(null)
-          }}
-        />
-      </SettingsSheet>
-
-      {/* Email Sheet */}
-      <SettingsSheet
-        isOpen={activeSheet === 'email'}
-        onClose={() => {
-          setActiveSheet(null)
-          setNewEmail('')
-        }}
-        title="Email Address"
-      >
-        <div className="space-y-4">
-          <div className="p-4 rounded-xl bg-muted">
-            <p className="text-sm text-muted-foreground">Current email</p>
-            <p className="font-medium text-foreground">{currentUserEmail || 'Not set'}</p>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            To change your email address, you'll need to verify the new email. A verification link will be sent to your new address.
-          </p>
-          <input
-            type="email"
-            placeholder="Enter new email address"
-            value={newEmail}
-            onChange={(e) => setNewEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-muted border border-border focus:border-gold outline-none transition-colors text-foreground placeholder:text-muted-foreground"
-          />
-          <button
-            onClick={handleChangeEmail}
-            disabled={isChangingEmail || !newEmail}
-            className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isChangingEmail ? 'Sending...' : 'Change Email Address'}
-          </button>
-        </div>
-      </SettingsSheet>
-
-      {/* Phone Number Sheet */}
-      <SettingsSheet
-        isOpen={activeSheet === 'phone'}
-        onClose={() => setActiveSheet(null)}
-        title="Phone Number"
-      >
-        <PhoneNumberForm
-          onSuccess={() => {
-            addToast({ type: 'success', title: 'Phone number updated' })
-            setActiveSheet(null)
-          }}
-        />
-      </SettingsSheet>
-
-      {/* Export Sheet */}
-      <SettingsSheet
-        isOpen={activeSheet === 'export'}
-        onClose={() => setActiveSheet(null)}
-        title="Export Data"
-      >
-        <div className="space-y-4">
-          <p className="text-muted-foreground">
-            Download your subscriptions as CSV or JSON, or export a full account backup including profile,
-            settings, notifications, and subscriptions.
-          </p>
-          <button
-            onClick={() => handleExport('csv')}
-            className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors cursor-pointer"
-          >
-            <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
-              <Download className="w-5 h-5 text-foreground" />
-            </div>
-            <div className="flex-1 text-left">
-              <p className="font-medium text-foreground">Export as CSV</p>
-              <p className="text-sm text-muted-foreground">Spreadsheet format</p>
-            </div>
-          </button>
-          <button
-            onClick={() => handleExport('json')}
-            className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors cursor-pointer"
-          >
-            <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
-              <FileJson className="w-5 h-5 text-foreground" />
-            </div>
-            <div className="flex-1 text-left">
-              <p className="font-medium text-foreground">Export as JSON</p>
-              <p className="text-sm text-muted-foreground">For backup & import</p>
-            </div>
-          </button>
-          <button
-            onClick={() => handleExport('account')}
-            disabled={isExportingAccount}
-            className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
-              {isExportingAccount ? (
-                <RefreshCw className="w-5 h-5 text-foreground animate-spin" />
+          <div className="p-4 rounded-2xl glass hover:bg-secondary/30 transition-colors">
+            <div className="flex items-center gap-4">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={userProfile?.name || 'Profile'}
+                  className="w-16 h-16 rounded-full object-cover border-2 border-gold/30"
+                />
               ) : (
-                <FileJson className="w-5 h-5 text-foreground" />
-              )}
-            </div>
-
-            <div className="flex-1 text-left">
-              <p className="font-medium text-foreground">Full account backup</p>
-              <p className="text-sm text-muted-foreground">
-                Profile, settings, notifications, and subscriptions (JSON)
-              </p>
-            </div>
-          </button>
-        </div>
-      </SettingsSheet>
-
-      {/* Billing & Plan Sheet */}
-      <SettingsSheet
-        isOpen={activeSheet === 'billing'}
-        onClose={() => setActiveSheet(null)}
-        title={wasRemovedFromFamily ? 'Billing & Plan' : isFamilyMember ? 'Family Access' : 'Billing & Plan'}
-      >
-        <div className="space-y-6">
-          {/* Removed from Family - Show Free Plan */}
-          {wasRemovedFromFamily ? (
-            <>
-              <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20">
-                <p className="text-sm text-muted-foreground">Status</p>
-                <p className="text-2xl font-semibold text-amber-600 dark:text-amber-400 mt-1">Free Plan</p>
-                <p className="text-xs text-muted-foreground mt-2">Your Family access was removed</p>
-              </div>
-
-              <p className="text-sm text-muted-foreground">
-                Your personal Renewly account and tracked subscriptions are safe. You can start your own Pro or Family plan anytime.
-              </p>
-
-              <button
-                onClick={() => {
-                  window.location.href = '/app/upgrade'
-                  setActiveSheet(null)
-                }}
-                className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
-              >
-                Start Your Own Plan
-              </button>
-            </>
-          ) : isFamilyMember ? (
-            /* Active Family Member */
-            <>
-              {/* Current Plan Display */}
-              <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20">
-                <p className="text-sm text-muted-foreground">Status</p>
-                <p className="text-2xl font-semibold text-blue-600 dark:text-blue-400 mt-1">Included in Family</p>
-                <p className="text-xs text-muted-foreground mt-2">You are not paying for this subscription</p>
-              </div>
-
-              {/* Family Member Description */}
-              <p className="text-sm text-muted-foreground">
-                You are included in a Renewly Family plan. You are not the billing owner, so there is no paid subscription to cancel here.
-              </p>
-
-              {/* Period End Info */}
-              {familyStatus?.familyGroup?.currentPeriodEnd && (
-                <div className="p-4 rounded-xl bg-muted/50 border border-border">
-                  <p className="text-xs font-medium text-foreground mb-1">Your Family access expires</p>
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(familyStatus.familyGroup.currentPeriodEnd).toLocaleDateString()}, unless the owner removes you or the plan ends.
-                  </p>
+                <div className="w-16 h-16 rounded-full bg-gold/20 flex items-center justify-center border-2 border-gold/30">
+                  <span className="text-2xl font-semibold text-gold">
+                    {userProfile?.name?.charAt(0).toUpperCase() || 'U'}
+                  </span>
                 </div>
               )}
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg font-semibold text-foreground truncate">
+                  {userProfile?.name || 'User'}
+                </h2>
+                <p className="text-sm text-muted-foreground truncate">
+                  {currentUserEmail || 'No email'}
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <Crown className={cn("w-4 h-4", isPremium ? "text-gold" : "text-muted-foreground")} />
+                  <span className={cn("text-xs font-medium", isPremium ? "text-gold" : "text-muted-foreground")}>
+                    {planName}
+                  </span>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </div>
+          </div>
+        </motion.button>
 
-              {/* Action Buttons */}
-              <div className="space-y-3 pt-2">
-                <button
-                  onClick={() => {
-                    window.location.href = '/app/family'
-                    setActiveSheet(null)
-                  }}
-                  className="w-full px-4 py-3 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium hover:bg-blue-500/20 border border-blue-500/30 transition-colors cursor-pointer"
-                >
-                  Manage Family Access
-                </button>
+        {/* Settings Sections */}
+        <div className="px-4 lg:px-6 space-y-6">
+          {/* Account Section */}
+          <SettingsSection title="Account" delay={0.15}>
+            <SettingsItem
+              icon={CreditCard}
+              label="Plan & Billing"
+              description={userProfile?.plan === 'pro' ? 'Pro - Active' : planName}
+              onClick={() => setActiveSheet('billing')}
+            />
+            {(userProfile?.plan === 'family' || isFamilyOwner || isActiveFamilyMember || familyStatus?.pendingInvite) && !wasRemovedFromFamily && (
+              <SettingsItem
+                icon={Users}
+                label="Family Members"
+                description="Manage members and invitations"
+                onClick={() => window.location.href = '/app/family'}
+              />
+            )}
+          </SettingsSection>
+
+          {/* Notifications Section */}
+          <SettingsSection title="Notifications" delay={0.2}>
+            <SettingsToggle
+              icon={Bell}
+              label="Browser Push Notifications"
+              description="Receive renewal reminders on this browser/device"
+              checked={notificationSettings.pushNotifications}
+              disabled={false}
+              onToggle={handleTogglePushNotifications}
+            />
+            <div className="px-4 py-2 text-xs text-muted-foreground/70">
+              For iPhone/iPad, add Renewly to your Home Screen to enable web push. Push delivery setup is being finalized.
+            </div>
+            <SettingsToggle
+              icon={Mail}
+              label="Email Notifications"
+              description="Welcome emails, renewal updates, and account alerts"
+              checked={notificationSettings.emailNotifications}
+              onToggle={handleToggleEmailNotifications}
+            />
+            <div className="px-4 py-2 text-xs text-muted-foreground/70">
+              We'll use email for important account updates, upcoming renewal reminders, and useful subscription summaries — no spam.
+            </div>
+            <SettingsItem
+              icon={Smartphone}
+              label="Reminder Timing"
+              description={`${notificationSettings.reminderDays} days before renewal`}
+              onClick={() => setActiveSheet('reminder')}
+            />
+          </SettingsSection>
+
+          {/* Security Section */}
+          <SettingsSection title="Security" delay={0.25}>
+            <SettingsItem
+              icon={Lock}
+              label="Change Password"
+              onClick={() => setActiveSheet('password')}
+            />
+            <SettingsItem
+              icon={Mail}
+              label="Email Address"
+              description={currentUserEmail || 'Not set'}
+              onClick={() => setActiveSheet('email')}
+            />
+            <SettingsItem
+              icon={Smartphone}
+              label="Phone Number"
+              description="Coming soon"
+              onClick={() => {
+                addToast({
+                  type: 'info',
+                  title: 'Phone reminders coming soon',
+                  message: 'Phone number settings are not available yet. Email reminders are working now.',
+                })
+              }}
+              disabled={true}
+            />
+            <BiometricSettingsItem />
+          </SettingsSection>
+
+          {/* Data Section */}
+          <SettingsSection title="Data & Storage" delay={0.3}>
+            <SettingsItem
+              icon={Download}
+              label="Export Data"
+              description="Subscriptions as CSV/JSON or full account backup"
+              onClick={() => setActiveSheet('export')}
+            />
+          </SettingsSection>
+
+          {/* Appearance Section */}
+          <SettingsSection title="Appearance" delay={0.3}>
+            {/* Premium 3-card theme selector (Light / Dark / Glass) */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-card border border-border">
+              <ThemeSelectorCards />
+            </div>
+
+            <SettingsItem
+              icon={Globe}
+              label="Currency"
+              description={`${currentCurrency.symbol} ${currentCurrency.name}`}
+              onClick={() => setActiveSheet('currency')}
+            />
+
+            <SettingsItem
+              icon={Globe}
+              label="Language"
+              description={languageNames[(notificationSettings.language || 'en') as SupportedLanguage]}
+              onClick={() => setActiveSheet('language')}
+            />
+          </SettingsSection>
+
+          {/* Support Section */}
+          <SettingsSection title="Support" delay={0.4}>
+            <SettingsItem
+              icon={HelpCircle}
+              label="Help Center"
+              onClick={() => router.push('/help')}
+            />
+            <SettingsItem
+              icon={FileText}
+              label="Terms of Service"
+              onClick={() => router.push('/terms')}
+            />
+            <SettingsItem
+              icon={FileText}
+              label="Privacy Policy"
+              onClick={() => router.push('/privacy')}
+            />
+          </SettingsSection>
+
+          {/* Sign Out Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...springs.gentle, delay: 0.45 }}
+          >
+            <motion.button
+              onClick={handleSignOut}
+              disabled={isSigningOut}
+              whileTap={{ scale: 0.98 }}
+              className={cn(
+                "w-full flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer",
+                isSigningOut
+                  ? "border-gold/20 bg-gold/6 text-gold/70 opacity-70 cursor-not-allowed"
+                  : "border-gold/30 bg-[linear-gradient(135deg,rgba(199,163,106,0.14),rgba(199,163,106,0.06),rgba(255,255,255,0.02))] text-gold hover:border-gold/55 hover:bg-gold/16 hover:text-ivory hover:shadow-[0_16px_40px_rgba(199,163,106,0.16)]"
+              )}
+            >
+              {isSigningOut ? (
+                <>
+                  <RefreshCw className="w-5 h-5 animate-spin" />
+                  <span className="font-medium">Signing out...</span>
+                </>
+              ) : (
+                <>
+                  <LogOut className="w-5 h-5" />
+                  <span className="font-medium">Sign Out</span>
+                </>
+              )}
+            </motion.button>
+          </motion.div>
+
+          {/* Version */}
+          <p className="text-center text-xs text-muted-foreground py-4">
+            Renewly v1.0.0
+          </p>
+        </div>
+
+        {/* Plan Selection Sheet - wrapped in proper modal */}
+        <SettingsSheet
+          isOpen={showPlanSheet}
+          onClose={() => setShowPlanSheet(false)}
+          title="Choose Your Plan"
+        >
+          <PlanSelectionSheet
+            onClose={() => setShowPlanSheet(false)}
+            currentPlan={userProfile?.plan || 'free'}
+          />
+        </SettingsSheet>
+
+        {/* Profile Sheet */}
+        <SettingsSheet
+          isOpen={activeSheet === 'profile'}
+          onClose={() => setActiveSheet(null)}
+          title="Edit Profile"
+        >
+          <ProfileForm
+            userProfile={userProfile}
+            avatarUrl={avatarUrl}
+            onSave={(data) => {
+              if (userProfile) {
+                // Update store with new profile data including avatar
+                setUserProfile({
+                  ...userProfile,
+                  name: data.name,
+                  avatarUrl: data.avatarUrl,
+                  timeZone: data.timezone,
+                })
+              }
+              addToast({ type: 'success', title: 'Profile updated' })
+              setActiveSheet(null)
+            }}
+          />
+        </SettingsSheet>
+
+        {/* Reminder Sheet */}
+        <SettingsSheet
+          isOpen={activeSheet === 'reminder'}
+          onClose={() => setActiveSheet(null)}
+          title="Reminder Timing"
+        >
+          <div className="space-y-4">
+            <p className="text-muted-foreground">Choose when to receive renewal reminders.</p>
+            {[1, 3, 7, 14, 30].map((days) => (
+              <button
+                key={days}
+                onClick={async () => {
+                  await updateNotificationSettings({ reminderDays: days })
+                  addToast({ type: 'success', title: 'Reminder updated', message: `You'll be reminded ${days} day${days > 1 ? 's' : ''} before renewal.` })
+                  setActiveSheet(null)
+                }}
+                className={cn(
+                  "w-full flex items-center justify-between p-4 rounded-xl transition-colors",
+                  notificationSettings.reminderDays === days
+                    ? "bg-gold/10 text-gold border border-gold/30"
+                    : "bg-muted hover:bg-secondary"
+                )}
+              >
+                <span>{days} day{days > 1 ? 's' : ''} before</span>
+                {notificationSettings.reminderDays === days && <Check className="w-5 h-5" />}
+              </button>
+            ))}
+          </div>
+        </SettingsSheet>
+
+        {/* Password Sheet */}
+        <SettingsSheet
+          isOpen={activeSheet === 'password'}
+          onClose={() => setActiveSheet(null)}
+          title="Change Password"
+        >
+          <PasswordForm
+            onSuccess={() => {
+              addToast({ type: 'success', title: 'Password updated' })
+              setActiveSheet(null)
+            }}
+          />
+        </SettingsSheet>
+
+        {/* Email Sheet */}
+        <SettingsSheet
+          isOpen={activeSheet === 'email'}
+          onClose={() => {
+            setActiveSheet(null)
+            setNewEmail('')
+          }}
+          title="Email Address"
+        >
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl bg-muted">
+              <p className="text-sm text-muted-foreground">Current email</p>
+              <p className="font-medium text-foreground">{currentUserEmail || 'Not set'}</p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              To change your email address, you'll need to verify the new email. A verification link will be sent to your new address.
+            </p>
+            <input
+              type="email"
+              placeholder="Enter new email address"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl bg-muted border border-border focus:border-gold outline-none transition-colors text-foreground placeholder:text-muted-foreground"
+            />
+            <button
+              onClick={handleChangeEmail}
+              disabled={isChangingEmail || !newEmail}
+              className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isChangingEmail ? 'Sending...' : 'Change Email Address'}
+            </button>
+          </div>
+        </SettingsSheet>
+
+        {/* Phone Number Sheet */}
+        <SettingsSheet
+          isOpen={activeSheet === 'phone'}
+          onClose={() => setActiveSheet(null)}
+          title="Phone Number"
+        >
+          <PhoneNumberForm
+            onSuccess={() => {
+              addToast({ type: 'success', title: 'Phone number updated' })
+              setActiveSheet(null)
+            }}
+          />
+        </SettingsSheet>
+
+        {/* Export Sheet */}
+        <SettingsSheet
+          isOpen={activeSheet === 'export'}
+          onClose={() => setActiveSheet(null)}
+          title="Export Data"
+        >
+          <div className="space-y-4">
+            <p className="text-muted-foreground">
+              Download your subscriptions as CSV or JSON, or export a full account backup including profile,
+              settings, notifications, and subscriptions.
+            </p>
+            <button
+              onClick={() => handleExport('csv')}
+              className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors cursor-pointer"
+            >
+              <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+                <Download className="w-5 h-5 text-foreground" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="font-medium text-foreground">Export as CSV</p>
+                <p className="text-sm text-muted-foreground">Spreadsheet format</p>
+              </div>
+            </button>
+            <button
+              onClick={() => handleExport('json')}
+              className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors cursor-pointer"
+            >
+              <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+                <FileJson className="w-5 h-5 text-foreground" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="font-medium text-foreground">Export as JSON</p>
+                <p className="text-sm text-muted-foreground">For backup & import</p>
+              </div>
+            </button>
+            <button
+              onClick={() => handleExport('account')}
+              disabled={isExportingAccount}
+              className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted hover:bg-secondary transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+                {isExportingAccount ? (
+                  <RefreshCw className="w-5 h-5 text-foreground animate-spin" />
+                ) : (
+                  <FileJson className="w-5 h-5 text-foreground" />
+                )}
+              </div>
+
+              <div className="flex-1 text-left">
+                <p className="font-medium text-foreground">Full account backup</p>
+                <p className="text-sm text-muted-foreground">
+                  Profile, settings, notifications, and subscriptions (JSON)
+                </p>
+              </div>
+            </button>
+          </div>
+        </SettingsSheet>
+
+        {/* Billing & Plan Sheet */}
+        <SettingsSheet
+          isOpen={activeSheet === 'billing'}
+          onClose={() => setActiveSheet(null)}
+          title={wasRemovedFromFamily ? 'Billing & Plan' : isFamilyMember ? 'Family Access' : 'Billing & Plan'}
+        >
+          <div className="space-y-6">
+            {/* Removed from Family - Show Free Plan */}
+            {wasRemovedFromFamily ? (
+              <>
+                <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20">
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <p className="text-2xl font-semibold text-amber-600 dark:text-amber-400 mt-1">Free Plan</p>
+                  <p className="text-xs text-muted-foreground mt-2">Your Family access was removed</p>
+                </div>
+
+                <p className="text-sm text-muted-foreground">
+                  Your personal Renewly account and tracked subscriptions are safe. You can start your own Pro or Family plan anytime.
+                </p>
+
                 <button
                   onClick={() => {
                     window.location.href = '/app/upgrade'
                     setActiveSheet(null)
                   }}
-                  className="w-full px-4 py-3 rounded-xl bg-gold/10 text-gold font-medium hover:bg-gold/20 border border-gold/30 transition-colors cursor-pointer"
+                  className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
                 >
                   Start Your Own Plan
                 </button>
-                <p className="text-xs text-muted-foreground">
-                  You can start your own Pro or Family plan anytime. This will be separate from the Family access you currently receive.
+              </>
+            ) : isFamilyMember ? (
+              /* Active Family Member */
+              <>
+                {/* Current Plan Display */}
+                <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20">
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <p className="text-2xl font-semibold text-blue-600 dark:text-blue-400 mt-1">Included in Family</p>
+                  <p className="text-xs text-muted-foreground mt-2">You are not paying for this subscription</p>
+                </div>
+
+                {/* Family Member Description */}
+                <p className="text-sm text-muted-foreground">
+                  You are included in a Renewly Family plan. You are not the billing owner, so there is no paid subscription to cancel here.
                 </p>
-              </div>
 
-              <p className="text-xs text-muted-foreground text-center pt-2">
-                Only the Family owner can cancel the Family plan billing.
-              </p>
-            </>
-          ) : (
-            /* Owner or Non-Family - Original UI */
-            <>
-              {/* Current Plan Display */}
-              <div className="p-4 rounded-xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
-                <p className="text-sm text-muted-foreground">Current Plan</p>
-                <p className="text-2xl font-semibold text-gold mt-1">{planName}</p>
-                {isPremium && (
-                  <p className="text-xs text-muted-foreground mt-2">Your subscription is active</p>
+                {/* Period End Info */}
+                {familyStatus?.familyGroup?.currentPeriodEnd && (
+                  <div className="p-4 rounded-xl bg-muted/50 border border-border">
+                    <p className="text-xs font-medium text-foreground mb-1">Your Family access expires</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(familyStatus.familyGroup.currentPeriodEnd).toLocaleDateString()}, unless the owner removes you or the plan ends.
+                    </p>
+                  </div>
                 )}
-              </div>
 
-              {/* Free Plan - Show Upgrade CTA */}
-              {!isPremium && (
-                <>
-                  <p className="text-sm text-muted-foreground">
-                    Upgrade to Pro or Family to unlock advanced features including analytics, leak detection, and more.
-                  </p>
-                  <button
-                    onClick={handleChangePlan}
-                    className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
-                  >
-                    View Upgrade Options
-                  </button>
-                </>
-              )}
-
-              {/* Premium Plans - Show Manage Plan & Cancel Plan */}
-              {isPremium && userProfile?.plan !== 'enterprise' && (
-                <>
-                  <div className="space-y-3 pt-2">
-                    <button
-                      onClick={handleChangePlan}
-                      className="w-full px-4 py-3 rounded-xl bg-gold/10 text-gold font-medium hover:bg-gold/20 border border-gold/30 transition-colors cursor-pointer"
-                    >
-                      Change Plan
-                    </button>
+                {/* Action Buttons */}
+                <div className="space-y-3 pt-2">
                   <button
                     onClick={() => {
+                      window.location.href = '/app/family'
                       setActiveSheet(null)
-                      // Use requestAnimationFrame to ensure sheet closes before modal opens
-                      requestAnimationFrame(() => setShowCancelConfirmation(true))
                     }}
-                    className="w-full px-4 py-3 rounded-xl bg-red-500/10 text-red-600 font-medium hover:bg-red-500/20 border border-red-500/30 transition-colors cursor-pointer"
+                    className="w-full px-4 py-3 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium hover:bg-blue-500/20 border border-blue-500/30 transition-colors cursor-pointer"
                   >
-                    Cancel Plan
+                    Manage Family Access
                   </button>
-                  </div>
-                </>
-              )}
-
-              {/* Enterprise Plan */}
-              {userProfile?.plan === 'enterprise' && (
-                <>
-                  <p className="text-sm text-muted-foreground">
-                    For changes to your enterprise subscription, please contact our sales team.
+                  <button
+                    onClick={() => {
+                      window.location.href = '/app/upgrade'
+                      setActiveSheet(null)
+                    }}
+                    className="w-full px-4 py-3 rounded-xl bg-gold/10 text-gold font-medium hover:bg-gold/20 border border-gold/30 transition-colors cursor-pointer"
+                  >
+                    Start Your Own Plan
+                  </button>
+                  <p className="text-xs text-muted-foreground">
+                    You can start your own Pro or Family plan anytime. This will be separate from the Family access you currently receive.
                   </p>
+                </div>
+
+                <p className="text-xs text-muted-foreground text-center pt-2">
+                  Only the Family owner can cancel the Family plan billing.
+                </p>
+              </>
+            ) : (
+              /* Owner or Non-Family - Original UI */
+              <>
+                {/* Current Plan Display */}
+                <div className="p-4 rounded-xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
+                  <p className="text-sm text-muted-foreground">Current Plan</p>
+                  <p className="text-2xl font-semibold text-gold mt-1">{planName}</p>
+                  {isPremium && (
+                    <p className="text-xs text-muted-foreground mt-2">Your subscription is active</p>
+                  )}
+                </div>
+
+                {/* Free Plan - Show Upgrade CTA */}
+                {!isPremium && (
+                  <>
+                    <p className="text-sm text-muted-foreground">
+                      Upgrade to Pro or Family to unlock advanced features including analytics, leak detection, and more.
+                    </p>
+                    <button
+                      onClick={handleChangePlan}
+                      className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
+                    >
+                      View Upgrade Options
+                    </button>
+                  </>
+                )}
+
+                {/* Premium Plans - Show Manage Plan & Cancel Plan */}
+                {isPremium && userProfile?.plan !== 'enterprise' && (
+                  <>
+                    <div className="space-y-3 pt-2">
+                      <button
+                        onClick={handleChangePlan}
+                        className="w-full px-4 py-3 rounded-xl bg-gold/10 text-gold font-medium hover:bg-gold/20 border border-gold/30 transition-colors cursor-pointer"
+                      >
+                        Change Plan
+                      </button>
+                      <button
+                        onClick={() => {
+                          setActiveSheet(null)
+                          // Use requestAnimationFrame to ensure sheet closes before modal opens
+                          requestAnimationFrame(() => setShowCancelConfirmation(true))
+                        }}
+                        className="w-full px-4 py-3 rounded-xl bg-red-500/10 text-red-600 font-medium hover:bg-red-500/20 border border-red-500/30 transition-colors cursor-pointer"
+                      >
+                        Cancel Plan
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {/* Enterprise Plan */}
+                {userProfile?.plan === 'enterprise' && (
+                  <>
+                    <p className="text-sm text-muted-foreground">
+                      For changes to your enterprise subscription, please contact our sales team.
+                    </p>
+                    <button
+                      onClick={() => {
+                        window.location.href = 'mailto:contact@renewly.in'
+                      }}
+                      className="w-full py-3 rounded-xl bg-gold/10 text-gold font-medium hover:bg-gold/20 border border-gold/30 transition-colors cursor-pointer"
+                    >
+                      Contact Sales
+                    </button>
+                  </>
+                )}
+
+                {/* Support Section */}
+                <div className="p-4 rounded-xl bg-muted space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">Questions about billing?</p>
+                  <p className="text-sm text-foreground">Contact our support team for assistance with your account or subscription.</p>
                   <button
                     onClick={() => {
                       window.location.href = 'mailto:contact@renewly.in'
                     }}
-                    className="w-full py-3 rounded-xl bg-gold/10 text-gold font-medium hover:bg-gold/20 border border-gold/30 transition-colors cursor-pointer"
+                    className="text-sm text-gold hover:text-gold/80 font-medium transition-colors cursor-pointer"
                   >
-                    Contact Sales
+                    contact@renewly.in
                   </button>
-                </>
-              )}
-
-              {/* Support Section */}
-              <div className="p-4 rounded-xl bg-muted space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">Questions about billing?</p>
-                <p className="text-sm text-foreground">Contact our support team for assistance with your account or subscription.</p>
-                <button
-                  onClick={() => {
-                    window.location.href = 'mailto:contact@renewly.in'
-                  }}
-                  className="text-sm text-gold hover:text-gold/80 font-medium transition-colors cursor-pointer"
-                >
-                  contact@renewly.in
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </SettingsSheet>
-
-      {/* Language Sheet */}
-      {/* Currency Sheet */}
-      <SettingsSheet
-        isOpen={activeSheet === 'currency'}
-        onClose={() => setActiveSheet(null)}
-        title="Currency"
-      >
-        <div className="space-y-2">
-          {currencies.map((currency) => (
-            <button
-              key={currency.code}
-              onClick={async () => {
-                await updateNotificationSettings({ currencyCode: currency.code })
-                addToast({
-                  type: 'success',
-                  title: 'Currency updated',
-                  message: `${currency.name} is now your preferred currency.`,
-                })
-                setActiveSheet(null)
-              }}
-              className={cn(
-                "w-full flex items-center justify-between p-4 rounded-xl transition-colors cursor-pointer",
-                notificationSettings.currencyCode === currency.code
-                  ? "bg-gold/10 text-gold border border-gold/30"
-                  : "bg-muted hover:bg-secondary"
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-lg font-semibold">{currency.symbol}</span>
-                <div className="text-left">
-                  <p className="font-medium">{currency.name}</p>
-                  <p className="text-sm opacity-80">{currency.code}</p>
                 </div>
-              </div>
+              </>
+            )}
+          </div>
+        </SettingsSheet>
 
-              {notificationSettings.currencyCode === currency.code && <Check className="w-5 h-5" />}
-            </button>
-          ))}
-        </div>
-      </SettingsSheet>
-      <SettingsSheet
-        isOpen={activeSheet === 'language'}
-        onClose={() => setActiveSheet(null)}
-        title="Language"
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Select your preferred language. Settings labels, common UI text, and notification messages will be displayed in your chosen language.
-          </p>
+        {/* Language Sheet */}
+        {/* Currency Sheet */}
+        <SettingsSheet
+          isOpen={activeSheet === 'currency'}
+          onClose={() => setActiveSheet(null)}
+          title="Currency"
+        >
           <div className="space-y-2">
-            {[
-              { code: 'en', name: 'English', nativeName: 'English' },
-              { code: 'es', name: 'Spanish', nativeName: 'Español' },
-              { code: 'fr', name: 'French', nativeName: 'Français' },
-              { code: 'de', name: 'German', nativeName: 'Deutsch' },
-              { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी' },
-            ].map((lang) => (
+            {currencies.map((currency) => (
               <button
-                key={lang.code}
+                key={currency.code}
                 onClick={async () => {
-                  await updateNotificationSettings({ language: lang.code })
+                  await updateNotificationSettings({ currencyCode: currency.code })
                   addToast({
                     type: 'success',
-                    title: 'Language updated',
-                    message: `App language changed to ${lang.nativeName}`
+                    title: 'Currency updated',
+                    message: `${currency.name} is now your preferred currency.`,
                   })
                   setActiveSheet(null)
                 }}
                 className={cn(
                   "w-full flex items-center justify-between p-4 rounded-xl transition-colors cursor-pointer",
-                  notificationSettings.language === lang.code
+                  notificationSettings.currencyCode === currency.code
                     ? "bg-gold/10 text-gold border border-gold/30"
                     : "bg-muted hover:bg-secondary"
                 )}
               >
-                <div className="text-left">
-                  <span className="block font-medium">{lang.nativeName}</span>
-                  <span className="text-sm opacity-70">{lang.name}</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-lg font-semibold">{currency.symbol}</span>
+                  <div className="text-left">
+                    <p className="font-medium">{currency.name}</p>
+                    <p className="text-sm opacity-80">{currency.code}</p>
+                  </div>
                 </div>
-                {notificationSettings.language === lang.code && <Check className="w-5 h-5" />}
+
+                {notificationSettings.currencyCode === currency.code && <Check className="w-5 h-5" />}
               </button>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground pt-2">
-            Note: Some content like legal pages may remain in English.
-          </p>
-        </div>
-      </SettingsSheet>
-    </div>
+        </SettingsSheet>
+        <SettingsSheet
+          isOpen={activeSheet === 'language'}
+          onClose={() => setActiveSheet(null)}
+          title="Language"
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Select your preferred language. Settings labels, common UI text, and notification messages will be displayed in your chosen language.
+            </p>
+            <div className="space-y-2">
+              {[
+                { code: 'en', name: 'English', nativeName: 'English' },
+                { code: 'es', name: 'Spanish', nativeName: 'Español' },
+                { code: 'fr', name: 'French', nativeName: 'Français' },
+                { code: 'de', name: 'German', nativeName: 'Deutsch' },
+                { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी' },
+              ].map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={async () => {
+                    await updateNotificationSettings({ language: lang.code })
+                    addToast({
+                      type: 'success',
+                      title: 'Language updated',
+                      message: `App language changed to ${lang.nativeName}`
+                    })
+                    setActiveSheet(null)
+                  }}
+                  className={cn(
+                    "w-full flex items-center justify-between p-4 rounded-xl transition-colors cursor-pointer",
+                    notificationSettings.language === lang.code
+                      ? "bg-gold/10 text-gold border border-gold/30"
+                      : "bg-muted hover:bg-secondary"
+                  )}
+                >
+                  <div className="text-left">
+                    <span className="block font-medium">{lang.nativeName}</span>
+                    <span className="text-sm opacity-70">{lang.name}</span>
+                  </div>
+                  {notificationSettings.language === lang.code && <Check className="w-5 h-5" />}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground pt-2">
+              Note: Some content like legal pages may remain in English.
+            </p>
+          </div>
+        </SettingsSheet>
+      </div>
 
-    {/* Cancel Plan Confirmation Modal */}
-    <AnimatePresence>
-      {showCancelConfirmation && (() => {
-        const renewalDate = getSubscriptionRenewalDate(userProfile)
-        const dateStr = renewalDate
-          ? new Date(renewalDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-          : 'your renewal date'
-        const isPro = userProfile?.plan === 'pro'
-        const planName = isPro ? 'Renewly Pro' : 'Renewly Family'
+      {/* Cancel Plan Confirmation Modal */}
+      <AnimatePresence>
+        {showCancelConfirmation && (() => {
+          const renewalDate = getSubscriptionRenewalDate(userProfile)
+          const dateStr = renewalDate
+            ? new Date(renewalDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            : 'your renewal date'
+          const isPro = userProfile?.plan === 'pro'
+          const planName = isPro ? 'Renewly Pro' : 'Renewly Family'
 
-        return (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowCancelConfirmation(false)}
-              className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.95 }}
-              onClick={(e) => e.stopPropagation()}
-              className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[150] max-w-md mx-auto bg-card rounded-2xl border border-border p-6 shadow-xl"
-            >
-              <h2 className="text-lg font-semibold text-foreground mb-4">
-                Cancel {planName}?
-              </h2>
-              <div className="space-y-4 mb-6 text-sm text-muted-foreground">
-                <p>
-                  Your {planName} access is paid until <span className="font-semibold text-foreground">{dateStr}</span>.
-                </p>
-                <div>
-                  <p className="font-medium text-foreground mb-2">If you schedule cancellation now:</p>
-                  <ul className="space-y-2 pl-4 list-disc">
-                    <li>You can continue using {isPro ? 'Pro' : 'Family'} features until {dateStr}</li>
-                    <li>Your plan will move to Free after that date</li>
-                    <li>Your personal tracked subscriptions will not be deleted</li>
-                  </ul>
+          return (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowCancelConfirmation(false)}
+                className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                onClick={(e) => e.stopPropagation()}
+                className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[150] max-w-md mx-auto bg-card rounded-2xl border border-border p-6 shadow-xl"
+              >
+                <h2 className="text-lg font-semibold text-foreground mb-4">
+                  Cancel {planName}?
+                </h2>
+                <div className="space-y-4 mb-6 text-sm text-muted-foreground">
+                  <p>
+                    Your {planName} access is paid until <span className="font-semibold text-foreground">{dateStr}</span>.
+                  </p>
+                  <div>
+                    <p className="font-medium text-foreground mb-2">If you schedule cancellation now:</p>
+                    <ul className="space-y-2 pl-4 list-disc">
+                      <li>You can continue using {isPro ? 'Pro' : 'Family'} features until {dateStr}</li>
+                      <li>Your plan will move to Free after that date</li>
+                      <li>Your personal tracked subscriptions will not be deleted</li>
+                    </ul>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowCancelConfirmation(false)}
-                  className="flex-1 px-4 py-2 rounded-lg bg-muted text-foreground font-medium hover:bg-secondary transition-colors cursor-pointer"
-                >
-                  Keep Plan
-                </button>
-                <button
-                  onClick={handleCancelPlan}
-                  disabled={isCancellingPlan}
-                  className="flex-1 px-4 py-2 rounded-lg bg-red-500/20 text-red-600 font-medium hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  {isCancellingPlan ? 'Scheduling...' : 'Schedule Cancellation'}
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )
-      })()}
-    </AnimatePresence>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowCancelConfirmation(false)}
+                    className="flex-1 px-4 py-2 rounded-lg bg-muted text-foreground font-medium hover:bg-secondary transition-colors cursor-pointer"
+                  >
+                    Keep Plan
+                  </button>
+                  <button
+                    onClick={handleCancelPlan}
+                    disabled={isCancellingPlan}
+                    className="flex-1 px-4 py-2 rounded-lg bg-red-500/20 text-red-600 font-medium hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    {isCancellingPlan ? 'Scheduling...' : 'Schedule Cancellation'}
+                  </button>
+                </div>
+              </motion.div>
+            </>
+          )
+        })()}
+      </AnimatePresence>
     </>
   )
 }
