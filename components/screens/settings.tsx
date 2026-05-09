@@ -148,6 +148,7 @@ export function SettingsScreen() {
 
   // Family status for member/owner distinction
   const [familyStatus, setFamilyStatus] = useState<any>(null)
+  const [familyStatusLoading, setFamilyStatusLoading] = useState(true)
 
   // Track client-side mounting to prevent hydration mismatch
   const [isMounted, setIsMounted] = useState(false)
@@ -1002,7 +1003,7 @@ export function SettingsScreen() {
         >
           <div className="space-y-6">
             {/* Removed from Family - Show Free Plan */}
-            {wasRemovedFromFamily ? (
+            {wasRemovedFromFamily && userProfile?.plan === 'free' ? (
               <>
                 <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20">
                   <p className="text-sm text-muted-foreground">Status</p>
