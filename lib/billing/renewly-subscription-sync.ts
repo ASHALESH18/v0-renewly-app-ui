@@ -43,7 +43,7 @@ export async function ensureFamilyGroupForOwner(params: {
   currentPeriodEnd?: string | null
 }): Promise<string> {
   const { ownerUserId, ownerEmail, currentPeriodStart, currentPeriodEnd } = params
-  
+
   const supabase = getSupabaseClient()
 
   try {
@@ -132,6 +132,7 @@ export async function syncRenewlyProSubscription(params: {
   currentPeriodEnd?: string | null
 }): Promise<void> {
   const { userId, currentPeriodEnd } = params
+  const supabase = getSupabaseClient()
 
   try {
     const renewalDate = getNextMonthlyRenewalDate(currentPeriodEnd)
@@ -186,6 +187,7 @@ export async function syncRenewlyFamilyOwnerSubscription(params: {
   currentPeriodEnd?: string | null
 }): Promise<void> {
   const { ownerUserId, familyGroupId, extraSeatCount = 0, currentPeriodEnd } = params
+  const supabase = getSupabaseClient()
 
   try {
     const renewalDate = getNextMonthlyRenewalDate(currentPeriodEnd)
@@ -248,6 +250,7 @@ export async function syncRenewlyFamilyMemberSubscription(params: {
   currentPeriodEnd?: string | null
 }): Promise<void> {
   const { memberUserId, ownerUserId, familyGroupId, currentPeriodEnd } = params
+  const supabase = getSupabaseClient()
 
   try {
     const renewalDate = getNextMonthlyRenewalDate(currentPeriodEnd)
@@ -297,6 +300,7 @@ export async function archiveManagedRenewlySubscriptions(params: {
   exceptManagedKeys?: string[]
 }): Promise<void> {
   const { userId, exceptManagedKeys = [] } = params
+  const supabase = getSupabaseClient()
 
   try {
     // Find all system-managed Renewly subscriptions for this user
@@ -353,6 +357,7 @@ export async function syncRenewlyBillingSubscriptionForPlan(params: {
   currentPeriodEnd?: string | null
 }): Promise<void> {
   const { userId, email, plan, currentPeriodEnd } = params
+  const supabase = getSupabaseClient()
 
   try {
     if (plan === 'pro') {
