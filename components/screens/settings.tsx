@@ -133,6 +133,16 @@ export function SettingsScreen() {
   const notificationSettings = useStore((state) => state.notificationSettings)
   const subscriptions = useStore((state) => state.subscriptions)
   const addToast = useStore((state) => state.addToast)
+
+  const safeNotificationSettings = notificationSettings || {
+    pushNotifications: false,
+    emailNotifications: false,
+    reminderDays: 7,
+    currencyCode: 'INR',
+    language: 'en',
+  }
+
+  const safeSubscriptions = Array.isArray(subscriptions) ? subscriptions : []
   const updateNotificationSettings = useStore((state) => state.updateNotificationSettings)
   const setUserProfile = useStore((state) => state.setUserProfile)
 
@@ -156,7 +166,11 @@ export function SettingsScreen() {
         const res = await fetch('/api/family/status')
         if (res.ok) {
           const data = await res.json()
-          setFamilyStatus(data)
+          setFamilyStatus({
+            ...data,
+            members: Array.isArray(data?.members) ? data.members : [],
+            invites: Array.isArray(data?.invites) ? data.invites : [],
+          })
         }
       } catch (error) {
         console.error('[v0] Error fetching family status:', error)
@@ -250,9 +264,9 @@ export function SettingsScreen() {
 
   const currentCurrency =
     currencies.find((currency) => currency.code === safeNotificationSettings.currencyCode) || {
-      code: safeNotificationSettings.currencyCode || 'USD',
-      name: safeNotificationSettings.currencyCode || 'USD',
-      symbol: safeNotificationSettings.currencyCode || '$',
+      code: safeNotificationSettings.currencyCode,
+      name: safeNotificationSettings.currencyCode,
+      symbol: safeNotificationSettings.currencyCode,
     }
 
   // Handlers
@@ -655,7 +669,7 @@ export function SettingsScreen() {
               icon={Bell}
               label="Browser Push Notifications"
               description="Receive renewal reminders on this browser/device"
-              checked={notificationSettings.pushNotifications}
+              checked={safeNotificationSettings.pushNotifications}
               disabled={false}
               onToggle={handleTogglePushNotifications}
             />
@@ -666,7 +680,7 @@ export function SettingsScreen() {
               icon={Mail}
               label="Email Notifications"
               description="Welcome emails, renewal updates, and account alerts"
-              checked={notificationSettings.emailNotifications}
+              checked={safeNotificationSettings.emailNotifications}
               onToggle={handleToggleEmailNotifications}
             />
             <div className="px-4 py-2 text-xs text-muted-foreground/70">
@@ -675,7 +689,7 @@ export function SettingsScreen() {
             <SettingsItem
               icon={Smartphone}
               label="Reminder Timing"
-              description={`${notificationSettings.reminderDays} days before renewal`}
+              description={`${safeNotificationSettings.reminderDays} days before renewal`}
               onClick={() => setActiveSheet('reminder')}
             />
           </SettingsSection>
@@ -736,7 +750,7 @@ export function SettingsScreen() {
             <SettingsItem
               icon={Globe}
               label="Language"
-              description={languageNames[(notificationSettings.language || 'en') as SupportedLanguage]}
+              description={languageNames[(safeNotificationSettings.language || 'en') as SupportedLanguage]}
               onClick={() => setActiveSheet('language')}
             />
           </SettingsSection>
@@ -1236,7 +1250,7 @@ export function SettingsScreen() {
                   }}
                   className={cn(
                     "w-full flex items-center justify-between p-4 rounded-xl transition-colors cursor-pointer",
-                    notificationSettings.language === lang.code
+                    safeNotificationSettings.language === lang.code
                       ? "bg-gold/10 text-gold border border-gold/30"
                       : "bg-muted hover:bg-secondary"
                   )}
