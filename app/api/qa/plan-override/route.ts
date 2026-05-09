@@ -7,6 +7,104 @@ import { syncRenewlyBillingSubscriptionForPlan } from '@/lib/billing/renewly-sub
 import { invalidateCache } from '@/lib/redis'
 
 /**
+ * QA-only helper: Clean up stale Family state when forcing Pro/Free
+ * QA Force is an immediate technical reset, not a real period-end lifecycle.
+ */
+async function cleanupFamilyStateForQaOverride(params: {
+  supabase: any
+  userId: string
+  email?: string | null
+}) {
+  const { supabase, userId, email } = params
+  const now = new Date().toISOString()
+
+  const { data: ownedGroups = [], error: ownedGroupsError } = await supabase
+    .from('family_groups')
+    .select('id')
+    .eq('owner_user_id', userId)
+    .in('status', ['active', 'past_due'])
+
+  if (ownedGroupsError) {
+    console.warn('[plan-override] Failed to fetch owned family groups for cleanup:', ownedGroupsError)
+  }
+
+  const ownedGroupIds = (ownedGroups || []).map((group: any) => group.id).filter(Boolean)
+
+  if (ownedGroupIds.length > 0) {
+    await supabase
+      .from('family_invites')
+      .update({ status: 'cancelled', cancelled_at: now, updated_at: now })
+      .in('family_group_id', ownedGroupIds)
+      .eq('status', 'pending')
+
+    await supabase
+      .from('family_members')
+      .update({ status: 'removed', removed_at: now, updated_at: now })
+      .in('family_group_id', ownedGroupIds)
+      .eq('status', 'active')
+
+    await supabase
+      .from('family_seat_addons')
+      .update({ status: 'cancelled', cancel_at_period_end: true, updated_at: now })
+      .in('family_group_id', ownedGroupIds)
+      .eq('status', 'active')
+
+    await supabase
+      .from('subscriptions')
+      .update({ status: 'cancelled', updated_at: now })
+      .in('family_group_id', ownedGroupIds)
+      .eq('is_system_managed', true)
+      .eq('system_source', 'renewly_billing')
+
+    await supabase
+      .from('family_groups')
+      .update({
+        status: 'cancelled',
+        scheduled_action: 'none',
+        scheduled_action_reason: null,
+        updated_at: now,
+      })
+      .in('id', ownedGroupIds)
+  }
+
+  const { data: activeMemberships = [], error: membershipError } = await supabase
+    .from('family_members')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('role', 'member')
+    .eq('status', 'active')
+
+  if (membershipError) {
+    console.warn('[plan-override] Failed to fetch member rows for cleanup:', membershipError)
+  }
+
+  const membershipIds = (activeMemberships || []).map((member: any) => member.id).filter(Boolean)
+
+  if (membershipIds.length > 0) {
+    await supabase
+      .from('family_members')
+      .update({ status: 'removed', removed_at: now, updated_at: now })
+      .in('id', membershipIds)
+  }
+
+  if (email) {
+    await supabase
+      .from('family_invites')
+      .update({ status: 'cancelled', cancelled_at: now, updated_at: now })
+      .ilike('invited_email', email)
+      .eq('status', 'pending')
+  }
+
+  await supabase
+    .from('subscriptions')
+    .update({ status: 'cancelled', updated_at: now })
+    .eq('user_id', userId)
+    .eq('is_system_managed', true)
+    .eq('system_source', 'renewly_billing')
+    .eq('covered_by_family', true)
+}
+
+/**
  * QA-only endpoint to override user plan for testing
  * This is NOT a production feature and must be disabled in production
  * 
@@ -127,6 +225,15 @@ export async function POST(request: NextRequest) {
 
     // Audit log (server-side only, never exposed to client)
     console.log(`[v0] QA PLAN OVERRIDE: ${user.email} (${user.id}) changed from ${oldPlan} to ${plan} at ${new Date().toISOString()}`)
+
+    // QA Force Pro/Free is an immediate technical reset, clean stale Family state
+    if (plan === 'pro' || plan === 'free') {
+      await cleanupFamilyStateForQaOverride({
+        supabase,
+        userId: user.id,
+        email: user.email || null,
+      })
+    }
 
     // Sync system-managed Renewly subscriptions
     let syncStatus: 'completed' | 'failed' | 'skipped' = 'skipped'
