@@ -97,8 +97,8 @@ const mediaFAQ = [
     answer: 'Renewly is designed for individuals and families who want to understand and manage their subscription spending. Our plans range from a free tier for basic tracking to Enterprise solutions for teams and organizations.'
   },
   {
-    question: 'How does the Family plan work?',
-    answer: 'The Family plan includes up to 4 members with shared renewal tracking, unified reminders, and household visibility. Additional members can be added for +₹99/member/month beyond the first 4.'
+    question: 'How does the Renewly Family plan work?',
+    answer: 'The Renewly Family plan includes an owner + 4 invited members with shared renewal tracking, unified reminders, and household visibility. Add up to 4 extra members for +₹99/month or +$1.49/month each per member. Maximum owner + 8 invited members.'
   },
   {
     question: 'How can I request a product demo?',

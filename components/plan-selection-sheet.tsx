@@ -19,7 +19,7 @@ const comparisonRows = [
   { label: 'Subscriptions', pro: 'Unlimited', family: 'Unlimited shared', enterprise: 'Unlimited team' },
   { label: 'Analytics', pro: 'Advanced', family: 'Advanced', enterprise: 'Team reporting' },
   { label: 'Calendar', pro: 'Included', family: 'Shared', enterprise: 'Team' },
-  { label: 'Members', pro: '1 user', family: 'Up to 4', enterprise: 'Custom' },
+  { label: 'Members', pro: '1 user', family: 'Owner + 4 invited members', enterprise: 'Custom' },
   { label: 'Support', pro: 'Priority', family: 'Priority', enterprise: 'Dedicated' },
 ]
 
