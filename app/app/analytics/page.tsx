@@ -19,7 +19,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     const fetchEntitlement = async () => {
       try {
-        const res = await fetch('/api/entitlements/current')
+        const res = await fetch('/api/entitlements/current', { cache: 'no-store' })
         if (res.ok) {
           const data = await res.json()
           setEntitlement(data)

@@ -224,6 +224,20 @@ export function SettingsScreen() {
   }
   const planName = userProfile?.plan ? planNames[userProfile.plan] : 'Free Plan'
   const isPremium = userProfile?.plan && userProfile.plan !== 'free'
+
+  // Find active managed Renewly Pro/Family subscription for pending billing badge
+  const currentRenewlyManagedSubscription = useMemo(() => {
+    return subscriptions.find((subscription: any) =>
+      subscription?.isSystemManaged === true &&
+      subscription?.systemSource === 'renewly_billing' &&
+      (subscription?.managedPlan === 'pro' || subscription?.managedPlan === 'family') &&
+      subscription?.status === 'active'
+    )
+  }, [subscriptions])
+
+  const pendingBillingBadgeText = currentRenewlyManagedSubscription
+    ? getPendingBillingBadgeText(currentRenewlyManagedSubscription)
+    : null
   const currentCurrency =
     currencies.find((currency) => currency.code === notificationSettings.currencyCode) || {
       code: notificationSettings.currencyCode,
@@ -612,10 +626,10 @@ export function SettingsScreen() {
             <SettingsItem
               icon={CreditCard}
               label="Plan & Billing"
-              description={userProfile?.plan === 'pro' ? 'Pro - Active' : planName}
+              description={pendingBillingBadgeText || (userProfile?.plan === 'pro' ? 'Pro - Active' : planName)}
               onClick={() => setActiveSheet('billing')}
             />
-            {(userProfile?.plan === 'family' || isFamilyOwner || isActiveFamilyMember || familyStatus?.pendingInvite) && !wasRemovedFromFamily && (
+            {isFamilyOwner && !wasRemovedFromFamily && (
               <SettingsItem
                 icon={Users}
                 label="Family Members"
@@ -1051,9 +1065,13 @@ export function SettingsScreen() {
                 <div className="p-4 rounded-xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
                   <p className="text-sm text-muted-foreground">Current Plan</p>
                   <p className="text-2xl font-semibold text-gold mt-1">{planName}</p>
-                  {isPremium && (
+                  {pendingBillingBadgeText ? (
+                    <p className="text-xs font-medium text-amber-600 dark:text-amber-400 mt-2">
+                      {pendingBillingBadgeText}
+                    </p>
+                  ) : isPremium ? (
                     <p className="text-xs text-muted-foreground mt-2">Your subscription is active</p>
-                  )}
+                  ) : null}
                 </div>
 
                 {/* Free Plan - Show Upgrade CTA */}

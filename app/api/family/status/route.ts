@@ -110,7 +110,7 @@ export async function GET() {
       .eq('status', 'removed')
       .order('removed_at', { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
 
     // Fetch pending invite by signed-in email (case-insensitive match)
     const { data: pendingInviteData } = await supabase

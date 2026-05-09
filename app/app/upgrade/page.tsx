@@ -172,10 +172,58 @@ function UpgradeContent() {
     }
   }
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (selectedPlanId === 'enterprise') {
       setStep('enterprise-contact')
-    } else if (canUseRazorpay) {
+      return
+    }
+
+    // Family -> Pro is a downgrade. Do not create Pro immediately.
+    // In Preview/QA, schedule it to take effect at period end.
+    if (qaStatus?.currentPlan === 'family' && selectedPlanId === 'pro') {
+      try {
+        setQaLoading(true)
+
+        const res = await fetch('/api/qa/billing/schedule-change', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'downgrade', targetPlan: 'pro' }),
+        })
+
+        const data = await res.json()
+
+        if (!res.ok) {
+          addToast({
+            type: 'error',
+            title: 'Downgrade scheduling failed',
+            message: data.error || 'Could not schedule your downgrade right now.',
+          })
+          return
+        }
+
+        await refreshSubscriptionsFromServer()
+
+        addToast({
+          type: 'success',
+          title: 'Downgrade scheduled',
+          message: `Your Family plan remains active until ${data.effectiveAt || 'the renewal date'}. Renewly Pro starts after that date.`,
+        })
+
+        router.push('/app/dashboard')
+      } catch (error) {
+        addToast({
+          type: 'error',
+          title: 'Downgrade scheduling error',
+          message: (error as Error).message || 'An error occurred',
+        })
+      } finally {
+        setQaLoading(false)
+      }
+
+      return
+    }
+
+    if (canUseRazorpay) {
       setStep('checkout')
     }
   }

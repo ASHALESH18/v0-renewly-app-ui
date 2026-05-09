@@ -101,7 +101,7 @@ export async function resolveEffectiveEntitlement(userId: string): Promise<Effec
       .select('id, status')
       .eq('owner_user_id', userId)
       .in('status', ['active', 'past_due'])
-      .single()
+      .maybeSingle()
 
     if (ownerGroup) {
       result.isFamilyOwner = true
@@ -118,7 +118,8 @@ export async function resolveEffectiveEntitlement(userId: string): Promise<Effec
       .select('id, family_group_id, status')
       .eq('user_id', userId)
       .eq('status', 'active')
-      .single()
+      .eq('role', 'member')
+      .maybeSingle()
 
     if (membership) {
       // 4. Fetch family group to verify it's active/past_due
@@ -126,7 +127,7 @@ export async function resolveEffectiveEntitlement(userId: string): Promise<Effec
         .from('family_groups')
         .select('id, status')
         .eq('id', membership.family_group_id)
-        .single()
+        .maybeSingle()
 
       if (memberGroup && (memberGroup.status === 'active' || memberGroup.status === 'past_due')) {
         result.isFamilyMember = true
@@ -150,7 +151,7 @@ export async function resolveEffectiveEntitlement(userId: string): Promise<Effec
       .eq('status', 'active')
       .in('managed_plan', ['pro', 'family'])
       .or('covered_by_family.eq.false,covered_by_family.is.null')
-      .single()
+      .maybeSingle()
 
     if (independentSubscription) {
       result.hasIndependentPaidPlan = true
@@ -167,7 +168,7 @@ export async function resolveEffectiveEntitlement(userId: string): Promise<Effec
       .eq('status', 'removed')
       .order('removed_at', { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
 
     if (removedMembership) {
       result.removedFromFamily = true
