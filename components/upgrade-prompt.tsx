@@ -135,14 +135,14 @@ export function UpgradePrompt({
                     }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-ivory">Family</h3>
+                    <h3 className="text-lg font-semibold text-ivory">Renewly Family</h3>
                     <span className="text-xs bg-gold/20 text-gold px-2 py-1 rounded">Popular</span>
                   </div>
                   <p className="text-sm text-gold mb-4 font-medium">{formatPromptPrice(familyPricing)}</p>
                   <ul className="space-y-2">
                     {[
                       'Everything in Pro',
-                      'Up to 4 family members',
+                      'Owner + 4 invited members',
                       'Shared dashboard',
                       'Family reports',
                     ].map((feature) => (

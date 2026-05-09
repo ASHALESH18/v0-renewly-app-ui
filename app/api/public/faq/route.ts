@@ -9,8 +9,8 @@ export async function GET() {
         answer: 'Click the "Add Subscription" button to get started. You can enter the subscription details manually or import them from your email.'
       },
       {
-        question: 'How does the Family plan work?',
-        answer: 'The Family plan includes up to 4 members with shared renewal tracking, unified reminders, and household visibility. Need more? Additional members are just +₹99/member/month beyond the first 4.'
+        question: 'How does the Renewly Family plan work?',
+        answer: 'The Renewly Family plan includes an owner + 4 invited members with shared renewal tracking, unified reminders, and household visibility. Add up to 4 extra members for +₹99/month or +$1.49/month each per member. Maximum owner + 8 invited members.'
       },
       {
         question: 'What payment methods do you support?',

@@ -101,7 +101,7 @@ export function ProfileMenu({ isOpen, onClose, onNavigate, avatarUrl }: ProfileM
   const planNames: Record<string, string> = {
     free: 'Free Plan',
     pro: 'Pro Member',
-    family: 'Family Plan',
+    family: 'Renewly Family',
     enterprise: 'Enterprise',
   }
   const planName = userProfile?.plan ? planNames[userProfile.plan] : 'Free Plan'
