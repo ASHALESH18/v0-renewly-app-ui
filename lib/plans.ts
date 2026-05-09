@@ -80,7 +80,7 @@ export const plans: Plan[] = [
     priceINR: { amount: 299, period: 'month', originalAmount: 499, savings: 200 },
     priceUSD: { amount: 8.99, period: 'month', originalAmount: 14.99, savings: 6 },
     priceEUR: { amount: 8.99, period: 'month', originalAmount: 14.99, savings: 6 },
-    extraNote: 'Additional members after 4 members',
+    extraNote: 'Includes owner + 4 invited members. Add up to 4 extra members at ₹99/month or $1.49/month each.',
     features: [
       'Everything in Pro',
       'Up to 4 family members',
@@ -90,6 +90,9 @@ export const plans: Plan[] = [
       'Shared notifications',
       'Shared expense tracking',
       'Family spending reports',
+      'Owner + 4 included invited members',
+      'Up to 4 extra members at ₹99/month or $1.49/month each',
+      'Maximum owner + 8 invited members',
     ],
     cta: 'Upgrade to Family',
     ctaHref: '/auth/sign-in?next=/app/upgrade?plan=family',

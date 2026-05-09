@@ -148,12 +148,12 @@ export function BottomNav({ activeTab }: BottomNavProps) {
         <div className="relative mx-4 mb-4 rounded-2xl overflow-hidden">
           {/* Glass background - reduced blur for mobile perf */}
           <div className="absolute inset-0 bg-card/98 dark:bg-graphite/98 backdrop-blur-lg border border-border/60 dark:border-gold/10 rounded-2xl shadow-lg" />
-          
+
           {/* Subtle top highlight */}
-          <div 
+          <div
             className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/25 to-transparent"
           />
-          
+
           <div className="relative flex items-center justify-around px-2 py-3">
             {primaryNavItems.map((item) => {
               const isActive = activeTab === item.id
@@ -340,7 +340,6 @@ const sidebarItems = [
   { id: 'inbox', icon: Inbox, label: 'Smart Inbox', href: '/app/inbox' },
   { id: 'integrations', icon: Link2, label: 'Integrations', href: '/app/integrations' },
   { id: 'notifications', icon: Bell, label: 'Notifications', href: '/app/notifications' },
-  { id: 'family', icon: Users, label: 'Family Members', href: '/app/family' },
   { id: 'settings', icon: Settings, label: 'Settings', href: '/app/settings' },
 ]
 

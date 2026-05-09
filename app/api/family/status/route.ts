@@ -74,6 +74,7 @@ export async function GET() {
       isFamilyOwner: false,
       familyGroup: null,
       familyGroupId: null,
+      familyOwner: null,
       membership: null,
       removedMembership: null,
       pendingInvite: null,
@@ -113,11 +114,11 @@ export async function GET() {
     // Fetch pending invite by signed-in email (case-insensitive match)
     const { data: pendingInviteData } = await supabase
       .from('family_invites')
-      .select('id, invited_email, status, expires_at, seat_type')
+      .select('id, family_group_id, invited_email, status, expires_at, seat_type')
       .ilike('invited_email', userEmail)
       .eq('status', 'pending')
       .gt('expires_at', 'now()')
-      .single()
+      .maybeSingle()
 
     // If owner, fetch active members and pending invites
     if (ownerGroup) {
@@ -198,6 +199,10 @@ export async function GET() {
           includedMemberLimit: ownerGroup.included_member_limit,
         },
         familyGroupId: ownerGroup.id,
+        familyOwner: {
+          userId: user.id,
+          email: userEmail,
+        },
         membership: null,
         pendingInvite: null,
         members: (activeMembers || []).map(m => ({
@@ -251,10 +256,52 @@ export async function GET() {
       })
     }
 
-    // If member, return membership info
+    // If member, return membership info with family owner details
     if (membership) {
+      let familyOwner: { userId: string; email: string | null } | null = null
+      let memberFamilyGroup: any = null
+
+      const { data: groupData, error: memberGroupError } = await supabase
+        .from('family_groups')
+        .select('id, owner_user_id, status, current_period_end')
+        .eq('id', membership.family_group_id)
+        .in('status', ['active', 'past_due'])
+        .maybeSingle()
+
+      if (memberGroupError) {
+        console.error('[family-status] Member family group fetch error:', memberGroupError)
+      }
+
+      memberFamilyGroup = groupData
+
+      if (memberFamilyGroup?.owner_user_id) {
+        const { data: ownerProfile, error: ownerProfileError } = await supabase
+          .from('profiles')
+          .select('id, email')
+          .eq('id', memberFamilyGroup.owner_user_id)
+          .maybeSingle()
+
+        if (ownerProfileError) {
+          console.error('[family-status] Family owner profile fetch error:', ownerProfileError)
+        }
+
+        familyOwner = {
+          userId: memberFamilyGroup.owner_user_id,
+          email: ownerProfile?.email || null,
+        }
+      }
+
       return NextResponse.json({
         ...defaultResponse,
+        familyGroup: memberFamilyGroup
+          ? {
+            id: memberFamilyGroup.id,
+            status: memberFamilyGroup.status,
+            currentPeriodEnd: memberFamilyGroup.current_period_end,
+          }
+          : null,
+        familyGroupId: membership.family_group_id,
+        familyOwner,
         membership: {
           id: membership.id,
           familyGroupId: membership.family_group_id,
@@ -264,7 +311,6 @@ export async function GET() {
         },
       })
     }
-
     // If removed from family, return removed membership state
     if (removedMembership) {
       return NextResponse.json({
@@ -279,10 +325,41 @@ export async function GET() {
       })
     }
 
-    // If has pending invite, return it
+    // If has pending invite, return it with family owner details
     if (pendingInviteData) {
+      let familyOwner: { userId: string; email: string | null } | null = null
+
+      const { data: inviteGroup, error: inviteGroupError } = await supabase
+        .from('family_groups')
+        .select('id, owner_user_id, status')
+        .eq('id', pendingInviteData.family_group_id)
+        .maybeSingle()
+
+      if (inviteGroupError) {
+        console.error('[family-status] Pending invite group fetch error:', inviteGroupError)
+      }
+
+      if (inviteGroup?.owner_user_id) {
+        const { data: ownerProfile, error: ownerProfileError } = await supabase
+          .from('profiles')
+          .select('id, email')
+          .eq('id', inviteGroup.owner_user_id)
+          .maybeSingle()
+
+        if (ownerProfileError) {
+          console.error('[family-status] Pending invite owner profile fetch error:', ownerProfileError)
+        }
+
+        familyOwner = {
+          userId: inviteGroup.owner_user_id,
+          email: ownerProfile?.email || null,
+        }
+      }
+
       return NextResponse.json({
         ...defaultResponse,
+        familyGroupId: pendingInviteData.family_group_id,
+        familyOwner,
         pendingInvite: {
           id: pendingInviteData.id,
           invitedEmail: pendingInviteData.invited_email,

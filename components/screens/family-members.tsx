@@ -13,6 +13,10 @@ interface FamilyStatus {
   isFamilyOwner: boolean
   familyGroup: any
   familyGroupId: string | null
+  familyOwner?: {
+    userId?: string | null
+    email?: string | null
+  } | null
   membership: any
   pendingInvite: any
   members: Array<any>
@@ -134,7 +138,7 @@ export function FamilyMembersScreen() {
 
   const handleSendInvite = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!invitationState.email.trim()) {
       setInvitationState((prev) => ({ ...prev, status: 'error', errorMessage: 'Email is required' }))
       return
@@ -165,8 +169,8 @@ export function FamilyMembersScreen() {
 
       // Handle QA mode with inviteUrl but no email
       if (data.inviteUrl && !data.emailSent) {
-        setInvitationState({ 
-          email: '', 
+        setInvitationState({
+          email: '',
           status: 'success',
           inviteUrl: data.inviteUrl,
           errorMessage: data.warning || 'Email not sent - sharing link instead'
@@ -191,9 +195,9 @@ export function FamilyMembersScreen() {
       }, 1500)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred'
-      
+
       setInvitationState((prev) => ({ ...prev, status: 'error', errorMessage }))
-      
+
       addToast({
         type: 'error',
         title: 'Error',
@@ -600,13 +604,15 @@ export function FamilyMembersScreen() {
                 <Mail className="h-6 w-6 flex-shrink-0 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div className="flex-1">
                   <h2 className="text-xl font-semibold text-blue-900 dark:text-blue-100">You&apos;ve Been Invited to Renewly Family</h2>
-                  
+
                   {familyStatus?.pendingInvite && (
                     <div className="mt-4 space-y-4">
                       <div className="space-y-2 text-sm">
-                        <p className="text-blue-700 dark:text-blue-300">
-                          <span className="font-medium">Email:</span> {familyStatus.pendingInvite.invitedEmail}
-                        </p>
+                        {familyStatus?.familyOwner?.email && (
+                          <p className="text-blue-700 dark:text-blue-300">
+                            <span className="font-medium">Invited by:</span> {familyStatus.familyOwner.email}
+                          </p>
+                        )}
                         <p className="text-blue-700 dark:text-blue-300">
                           <span className="font-medium">Expires:</span> {new Date(familyStatus.pendingInvite.expiresAt).toLocaleDateString()}
                         </p>
@@ -662,6 +668,12 @@ export function FamilyMembersScreen() {
                   </p>
                   {familyStatus?.membership && (
                     <div className="mt-4 space-y-3 text-sm">
+                      {familyStatus?.familyOwner?.email && (
+                        <p className="text-emerald-700 dark:text-emerald-300">
+                          <span className="font-medium">Family owner:</span> {familyStatus.familyOwner.email}
+                        </p>
+                      )}
+
                       <p className="text-emerald-700 dark:text-emerald-300">
                         <span className="font-medium">Role:</span> Member
                       </p>
@@ -880,7 +892,10 @@ export function FamilyMembersScreen() {
                           </div>
                           <div>
                             <p className="font-medium text-foreground">{member.email}</p>
-                            <p className="text-xs text-muted-foreground">Member</p>
+                            <p className="text-xs text-muted-foreground">
+                              {member.seatType === 'extra' ? 'Extra seat' : 'Included seat'}
+                              {member.joinedAt ? ` • Joined ${new Date(member.joinedAt).toLocaleDateString()}` : ''}
+                            </p>
                           </div>
                         </div>
                         {familyStatus?.isFamilyOwner && (
@@ -910,7 +925,7 @@ export function FamilyMembersScreen() {
                     {pendingInvites.map((invite) => {
                       const inviteId = getInviteId(invite)
                       const hasValidId = Boolean(inviteId && inviteId !== 'undefined' && inviteId !== 'null')
-                      
+
                       return (
                         <div key={inviteId || invite.invitedEmail}>
                           <div className="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/10 p-4">
@@ -920,6 +935,9 @@ export function FamilyMembersScreen() {
                                 <p className="font-medium text-foreground">{invite.invitedEmail}</p>
                                 <p className="text-xs text-muted-foreground">
                                   Expires {new Date(invite.expiresAt).toLocaleDateString()}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {invite.seatType === 'extra' ? 'Extra seat invite' : 'Included seat invite'}
                                 </p>
                               </div>
                             </div>
