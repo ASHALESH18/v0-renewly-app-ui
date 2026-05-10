@@ -178,6 +178,39 @@ export async function POST(request: NextRequest) {
     revalidateTag(`subscriptions:${user.id}`)
     revalidateTag('profile')
 
+    // Also schedule Family group action if user is a Family owner
+    // This ensures Settings cancellation/downgrade properly flags the family group
+    if (currentPlan === 'family' && (type === 'cancel' || (type === 'downgrade' && targetPlan === 'pro'))) {
+      const { data: familyGroup } = await supabase
+        .from('family_groups')
+        .select('id, status, scheduled_action')
+        .eq('owner_user_id', user.id)
+        .in('status', ['active', 'past_due'])
+        .maybeSingle()
+
+      if (familyGroup) {
+        const familyAction =
+          type === 'cancel' ? 'cancel_at_period_end' : 'downgrade_to_pro_at_period_end'
+
+        // Only update if not already scheduled
+        if (familyGroup.scheduled_action !== familyAction) {
+          await supabase
+            .from('family_groups')
+            .update({
+              scheduled_action: familyAction,
+              scheduled_action_reason: 'qa_preview_downgrade',
+              scheduled_action_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', familyGroup.id)
+
+          console.log(
+            `[schedule-change] Also scheduled Family group ${familyGroup.id} for ${familyAction}`
+          )
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       type,

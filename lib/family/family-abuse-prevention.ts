@@ -167,9 +167,10 @@ export function checkNotRemovingOwner(
 export function isManagedSubscription(
   subscription: any
 ): boolean {
-  return subscription?.is_system_managed === true && 
-         subscription?.managed_plan === 'family' || 
-         subscription?.managed_plan === 'pro'
+  return (
+    subscription?.is_system_managed === true &&
+    (subscription?.managed_plan === 'family' || subscription?.managed_plan === 'pro')
+  )
 }
 
 /**
