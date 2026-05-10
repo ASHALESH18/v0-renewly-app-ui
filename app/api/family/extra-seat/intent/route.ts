@@ -97,13 +97,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No active family group found' }, { status: 403 })
     }
 
-    if (familyGroup.scheduled_action === 'cancel_at_period_end') {
+    if (familyGroup.scheduled_action === 'cancel_at_period_end' || familyGroup.scheduled_action === 'downgrade_to_pro_at_period_end') {
       return NextResponse.json(
         {
-          error: 'cannot_invite_during_cancellation',
-          message: 'Cannot create new invites while Family plan cancellation is scheduled.',
+          error: 'cannot_invite_during_billing_change',
+          message: 'Cannot create new invites while Family plan changes are scheduled.',
         },
-        { status: 400 }
+        { status: 409 }
       )
     }
 

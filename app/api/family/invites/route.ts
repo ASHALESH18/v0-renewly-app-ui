@@ -99,6 +99,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No active family group found' }, { status: 403 })
     }
 
+    // F10: Block invites if family cancellation/downgrade is scheduled
+    if (
+      familyGroup.scheduled_action === 'cancel_at_period_end' ||
+      familyGroup.scheduled_action === 'downgrade_to_pro_at_period_end'
+    ) {
+      return NextResponse.json(
+        {
+          error: 'Family plan changes are already scheduled',
+          message: 'New invites are paused until the billing change is resolved.',
+        },
+        { status: 409 }
+      )
+    }
+
     if (familyGroup.scheduled_action === 'cancel_at_period_end') {
       return NextResponse.json(
         {
