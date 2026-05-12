@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
+import { CheckCircle2, AlertCircle, Loader2, X } from 'lucide-react'
 import { Header } from '@/components/header'
 import { PageTransition } from '@/components/motion'
 import useStore from '@/lib/store'
@@ -36,6 +36,7 @@ export default function AcceptInvitePage() {
   const [isAccepting, setIsAccepting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isAccepted, setIsAccepted] = useState(false)
+  const [isDeclining, setIsDeclining] = useState(false)
   const [wrongEmailMatch, setWrongEmailMatch] = useState<string | null>(null)
 
   // Resolve invite details or check for pending invite
@@ -43,15 +44,36 @@ export default function AcceptInvitePage() {
     const loadInvite = async () => {
       try {
         if (token) {
-          // Token-based flow
+          // Token-based flow: try to resolve token
           setMode('token')
-          const res = await fetch(`/api/family/invites/resolve?token=${encodeURIComponent(token)}`)
-          if (!res.ok) {
-            const data = await res.json()
-            throw new Error(data.error || 'Invalid or expired invitation')
+          try {
+            const res = await fetch(`/api/family/invites/resolve?token=${encodeURIComponent(token)}`)
+            if (res.ok) {
+              const data = await res.json()
+              setInviteDetails(data)
+            } else {
+              // Token resolution failed - fallback to pending invite lookup if user is signed in
+              const statusRes = await fetch('/api/family/status', { cache: 'no-store' })
+              if (statusRes.ok) {
+                const statusData = await statusRes.json()
+                if (statusData.pendingInvite) {
+                  // Found pending invite by email - use direct flow
+                  setMode('direct')
+                  setPendingInvite(statusData.pendingInvite)
+                } else {
+                  // No pending invite found either
+                  const data = await res.json()
+                  throw new Error(data.error || 'Invalid or expired invitation')
+                }
+              } else {
+                // Failed to fetch status, show token error
+                const data = await res.json()
+                throw new Error(data.error || 'Invalid or expired invitation')
+              }
+            }
+          } catch (tokenError) {
+            throw tokenError
           }
-          const data = await res.json()
-          setInviteDetails(data)
         } else {
           // No token: check for pending invite from status endpoint
           const res = await fetch('/api/family/status', { cache: 'no-store' })
@@ -67,14 +89,14 @@ export default function AcceptInvitePage() {
           } else {
             // No token and no pending invite: show friendly error
             setError(
-              'No invitation token was found. If you already signed up, open Family Members from the app or ask the family owner to resend the invite.'
+              'Invite not found or no longer active. Ask the Family owner to resend the invite. Already signed in with the invited email? Open Family Members to check for pending invites.'
             )
           }
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Failed to load invitation'
         setError(message)
-        console.error('[v0] Invite load error:', error)
+        console.error('[family-accept] Invite load error:', error)
       } finally {
         setIsLoading(false)
       }
@@ -145,6 +167,44 @@ export default function AcceptInvitePage() {
       })
     } finally {
       setIsAccepting(false)
+    }
+  }
+
+  const handleDeclineInvite = async () => {
+    if (mode === 'direct' && !pendingInvite) return
+
+    setIsDeclining(true)
+    try {
+      const res = await fetch('/api/family/invites/decline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inviteId: pendingInvite.id }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to decline invitation')
+      }
+
+      addToast({
+        type: 'success',
+        title: 'Invite declined',
+        message: 'You declined the Family invitation.',
+      })
+
+      // Redirect to dashboard
+      setTimeout(() => {
+        router.push('/app/dashboard')
+      }, 1500)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An error occurred'
+      addToast({
+        type: 'error',
+        title: 'Error declining invitation',
+        message,
+      })
+    } finally {
+      setIsDeclining(false)
     }
   }
 
@@ -297,23 +357,42 @@ export default function AcceptInvitePage() {
                 </div>
               </div>
 
-              <button
-                onClick={handleAcceptInvite}
-                disabled={isAccepting}
-                className="w-full flex items-center justify-center gap-2 rounded-lg bg-gold px-4 py-3 text-obsidian font-medium hover:bg-gold/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
-              >
-                {isAccepting ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Accepting...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="h-5 w-5" />
-                    Accept Invite
-                  </>
-                )}
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleAcceptInvite}
+                  disabled={isAccepting || isDeclining}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-gold px-4 py-3 text-obsidian font-medium hover:bg-gold/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                >
+                  {isAccepting ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Accepting...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-5 w-5" />
+                      Accept Invite
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={handleDeclineInvite}
+                  disabled={isDeclining || isAccepting}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400 font-medium hover:bg-red-500/20 border border-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                >
+                  {isDeclining ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Declining...
+                    </>
+                  ) : (
+                    <>
+                      <X className="h-5 w-5" />
+                      Decline
+                    </>
+                  )}
+                </button>
+              </div>
             </motion.div>
           ) : null}
         </div>
