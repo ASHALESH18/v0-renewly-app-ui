@@ -191,22 +191,30 @@ export async function POST(request: NextRequest) {
       if (familyGroup) {
         const familyAction =
           type === 'cancel' ? 'cancel_at_period_end' : 'downgrade_to_pro_at_period_end'
+        const familyReason =
+          type === 'cancel' ? 'qa_preview_cancel' : 'qa_preview_downgrade'
 
         // Only update if not already scheduled
         if (familyGroup.scheduled_action !== familyAction) {
-          await supabase
+          const { error: scheduleError } = await supabase
             .from('family_groups')
             .update({
               scheduled_action: familyAction,
-              scheduled_action_reason: 'qa_preview_downgrade',
+              scheduled_action_reason: familyReason,
               scheduled_action_at: new Date().toISOString(),
+              scheduled_action_created_at: new Date().toISOString(),
+              scheduled_action_effective_at: familyGroup.current_period_end || new Date().toISOString(),
               updated_at: new Date().toISOString(),
             })
             .eq('id', familyGroup.id)
 
-          console.log(
-            `[schedule-change] Also scheduled Family group ${familyGroup.id} for ${familyAction}`
-          )
+          if (scheduleError) {
+            console.error('[schedule-change] Failed to schedule family action:', scheduleError)
+          } else {
+            console.log(
+              `[schedule-change] Also scheduled Family group ${familyGroup.id} for ${familyAction} (reason: ${familyReason})`
+            )
+          }
         }
       }
     }

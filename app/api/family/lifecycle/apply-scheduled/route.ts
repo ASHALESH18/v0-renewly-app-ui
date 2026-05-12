@@ -71,13 +71,17 @@ export async function POST(request: NextRequest) {
         processedCount: result.processedGroupIds.length,
         cancelledCount: result.cancelledGroupIds.length,
         downgradedCount: result.downgradedGroupIds.length,
+        skippedCount: result.skippedGroupIds.length,
         errorCount: result.errors.length,
       }
     )
 
+    // Report honest success: true only if no errors
+    const success = result.errors.length === 0
+
     return NextResponse.json(
       {
-        success: result.success,
+        success,
         processedGroupIds: result.processedGroupIds,
         cancelledGroupIds: result.cancelledGroupIds,
         downgradedGroupIds: result.downgradedGroupIds,
@@ -85,7 +89,7 @@ export async function POST(request: NextRequest) {
         errors: result.errors,
         mode: dryRun ? 'dry-run' : 'applied',
       },
-      { status: result.success ? 200 : 207 }
+      { status: success ? 200 : 207 }
     )
   } catch (error) {
     console.error('[apply-scheduled] Unexpected error:', error)

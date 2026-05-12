@@ -92,13 +92,22 @@ export async function applyDueFamilyLifecycleActions(
     for (const group of dueGroups) {
       try {
         if (group.scheduled_action === 'cancel_at_period_end') {
-          await processGroupCancellation(supabase, group, nowIso, dryRun)
-          result.cancelledGroupIds.push(group.id)
+          const verified = await processGroupCancellation(supabase, group, nowIso, dryRun)
+          if (verified) {
+            result.cancelledGroupIds.push(group.id)
+            result.processedGroupIds.push(group.id)
+          } else {
+            result.skippedGroupIds.push(group.id)
+          }
         } else if (group.scheduled_action === 'downgrade_to_pro_at_period_end') {
-          await processGroupDowngrade(supabase, group, nowIso, dryRun)
-          result.downgradedGroupIds.push(group.id)
+          const verified = await processGroupDowngrade(supabase, group, nowIso, dryRun)
+          if (verified) {
+            result.downgradedGroupIds.push(group.id)
+            result.processedGroupIds.push(group.id)
+          } else {
+            result.skippedGroupIds.push(group.id)
+          }
         }
-        result.processedGroupIds.push(group.id)
       } catch (error) {
         result.success = false
         result.errors.push({
@@ -125,13 +134,14 @@ export async function applyDueFamilyLifecycleActions(
 
 /**
  * Process Family cancellation at period end
+ * Returns true only if verification passed
  */
 async function processGroupCancellation(
   supabase: any,
   group: any,
   nowIso: string,
   dryRun: boolean
-) {
+): Promise<boolean> {
   const groupId = group.id
   const ownerId = group.owner_user_id
 
@@ -162,19 +172,42 @@ async function processGroupCancellation(
 
   if (!dryRun) {
     // 1. Cancel family group
-    await supabase
+    const { error: groupError } = await supabase
       .from('family_groups')
       .update({
         status: 'cancelled',
         scheduled_action: null,
         scheduled_action_reason: null,
+        scheduled_action_created_at: null,
+        scheduled_action_effective_at: null,
+        scheduled_action_at: null,
         updated_at: nowIso,
       })
       .eq('id', groupId)
 
-    // 2. Remove active members
+    if (groupError) {
+      console.error(`[family-lifecycle] Failed to cancel group ${groupId}:`, groupError)
+      return false
+    }
+
+    // 2. Verify the update worked
+    const { data: verifyGroup, error: verifyError } = await supabase
+      .from('family_groups')
+      .select('id, status, scheduled_action')
+      .eq('id', groupId)
+      .maybeSingle()
+
+    if (verifyError || !verifyGroup || verifyGroup.status !== 'cancelled' || verifyGroup.scheduled_action !== null) {
+      console.error(
+        `[family-lifecycle] Verification failed for cancelled group ${groupId}:`,
+        verifyGroup
+      )
+      return false
+    }
+
+    // 3. Remove active members
     if (members && members.length > 0) {
-      await supabase
+      const { error: memberError } = await supabase
         .from('family_members')
         .update({
           status: 'removed',
@@ -183,11 +216,15 @@ async function processGroupCancellation(
         })
         .eq('family_group_id', groupId)
         .eq('status', 'active')
+
+      if (memberError) {
+        console.warn(`[family-lifecycle] Failed to remove members from group ${groupId}:`, memberError)
+      }
     }
 
-    // 3. Cancel pending invites
+    // 4. Cancel pending invites
     if (invites && invites.length > 0) {
-      await supabase
+      const { error: inviteError } = await supabase
         .from('family_invites')
         .update({
           status: 'cancelled',
@@ -196,22 +233,30 @@ async function processGroupCancellation(
         })
         .eq('family_group_id', groupId)
         .eq('status', 'pending')
+
+      if (inviteError) {
+        console.warn(`[family-lifecycle] Failed to cancel invites for group ${groupId}:`, inviteError)
+      }
     }
 
-    // 4. Cancel managed Renewly Family subscriptions
+    // 5. Cancel managed Renewly Family subscriptions
     if (managedSubs && managedSubs.length > 0) {
       for (const sub of managedSubs) {
-        await supabase
+        const { error: subError } = await supabase
           .from('subscriptions')
           .update({
             status: 'cancelled',
             updated_at: nowIso,
           })
           .eq('id', sub.id)
+
+        if (subError) {
+          console.warn(`[family-lifecycle] Failed to cancel subscription ${sub.id}:`, subError)
+        }
       }
     }
 
-    // 5. Set owner and members to Free (protecting independent paid plans)
+    // 6. Set owner and members to Free (protecting independent paid plans)
     const memberIds = members ? members.map((m: any) => m.user_id) : []
     const allUserIds = [ownerId, ...memberIds]
 
@@ -223,17 +268,19 @@ async function processGroupCancellation(
   console.log(
     `[family-lifecycle] ${dryRun ? '[DRY-RUN] ' : ''}Cancelled group ${groupId}, removed ${members?.length || 0} members`
   )
+  return true
 }
 
 /**
  * Process Family downgrade to Pro at period end
+ * Returns true only if verification passed
  */
 async function processGroupDowngrade(
   supabase: any,
   group: any,
   nowIso: string,
   dryRun: boolean
-) {
+): Promise<boolean> {
   const groupId = group.id
   const ownerId = group.owner_user_id
 
@@ -264,19 +311,42 @@ async function processGroupDowngrade(
 
   if (!dryRun) {
     // 1. Cancel family group
-    await supabase
+    const { error: groupError } = await supabase
       .from('family_groups')
       .update({
         status: 'cancelled',
         scheduled_action: null,
         scheduled_action_reason: null,
+        scheduled_action_created_at: null,
+        scheduled_action_effective_at: null,
+        scheduled_action_at: null,
         updated_at: nowIso,
       })
       .eq('id', groupId)
 
-    // 2. Remove active members
+    if (groupError) {
+      console.error(`[family-lifecycle] Failed to cancel group ${groupId}:`, groupError)
+      return false
+    }
+
+    // 2. Verify the update worked
+    const { data: verifyGroup, error: verifyError } = await supabase
+      .from('family_groups')
+      .select('id, status, scheduled_action')
+      .eq('id', groupId)
+      .maybeSingle()
+
+    if (verifyError || !verifyGroup || verifyGroup.status !== 'cancelled' || verifyGroup.scheduled_action !== null) {
+      console.error(
+        `[family-lifecycle] Verification failed for downgraded group ${groupId}:`,
+        verifyGroup
+      )
+      return false
+    }
+
+    // 3. Remove active members
     if (members && members.length > 0) {
-      await supabase
+      const { error: memberError } = await supabase
         .from('family_members')
         .update({
           status: 'removed',
@@ -285,11 +355,15 @@ async function processGroupDowngrade(
         })
         .eq('family_group_id', groupId)
         .eq('status', 'active')
+
+      if (memberError) {
+        console.warn(`[family-lifecycle] Failed to remove members from group ${groupId}:`, memberError)
+      }
     }
 
-    // 3. Cancel pending invites
+    // 4. Cancel pending invites
     if (invites && invites.length > 0) {
-      await supabase
+      const { error: inviteError } = await supabase
         .from('family_invites')
         .update({
           status: 'cancelled',
@@ -298,28 +372,36 @@ async function processGroupDowngrade(
         })
         .eq('family_group_id', groupId)
         .eq('status', 'pending')
+
+      if (inviteError) {
+        console.warn(`[family-lifecycle] Failed to cancel invites for group ${groupId}:`, inviteError)
+      }
     }
 
-    // 4. Cancel managed Family subscriptions for all users
+    // 5. Cancel managed Family subscriptions for all users
     if (managedSubs && managedSubs.length > 0) {
       for (const sub of managedSubs) {
-        await supabase
+        const { error: subError } = await supabase
           .from('subscriptions')
           .update({
             status: 'cancelled',
             updated_at: nowIso,
           })
           .eq('id', sub.id)
+
+        if (subError) {
+          console.warn(`[family-lifecycle] Failed to cancel subscription ${sub.id}:`, subError)
+        }
       }
     }
 
-    // 5. Set members to Free (protecting independent paid plans)
+    // 6. Set members to Free (protecting independent paid plans)
     const memberIds = members ? members.map((m: any) => m.user_id) : []
     for (const userId of memberIds) {
       await setUserPlanToFreeIfNotIndependentPaid(supabase, userId, nowIso)
     }
 
-    // 6. Create Pro managed subscription for owner
+    // 7. Create Pro managed subscription for owner
     // First try to reuse existing Pro subscription if owner already has one
     const { data: existingProSub } = await supabase
       .from('subscriptions')
@@ -332,7 +414,7 @@ async function processGroupDowngrade(
 
     if (!existingProSub) {
       // Create new Pro managed subscription for owner
-      await supabase.from('subscriptions').insert({
+      const { error: proSubError } = await supabase.from('subscriptions').insert({
         user_id: ownerId,
         is_system_managed: true,
         system_source: 'renewly_billing',
@@ -342,24 +424,36 @@ async function processGroupDowngrade(
         updated_at: nowIso,
       })
 
-      console.log(
-        `[family-lifecycle] Created Pro managed subscription for owner ${ownerId}`
-      )
+      if (proSubError) {
+        console.warn(
+          `[family-lifecycle] Failed to create Pro subscription for owner ${ownerId}:`,
+          proSubError
+        )
+      } else {
+        console.log(
+          `[family-lifecycle] Created Pro managed subscription for owner ${ownerId}`
+        )
+      }
     }
 
-    // 7. Set owner to Pro
-    await supabase
+    // 8. Set owner to Pro
+    const { error: ownerError } = await supabase
       .from('profiles')
       .update({
         plan: 'pro',
         updated_at: nowIso,
       })
       .eq('id', ownerId)
+
+    if (ownerError) {
+      console.warn(`[family-lifecycle] Failed to set owner ${ownerId} to Pro:`, ownerError)
+    }
   }
 
   console.log(
     `[family-lifecycle] ${dryRun ? '[DRY-RUN] ' : ''}Downgraded group ${groupId} to owner Pro, removed ${members?.length || 0} members`
   )
+  return true
 }
 
 /**

@@ -72,8 +72,10 @@ export async function POST(request: NextRequest) {
       .from('family_groups')
       .update({
         scheduled_action: 'cancel_at_period_end',
-        scheduled_action_reason: 'owner_requested',
+        scheduled_action_reason: 'owner_cancelled',
         scheduled_action_at: now,
+        scheduled_action_created_at: now,
+        scheduled_action_effective_at: familyGroup.current_period_end || now,
         updated_at: now,
       })
       .eq('id', familyGroup.id)
