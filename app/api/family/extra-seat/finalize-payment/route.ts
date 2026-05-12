@@ -222,9 +222,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Family group is not active' }, { status: 409 })
     }
 
-    if (familyGroup.scheduled_action === 'cancel_at_period_end') {
+    if (familyGroup.scheduled_action === 'cancel_at_period_end' || familyGroup.scheduled_action === 'downgrade_to_pro_at_period_end') {
       return NextResponse.json(
-        { error: 'Cannot create extra-seat invites while Family cancellation is scheduled' },
+        { error: 'Family plan changes are already scheduled. New invites are paused until the billing change is resolved.' },
         { status: 409 }
       )
     }
