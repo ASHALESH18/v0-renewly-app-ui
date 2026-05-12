@@ -55,6 +55,7 @@ export function FamilyMembersScreen() {
     email: string
   } | null>(null)
   const [isAcceptingDirectInvite, setIsAcceptingDirectInvite] = useState(false)
+  const [isDecliningInvite, setIsDecliningInvite] = useState(false)
   const [isResyncingFamily, setIsResyncingFamily] = useState(false)
   const [isRefreshingStatus, setIsRefreshingStatus] = useState(false)
   const [invitationState, setInvitationState] = useState<InvitationState>({ email: '', status: 'idle' })
@@ -427,6 +428,44 @@ export function FamilyMembersScreen() {
     await refreshFamilyStatus()
   }
 
+  const handleDeclineDirectInvite = async () => {
+    if (!familyStatus?.pendingInvite?.id) return
+
+    setIsDecliningInvite(true)
+
+    try {
+      const res = await fetch('/api/family/invites/decline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inviteId: familyStatus.pendingInvite.id }),
+      })
+
+      const data = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to decline invite')
+      }
+
+      addToast({
+        type: 'success',
+        title: 'Invite declined',
+        message: 'You declined the Family invitation.',
+      })
+
+      // Refresh to update UI
+      await refreshFamilyStatus({ silent: true })
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+      addToast({
+        type: 'error',
+        title: 'Error declining invite',
+        message: errorMessage,
+      })
+    } finally {
+      setIsDecliningInvite(false)
+    }
+  }
+
   const handleResendInvite = async (inviteId: string, invitedEmail: string) => {
     setResendingInviteId(inviteId)
 
@@ -618,24 +657,43 @@ export function FamilyMembersScreen() {
                         </p>
                       </div>
 
-                      {/* Accept Invite Button */}
-                      <button
-                        onClick={handleAcceptDirectInvite}
-                        disabled={isAcceptingDirectInvite}
-                        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {isAcceptingDirectInvite ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Accepting...
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle2 className="h-4 w-4" />
-                            Accept Invite
-                          </>
-                        )}
-                      </button>
+                      {/* Accept/Decline Buttons */}
+                      <div className="flex gap-3">
+                        <button
+                          onClick={handleAcceptDirectInvite}
+                          disabled={isAcceptingDirectInvite || isDecliningInvite}
+                          className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {isAcceptingDirectInvite ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Accepting...
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="h-4 w-4" />
+                              Accept Invite
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={handleDeclineDirectInvite}
+                          disabled={isDecliningInvite || isAcceptingDirectInvite}
+                          className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-red-500/20 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-500/30 border border-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {isDecliningInvite ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Declining...
+                            </>
+                          ) : (
+                            <>
+                              <X className="h-4 w-4" />
+                              Decline
+                            </>
+                          )}
+                        </button>
+                      </div>
 
                       {/* Email link fallback */}
                       <p className="text-xs text-blue-600 dark:text-blue-400 mt-3">
