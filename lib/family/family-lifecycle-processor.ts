@@ -13,6 +13,14 @@
 
 import { createClient } from '@supabase/supabase-js'
 
+/**
+ * Check if a scheduled_action value has been cleared
+ * Accepts both null (from older DBs) and 'none' (current expected value)
+ */
+function isClearedScheduledAction(value: unknown): boolean {
+  return value === null || value === 'none'
+}
+
 interface LifecycleProcessorOptions {
   familyGroupId?: string
   now?: string | Date
@@ -98,6 +106,11 @@ export async function applyDueFamilyLifecycleActions(
             result.processedGroupIds.push(group.id)
           } else {
             result.skippedGroupIds.push(group.id)
+            result.success = false
+            result.errors.push({
+              familyGroupId: group.id,
+              message: `Failed to apply cancellation for family group ${group.id}`,
+            })
           }
         } else if (group.scheduled_action === 'downgrade_to_pro_at_period_end') {
           const verified = await processGroupDowngrade(supabase, group, nowIso, dryRun)
@@ -106,18 +119,20 @@ export async function applyDueFamilyLifecycleActions(
             result.processedGroupIds.push(group.id)
           } else {
             result.skippedGroupIds.push(group.id)
+            result.success = false
+            result.errors.push({
+              familyGroupId: group.id,
+              message: `Failed to apply downgrade for family group ${group.id}`,
+            })
           }
         }
       } catch (error) {
         result.success = false
+        result.skippedGroupIds.push(group.id)
         result.errors.push({
           familyGroupId: group.id,
-          message: error instanceof Error ? error.message : String(error),
+          message: `Unexpected error processing group: ${error instanceof Error ? error.message : String(error)}`,
         })
-        console.error(
-          `[family-lifecycle] Error processing group ${group.id}:`,
-          error
-        )
       }
     }
 
@@ -176,7 +191,7 @@ async function processGroupCancellation(
       .from('family_groups')
       .update({
         status: 'cancelled',
-        scheduled_action: null,
+        scheduled_action: 'none',
         scheduled_action_reason: null,
         scheduled_action_created_at: null,
         scheduled_action_effective_at: null,
@@ -186,7 +201,8 @@ async function processGroupCancellation(
       .eq('id', groupId)
 
     if (groupError) {
-      console.error(`[family-lifecycle] Failed to cancel group ${groupId}:`, groupError)
+      const errorMsg = `Failed to cancel family group ${groupId}: ${groupError.message}`
+      console.error(`[family-lifecycle] ${errorMsg}`, groupError)
       return false
     }
 
@@ -197,11 +213,9 @@ async function processGroupCancellation(
       .eq('id', groupId)
       .maybeSingle()
 
-    if (verifyError || !verifyGroup || verifyGroup.status !== 'cancelled' || verifyGroup.scheduled_action !== null) {
-      console.error(
-        `[family-lifecycle] Verification failed for cancelled group ${groupId}:`,
-        verifyGroup
-      )
+    if (verifyError || !verifyGroup || verifyGroup.status !== 'cancelled' || !isClearedScheduledAction(verifyGroup.scheduled_action)) {
+      const errorMsg = `Verification failed for cancelled group ${groupId}: expected status=cancelled and scheduled_action cleared, got ${JSON.stringify(verifyGroup)}`
+      console.error(`[family-lifecycle] ${errorMsg}`)
       return false
     }
 
@@ -315,7 +329,7 @@ async function processGroupDowngrade(
       .from('family_groups')
       .update({
         status: 'cancelled',
-        scheduled_action: null,
+        scheduled_action: 'none',
         scheduled_action_reason: null,
         scheduled_action_created_at: null,
         scheduled_action_effective_at: null,
@@ -325,7 +339,8 @@ async function processGroupDowngrade(
       .eq('id', groupId)
 
     if (groupError) {
-      console.error(`[family-lifecycle] Failed to cancel group ${groupId}:`, groupError)
+      const errorMsg = `Failed to downgrade family group ${groupId}: ${groupError.message}`
+      console.error(`[family-lifecycle] ${errorMsg}`, groupError)
       return false
     }
 
@@ -336,11 +351,9 @@ async function processGroupDowngrade(
       .eq('id', groupId)
       .maybeSingle()
 
-    if (verifyError || !verifyGroup || verifyGroup.status !== 'cancelled' || verifyGroup.scheduled_action !== null) {
-      console.error(
-        `[family-lifecycle] Verification failed for downgraded group ${groupId}:`,
-        verifyGroup
-      )
+    if (verifyError || !verifyGroup || verifyGroup.status !== 'cancelled' || !isClearedScheduledAction(verifyGroup.scheduled_action)) {
+      const errorMsg = `Verification failed for downgraded group ${groupId}: expected status=cancelled and scheduled_action cleared, got ${JSON.stringify(verifyGroup)}`
+      console.error(`[family-lifecycle] ${errorMsg}`)
       return false
     }
 
