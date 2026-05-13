@@ -8,6 +8,7 @@ import { syncRenewlyFamilyMemberSubscription } from '@/lib/billing/renewly-subsc
 import { invalidateCache } from '@/lib/redis'
 import { revalidateTag } from 'next/cache'
 import { checkUserNotInMultipleFamilies } from '@/lib/family/family-abuse-prevention'
+import { notifyOwnerOfInviteAction } from '@/lib/family/send-owner-notifications'
 
 /**
  * POST /api/family/invites/accept-direct
@@ -285,6 +286,16 @@ export async function POST(request: Request) {
     // Invalidate Next.js cache tags
     revalidateTag(`subscriptions:${user.id}`)
     revalidateTag('profile')
+
+    // Notify owner (non-blocking - doesn't affect response)
+    notifyOwnerOfInviteAction({
+      inviteId: invite.id,
+      familyGroupId: invite.family_group_id,
+      invitedEmail: invite.invited_email,
+      action: 'accepted',
+    }).catch((error) => {
+      console.warn('[accept-direct] Failed to notify owner:', error)
+    })
 
     return NextResponse.json({
       success: true,
