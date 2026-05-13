@@ -636,15 +636,53 @@ export function SettingsScreen() {
               onClick={() => setActiveSheet('billing')}
             />
 
-            {((isFamilyOwner && !wasRemovedFromFamily) || (userProfile?.plan === 'family' && familyStatusLoading)) && (
+            {/* Family section - shown for all users */}
+            {familyStatusLoading ? (
+              <SettingsItem
+                icon={Users}
+                label="Family"
+                description="Loading family access…"
+                disabled={true}
+              />
+            ) : familyStatus?.pendingInvite ? (
+              // Free user with pending invite
+              <SettingsItem
+                icon={Users}
+                label="Family Invite"
+                description="You've been invited to join a Renewly Family plan."
+                onClick={() => window.location.href = '/app/family'}
+              />
+            ) : isFamilyOwner && !wasRemovedFromFamily ? (
+              // Active Family owner
               <SettingsItem
                 icon={Users}
                 label="Family Members"
-                description={familyStatusLoading ? 'Loading family access…' : 'Manage members and invitations'}
-                onClick={() => {
-                  if (!familyStatusLoading) window.location.href = '/app/family'
-                }}
-                disabled={familyStatusLoading}
+                description="Manage your Renewly Family plan members."
+                onClick={() => window.location.href = '/app/family'}
+              />
+            ) : isFamilyMember ? (
+              // Active Family member
+              <SettingsItem
+                icon={Users}
+                label="Family Access"
+                description="You're covered by a Renewly Family plan."
+                onClick={() => window.location.href = '/app/family'}
+              />
+            ) : wasRemovedFromFamily ? (
+              // Removed/cancelled Family member
+              <SettingsItem
+                icon={Users}
+                label="Family Access Ended"
+                description="Your previous Family access is no longer active."
+                onClick={() => window.location.href = '/app/family'}
+              />
+            ) : (
+              // Free user with no pending invite
+              <SettingsItem
+                icon={Users}
+                label="Family"
+                description="Invite members and manage shared access with Renewly Family."
+                onClick={() => window.location.href = '/app/family'}
               />
             )}
           </SettingsSection>
