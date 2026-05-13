@@ -90,7 +90,7 @@ export default function AcceptInvitePage() {
           } else {
             // No token and no pending invite: show friendly error
             setError(
-              'Invite not found or no longer active. Ask the Family owner to resend the invite. Already signed in with the invited email? Open Family Members to check for pending invites.'
+              'Invite not found or no longer active. Ask the Family owner to resend the invite. Already signed in with the invited email? Open Family to check for pending invites.'
             )
           }
         }

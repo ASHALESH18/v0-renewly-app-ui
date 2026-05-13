@@ -614,20 +614,20 @@ export function FamilyMembersScreen() {
               <Loader2 className="h-8 w-8 animate-spin text-gold" />
             </div>
           ) : isNonFamilyUser ? (
-            // E: Free/Pro user - show upgrade message
-            <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-6">
+            // E: Free/Pro user - show Family education message
+            <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-6">
               <div className="flex items-start gap-4">
-                <AlertCircle className="h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                <Users className="h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div>
-                  <p className="font-medium text-amber-900 dark:text-amber-100">Family Plan Required</p>
-                  <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">
-                    Family Members is only available for Renewly Family subscribers. Upgrade your plan to invite members and manage shared access.
+                  <p className="font-medium text-blue-900 dark:text-blue-100">Renewly Family</p>
+                  <p className="mt-1 text-sm text-blue-800 dark:text-blue-200">
+                    Invite family members and manage shared access with a Renewly Family plan.
                   </p>
                   <a
                     href="/app/upgrade?plan=family"
-                    className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-300 hover:underline"
+                    className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-blue-700 dark:text-blue-300 hover:underline"
                   >
-                    View Family Plan
+                    Start your plan
                     <ExternalLink className="h-4 w-4" />
                   </a>
                 </div>

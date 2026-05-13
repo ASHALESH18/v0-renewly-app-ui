@@ -35,6 +35,7 @@ interface NotificationItem {
   date: string
   read: boolean
   subscriptionId?: string
+  actionHref?: string
 }
 
 export function Header({
@@ -229,6 +230,8 @@ export function Header({
             <div className="relative" ref={notificationPanelRef}>
               <HeaderButton
                 onClick={() => {
+                  // Refresh notifications before opening to show latest pending invites
+                  refreshNotifications().catch(() => {})
                   setIsNotificationsOpen((prev) => !prev)
                   onNotificationClick?.()
                 }}
@@ -293,9 +296,13 @@ export function Header({
                           >
                             <button
                               type="button"
-                              onClick={() =>
+                              onClick={() => {
                                 void handleMarkRead(notification.id, notification.read)
-                              }
+                                // Navigate to actionHref if provided
+                                if (notification.actionHref) {
+                                  window.location.href = notification.actionHref
+                                }
+                              }}
                               className="w-full text-left cursor-pointer"
                             >
                               <div className="flex items-start justify-between gap-3">
