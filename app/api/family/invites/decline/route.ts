@@ -5,6 +5,7 @@ import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
 import { normalizeInviteEmail } from '@/lib/family/family-invite-utils'
 import { revalidateTag } from 'next/cache'
+import { notifyOwnerOfInviteAction } from '@/lib/family/send-owner-notifications'
 
 /**
  * POST /api/family/invites/decline
@@ -58,7 +59,7 @@ export async function POST(request: Request) {
     // Fetch pending invite by ID
     const { data: invite, error: inviteError } = await supabase
       .from('family_invites')
-      .select('id, invited_email, status')
+      .select('id, invited_email, status, family_group_id')
       .eq('id', inviteId.trim())
       .single()
 
@@ -127,6 +128,16 @@ export async function POST(request: Request) {
     // Invalidate cache
     revalidateTag('family-status')
     revalidateTag(`subscriptions:${user.id}`)
+
+    // Notify owner (non-blocking - doesn't affect response)
+    notifyOwnerOfInviteAction({
+      inviteId: invite.id,
+      familyGroupId: invite.family_group_id,
+      invitedEmail: invite.invited_email,
+      action: 'declined',
+    }).catch((error) => {
+      console.warn('[decline] Failed to notify owner:', error)
+    })
 
     return NextResponse.json({
       success: true,
