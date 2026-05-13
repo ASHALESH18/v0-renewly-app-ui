@@ -232,11 +232,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (!emailResult.sent) {
-      console.error('[family-invites] Email send failed:', emailResult.error)
-      return NextResponse.json(
-        { error: 'Failed to send invite email. Please try again.' },
-        { status: 500 }
-      )
+      // Email send failed, but invite was created - return success with warning
+      console.warn('[family-invites] Email send failed (invite still created):', emailResult.error)
+      return NextResponse.json({
+        success: true,
+        emailSent: false,
+        inviteUrl,
+        warning: 'Invite created, but email delivery could not be confirmed. The invite will still appear in the member\'s app.',
+      })
     }
 
     return NextResponse.json({

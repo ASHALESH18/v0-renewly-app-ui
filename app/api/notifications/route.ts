@@ -41,9 +41,26 @@ function sortNotifications(items: Notification[]) {
   })
 }
 
-function buildNotifications(subscriptions: SubscriptionRow[]): Notification[] {
+function buildNotifications(subscriptions: SubscriptionRow[], familyInvites?: any[]): Notification[] {
   const today = startOfDay(new Date())
   const notifications: Notification[] = []
+
+  // Add Family invite notifications
+  if (familyInvites && familyInvites.length > 0) {
+    for (const invite of familyInvites) {
+      if (invite.status === 'pending') {
+        const ownerEmail = invite.family_owner?.email || 'Family owner'
+        notifications.push({
+          id: `family-invite-${invite.id}`,
+          type: 'info',
+          title: 'Family Invite',
+          message: `${ownerEmail} invited you to join Renewly Family`,
+          date: invite.created_at || new Date().toISOString(),
+          read: false,
+        })
+      }
+    }
+  }
 
   for (const sub of subscriptions) {
     if (!sub.renewal_date || sub.status !== 'active') continue
@@ -237,8 +254,51 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Get user email for family invite lookup
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', user.id)
+      .single()
+
+    // Fetch pending family invites by invited email
+    let familyInvites: any[] = []
+    if (userProfile?.email) {
+      // Fetch invites and enrich with owner email
+      const { data: invites } = await supabase
+        .from('family_invites')
+        .select('id, status, created_at, family_group_id')
+        .eq('invited_email', userProfile.email)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+
+      if (invites && invites.length > 0) {
+        // Fetch owner emails for the family groups
+        const groupIds = invites.map((inv: any) => inv.family_group_id)
+        const { data: groups } = await supabase
+          .from('family_groups')
+          .select('id, owner_user_id')
+          .in('id', groupIds)
+
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, email')
+          .in('id', groups?.map((g: any) => g.owner_user_id) || [])
+
+        const emailMap = new Map(profiles?.map((p: any) => [p.id, p.email]) || [])
+        const groupMap = new Map(groups?.map((g: any) => [g.id, g.owner_user_id]) || [])
+
+        familyInvites = invites.map((invite: any) => ({
+          ...invite,
+          family_owner: {
+            email: emailMap.get(groupMap.get(invite.family_group_id)),
+          },
+        }))
+      }
+    }
+
     const subscriptions = (await getUserSubscriptions()) as SubscriptionRow[]
-    const generatedNotifications = buildNotifications(subscriptions)
+    const generatedNotifications = buildNotifications(subscriptions, familyInvites)
     const stateMap = await readNotificationStates(
       supabase,
       user.id,

@@ -56,6 +56,7 @@ export function FamilyMembersScreen() {
   } | null>(null)
   const [isAcceptingDirectInvite, setIsAcceptingDirectInvite] = useState(false)
   const [isDecliningInvite, setIsDecliningInvite] = useState(false)
+  const [showDeclineConfirmation, setShowDeclineConfirmation] = useState(false)
   const [isResyncingFamily, setIsResyncingFamily] = useState(false)
   const [isRefreshingStatus, setIsRefreshingStatus] = useState(false)
   const [invitationState, setInvitationState] = useState<InvitationState>({ email: '', status: 'idle' })
@@ -677,7 +678,7 @@ export function FamilyMembersScreen() {
                           )}
                         </button>
                         <button
-                          onClick={handleDeclineDirectInvite}
+                          onClick={() => setShowDeclineConfirmation(true)}
                           disabled={isDecliningInvite || isAcceptingDirectInvite}
                           className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-red-500/20 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-500/30 border border-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
@@ -1453,6 +1454,54 @@ export function FamilyMembersScreen() {
                   )}
                 </div>
               </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Decline Confirmation Modal */}
+      <AnimatePresence>
+        {showDeclineConfirmation && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+              onClick={() => setShowDeclineConfirmation(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+              className="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none"
+            >
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 max-w-md w-full border border-slate-200 dark:border-slate-700 shadow-xl pointer-events-auto">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Decline Family Invite?</h3>
+                <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+                  You'll stay on your current plan and won&apos;t get access to this Family plan unless the owner invites you again.
+                </p>
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => setShowDeclineConfirmation(false)}
+                    className="flex-1 rounded-lg px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                  >
+                    Keep Invite
+                  </button>
+                  <button
+                    onClick={async () => {
+                      setShowDeclineConfirmation(false)
+                      await handleDeclineDirectInvite()
+                    }}
+                    disabled={isDecliningInvite}
+                    className="flex-1 rounded-lg px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                  >
+                    {isDecliningInvite ? 'Declining...' : 'Decline Invite'}
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </>
         )}
