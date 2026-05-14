@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { getUserSubscriptions } from '@/lib/supabase/repositories/subscriptions'
 import { formatCurrencyAmount } from '@/lib/currency'
 import type { NotificationStateRow, SubscriptionRow } from '@/lib/supabase/database.types'
@@ -20,22 +19,6 @@ interface Notification {
 type NotificationAction = 'mark_read' | 'mark_all_read' | 'dismiss'
 
 const DAY_MS = 1000 * 60 * 60 * 24
-
-/**
- * Create a service-role Supabase client for server-side admin operations.
- * Used for reading/writing data that RLS prevents, scoped safely by user.id.
- * Never expose this client to the browser.
- */
-function createAdminSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error('Missing SUPABASE credentials for admin operations')
-  }
-
-  return createSupabaseClient(supabaseUrl, serviceRoleKey)
-}
 
 function startOfDay(date: Date) {
   const value = new Date(date)
@@ -265,43 +248,28 @@ async function persistNotificationState(
 
 export async function GET() {
   try {
-    // S5B.4: Authenticate user with normal auth client
-    const authSupabase = await createClient()
+    const supabase = await createClient()
     const {
       data: { user },
-    } = await authSupabase.auth.getUser()
+    } = await supabase.auth.getUser()
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Create admin Supabase client for server-only operations scoped by user.id
-    let adminSupabase: any
-    try {
-      adminSupabase = createAdminSupabaseClient()
-    } catch (error) {
-      console.error('[notifications] Failed to initialize admin client:', error)
-      return NextResponse.json({ error: 'Service unavailable' }, { status: 500 })
-    }
-
-    // Get user email for family invite lookup using admin client
-    const { data: userProfile } = await adminSupabase
+    // Get user email for family invite lookup
+    const { data: userProfile } = await supabase
       .from('profiles')
       .select('email')
       .eq('id', user.id)
       .single()
 
-    // Use shared helper with admin client to fetch pending family invite (source-of-truth)
+    // Use shared helper to fetch pending family invite (source-of-truth)
     // Fallback to auth email if profile email is missing
     const userEmail = userProfile?.email || user.email || ''
-    const normalizedEmail = userEmail.trim().toLowerCase()
-    console.info('[notifications] user', { userId: user.id, email: normalizedEmail })
-
     const pendingInvite = userEmail
-      ? await getPendingFamilyInviteForUserEmail(adminSupabase, userEmail)
+      ? await getPendingFamilyInviteForUserEmail(supabase, userEmail)
       : null
-
-    console.info('[notifications] pendingInvite', { found: Boolean(pendingInvite), inviteId: pendingInvite?.id })
 
     // Convert helper result to buildNotifications format
     const familyInvites = pendingInvite
@@ -318,43 +286,30 @@ export async function GET() {
 
     const subscriptions = (await getUserSubscriptions()) as SubscriptionRow[]
     const generatedNotifications = buildNotifications(subscriptions, familyInvites)
-
-    // Read notification_state using admin client, scoped to user.id only
     const stateMap = await readNotificationStates(
-      adminSupabase,
+      supabase,
       user.id,
       generatedNotifications.map((item) => item.id)
     )
 
     const notifications = applyNotificationState(generatedNotifications, stateMap)
-    const unreadCount = notifications.filter((item) => !item.read).length
 
-    console.info('[notifications] generated', { count: generatedNotifications.length, unreadCount })
-
-    return NextResponse.json(
-      {
-        notifications,
-        unreadCount,
-      },
-      {
-        headers: {
-          'Cache-Control': 'no-store, max-age=0',
-        },
-      }
-    )
+    return NextResponse.json({
+      notifications,
+      unreadCount: notifications.filter((item) => !item.read).length,
+    })
   } catch (error) {
-    console.error('[notifications] Unexpected error:', error)
+    console.error('[v0] Notifications API error:', error)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
   try {
-    // S5B.4: Authenticate user with normal auth client
-    const authSupabase = await createClient()
+    const supabase = await createClient()
     const {
       data: { user },
-    } = await authSupabase.auth.getUser()
+    } = await supabase.auth.getUser()
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -377,28 +332,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true })
     }
 
-    // Create admin Supabase client for notification_state writes, scoped to user.id
-    let adminSupabase: any
-    try {
-      adminSupabase = createAdminSupabaseClient()
-    } catch (error) {
-      console.error('[notifications] Failed to initialize admin client for POST:', error)
-      return NextResponse.json({ error: 'Service unavailable' }, { status: 500 })
-    }
+    await persistNotificationState(supabase, user.id, action, ids)
 
-    // Persist notification state using admin client, scoped to user.id only
-    await persistNotificationState(adminSupabase, user.id, action, ids)
-
-    return NextResponse.json(
-      { success: true },
-      {
-        headers: {
-          'Cache-Control': 'no-store, max-age=0',
-        },
-      }
-    )
+    return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('[notifications] POST error:', error)
+    console.error('[v0] Notifications update API error:', error)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
 }
