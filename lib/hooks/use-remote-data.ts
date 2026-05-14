@@ -184,8 +184,28 @@ export function useNotifications() {
 
     void load()
 
+    // Refresh notifications on window focus and visibility change
+    // Ensures pending Family invites are shown as soon as they appear
+    const handleFocus = () => {
+      if (active) {
+        // Use refresh(true) to force a fresh fetch
+        fetchNotifications(true).catch(() => {})
+      }
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && active) {
+        fetchNotifications(true).catch(() => {})
+      }
+    }
+
+    window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
     return () => {
       active = false
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [fetchNotifications])
 

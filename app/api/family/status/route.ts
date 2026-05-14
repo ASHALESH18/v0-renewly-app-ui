@@ -312,21 +312,10 @@ export async function GET() {
         },
       })
     }
-    // If removed from family, return removed membership state
-    if (removedMembership) {
-      return NextResponse.json({
-        ...defaultResponse,
-        removedMembership: {
-          id: removedMembership.id,
-          familyGroupId: removedMembership.family_group_id,
-          role: removedMembership.role,
-          removedAt: removedMembership.removed_at,
-          status: 'removed',
-        },
-      })
-    }
 
+    // PRIORITY FIX S5B.2: Check pending invite BEFORE removed membership
     // If has pending invite, return it with family owner details
+    // This allows users with both removed + pending to see the new pending invite
     if (pendingInviteData) {
       let familyOwner: { userId: string; email: string | null } | null = null
 
@@ -334,6 +323,7 @@ export async function GET() {
         .from('family_groups')
         .select('id, owner_user_id, status')
         .eq('id', pendingInviteData.family_group_id)
+        .in('status', ['active', 'past_due'])
         .maybeSingle()
 
       if (inviteGroupError) {
@@ -366,6 +356,20 @@ export async function GET() {
           invitedEmail: pendingInviteData.invited_email,
           expiresAt: pendingInviteData.expires_at,
           seatType: pendingInviteData.seat_type,
+        },
+      })
+    }
+
+    // If removed from family, return removed membership state
+    if (removedMembership) {
+      return NextResponse.json({
+        ...defaultResponse,
+        removedMembership: {
+          id: removedMembership.id,
+          familyGroupId: removedMembership.family_group_id,
+          role: removedMembership.role,
+          removedAt: removedMembership.removed_at,
+          status: 'removed',
         },
       })
     }

@@ -12,6 +12,7 @@ interface Notification {
   date: string
   read: boolean
   subscriptionId?: string
+  actionHref?: string
 }
 
 type NotificationAction = 'mark_read' | 'mark_all_read' | 'dismiss'
@@ -57,6 +58,7 @@ function buildNotifications(subscriptions: SubscriptionRow[], familyInvites?: an
           message: `${ownerEmail} invited you to join Renewly Family`,
           date: invite.created_at || new Date().toISOString(),
           read: false,
+          actionHref: '/app/family',
         })
       }
     }
@@ -261,16 +263,19 @@ export async function GET() {
       .eq('id', user.id)
       .single()
 
-    // Fetch pending family invites by invited email
+    // Fetch pending family invites by invited email (case-insensitive)
     let familyInvites: any[] = []
     if (userProfile?.email) {
       // Fetch invites and enrich with owner email
+      // Use ilike for case-insensitive matching, consistent with /api/family/status
       const { data: invites } = await supabase
         .from('family_invites')
         .select('id, status, created_at, family_group_id')
-        .eq('invited_email', userProfile.email)
+        .ilike('invited_email', userProfile.email)
         .eq('status', 'pending')
+        .gt('expires_at', 'now()')
         .order('created_at', { ascending: false })
+        .limit(1)
 
       if (invites && invites.length > 0) {
         // Fetch owner emails for the family groups
