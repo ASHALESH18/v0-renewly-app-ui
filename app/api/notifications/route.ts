@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getUserSubscriptions } from '@/lib/supabase/repositories/subscriptions'
 import { formatCurrencyAmount } from '@/lib/currency'
 import type { NotificationStateRow, SubscriptionRow } from '@/lib/supabase/database.types'
+import { getPendingFamilyInviteForUserEmail } from '@/lib/family/get-pending-family-invite'
 
 interface Notification {
   id: string
@@ -54,8 +55,8 @@ function buildNotifications(subscriptions: SubscriptionRow[], familyInvites?: an
         notifications.push({
           id: `family-invite-${invite.id}`,
           type: 'info',
-          title: 'Family Invite',
-          message: `${ownerEmail} invited you to join Renewly Family`,
+          title: 'Renewly Family invite',
+          message: `${ownerEmail} invited you to join their Renewly Family plan.`,
           date: invite.created_at || new Date().toISOString(),
           read: false,
           actionHref: '/app/family',
@@ -263,44 +264,25 @@ export async function GET() {
       .eq('id', user.id)
       .single()
 
-    // Fetch pending family invites by invited email (case-insensitive)
-    let familyInvites: any[] = []
-    if (userProfile?.email) {
-      // Fetch invites and enrich with owner email
-      // Use ilike for case-insensitive matching, consistent with /api/family/status
-      const { data: invites } = await supabase
-        .from('family_invites')
-        .select('id, status, created_at, family_group_id')
-        .ilike('invited_email', userProfile.email)
-        .eq('status', 'pending')
-        .gt('expires_at', 'now()')
-        .order('created_at', { ascending: false })
-        .limit(1)
+    // Use shared helper to fetch pending family invite (source-of-truth)
+    // Fallback to auth email if profile email is missing
+    const userEmail = userProfile?.email || user.email || ''
+    const pendingInvite = userEmail
+      ? await getPendingFamilyInviteForUserEmail(supabase, userEmail)
+      : null
 
-      if (invites && invites.length > 0) {
-        // Fetch owner emails for the family groups
-        const groupIds = invites.map((inv: any) => inv.family_group_id)
-        const { data: groups } = await supabase
-          .from('family_groups')
-          .select('id, owner_user_id')
-          .in('id', groupIds)
-
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, email')
-          .in('id', groups?.map((g: any) => g.owner_user_id) || [])
-
-        const emailMap = new Map(profiles?.map((p: any) => [p.id, p.email]) || [])
-        const groupMap = new Map(groups?.map((g: any) => [g.id, g.owner_user_id]) || [])
-
-        familyInvites = invites.map((invite: any) => ({
-          ...invite,
-          family_owner: {
-            email: emailMap.get(groupMap.get(invite.family_group_id)),
-          },
-        }))
-      }
-    }
+    // Convert helper result to buildNotifications format
+    const familyInvites = pendingInvite
+      ? [{
+        id: pendingInvite.id,
+        status: 'pending',
+        created_at: pendingInvite.createdAt,
+        family_group_id: pendingInvite.familyGroupId,
+        family_owner: {
+          email: pendingInvite.familyOwner.email,
+        },
+      }]
+      : []
 
     const subscriptions = (await getUserSubscriptions()) as SubscriptionRow[]
     const generatedNotifications = buildNotifications(subscriptions, familyInvites)

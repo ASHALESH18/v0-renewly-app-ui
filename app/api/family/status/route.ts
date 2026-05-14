@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js'
 import { FAMILY_INCLUDED_MEMBER_COUNT, FAMILY_EXTRA_MEMBER_PRICE_INR } from '@/lib/family/family-config'
 import { calculateSeatUsage, calculateExtraSeatReuseState } from '@/lib/family/family-seat-utils'
 import { calculateFamilyBillingDisplay, getFamilyBillingCurrency } from '@/lib/billing/family-billing-utils'
+import { getPendingFamilyInviteForUserEmail } from '@/lib/family/get-pending-family-invite'
 
 /**
  * GET /api/family/status
@@ -112,14 +113,8 @@ export async function GET() {
       .limit(1)
       .maybeSingle()
 
-    // Fetch pending invite by signed-in email (case-insensitive match)
-    const { data: pendingInviteData } = await supabase
-      .from('family_invites')
-      .select('id, family_group_id, invited_email, status, expires_at, seat_type')
-      .ilike('invited_email', userEmail)
-      .eq('status', 'pending')
-      .gt('expires_at', 'now()')
-      .maybeSingle()
+    // Fetch pending invite using shared helper (source-of-truth)
+    const pendingInviteData = await getPendingFamilyInviteForUserEmail(supabase, userEmail)
 
     // If owner, fetch active members and pending invites
     if (ownerGroup) {
@@ -313,49 +308,22 @@ export async function GET() {
       })
     }
 
-    // PRIORITY FIX S5B.2: Check pending invite BEFORE removed membership
+    // Check pending invite BEFORE removed membership (S5B.2 precedence fix)
     // If has pending invite, return it with family owner details
-    // This allows users with both removed + pending to see the new pending invite
+    // Helper already validated family group and fetched owner
     if (pendingInviteData) {
-      let familyOwner: { userId: string; email: string | null } | null = null
-
-      const { data: inviteGroup, error: inviteGroupError } = await supabase
-        .from('family_groups')
-        .select('id, owner_user_id, status')
-        .eq('id', pendingInviteData.family_group_id)
-        .in('status', ['active', 'past_due'])
-        .maybeSingle()
-
-      if (inviteGroupError) {
-        console.error('[family-status] Pending invite group fetch error:', inviteGroupError)
-      }
-
-      if (inviteGroup?.owner_user_id) {
-        const { data: ownerProfile, error: ownerProfileError } = await supabase
-          .from('profiles')
-          .select('id, email')
-          .eq('id', inviteGroup.owner_user_id)
-          .maybeSingle()
-
-        if (ownerProfileError) {
-          console.error('[family-status] Pending invite owner profile fetch error:', ownerProfileError)
-        }
-
-        familyOwner = {
-          userId: inviteGroup.owner_user_id,
-          email: ownerProfile?.email || null,
-        }
-      }
-
       return NextResponse.json({
         ...defaultResponse,
-        familyGroupId: pendingInviteData.family_group_id,
-        familyOwner,
+        familyGroupId: pendingInviteData.familyGroupId,
+        familyOwner: {
+          userId: pendingInviteData.familyOwner.userId,
+          email: pendingInviteData.familyOwner.email,
+        },
         pendingInvite: {
           id: pendingInviteData.id,
-          invitedEmail: pendingInviteData.invited_email,
-          expiresAt: pendingInviteData.expires_at,
-          seatType: pendingInviteData.seat_type,
+          invitedEmail: pendingInviteData.invitedEmail,
+          expiresAt: pendingInviteData.expiresAt,
+          seatType: pendingInviteData.seatType,
         },
       })
     }
