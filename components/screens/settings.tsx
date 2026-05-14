@@ -196,6 +196,28 @@ export function SettingsScreen() {
     return Boolean(familyStatus?.removedMembership)
   }, [familyStatus?.removedMembership])
 
+  // S5C: Compute effective plan display for consistency across all plan displays
+  const effectivePlanDisplay = useMemo(() => {
+    // Active Family member - show as "Renewly Family Member"
+    if (isFamilyMember) {
+      return 'Renewly Family Member'
+    }
+    // Active Family owner - show as "Renewly Family"
+    if (isFamilyOwner) {
+      return 'Renewly Family'
+    }
+    // Pending invite - still show Free but Family row will show invite state
+    if (familyStatus?.pendingInvite && !isFamilyMember && !isFamilyOwner) {
+      return 'Free Plan'
+    }
+    // Removed from Family - show Free
+    if (wasRemovedFromFamily) {
+      return 'Free Plan'
+    }
+    // Default to profile plan display
+    return userProfile?.plan ? planNames[userProfile.plan] : 'Free Plan'
+  }, [isFamilyMember, isFamilyOwner, familyStatus?.pendingInvite, wasRemovedFromFamily, userProfile?.plan, planNames])
+
   useEffect(() => {
     if (section === 'profile') {
       setActiveSheet('profile')
@@ -615,9 +637,9 @@ export function SettingsScreen() {
                   {currentUserEmail || 'No email'}
                 </p>
                 <div className="flex items-center gap-2 mt-1">
-                  <Crown className={cn('w-4 h-4', isPremium ? 'text-gold' : 'text-muted-foreground')} />
-                  <span className={cn('text-xs font-medium', isPremium ? 'text-gold' : 'text-muted-foreground')}>
-                    {planName}
+                  <Crown className={cn('w-4 h-4', isPremium || isFamilyMember || isFamilyOwner ? 'text-gold' : 'text-muted-foreground')} />
+                  <span className={cn('text-xs font-medium', isPremium || isFamilyMember || isFamilyOwner ? 'text-gold' : 'text-muted-foreground')}>
+                    {effectivePlanDisplay}
                   </span>
                 </div>
               </div>
@@ -632,7 +654,12 @@ export function SettingsScreen() {
             <SettingsItem
               icon={CreditCard}
               label="Plan & Billing"
-              description={pendingBillingBadgeText || (userProfile?.plan === 'pro' ? 'Pro - Active' : planName)}
+              description={
+                // S5C: Use effective plan for consistency
+                isFamilyMember
+                  ? 'Covered by Renewly Family'
+                  : pendingBillingBadgeText || (userProfile?.plan === 'pro' ? 'Pro - Active' : effectivePlanDisplay)
+              }
               onClick={() => setActiveSheet('billing')}
             />
 
@@ -1016,7 +1043,7 @@ export function SettingsScreen() {
         <SettingsSheet
           isOpen={activeSheet === 'billing'}
           onClose={() => setActiveSheet(null)}
-          title={isFamilyMember ? 'Family Access' : 'Billing & Plan'}
+          title={isFamilyMember ? 'Renewly Family Access' : 'Plan & Billing'}
         >
           <div className="space-y-6">
             {wasRemovedFromFamily && userProfile?.plan === 'free' ? (
@@ -1045,58 +1072,32 @@ export function SettingsScreen() {
               <>
                 <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20">
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <p className="text-2xl font-semibold text-blue-600 dark:text-blue-400 mt-1">Included in Family</p>
-                  <p className="text-xs text-muted-foreground mt-2">You are not paying for this subscription</p>
+                  <p className="text-2xl font-semibold text-blue-600 dark:text-blue-400 mt-1">Renewly Family Member</p>
+                  <p className="text-xs text-muted-foreground mt-2">Covered by Family plan</p>
                 </div>
 
                 <p className="text-sm text-muted-foreground">
-                  You are included in a Renewly Family plan. You are not the billing owner, so there is no paid subscription to cancel here.
+                  Your Family access is active while the owner&apos;s Renewly Family plan remains active.
                 </p>
 
                 {familyStatus?.familyOwner?.email && (
                   <div className="p-4 rounded-xl bg-muted/50 border border-border">
                     <p className="text-xs font-medium text-foreground mb-1">Family owner</p>
-                    <p className="text-sm text-muted-foreground">{familyStatus.familyOwner.email}</p>
+                    <p className="text-sm text-muted-foreground">You&apos;re covered by {familyStatus.familyOwner.email}&apos;s Renewly Family plan.</p>
                   </div>
                 )}
 
-                {familyStatus?.familyGroup?.currentPeriodEnd && (
+                {familyStatus?.membership?.seatType && (
                   <div className="p-4 rounded-xl bg-muted/50 border border-border">
-                    <p className="text-xs font-medium text-foreground mb-1">Your Family access expires</p>
+                    <p className="text-xs font-medium text-foreground mb-1">Seat type</p>
                     <p className="text-sm text-muted-foreground">
-                      {new Date(familyStatus.familyGroup.currentPeriodEnd).toLocaleDateString()}, unless the owner removes you or the plan ends.
+                      {familyStatus.membership.seatType === 'included' ? 'Included member' : 'Extra member'}
                     </p>
                   </div>
                 )}
 
-                <div className="space-y-3 pt-2">
-                  <button
-                    onClick={() => {
-                      window.location.href = '/app/family'
-                      setActiveSheet(null)
-                    }}
-                    className="w-full px-4 py-3 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium hover:bg-blue-500/20 border border-blue-500/30 transition-colors cursor-pointer"
-                  >
-                    Manage Family Access
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      window.location.href = '/app/upgrade'
-                      setActiveSheet(null)
-                    }}
-                    className="w-full px-4 py-3 rounded-xl bg-gold/10 text-gold font-medium hover:bg-gold/20 border border-gold/30 transition-colors cursor-pointer"
-                  >
-                    Start Your Own Plan
-                  </button>
-
-                  <p className="text-xs text-muted-foreground">
-                    You can start your own Pro or Family plan anytime. This will be separate from the Family access you currently receive.
-                  </p>
-                </div>
-
                 <p className="text-xs text-muted-foreground text-center pt-2">
-                  Only the Family owner can cancel the Family plan billing.
+                  Only the Family owner manages billing.
                 </p>
               </>
             ) : (
