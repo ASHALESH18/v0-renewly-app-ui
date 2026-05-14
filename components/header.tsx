@@ -67,6 +67,7 @@ export function Header({
     unreadCount: liveUnreadCount,
     isLoading: notificationsLoading,
     refresh: refreshNotifications,
+    refreshForBellOpen,
   } = useNotifications()
 
   const recentNotifications = useMemo<NotificationItem[]>(
@@ -260,8 +261,8 @@ export function Header({
             <div className="relative" ref={notificationPanelRef}>
               <HeaderButton
                 onClick={() => {
-                  // Refresh notifications before opening to show latest pending invites
-                  refreshNotifications().catch(() => {})
+                  // S5B.4-R: Refresh with shorter TTL (10s) when opening bell
+                  refreshForBellOpen?.().catch(() => {})
                   setIsNotificationsOpen((prev) => !prev)
                   onNotificationClick?.()
                 }}
