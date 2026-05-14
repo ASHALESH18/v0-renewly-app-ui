@@ -86,35 +86,43 @@ export async function GET() {
       availableSeats: 0,
     }
 
-    // Fetch active family group where user is owner
-    const { data: ownerGroup, error: ownerGroupError } = await supabase
-      .from('family_groups')
-      .select('id, status, included_member_limit, extra_member_price_inr, current_period_end, scheduled_action, scheduled_action_reason')
-      .eq('owner_user_id', user.id)
-      .in('status', ['active', 'past_due'])
-      .maybeSingle()
+    // S5B.3: Parallel fetch of user states (not owner-only data yet)
+    // Evaluate states in this order: owner, member, pending, removed, free
+    const [ownerResult, membershipResult, removedResult, pendingInviteData] = await Promise.all([
+      // Fetch active family group where user is owner
+      supabase
+        .from('family_groups')
+        .select('id, status, included_member_limit, extra_member_price_inr, current_period_end, scheduled_action, scheduled_action_reason')
+        .eq('owner_user_id', user.id)
+        .in('status', ['active', 'past_due'])
+        .maybeSingle(),
+      // Fetch active family membership where user is member
+      supabase
+        .from('family_members')
+        .select('id, family_group_id, role, seat_type, joined_at')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .eq('role', 'member')
+        .maybeSingle(),
+      // Fetch removed membership (lightweight check for recently removed members)
+      supabase
+        .from('family_members')
+        .select('id, family_group_id, role, removed_at')
+        .eq('user_id', user.id)
+        .eq('status', 'removed')
+        .order('removed_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      // Fetch pending invite using shared helper (source-of-truth)
+      getPendingFamilyInviteForUserEmail(supabase, userEmail),
+    ])
 
-    // Fetch active family membership where user is member
-    const { data: membership, error: membershipError } = await supabase
-  .from('family_members')
-  .select('id, family_group_id, role, seat_type, joined_at')
-  .eq('user_id', user.id)
-  .eq('status', 'active')
-  .eq('role', 'member')
-  .maybeSingle()
-
-    // Fetch removed membership (lightweight check for recently removed members)
-    const { data: removedMembership, error: removedMembershipError } = await supabase
-      .from('family_members')
-      .select('id, family_group_id, role, removed_at')
-      .eq('user_id', user.id)
-      .eq('status', 'removed')
-      .order('removed_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-
-    // Fetch pending invite using shared helper (source-of-truth)
-    const pendingInviteData = await getPendingFamilyInviteForUserEmail(supabase, userEmail)
+    const ownerGroup = ownerResult.data
+    const ownerGroupError = ownerResult.error
+    const membership = membershipResult.data
+    const membershipError = membershipResult.error
+    const removedMembership = removedResult.data
+    const removedMembershipError = removedResult.error
 
     // If owner, fetch active members and pending invites
     if (ownerGroup) {
@@ -343,6 +351,7 @@ export async function GET() {
     }
 
     // Default: return safe empty response
+    console.info('[family-status] No family relationship found', { userId: user.id })
     return NextResponse.json(defaultResponse)
   } catch (error) {
     console.error('[family-status] Error:', error)
