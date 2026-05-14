@@ -133,7 +133,16 @@ export function Header({
 
     try {
       setIsUpdatingNotifications(true)
-      await persistNotificationAction({ action: 'mark_read', id })
+      
+      // S5B.3-R: Handle derived Family invite notifications stored in localStorage
+      if (id.startsWith('family-invite-')) {
+        const { markDerivedNotificationRead } = await import('@/lib/notifications/derive-family-invite-notification')
+        markDerivedNotificationRead(id)
+      } else {
+        // Regular API notification
+        await persistNotificationAction({ action: 'mark_read', id })
+      }
+      
       await refreshNotifications()
     } finally {
       setIsUpdatingNotifications(false)
@@ -145,7 +154,16 @@ export function Header({
 
     try {
       setIsUpdatingNotifications(true)
-      await persistNotificationAction({ action: 'dismiss', id })
+      
+      // S5B.3-R: Handle derived Family invite notifications stored in localStorage
+      if (id.startsWith('family-invite-')) {
+        const { markDerivedNotificationRead } = await import('@/lib/notifications/derive-family-invite-notification')
+        markDerivedNotificationRead(id)
+      } else {
+        // Regular API notification
+        await persistNotificationAction({ action: 'dismiss', id })
+      }
+      
       await refreshNotifications()
     } finally {
       setIsUpdatingNotifications(false)
@@ -163,7 +181,19 @@ export function Header({
 
       if (!unreadIds.length) return
 
-      await persistNotificationAction({ action: 'mark_all_read', ids: unreadIds })
+      // S5B.3-R: Separate derived and API notifications
+      const derivedIds = unreadIds.filter((id) => id.startsWith('family-invite-'))
+      const apiIds = unreadIds.filter((id) => !id.startsWith('family-invite-'))
+
+      if (derivedIds.length > 0) {
+        const { markDerivedNotificationRead } = await import('@/lib/notifications/derive-family-invite-notification')
+        derivedIds.forEach((id) => markDerivedNotificationRead(id))
+      }
+
+      if (apiIds.length > 0) {
+        await persistNotificationAction({ action: 'mark_all_read', ids: apiIds })
+      }
+
       await refreshNotifications()
     } finally {
       setIsUpdatingNotifications(false)

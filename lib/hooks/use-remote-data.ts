@@ -144,20 +144,62 @@ export function useNotifications() {
         setIsLoading(true)
       }
 
-      const res = await fetch('/api/notifications', {
-        method: 'GET',
-        cache: 'no-store',
-      })
+      // Fetch API notifications
+      const [notifRes, familyStatusRes] = await Promise.all([
+        fetch('/api/notifications', {
+          method: 'GET',
+          cache: 'no-store',
+        }),
+        fetch('/api/family/status', {
+          cache: 'no-store',
+        }),
+      ])
 
-      if (!res.ok) {
+      if (!notifRes.ok) {
         throw new Error('Failed to fetch notifications')
       }
 
-      const json = await res.json()
-      notificationsCache = json
-      setData(json)
+      const notifJson = await notifRes.json()
+      let familyStatus = null
+
+      // Family status is optional - don't break if it fails
+      if (familyStatusRes.ok) {
+        try {
+          familyStatus = await familyStatusRes.json()
+        } catch {
+          // Silently fail, proceed with API notifications only
+        }
+      }
+
+      // S5B.3-R: Merge derived Family invite notification with API notifications
+      const { deriveFamilyInviteNotification } = await import('@/lib/notifications/derive-family-invite-notification')
+      const derivedFamilyNotif = deriveFamilyInviteNotification(familyStatus)
+      
+      let allNotifications = notifJson.notifications || []
+      let totalUnreadCount = notifJson.unreadCount || 0
+
+      // Add derived Family invite notification if it exists
+      if (derivedFamilyNotif) {
+        // Check if we already have this notification in the API response
+        const alreadyExists = allNotifications.some((n: any) => n.id === derivedFamilyNotif.id)
+        
+        if (!alreadyExists) {
+          allNotifications = [derivedFamilyNotif, ...allNotifications]
+          if (!derivedFamilyNotif.read) {
+            totalUnreadCount += 1
+          }
+        }
+      }
+
+      const mergedJson = {
+        notifications: allNotifications,
+        unreadCount: totalUnreadCount,
+      }
+
+      notificationsCache = mergedJson
+      setData(mergedJson)
       setError(null)
-      return json
+      return mergedJson
     } catch (err) {
       setError(err)
       throw err
