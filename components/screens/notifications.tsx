@@ -16,6 +16,7 @@ interface Notification {
   date: string
   read: boolean
   subscriptionId?: string
+  actionHref?: string
 }
 
 type NotificationMutationAction = 'mark_read' | 'mark_all_read' | 'dismiss'
@@ -92,7 +93,13 @@ export function NotificationsScreen() {
     )
 
     try {
-      await persistAction({ action: 'mark_read', id })
+      // S5B.3-R: Handle derived Family invite notifications
+      if (id.startsWith('family-invite-')) {
+        const { markDerivedNotificationRead } = await import('@/lib/notifications/derive-family-invite-notification')
+        markDerivedNotificationRead(id)
+      } else {
+        await persistAction({ action: 'mark_read', id })
+      }
     } catch {
       setItems(previousItems)
       setActionError('Could not update that notification. Please try again.')
@@ -111,7 +118,18 @@ export function NotificationsScreen() {
     setItems((prev) => prev.map((item) => ({ ...item, read: true })))
 
     try {
-      await persistAction({ action: 'mark_all_read', ids: unreadIds })
+      // S5B.3-R: Separate derived and API notifications
+      const derivedIds = unreadIds.filter((id) => id.startsWith('family-invite-'))
+      const apiIds = unreadIds.filter((id) => !id.startsWith('family-invite-'))
+
+      if (derivedIds.length > 0) {
+        const { markDerivedNotificationRead } = await import('@/lib/notifications/derive-family-invite-notification')
+        derivedIds.forEach((id) => markDerivedNotificationRead(id))
+      }
+
+      if (apiIds.length > 0) {
+        await persistAction({ action: 'mark_all_read', ids: apiIds })
+      }
     } catch {
       setItems(previousItems)
       setActionError('Could not mark all notifications as read. Please try again.')
@@ -129,7 +147,13 @@ export function NotificationsScreen() {
     setItems((prev) => prev.filter((item) => item.id !== id))
 
     try {
-      await persistAction({ action: 'dismiss', id })
+      // S5B.3-R: Handle derived Family invite notifications
+      if (id.startsWith('family-invite-')) {
+        const { markDerivedNotificationRead } = await import('@/lib/notifications/derive-family-invite-notification')
+        markDerivedNotificationRead(id)
+      } else {
+        await persistAction({ action: 'dismiss', id })
+      }
     } catch {
       setItems(previousItems)
       setActionError('Could not remove that notification. Please try again.')
@@ -249,11 +273,20 @@ export function NotificationsScreen() {
                       if (!notification.read) {
                         void markAsRead(notification.id)
                       }
+                      // S5B.3-R: Navigate to actionHref if provided
+                      if ((notification as any).actionHref) {
+                        window.location.href = (notification as any).actionHref
+                      }
                     }}
                     onKeyDown={(event) => {
                       if (!notification.read && (event.key === 'Enter' || event.key === ' ')) {
                         event.preventDefault()
                         void markAsRead(notification.id)
+                      }
+                      // S5B.3-R: Navigate on Enter/Space if actionHref provided
+                      if ((event.key === 'Enter' || event.key === ' ') && (notification as any).actionHref) {
+                        event.preventDefault()
+                        window.location.href = (notification as any).actionHref
                       }
                     }}
                     role="button"
