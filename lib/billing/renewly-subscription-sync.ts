@@ -375,18 +375,35 @@ export async function syncRenewlyBillingSubscriptionForPlan(params: {
         currentPeriodEnd,
       })
 
-      // Get extra seat count from family_group
-      const { data: familyGroup, error: fetchError } = await supabase
-        .from('family_groups')
-        .select('extra_seat_count')
-        .eq('id', familyGroupId)
-        .single()
+      // F6C.2: Get extra seat count from family_seat_addons (active) first, then fallback to family_groups.extra_seat_count
+      const { data: seatAddons, error: addonsError } = await supabase
+        .from('family_seat_addons')
+        .select('quantity')
+        .eq('family_group_id', familyGroupId)
+        .eq('status', 'active')
 
-      if (fetchError) {
-        console.warn('[renewly-sync] Could not fetch family group for seat count:', fetchError)
+      if (addonsError) {
+        console.warn('[renewly-sync] Could not fetch seat addons:', addonsError)
       }
 
-      const extraSeats = familyGroup?.extra_seat_count ?? 0
+      // F6C.2: Use active addon quantity as primary source
+      let extraSeats = 0
+      if (seatAddons && seatAddons.length > 0) {
+        extraSeats = seatAddons.reduce((sum, addon) => sum + (addon.quantity || 0), 0)
+      } else {
+        // Fallback to family_groups.extra_seat_count if no addons
+        const { data: familyGroup, error: fetchError } = await supabase
+          .from('family_groups')
+          .select('extra_seat_count')
+          .eq('id', familyGroupId)
+          .single()
+
+        if (fetchError) {
+          console.warn('[renewly-sync] Could not fetch family group for seat count:', fetchError)
+        }
+
+        extraSeats = familyGroup?.extra_seat_count ?? 0
+      }
 
       await syncRenewlyFamilyOwnerSubscription({
         ownerUserId: userId,
