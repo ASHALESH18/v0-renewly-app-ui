@@ -1096,6 +1096,39 @@ export function SettingsScreen() {
                   )}
                 </div>
 
+                {/* F6C.2: Family owner billing breakdown */}
+                {isFamilyOwner && familyStatus?.billingDisplay && (
+                  <div className="p-4 rounded-xl bg-muted/50 border border-border space-y-3">
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-3">Billing Summary</p>
+                    </div>
+
+                    {familyStatus.billingDisplay.billingItems && familyStatus.billingDisplay.billingItems.length > 0 ? (
+                      <>
+                        {familyStatus.billingDisplay.billingItems.map((item: any, idx: number) => (
+                          <div key={idx} className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">{item.label}</span>
+                            <span className="font-medium text-foreground">{item.amount}</span>
+                          </div>
+                        ))}
+
+                        {familyStatus.seatUsage?.paidActiveExtraSeats > 0 && (
+                          <div className="pt-2 border-t border-border">
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium text-foreground">Monthly Total</span>
+                              <span className="text-lg font-semibold text-gold">
+                                {familyStatus.billingDisplay.totalMonthlyRenewal}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Base Family plan ₹299/month</p>
+                    )}
+                  </div>
+                )}
+
                 {!isPremium && (
                   <>
                     <p className="text-sm text-muted-foreground">

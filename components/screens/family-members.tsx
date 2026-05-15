@@ -782,9 +782,18 @@ export function FamilyMembersScreen() {
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h2 className="text-2xl font-semibold text-foreground">Your Family Plan</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {currentMemberCount} of {maxMembers} members
-                    </p>
+                    {/* F6C.2: Show clear seat breakdown instead of confusing "5 of 4" */}
+                    <div className="mt-2 space-y-1">
+                      <p className="text-sm text-muted-foreground">
+                        {familyStatus?.seatUsage ? (
+                          <>
+                            {familyStatus.seatUsage.includedSeatsUsed} included + {familyStatus.seatUsage.activeExtraMembers} extra = {familyStatus.seatUsage.includedSeatsUsed + familyStatus.seatUsage.activeExtraMembers} active members
+                          </>
+                        ) : (
+                          `${currentMemberCount} members`
+                        )}
+                      </p>
+                    </div>
                   </div>
                   {availableSeats > 0 && (
                     <button
@@ -912,20 +921,62 @@ export function FamilyMembersScreen() {
                   )}
                 </AnimatePresence>
 
-                {/* Capacity Bar */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Seats Used</span>
-                    <span className="font-medium text-foreground">{currentMemberCount + pendingInvites.length} / {maxMembers}</span>
+                {/* F6C.2: Included Seats Progress - only shows included limit, not extra */}
+                {familyStatus?.seatUsage ? (
+                  <div className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Included Seats</span>
+                        <span className="font-medium text-foreground">
+                          {familyStatus.seatUsage.includedSeatsUsed} / {familyStatus.seatUsage.includedLimit}
+                        </span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{
+                            width: `${Math.min(100, (familyStatus.seatUsage.includedSeatsUsed / familyStatus.seatUsage.includedLimit) * 100)}%`,
+                          }}
+                          className="h-full bg-gold"
+                        />
+                      </div>
+                    </div>
+
+                    {/* F6C.2: Show extra-seat addon if active */}
+                    {familyStatus.seatUsage.paidActiveExtraSeats > 0 && (
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
+                              Extra members +{familyStatus.seatUsage.paidActiveExtraSeats}
+                            </p>
+                            <p className="text-xs text-emerald-800 dark:text-emerald-300">
+                              ₹{familyStatus.seatUsage.extraSeatPriceINR}/month
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${((currentMemberCount + pendingInvites.length) / maxMembers) * 100}%` }}
-                      className="h-full bg-gold"
-                    />
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Seats Used</span>
+                      <span className="font-medium text-foreground">
+                        {currentMemberCount + pendingInvites.length} / {maxMembers}
+                      </span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{
+                          width: `${((currentMemberCount + pendingInvites.length) / maxMembers) * 100}%`,
+                        }}
+                        className="h-full bg-gold"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
               </motion.div>
 
               {/* Current Members */}
