@@ -17,15 +17,15 @@ export const metadata: Metadata = generatePageMetadata(
 export default function LandingPage() {
   return (
     <main className="relative min-h-screen overflow-x-hidden text-foreground bg-transparent">
-      <div className="w-full bg-amber-500/20 border-b border-amber-500/30 px-4 py-2 text-center text-sm text-amber-900 dark:text-amber-100 mt-4">
-        ⚡ Development is still in progress. Thank you for your patience!
-      </div>
       <LandingHeader />
       <Hero />
       <Features />
       <LeakPreview />
       <Pricing />
       <FAQ />
+      <div className="w-full bg-amber-500/20 border-b border-amber-500/30 px-4 py-2 text-center text-sm text-amber-900 dark:text-amber-100 mt-8 mb-8">
+        ⚡ Development is still in progress. Thank you for your patience!
+      </div>
       <Footer />
     </main>
   )
