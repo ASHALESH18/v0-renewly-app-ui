@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getUser } from '@/lib/supabase/server'
-import { getUserProfile } from '@/lib/supabase/repositories/profiles'
+import { getProfile } from '@/lib/supabase/repositories/profile'
 import { syncRenewlyBillingSubscriptionForPlan } from '@/lib/billing/renewly-subscription-sync'
 
 /**
@@ -17,7 +17,7 @@ export async function POST() {
     }
 
     // Get current plan and sync
-    const profile = await getUserProfile(user.id)
+    const profile = await getProfile()
 
     if (!profile) {
       return NextResponse.json(
