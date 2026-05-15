@@ -173,8 +173,21 @@ export function DashboardScreen({
   const [dismissedInviteId, setDismissedInviteId] = useState<string | null>(null)
 
   // Fetch family status to show pending invite banner
+  // F6C.2B: Also trigger Renewly subscription sync before Dashboard loads
   useEffect(() => {
-    const fetchFamilyStatus = async () => {
+    const initializeDashboard = async () => {
+      try {
+        // Sync Renewly subscriptions first (ensures Dashboard shows current billing)
+        await fetch('/api/sync/renewly-billing', {
+          method: 'POST',
+          cache: 'no-store',
+        })
+      } catch (error) {
+        console.error('[v0] Error syncing Renewly billing:', error)
+        // Continue with dashboard even if sync fails
+      }
+
+      // Then fetch family status
       try {
         const res = await fetch('/api/family/status', { cache: 'no-store' })
         if (res.ok) {
@@ -194,7 +207,7 @@ export function DashboardScreen({
       }
     }
 
-    fetchFamilyStatus()
+    initializeDashboard()
   }, [])
 
   const rawSubscriptions = useStore((state) => state.subscriptions)
