@@ -129,7 +129,9 @@ export default async function RootLayout({
       ? 'light'
       : cookieThemeChoice === 'glass'
         ? 'glass'
-        : 'dark'
+        : cookieThemeChoice === 'dark'
+          ? 'dark'
+          : 'glass'
 
   const initialBaseTheme: 'light' | 'dark' =
     initialThemeChoice === 'light' ? 'light' : 'dark'
@@ -207,7 +209,7 @@ export default async function RootLayout({
     }
 
     if (choice !== 'light' && choice !== 'dark' && choice !== 'glass') {
-      choice = 'dark';
+      choice = 'glass';
     }
 
     var baseTheme = choice === 'light' ? 'light' : 'dark';
@@ -219,7 +221,7 @@ export default async function RootLayout({
     root.style.colorScheme = baseTheme;
   } catch (_) {
     document.documentElement.classList.add('dark');
-    document.documentElement.dataset.appearance = 'standard';
+    document.documentElement.dataset.appearance = 'glass';
     document.documentElement.style.colorScheme = 'dark';
   }
 })();
