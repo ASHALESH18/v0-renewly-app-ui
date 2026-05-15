@@ -1096,31 +1096,6 @@ export function SettingsScreen() {
                   )}
                 </div>
 
-                {/* F6C.2: Family billing breakdown */}
-                {isFamilyOwner && familyStatus?.billingDisplay && (
-                  <div className="p-4 rounded-xl bg-muted/50 border border-border space-y-3">
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground mb-2">Billing Summary</p>
-                    </div>
-
-                    {familyStatus.billingDisplay.billingItems.map((item, idx) => (
-                      <div key={idx} className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">{item.label}</span>
-                        <span className="font-medium text-foreground">{item.amount}</span>
-                      </div>
-                    ))}
-
-                    {familyStatus.seatUsage?.paidActiveExtraSeats > 0 && (
-                      <div className="pt-2 border-t border-border-subtle">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-foreground">Monthly Total</span>
-                          <span className="text-lg font-semibold text-gold">{familyStatus.billingDisplay.totalMonthlyRenewal}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
                 {!isPremium && (
                   <>
                     <p className="text-sm text-muted-foreground">

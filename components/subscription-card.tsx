@@ -122,13 +122,6 @@ export function SubscriptionCard({
               </span>
             </div>
 
-            {/* F6C.2: Show extra-seat addon for Renewly Family */}
-            {subscription.name === 'Renewly Family' && subscription.systemMetadata?.extra_seats > 0 && (
-              <p className="mt-2 text-xs text-muted-foreground">
-                Includes Extra members +{subscription.systemMetadata.extra_seats} × ₹99/month
-              </p>
-            )}
-
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
               <div
                 className={cn(
