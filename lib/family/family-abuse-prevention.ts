@@ -130,6 +130,39 @@ export async function checkUserNotInMultipleFamilies(
 }
 
 /**
+ * F7-2: User cannot own multiple active families or be an owner while being a member
+ * Prevents conflict: one user cannot be both owner and member across different families
+ */
+export async function checkUserNotOwnerOfOtherFamily(
+  supabase: any,
+  userId: string,
+  excludeFamilyGroupId?: string
+): Promise<{ valid: boolean; error?: string }> {
+  // Check if user owns any active family group
+  let query = supabase
+    .from('family_groups')
+    .select('id')
+    .eq('owner_user_id', userId)
+    .in('status', ['active', 'past_due'])
+
+  // Optionally exclude a specific family group (for future use)
+  if (excludeFamilyGroupId) {
+    query = query.neq('id', excludeFamilyGroupId)
+  }
+
+  const { data: ownedFamilies } = await query.limit(1)
+
+  if (ownedFamilies && ownedFamilies.length > 0) {
+    return {
+      valid: false,
+      error: 'You already own an active Renewly Family plan. You cannot join another family.',
+    }
+  }
+
+  return { valid: true }
+}
+
+/**
  * F10-13: Non-owner cannot remove members
  */
 export function checkOwnerOnly(
