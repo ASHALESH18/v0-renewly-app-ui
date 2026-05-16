@@ -109,6 +109,7 @@ function formatDate(dateStr: string) {
 export function CalendarScreen() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [viewMode, setViewMode] = useState<'month' | 'week'>('month')
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   // F6C.2B: Sync Renewly billing before loading calendar events
   useEffect(() => {
