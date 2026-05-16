@@ -7,7 +7,6 @@ import { LeakPreview } from '@/components/landing/leak-preview'
 import { Pricing } from '@/components/landing/pricing'
 import { FAQ } from '@/components/landing/faq'
 import { Footer } from '@/components/landing/footer'
-import { detectCountryFromHeaders } from '@/lib/country-detection'
 
 export const metadata: Metadata = generatePageMetadata(
   'Renewly - Own Every Renewal | Premium Subscription Management',
@@ -16,16 +15,13 @@ export const metadata: Metadata = generatePageMetadata(
 )
 
 export default function LandingPage() {
-  // Detect user's country from request headers for currency display
-  const detectedCountry = detectCountryFromHeaders()
-
   return (
     <main className="relative min-h-screen overflow-x-hidden text-foreground bg-transparent">
       <LandingHeader />
       <Hero />
       <Features />
       <LeakPreview />
-      <Pricing detectedCountry={detectedCountry} />
+      <Pricing />
       <FAQ />
       <div className="w-full bg-amber-500/20 border-b border-amber-500/30 px-4 py-6 text-center text-sm text-amber-900 dark:text-amber-100">
         ⚡ Development is still in progress. Thank you for your patience!

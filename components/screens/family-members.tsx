@@ -166,17 +166,20 @@ export function FamilyMembersScreen() {
           const canReuseExtraSeat = familyStatus?.extraSeatReuse?.reusableExtraSeats > 0
           
           if (canReuseExtraSeat) {
-            // F7.1B: Should not happen - API should create extra seat invite directly
-            // But if it does, log it and show error
-            console.warn('[v0] F7.1B: Received 402 despite reusable extra seats available. This should not happen.')
-            throw new Error('Failed to create invite with available seat. Please try again.')
+            // Try to create invite using reusable seat (shouldn't need this, but failsafe)
+            addToast({
+              type: 'info',
+              title: 'Reusing available seat',
+              message: 'Creating invite with available extra seat.',
+            })
           } else {
-            // No reusable seats, show payment flow
+            // Show payment flow
             setExtraSeatsModalEmail(invitationState.email)
             setShowExtraSeatsModal(true)
-            setInvitationState((prev) => ({ ...prev, status: 'idle' }))
-            return
           }
+          
+          setInvitationState((prev) => ({ ...prev, status: 'idle' }))
+          return
         }
 
         throw new Error(data.message || data.error || 'Failed to send invite')

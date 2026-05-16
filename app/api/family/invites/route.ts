@@ -197,40 +197,13 @@ export async function POST(request: NextRequest) {
 
         const reusableExtraSeats = totalPaidSeats - ((extraMembers?.length || 0) + (extraPendingInvites?.length || 0))
 
-        // F7.1B: If reusable seats available, create extra invite instead of returning 402
+        // F7.1: If reusable seats available, create extra invite instead of returning 402
         if (reusableExtraSeats > 0) {
-          // F7.1B: Check for historical invite (cancelled/accepted/expired) and allow reinvite
-          const { data: historicalInvite } = await supabase
-            .from('family_invites')
-            .select('id')
-            .eq('family_group_id', familyGroup.id)
-            .ilike('invited_email', invitedEmail)
-            .in('status', ['pending', 'accepted', 'cancelled', 'expired'])
-            .limit(1)
-
-          // If there's a pending invite, reject (duplicate pending)
-          if (historicalInvite && historicalInvite.length > 0) {
-            const inv = historicalInvite[0]
-            const { data: existingStatus } = await supabase
-              .from('family_invites')
-              .select('status, seat_type')
-              .eq('id', inv.id)
-              .single()
-
-            if (existingStatus?.status === 'pending') {
-              return NextResponse.json(
-                { error: 'Invite already sent to this email' },
-                { status: 409 }
-              )
-            }
-            // Historical invite is accepted/cancelled/expired - allow new invite
-          }
-
           const rawToken = generateInviteToken()
           const tokenHash = hashInviteToken(rawToken)
           const expiryDate = getInviteExpiryDate()
 
-          const { error: insertError, data: insertedData } = await supabase
+          const { error: insertError } = await supabase
             .from('family_invites')
             .insert({
               family_group_id: familyGroup.id,
@@ -239,21 +212,13 @@ export async function POST(request: NextRequest) {
               token_hash: tokenHash,
               status: 'pending',
               seat_type: 'extra',
-              extra_seat_payment_intent_id: null,
               expires_at: expiryDate.toISOString(),
             })
-            .select()
 
           if (insertError) {
             console.error('[family-invites] Insert error for extra seat:', insertError)
             return NextResponse.json({ error: 'Failed to create invite' }, { status: 500 })
           }
-
-          console.log('[v0] F7.1B: Created extra seat invite', {
-            inviteId: insertedData?.[0]?.id,
-            invitedEmail,
-            seatType: 'extra',
-          })
 
           const requestOrigin =
             request.headers.get('origin') ||

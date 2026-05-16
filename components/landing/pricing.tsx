@@ -5,35 +5,23 @@ import { useRef } from 'react'
 import { Check, X, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { getAllPlans, getPlanPricing } from '@/lib/plans'
-import { getCurrencySymbol, getCurrencyFromCountry } from '@/lib/currency'
+import { getCurrencySymbol } from '@/lib/currency'
 import { getEffectiveCurrency } from '@/lib/pricing-display'
 import { getUpgradeDestination, getStartedDestination } from '@/lib/upgrade-flow'
 import { springs, staggerContainer, staggerItem, useMotionPreferences } from '../motion'
 import { useAuth } from '@/lib/hooks/use-auth'
 import useStore from '@/lib/store'
 
-interface PricingProps {
-  detectedCountry?: string | null
-}
-
-export function Pricing({ detectedCountry }: PricingProps) {
+export function Pricing() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, amount: 0.2 })
   const { isAuthenticated } = useAuth()
   const { shouldReduceAnimations } = useMotionPreferences()
   const notificationSettings = useStore((state) => state.notificationSettings)
-  
-  // Determine currency: user preference → detected country → locale → default
-  let selectedCurrency = getEffectiveCurrency(
+  const selectedCurrency = getEffectiveCurrency(
     notificationSettings?.currencyCode,
     notificationSettings?.locale
   )
-  
-  // If user has no preference and we detected their country, use that
-  if (!notificationSettings?.currencyCode && detectedCountry) {
-    selectedCurrency = getCurrencyFromCountry(detectedCountry)
-  }
-  
   const currencySymbol = getCurrencySymbol(selectedCurrency)
   const plans = getAllPlans()
 
