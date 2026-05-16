@@ -197,10 +197,29 @@ export async function POST(request: NextRequest) {
 
         const reusableExtraSeats = totalPaidSeats - ((extraMembers?.length || 0) + (extraPendingInvites?.length || 0))
 
-        // F7.1B: If reusable seats available, create extra invite instead of returning 402
+        // F7.1C: If reusable seats available, create extra invite instead of returning 402
         if (reusableExtraSeats > 0) {
-          // F7.1B: First, check if there's a historical (non-pending) invite for this email
-          // and handle it appropriately
+          // F7.1C: Check for duplicate pending invite (must be rejected)
+          const { data: existingPendingInvite } = await supabase
+            .from('family_invites')
+            .select('id, status')
+            .eq('family_group_id', familyGroup.id)
+            .ilike('invited_email', invitedEmail)
+            .eq('status', 'pending')
+            .limit(1)
+
+          if (existingPendingInvite && existingPendingInvite.length > 0) {
+            console.warn('[v0] F7.1C: Duplicate pending invite already exists', {
+              email: invitedEmail,
+              existingId: existingPendingInvite[0].id,
+            })
+            return NextResponse.json(
+              { error: 'An invite is already pending for this email address' },
+              { status: 409 }
+            )
+          }
+
+          // Check for historical (non-pending) invite
           const { data: historicalInvite } = await supabase
             .from('family_invites')
             .select('id, status')
@@ -209,7 +228,7 @@ export async function POST(request: NextRequest) {
             .in('status', ['cancelled', 'accepted', 'expired'])
             .limit(1)
 
-          console.log('[v0] F7.1B: Checking historical invite', {
+          console.log('[v0] F7.1C: Checking historical invite', {
             email: invitedEmail,
             found: historicalInvite?.length > 0,
             status: historicalInvite?.[0]?.status,
@@ -219,9 +238,10 @@ export async function POST(request: NextRequest) {
           const tokenHash = hashInviteToken(rawToken)
           const expiryDate = getInviteExpiryDate()
 
-          console.log('[v0] F7.1B: Creating extra seat invite', {
+          console.log('[v0] F7.1C: Creating extra seat invite', {
             email: invitedEmail,
             seatType: 'extra',
+            reusableSeats: reusableExtraSeats,
           })
 
           const { error: insertError, data: insertedData } = await supabase
@@ -239,13 +259,21 @@ export async function POST(request: NextRequest) {
             .select()
 
           if (insertError) {
-            console.error('[family-invites] F7.1B: Insert error for extra seat:', insertError)
-            return NextResponse.json({ error: 'Failed to create invite: ' + insertError.message }, { status: 500 })
+            console.error('[family-invites] F7.1C: Insert error for extra seat:', {
+              email: invitedEmail,
+              error: insertError.message,
+              code: insertError.code,
+            })
+            return NextResponse.json(
+              { error: `Failed to create invite: ${insertError.message}` },
+              { status: 500 }
+            )
           }
 
-          console.log('[v0] F7.1B: Insert successful', {
+          console.log('[v0] F7.1C: Insert successful', {
             inviteId: insertedData?.[0]?.id,
             status: insertedData?.[0]?.status,
+            email: invitedEmail,
           })
 
           const requestOrigin =
