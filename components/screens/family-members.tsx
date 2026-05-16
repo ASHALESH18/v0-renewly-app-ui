@@ -76,6 +76,8 @@ export function FamilyMembersScreen() {
   const [isRemovingMember, setIsRemovingMember] = useState(false)
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false)
   const [isLeavingFamily, setIsLeavingFamily] = useState(false)
+  const [showCancelExtraSeatsModal, setShowCancelExtraSeatsModal] = useState(false)
+  const [isCancellingExtraSeats, setIsCancellingExtraSeats] = useState(false)
 
   // Helper to refresh family status
   const refreshFamilyStatus = async (options?: { silent?: boolean }) => {
@@ -592,6 +594,50 @@ export function FamilyMembersScreen() {
     }
   }
 
+  // F7: Handle cancelling unused extra seats
+  const handleCancelExtraSeats = async () => {
+    if (!familyStatus?.familyGroupId) return
+
+    setIsCancellingExtraSeats(true)
+
+    try {
+      const res = await fetch('/api/family/extra-seat/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          familyGroupId: familyStatus.familyGroupId,
+          quantity: 1,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to cancel extra seat')
+      }
+
+      addToast({
+        type: 'success',
+        title: 'Extra seat cancelled',
+        message: 'Your billing will be reduced at the end of the period.',
+      })
+
+      setShowCancelExtraSeatsModal(false)
+
+      // Refresh to update seat usage
+      await refreshFamilyStatus({ silent: true })
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+      addToast({
+        type: 'error',
+        title: 'Error cancelling extra seat',
+        message: errorMessage,
+      })
+    } finally {
+      setIsCancellingExtraSeats(false)
+    }
+  }
+
   // Safe array access
   const maxMembers = familyStatus?.maxMembers ?? 4
   const currentMemberCount = familyStatus?.currentMemberCount ?? members.length
@@ -953,7 +999,22 @@ export function FamilyMembersScreen() {
                             <p className="text-xs text-emerald-800 dark:text-emerald-300">
                               ₹{familyStatus.seatUsage.extraSeatPriceINR}/month
                             </p>
+                            {/* F7: Show available/used breakdown */}
+                            {familyStatus.extraSeatReuse && (
+                              <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-400">
+                                {familyStatus.extraSeatReuse.reusableExtraSeats} available • {familyStatus.seatUsage.activeExtraMembers} in use
+                              </p>
+                            )}
                           </div>
+                          {/* F7: Show cancel button if extra seats available */}
+                          {familyStatus.extraSeatReuse && familyStatus.extraSeatReuse.reusableExtraSeats > 0 && (
+                            <button
+                              onClick={() => setShowCancelExtraSeatsModal(true)}
+                              className="text-xs px-2 py-1 rounded bg-emerald-600/20 text-emerald-700 hover:bg-emerald-600/30 transition-colors font-medium dark:bg-emerald-900/40 dark:text-emerald-300 dark:hover:bg-emerald-900/60 cursor-pointer whitespace-nowrap"
+                            >
+                              Cancel
+                            </button>
+                          )}
                         </div>
                       </div>
                     )}
@@ -1335,6 +1396,80 @@ export function FamilyMembersScreen() {
                       className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {isLeavingFamily ? 'Leaving...' : 'Leave Family'}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* F7: Cancel Extra Seats Confirmation Modal */}
+      <AnimatePresence mode="wait">
+        {showCancelExtraSeatsModal && (
+          <>
+            {/* Darker backdrop */}
+            <motion.div
+              key="cancel-seats-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !isCancellingExtraSeats && setShowCancelExtraSeatsModal(false)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200]"
+            />
+
+            {/* Modal container */}
+            <motion.div
+              key="cancel-seats-modal"
+              initial={{ opacity: 0, y: 18, scale: 0.975 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.985 }}
+              className="fixed inset-0 z-[210] flex items-center justify-center p-4 pointer-events-none"
+            >
+              <motion.div
+                className="relative rounded-2xl bg-slate-950/95 border border-white/10 shadow-2xl pointer-events-auto max-w-md w-full"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-white/10">
+                  <h2 className="text-xl font-semibold text-white">Cancel unused extra seat?</h2>
+                  {!isCancellingExtraSeats && (
+                    <button
+                      onClick={() => setShowCancelExtraSeatsModal(false)}
+                      className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                      aria-label="Close dialog"
+                    >
+                      <X className="w-5 h-5 text-slate-300" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Content */}
+                <div className="p-6 space-y-6">
+                  <div className="space-y-3">
+                    <p className="text-sm text-slate-300">
+                      This will stop billing for one unused extra seat. Your active Family members will not be removed.
+                    </p>
+                    <p className="text-sm text-slate-300">
+                      The billing change will take effect at the end of your current period.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      onClick={() => setShowCancelExtraSeatsModal(false)}
+                      disabled={isCancellingExtraSeats}
+                      className="px-4 py-2 text-sm font-medium rounded-lg bg-slate-700 text-white hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Keep Seat
+                    </button>
+                    <button
+                      onClick={handleCancelExtraSeats}
+                      disabled={isCancellingExtraSeats}
+                      className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isCancellingExtraSeats ? 'Cancelling...' : 'Cancel Extra Seat'}
                     </button>
                   </div>
                 </div>
