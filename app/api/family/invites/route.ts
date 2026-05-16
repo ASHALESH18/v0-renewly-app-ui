@@ -166,6 +166,94 @@ export async function POST(request: NextRequest) {
       (pendingInvites || []).filter((invite: any) => (invite.seat_type || 'included') === 'included').length
 
     if (includedUsed >= includedLimit) {
+      // F7.1: Check if reusable extra seats are available before payment
+      const { data: seatAddons = [], error: addonsError } = await supabase
+        .from('family_seat_addons')
+        .select('quantity, cancel_at_period_end, status')
+        .eq('family_group_id', familyGroup.id)
+
+      if (!addonsError && seatAddons.length > 0) {
+        // Calculate reusable extra seats (paid but not used)
+        const totalPaidSeats = seatAddons.reduce((sum, addon) => {
+          if (addon.status === 'active' && !addon.cancel_at_period_end) {
+            return sum + (addon.quantity || 0)
+          }
+          return sum
+        }, 0)
+
+        const { data: extraMembers = [] } = await supabase
+          .from('family_members')
+          .select('id, seat_type')
+          .eq('family_group_id', familyGroup.id)
+          .eq('status', 'active')
+          .eq('seat_type', 'extra')
+
+        const { data: extraPendingInvites = [] } = await supabase
+          .from('family_invites')
+          .select('id, seat_type')
+          .eq('family_group_id', familyGroup.id)
+          .eq('status', 'pending')
+          .eq('seat_type', 'extra')
+
+        const reusableExtraSeats = totalPaidSeats - ((extraMembers?.length || 0) + (extraPendingInvites?.length || 0))
+
+        // F7.1: If reusable seats available, create extra invite instead of returning 402
+        if (reusableExtraSeats > 0) {
+          const rawToken = generateInviteToken()
+          const tokenHash = hashInviteToken(rawToken)
+          const expiryDate = getInviteExpiryDate()
+
+          const { error: insertError } = await supabase
+            .from('family_invites')
+            .insert({
+              family_group_id: familyGroup.id,
+              invited_email: invitedEmail,
+              invited_by: user.id,
+              token_hash: tokenHash,
+              status: 'pending',
+              seat_type: 'extra',
+              expires_at: expiryDate.toISOString(),
+            })
+
+          if (insertError) {
+            console.error('[family-invites] Insert error for extra seat:', insertError)
+            return NextResponse.json({ error: 'Failed to create invite' }, { status: 500 })
+          }
+
+          const requestOrigin =
+            request.headers.get('origin') ||
+            request.nextUrl.origin ||
+            undefined
+
+          const inviteUrl = buildFamilyInviteUrl(rawToken, requestOrigin)
+
+          const emailResult = await sendFamilyInviteEmail({
+            invitedEmail,
+            ownerEmail: ownerProfile?.email || user.email || 'contact@renewly.in',
+            ownerName: ownerProfile?.full_name || ownerProfile?.email || 'Family owner',
+            inviteUrl,
+            expiresInDays: 7,
+          })
+
+          if (!emailResult.sent) {
+            console.warn('[family-invites] Email send failed (extra seat invite still created):', emailResult.error)
+            return NextResponse.json({
+              success: true,
+              emailSent: false,
+              inviteUrl,
+              warning: 'Invite created using available extra seat, but email delivery could not be confirmed.',
+            })
+          }
+
+          return NextResponse.json({
+            success: true,
+            emailSent: true,
+            message: 'Invite created using available extra seat.',
+          })
+        }
+      }
+
+      // F7.1: No reusable seats, so payment required
       return NextResponse.json(
         {
           error: 'included_seats_full',

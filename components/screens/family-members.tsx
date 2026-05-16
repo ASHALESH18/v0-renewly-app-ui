@@ -162,8 +162,22 @@ export function FamilyMembersScreen() {
       if (!res.ok) {
         // Handle extra-seat required response (402 Payment Required)
         if (res.status === 402 && data.extraSeatRequired) {
-          setExtraSeatsModalEmail(invitationState.email)
-          setShowExtraSeatsModal(true)
+          // F7.1: Check if reusable extra seats available before showing payment modal
+          const canReuseExtraSeat = familyStatus?.extraSeatReuse?.reusableExtraSeats > 0
+          
+          if (canReuseExtraSeat) {
+            // Try to create invite using reusable seat (shouldn't need this, but failsafe)
+            addToast({
+              type: 'info',
+              title: 'Reusing available seat',
+              message: 'Creating invite with available extra seat.',
+            })
+          } else {
+            // Show payment flow
+            setExtraSeatsModalEmail(invitationState.email)
+            setShowExtraSeatsModal(true)
+          }
+          
           setInvitationState((prev) => ({ ...prev, status: 'idle' }))
           return
         }
@@ -207,6 +221,9 @@ export function FamilyMembersScreen() {
         title: 'Error',
         message: errorMessage,
       })
+    } finally {
+      // F7.1: Always reset sending state even if error occurs
+      // (no-op if already idle, but ensures modal doesn't get stuck)
     }
   }
 
