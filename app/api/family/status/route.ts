@@ -187,7 +187,7 @@ export async function GET() {
       const billingCurrency = getFamilyBillingCurrency(userCurrency)
       const billingDisplay = calculateFamilyBillingDisplay({
         activeMemberCount: currentMemberCount,
-        activeExtraMembers: seatUsage.activeExtraMembers,
+        activeExtraMembers: totalActiveExtraSeats,
         pendingIncludedInvites: includedInviteCount,
         pendingExtraInvites: seatUsage.pendingExtraInvites,
         currency: billingCurrency,
