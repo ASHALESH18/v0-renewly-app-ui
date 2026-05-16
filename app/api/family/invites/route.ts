@@ -22,6 +22,11 @@ import {
   checkNoDuplicatePendingInvite,
   checkNotAlreadyActiveMember,
 } from '@/lib/family/family-abuse-prevention'
+import {
+  calculateSeatUsage,
+  canReusePaidExtraSeatForNextInvite,
+  canInviteWithIncludedSeat,
+} from '@/lib/family/family-seat-utils'
 
 /**
  * POST /api/family/invites
@@ -136,16 +141,37 @@ export async function POST(request: NextRequest) {
 
     const { data: activeMembers = [] } = await supabase
       .from('family_members')
-      .select('id, seat_type')
+      .select('id, role, seat_type')
       .eq('family_group_id', familyGroup.id)
       .eq('status', 'active')
-      .neq('role', 'owner')
 
     const { data: pendingInvites = [] } = await supabase
       .from('family_invites')
       .select('id, seat_type')
       .eq('family_group_id', familyGroup.id)
       .eq('status', 'pending')
+
+    // F7.1D-R: Fetch active paid extra-seat add-ons with full details
+    const { data: seatAddons = [], error: addonsError } = await supabase
+      .from('family_seat_addons')
+      .select('id, quantity, status, cancel_at_period_end, current_period_end')
+      .eq('family_group_id', familyGroup.id)
+
+    if (addonsError) {
+      console.error('[family-invites] F7.1D-R: Error fetching seat addons:', addonsError)
+    }
+
+    // F7.1D-R: Use seat calculation utility for accurate seat usage
+    const seatUsage = calculateSeatUsage({
+      activeMembers: activeMembers || [],
+      pendingInvites: pendingInvites || [],
+      familyGroup: {
+        included_member_limit: familyGroup.included_member_limit,
+        extra_seat_count: familyGroup.included_member_limit, // fallback
+        current_period_end: null, // will be updated from addons
+      },
+      seatAddons: seatAddons || [],
+    })
 
     const invitedPeopleCount = (activeMembers?.length || 0) + (pendingInvites?.length || 0)
 
@@ -160,160 +186,189 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const includedLimit = familyGroup.included_member_limit ?? FAMILY_INCLUDED_MEMBER_COUNT
-    const includedUsed =
-      (activeMembers || []).filter((member: any) => (member.seat_type || 'included') === 'included').length +
-      (pendingInvites || []).filter((invite: any) => (invite.seat_type || 'included') === 'included').length
+    // F7.1D-R: Decision logic: included → extra → payment
+    if (canInviteWithIncludedSeat(seatUsage)) {
+      // A: Included seats available - create normal included-seat invite
+      const rawToken = generateInviteToken()
+      const tokenHash = hashInviteToken(rawToken)
+      const expiryDate = getInviteExpiryDate()
 
-    if (includedUsed >= includedLimit) {
-      // F7.1: Check if reusable extra seats are available before payment
-      const { data: seatAddons = [], error: addonsError } = await supabase
-        .from('family_seat_addons')
-        .select('quantity, cancel_at_period_end, status')
-        .eq('family_group_id', familyGroup.id)
+      const { error: insertError } = await supabase
+        .from('family_invites')
+        .insert({
+          family_group_id: familyGroup.id,
+          invited_email: invitedEmail,
+          invited_by: user.id,
+          token_hash: tokenHash,
+          status: 'pending',
+          seat_type: 'included',
+          expires_at: expiryDate.toISOString(),
+        })
 
-      if (!addonsError && seatAddons.length > 0) {
-        // Calculate reusable extra seats (paid but not used)
-        const totalPaidSeats = seatAddons.reduce((sum, addon) => {
-          if (addon.status === 'active' && !addon.cancel_at_period_end) {
-            return sum + (addon.quantity || 0)
-          }
-          return sum
-        }, 0)
-
-        const { data: extraMembers = [] } = await supabase
-          .from('family_members')
-          .select('id, seat_type')
-          .eq('family_group_id', familyGroup.id)
-          .eq('status', 'active')
-          .eq('seat_type', 'extra')
-
-        const { data: extraPendingInvites = [] } = await supabase
-          .from('family_invites')
-          .select('id, seat_type')
-          .eq('family_group_id', familyGroup.id)
-          .eq('status', 'pending')
-          .eq('seat_type', 'extra')
-
-        const reusableExtraSeats = totalPaidSeats - ((extraMembers?.length || 0) + (extraPendingInvites?.length || 0))
-
-        // F7.1C: If reusable seats available, create extra invite instead of returning 402
-        if (reusableExtraSeats > 0) {
-          // F7.1C: Check for duplicate pending invite (must be rejected)
-          const { data: existingPendingInvite } = await supabase
-            .from('family_invites')
-            .select('id, status')
-            .eq('family_group_id', familyGroup.id)
-            .ilike('invited_email', invitedEmail)
-            .eq('status', 'pending')
-            .limit(1)
-
-          if (existingPendingInvite && existingPendingInvite.length > 0) {
-            console.warn('[v0] F7.1C: Duplicate pending invite already exists', {
-              email: invitedEmail,
-              existingId: existingPendingInvite[0].id,
-            })
-            return NextResponse.json(
-              { error: 'An invite is already pending for this email address' },
-              { status: 409 }
-            )
-          }
-
-          // Check for historical (non-pending) invite
-          const { data: historicalInvite } = await supabase
-            .from('family_invites')
-            .select('id, status')
-            .eq('family_group_id', familyGroup.id)
-            .ilike('invited_email', invitedEmail)
-            .in('status', ['cancelled', 'accepted', 'expired'])
-            .limit(1)
-
-          console.log('[v0] F7.1C: Checking historical invite', {
-            email: invitedEmail,
-            found: historicalInvite?.length > 0,
-            status: historicalInvite?.[0]?.status,
-          })
-
-          const rawToken = generateInviteToken()
-          const tokenHash = hashInviteToken(rawToken)
-          const expiryDate = getInviteExpiryDate()
-
-          console.log('[v0] F7.1C: Creating extra seat invite', {
-            email: invitedEmail,
-            seatType: 'extra',
-            reusableSeats: reusableExtraSeats,
-          })
-
-          const { error: insertError, data: insertedData } = await supabase
-            .from('family_invites')
-            .insert({
-              family_group_id: familyGroup.id,
-              invited_email: invitedEmail,
-              invited_by: user.id,
-              token_hash: tokenHash,
-              status: 'pending',
-              seat_type: 'extra',
-              extra_seat_payment_intent_id: null,
-              expires_at: expiryDate.toISOString(),
-            })
-            .select()
-
-          if (insertError) {
-            console.error('[family-invites] F7.1C: Insert error for extra seat:', {
-              email: invitedEmail,
-              error: insertError.message,
-              code: insertError.code,
-            })
-            return NextResponse.json(
-              { error: `Failed to create invite: ${insertError.message}` },
-              { status: 500 }
-            )
-          }
-
-          console.log('[v0] F7.1C: Insert successful', {
-            inviteId: insertedData?.[0]?.id,
-            status: insertedData?.[0]?.status,
-            email: invitedEmail,
-          })
-
-          const requestOrigin =
-            request.headers.get('origin') ||
-            request.nextUrl.origin ||
-            undefined
-
-          const inviteUrl = buildFamilyInviteUrl(rawToken, requestOrigin)
-
-          const emailResult = await sendFamilyInviteEmail({
-            invitedEmail,
-            ownerEmail: ownerProfile?.email || user.email || 'contact@renewly.in',
-            ownerName: ownerProfile?.full_name || ownerProfile?.email || 'Family owner',
-            inviteUrl,
-            expiresInDays: 7,
-          })
-
-          if (!emailResult.sent) {
-            console.warn('[family-invites] Email send failed (extra seat invite still created):', emailResult.error)
-            return NextResponse.json({
-              success: true,
-              emailSent: false,
-              inviteUrl,
-              warning: 'Invite created using available extra seat, but email delivery could not be confirmed.',
-            })
-          }
-
-          return NextResponse.json({
-            success: true,
-            emailSent: true,
-            message: 'Invite created using available extra seat.',
-          })
-        }
+      if (insertError) {
+        console.error('[family-invites] F7.1D-R: Insert error for included seat:', {
+          email: invitedEmail,
+          error: insertError.message,
+          code: insertError.code,
+        })
+        return NextResponse.json({ error: 'Failed to create invite' }, { status: 500 })
       }
 
-      // F7.1: No reusable seats, so payment required
+      const requestOrigin =
+        request.headers.get('origin') ||
+        request.nextUrl.origin ||
+        undefined
+
+      const inviteUrl = buildFamilyInviteUrl(rawToken, requestOrigin)
+
+      if (process.env.VERCEL_ENV !== 'production') {
+        console.info('[family-invites] F7.1D-R: Included seat invite created', {
+          vercelEnv: process.env.VERCEL_ENV,
+          invitedEmail,
+          baseUrl: getInviteBaseUrl(requestOrigin),
+        })
+      }
+
+      const emailResult = await sendFamilyInviteEmail({
+        invitedEmail,
+        ownerEmail: ownerProfile?.email || user.email || 'contact@renewly.in',
+        ownerName: ownerProfile?.full_name || ownerProfile?.email || 'Family owner',
+        inviteUrl,
+        expiresInDays: 7,
+      })
+
+      if (emailResult.reason === 'email_unconfigured') {
+        return NextResponse.json({
+          success: true,
+          emailSent: false,
+          inviteUrl,
+          warning: 'Email is not configured. Use this QA invite link for testing.',
+        })
+      }
+
+      if (!emailResult.sent) {
+        console.warn('[family-invites] Email send failed (invite still created):', emailResult.error)
+        return NextResponse.json({
+          success: true,
+          emailSent: false,
+          inviteUrl,
+          warning: 'Invite created, but email delivery could not be confirmed. The invite will still appear in the member\'s app.',
+        })
+      }
+
+      return NextResponse.json({
+        success: true,
+        emailSent: true,
+      })
+    } else if (canReusePaidExtraSeatForNextInvite(seatUsage)) {
+      // B: Included seats full BUT paid extra capacity available - create extra-seat invite
+      // F7.1D-R: Check for duplicate pending invite before attempting creation
+      const { data: existingPendingInvite } = await supabase
+        .from('family_invites')
+        .select('id, status')
+        .eq('family_group_id', familyGroup.id)
+        .ilike('invited_email', invitedEmail)
+        .eq('status', 'pending')
+        .limit(1)
+
+      if (existingPendingInvite && existingPendingInvite.length > 0) {
+        console.warn('[v0] F7.1D-R: Duplicate pending invite already exists', {
+          email: invitedEmail,
+          existingId: existingPendingInvite[0].id,
+        })
+        return NextResponse.json(
+          { error: 'An invite is already pending for this email address' },
+          { status: 409 }
+        )
+      }
+
+      // Log detailed reuse state for debugging
+      if (process.env.VERCEL_ENV !== 'production') {
+        console.log('[v0] F7.1D-R: Creating reusable extra-seat invite', {
+          email: invitedEmail,
+          familyGroupId: familyGroup.id,
+          includedSeatsUsed: seatUsage.includedSeatsUsed,
+          includedLimit: seatUsage.includedLimit,
+          paidActiveExtraSeats: seatUsage.paidActiveExtraSeats,
+          activeExtraMembers: seatUsage.activeExtraMembers,
+          pendingExtraInvites: seatUsage.pendingExtraInvites,
+          reusableExtraSeats: seatUsage.paidActiveExtraSeats - (seatUsage.activeExtraMembers + seatUsage.pendingExtraInvites),
+        })
+      }
+
+      const rawToken = generateInviteToken()
+      const tokenHash = hashInviteToken(rawToken)
+      const expiryDate = getInviteExpiryDate()
+
+      const { error: insertError, data: insertedData } = await supabase
+        .from('family_invites')
+        .insert({
+          family_group_id: familyGroup.id,
+          invited_email: invitedEmail,
+          invited_by: user.id,
+          token_hash: tokenHash,
+          status: 'pending',
+          seat_type: 'extra',
+          extra_seat_payment_intent_id: null,
+          expires_at: expiryDate.toISOString(),
+        })
+        .select()
+
+      if (insertError) {
+        console.error('[family-invites] F7.1D-R: Insert error for extra-seat invite:', {
+          email: invitedEmail,
+          error: insertError.message,
+          code: insertError.code,
+          familyGroupId: familyGroup.id,
+        })
+        return NextResponse.json(
+          { error: `Failed to create invite: ${insertError.message}` },
+          { status: 500 }
+        )
+      }
+
+      console.log('[v0] F7.1D-R: Extra-seat invite created successfully', {
+        inviteId: insertedData?.[0]?.id,
+        status: insertedData?.[0]?.status,
+        email: invitedEmail,
+      })
+
+      const requestOrigin =
+        request.headers.get('origin') ||
+        request.nextUrl.origin ||
+        undefined
+
+      const inviteUrl = buildFamilyInviteUrl(rawToken, requestOrigin)
+
+      const emailResult = await sendFamilyInviteEmail({
+        invitedEmail,
+        ownerEmail: ownerProfile?.email || user.email || 'contact@renewly.in',
+        ownerName: ownerProfile?.full_name || ownerProfile?.email || 'Family owner',
+        inviteUrl,
+        expiresInDays: 7,
+      })
+
+      if (!emailResult.sent) {
+        console.warn('[family-invites] Email send failed (extra-seat invite still created):', emailResult.error)
+        return NextResponse.json({
+          success: true,
+          emailSent: false,
+          inviteUrl,
+          warning: 'Invite created using available extra seat, but email delivery could not be confirmed.',
+        })
+      }
+
+      return NextResponse.json({
+        success: true,
+        emailSent: true,
+        message: 'Invite created using available extra seat.',
+      })
+    } else {
+      // C: Included full + no reusable extra seats = payment required
       return NextResponse.json(
         {
           error: 'included_seats_full',
-          message: `You've used all ${includedLimit} included Family seats.`,
+          message: `You've used all ${seatUsage.includedLimit} included Family seats.`,
           extraSeatRequired: true,
           extraSeatPriceINR: 99,
           nextAction: 'create_extra_seat_intent',
@@ -321,75 +376,6 @@ export async function POST(request: NextRequest) {
         { status: 402 }
       )
     }
-
-    const rawToken = generateInviteToken()
-    const tokenHash = hashInviteToken(rawToken)
-    const expiryDate = getInviteExpiryDate()
-
-    const { error: insertError } = await supabase
-      .from('family_invites')
-      .insert({
-        family_group_id: familyGroup.id,
-        invited_email: invitedEmail,
-        invited_by: user.id,
-        token_hash: tokenHash,
-        status: 'pending',
-        seat_type: 'included',
-        expires_at: expiryDate.toISOString(),
-      })
-
-    if (insertError) {
-      console.error('[family-invites] Insert error:', insertError)
-      return NextResponse.json({ error: 'Failed to create invite' }, { status: 500 })
-    }
-
-    const requestOrigin =
-      request.headers.get('origin') ||
-      request.nextUrl.origin ||
-      undefined
-
-    const inviteUrl = buildFamilyInviteUrl(rawToken, requestOrigin)
-
-    if (process.env.VERCEL_ENV !== 'production') {
-      console.info('[family-invites] Invite created', {
-        vercelEnv: process.env.VERCEL_ENV,
-        invitedEmail,
-        baseUrl: getInviteBaseUrl(requestOrigin),
-      })
-    }
-
-    const emailResult = await sendFamilyInviteEmail({
-      invitedEmail,
-      ownerEmail: ownerProfile?.email || user.email || 'contact@renewly.in',
-      ownerName: ownerProfile?.full_name || ownerProfile?.email || 'Family owner',
-      inviteUrl,
-      expiresInDays: 7,
-    })
-
-    if (emailResult.reason === 'email_unconfigured') {
-      return NextResponse.json({
-        success: true,
-        emailSent: false,
-        inviteUrl,
-        warning: 'Email is not configured. Use this QA invite link for testing.',
-      })
-    }
-
-    if (!emailResult.sent) {
-      // Email send failed, but invite was created - return success with warning
-      console.warn('[family-invites] Email send failed (invite still created):', emailResult.error)
-      return NextResponse.json({
-        success: true,
-        emailSent: false,
-        inviteUrl,
-        warning: 'Invite created, but email delivery could not be confirmed. The invite will still appear in the member\'s app.',
-      })
-    }
-
-    return NextResponse.json({
-      success: true,
-      emailSent: true,
-    })
   } catch (error) {
     console.error('[family-invites] Error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

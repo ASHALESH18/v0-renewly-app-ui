@@ -160,26 +160,17 @@ export function FamilyMembersScreen() {
       const data = await res.json()
 
       if (!res.ok) {
-        // Handle extra-seat required response (402 Payment Required)
+        // F7.1D-R: Trust server response
         if (res.status === 402 && data.extraSeatRequired) {
-          // F7.1B: API should handle reusable extra seats directly and return 200
-          // If we get 402, it means no reusable seats available
-          // Check if reusable extra seats available before showing payment modal
-          const canReuseExtraSeat = familyStatus?.extraSeatReuse?.reusableExtraSeats > 0
-          
-          if (canReuseExtraSeat) {
-            // This should not happen - API should have created invite
-            console.warn('[v0] F7.1B: Got 402 despite reusable seats available')
-            throw new Error('Failed to create invite with available seat. Please try again.')
-          }
-          
-          // Show payment flow for new extra seat purchase
+          // Legitimate: included seats full + no reusable extra seats available
+          // Show payment flow
           setExtraSeatsModalEmail(invitationState.email)
           setShowExtraSeatsModal(true)
           setInvitationState((prev) => ({ ...prev, status: 'idle' }))
           return
         }
 
+        // Any other error (409 duplicate, 403 permission, 400 validation, 500 server error)
         throw new Error(data.message || data.error || 'Failed to send invite')
       }
 
@@ -219,9 +210,6 @@ export function FamilyMembersScreen() {
         title: 'Error',
         message: errorMessage,
       })
-    } finally {
-      // F7.1B: Always reset sending state even if error occurs
-      // Ensures loading state never gets stuck on "Loading..."
     }
   }
 
