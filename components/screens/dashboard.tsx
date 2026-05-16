@@ -178,10 +178,19 @@ export function DashboardScreen({
     const initializeDashboard = async () => {
       try {
         // Sync Renewly subscriptions first (ensures Dashboard shows current billing)
-        await fetch('/api/sync/renewly-billing', {
+        const syncRes = await fetch('/api/sync/renewly-billing', {
           method: 'POST',
           cache: 'no-store',
         })
+        
+        // F6C.2C: Add debug logging in development
+        if (process.env.NODE_ENV !== 'production') {
+          if (syncRes.ok) {
+            console.log('[v0] F6C.2C DEBUG: Renewly sync completed, now refreshing subscriptions')
+          } else {
+            console.warn('[v0] F6C.2C DEBUG: Renewly sync returned non-200 status:', syncRes.status)
+          }
+        }
       } catch (error) {
         console.error('[v0] Error syncing Renewly billing:', error)
         // Continue with dashboard even if sync fails
@@ -222,6 +231,18 @@ export function DashboardScreen({
 
   const metrics = useMemo(() => {
     const m = calculateMetrics(subscriptions, preferredCurrency, rates)
+
+    // F6C.2C: Add debug logging in development
+    if (process.env.NODE_ENV !== 'production' && subscriptions.length > 0) {
+      const renewlyFamily = subscriptions.find(s => s.name === 'Renewly Family' && s.isSystemManaged)
+      console.log('[v0] F6C.2C DEBUG: Dashboard metrics', {
+        totalSubscriptions: subscriptions.length,
+        renewlyFamilyFound: !!renewlyFamily,
+        renewlyFamilyAmount: renewlyFamily?.amount,
+        totalMonthlySpend: m.totalMonthlySpend,
+        totalYearlySpend: m.totalYearlySpend,
+      })
+    }
 
     return {
       totalMonthly: m.totalMonthlySpend,

@@ -26,6 +26,15 @@ export async function POST() {
       )
     }
 
+    // F6C.2C: Add debug logging in development
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[v0] F6C.2C DEBUG: Sync endpoint called', {
+        userId: user.id,
+        email: profile.email,
+        plan: profile.plan,
+      })
+    }
+
     // Sync Renewly subscription based on current plan
     await syncRenewlyBillingSubscriptionForPlan({
       userId: user.id,
@@ -33,6 +42,11 @@ export async function POST() {
       plan: profile.plan || 'free',
       currentPeriodEnd: profile.current_period_end || undefined,
     })
+
+    // F6C.2C: Add success logging in development
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[v0] F6C.2C DEBUG: Sync endpoint completed successfully')
+    }
 
     return NextResponse.json(
       { message: 'Renewly subscription synced successfully' },

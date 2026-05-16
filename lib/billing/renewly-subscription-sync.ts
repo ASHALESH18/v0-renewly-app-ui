@@ -378,9 +378,10 @@ export async function syncRenewlyBillingSubscriptionForPlan(params: {
       // F6C.2: Get extra seat count from family_seat_addons (active) first, then fallback to family_groups.extra_seat_count
       const { data: seatAddons, error: addonsError } = await supabase
         .from('family_seat_addons')
-        .select('quantity')
+        .select('quantity, price_inr_per_seat')
         .eq('family_group_id', familyGroupId)
         .eq('status', 'active')
+        .eq('cancel_at_period_end', false)
 
       if (addonsError) {
         console.warn('[renewly-sync] Could not fetch seat addons:', addonsError)
@@ -403,6 +404,17 @@ export async function syncRenewlyBillingSubscriptionForPlan(params: {
         }
 
         extraSeats = familyGroup?.extra_seat_count ?? 0
+      }
+
+      // F6C.2C: Add debug logging in preview/development
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[v0] F6C.2C DEBUG: Renewly Family sync', {
+          familyGroupId,
+          baseAmount: 299,
+          activeAddonQuantity: extraSeats,
+          addonTotal: extraSeats * 99,
+          totalAmount: 299 + extraSeats * 99,
+        })
       }
 
       await syncRenewlyFamilyOwnerSubscription({
