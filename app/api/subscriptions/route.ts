@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
           .from('subscriptions')
           .select('*')
           .eq('user_id', user.id)
+          .neq('status', 'cancelled')
           .order('created_at', { ascending: false })
 
         if (error) {

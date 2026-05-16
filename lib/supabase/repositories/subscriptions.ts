@@ -8,8 +8,9 @@ export async function getUserSubscriptions(): Promise<SubscriptionRow[]> {
     const user = await getUser()
     if (!user) return []
 
+    // F6C.2B: Filter to exclude cancelled subscriptions for active dashboard/calendar view
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/subscriptions?user_id=eq.${user.id}&order=created_at.desc`,
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/subscriptions?user_id=eq.${user.id}&status=neq.cancelled&order=created_at.desc`,
       {
         headers: {
           'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,

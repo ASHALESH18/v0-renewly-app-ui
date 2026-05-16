@@ -107,9 +107,25 @@ function formatDate(dateStr: string) {
 }
 
 export function CalendarScreen() {
-  const [viewMode, setViewMode] = useState('month')
-  const [currentDate, setCurrentDate] = useState(() => new Date())
-  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [viewMode, setViewMode] = useState<'month' | 'week'>('month')
+
+  // F6C.2B: Sync Renewly billing before loading calendar events
+  useEffect(() => {
+    const syncBilling = async () => {
+      try {
+        await fetch('/api/sync/renewly-billing', {
+          method: 'POST',
+          cache: 'no-store',
+        })
+      } catch (error) {
+        console.error('[v0] Error syncing billing for calendar:', error)
+        // Continue loading calendar even if sync fails
+      }
+    }
+
+    syncBilling()
+  }, [])
 
   const { calendarEvents, isLoading, error } = useCalendarEvents()
   const notificationSettings = useStore((state) => state.notificationSettings)
