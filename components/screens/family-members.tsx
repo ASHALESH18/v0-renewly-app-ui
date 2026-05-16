@@ -162,22 +162,20 @@ export function FamilyMembersScreen() {
       if (!res.ok) {
         // Handle extra-seat required response (402 Payment Required)
         if (res.status === 402 && data.extraSeatRequired) {
-          // F7.1: Check if reusable extra seats available before showing payment modal
+          // F7.1B: API should handle reusable extra seats directly and return 200
+          // If we get 402, it means no reusable seats available
+          // Check if reusable extra seats available before showing payment modal
           const canReuseExtraSeat = familyStatus?.extraSeatReuse?.reusableExtraSeats > 0
           
           if (canReuseExtraSeat) {
-            // Try to create invite using reusable seat (shouldn't need this, but failsafe)
-            addToast({
-              type: 'info',
-              title: 'Reusing available seat',
-              message: 'Creating invite with available extra seat.',
-            })
-          } else {
-            // Show payment flow
-            setExtraSeatsModalEmail(invitationState.email)
-            setShowExtraSeatsModal(true)
+            // This should not happen - API should have created invite
+            console.warn('[v0] F7.1B: Got 402 despite reusable seats available')
+            throw new Error('Failed to create invite with available seat. Please try again.')
           }
           
+          // Show payment flow for new extra seat purchase
+          setExtraSeatsModalEmail(invitationState.email)
+          setShowExtraSeatsModal(true)
           setInvitationState((prev) => ({ ...prev, status: 'idle' }))
           return
         }
@@ -222,8 +220,8 @@ export function FamilyMembersScreen() {
         message: errorMessage,
       })
     } finally {
-      // F7.1: Always reset sending state even if error occurs
-      // (no-op if already idle, but ensures modal doesn't get stuck)
+      // F7.1B: Always reset sending state even if error occurs
+      // Ensures loading state never gets stuck on "Loading..."
     }
   }
 

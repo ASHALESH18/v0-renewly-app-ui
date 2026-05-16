@@ -197,13 +197,34 @@ export async function POST(request: NextRequest) {
 
         const reusableExtraSeats = totalPaidSeats - ((extraMembers?.length || 0) + (extraPendingInvites?.length || 0))
 
-        // F7.1: If reusable seats available, create extra invite instead of returning 402
+        // F7.1B: If reusable seats available, create extra invite instead of returning 402
         if (reusableExtraSeats > 0) {
+          // F7.1B: First, check if there's a historical (non-pending) invite for this email
+          // and handle it appropriately
+          const { data: historicalInvite } = await supabase
+            .from('family_invites')
+            .select('id, status')
+            .eq('family_group_id', familyGroup.id)
+            .ilike('invited_email', invitedEmail)
+            .in('status', ['cancelled', 'accepted', 'expired'])
+            .limit(1)
+
+          console.log('[v0] F7.1B: Checking historical invite', {
+            email: invitedEmail,
+            found: historicalInvite?.length > 0,
+            status: historicalInvite?.[0]?.status,
+          })
+
           const rawToken = generateInviteToken()
           const tokenHash = hashInviteToken(rawToken)
           const expiryDate = getInviteExpiryDate()
 
-          const { error: insertError } = await supabase
+          console.log('[v0] F7.1B: Creating extra seat invite', {
+            email: invitedEmail,
+            seatType: 'extra',
+          })
+
+          const { error: insertError, data: insertedData } = await supabase
             .from('family_invites')
             .insert({
               family_group_id: familyGroup.id,
@@ -212,13 +233,20 @@ export async function POST(request: NextRequest) {
               token_hash: tokenHash,
               status: 'pending',
               seat_type: 'extra',
+              extra_seat_payment_intent_id: null,
               expires_at: expiryDate.toISOString(),
             })
+            .select()
 
           if (insertError) {
-            console.error('[family-invites] Insert error for extra seat:', insertError)
-            return NextResponse.json({ error: 'Failed to create invite' }, { status: 500 })
+            console.error('[family-invites] F7.1B: Insert error for extra seat:', insertError)
+            return NextResponse.json({ error: 'Failed to create invite: ' + insertError.message }, { status: 500 })
           }
+
+          console.log('[v0] F7.1B: Insert successful', {
+            inviteId: insertedData?.[0]?.id,
+            status: insertedData?.[0]?.status,
+          })
 
           const requestOrigin =
             request.headers.get('origin') ||
