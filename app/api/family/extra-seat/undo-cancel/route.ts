@@ -3,7 +3,18 @@
 import { NextResponse } from 'next/server'
 import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
-import { syncRenewlyBillingSubscriptionForPlan } from '@/lib/billing/renewly-subscription-sync'
+import { syncRenewlyFamilyOwnerSubscription } from '@/lib/billing/renewly-subscription-sync'
+import { invalidateCache } from '@/lib/redis'
+import { revalidateTag } from 'next/cache'
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
+    }),
+  ])
+}
 
 /**
  * POST /api/family/extra-seat/undo-cancel
@@ -114,16 +125,35 @@ export async function POST(request: Request) {
       )
     }
 
-    // Trigger Renewly subscription resync so billing metadata reflects kept seat.
+    const { data: refreshedAddons = [] } = await supabase
+      .from('family_seat_addons')
+      .select('id, quantity, status, cancel_at_period_end, current_period_end')
+      .eq('family_group_id', familyGroupId)
+      .eq('status', 'active')
+
+    let syncWarning: string | null = null
     try {
-      await syncRenewlyBillingSubscriptionForPlan({
-        userId: user.id,
-        email: user.email || '',
-        plan: 'family',
-        currentPeriodEnd: familyGroup.current_period_end,
-      })
+      await withTimeout(
+        syncRenewlyFamilyOwnerSubscription({
+          ownerUserId: user.id,
+          familyGroupId,
+          currentPeriodEnd: familyGroup.current_period_end,
+          seatAddons: refreshedAddons || [],
+        }),
+        3500,
+        'Renewly owner subscription resync'
+      )
     } catch (syncError) {
-      console.error('[extra-seat-undo-cancel] Renewly sync error:', syncError)
+      syncWarning = syncError instanceof Error ? syncError.message : 'Renewly subscription resync failed'
+      console.warn('[extra-seat-undo-cancel] Renewly sync warning:', syncError)
+    }
+
+    try {
+      await invalidateCache(`subscriptions:${user.id}`)
+      revalidateTag(`subscriptions:${user.id}`, 'max')
+      revalidateTag('billing', 'max')
+    } catch (cacheError) {
+      console.warn('[extra-seat-undo-cancel] Cache invalidation warning:', cacheError)
     }
 
     const restoredQuantity = restorable.reduce(
@@ -142,6 +172,8 @@ export async function POST(request: Request) {
         message: 'Scheduled cancellation reversed',
         restoredQuantity,
         restoredAddonIds: idsToRestore,
+        syncWarning,
+        shouldRefreshSubscriptions: true,
       },
       { status: 200 }
     )

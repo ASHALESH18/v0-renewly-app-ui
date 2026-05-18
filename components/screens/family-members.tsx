@@ -699,13 +699,17 @@ export function FamilyMembersScreen() {
   const handleUndoCancelExtraSeat = async () => {
     if (!familyStatus?.familyGroupId) return
     setIsUndoingCancel(true)
+    const controller = new AbortController()
+    const timeoutId = window.setTimeout(() => controller.abort(), 15000)
+
     try {
       const res = await fetch('/api/family/extra-seat/undo-cancel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ familyGroupId: familyStatus.familyGroupId }),
+        signal: controller.signal,
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
       if (!res.ok) {
         throw new Error(data?.error || 'Failed to undo cancellation')
       }
@@ -716,13 +720,19 @@ export function FamilyMembersScreen() {
       })
       await refreshFamilyStatus({ silent: true })
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+      const errorMessage = error instanceof DOMException && error.name === 'AbortError'
+        ? 'The request is taking too long. Refresh Family after a few seconds to verify the latest state.'
+        : error instanceof Error
+          ? error.message
+          : 'An error occurred'
       addToast({
         type: 'error',
         title: 'Could not undo cancellation',
         message: errorMessage,
       })
+      await refreshFamilyStatus({ silent: true }).catch(() => undefined)
     } finally {
+      window.clearTimeout(timeoutId)
       setIsUndoingCancel(false)
     }
   }

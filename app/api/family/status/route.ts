@@ -125,8 +125,43 @@ export async function GET() {
     const removedMembership = removedResult.data
     const removedMembershipError = removedResult.error
 
+    // F7.2E-R: A covered Family member can have an empty orphan owner group left
+    // from older profile.plan-based sync. In that conflict, do not show the user
+    // as an owner unless the owned group has real owner usage.
+    let effectiveOwnerGroup = ownerGroup
+    if (ownerGroup && membership && membership.family_group_id !== ownerGroup.id) {
+      const [ownedMembersResult, ownedInvitesResult, ownedAddonsResult] = await Promise.all([
+        supabase
+          .from('family_members')
+          .select('id', { count: 'exact', head: true })
+          .eq('family_group_id', ownerGroup.id)
+          .eq('status', 'active')
+          .neq('role', 'owner'),
+        supabase
+          .from('family_invites')
+          .select('id', { count: 'exact', head: true })
+          .eq('family_group_id', ownerGroup.id)
+          .eq('status', 'pending'),
+        supabase
+          .from('family_seat_addons')
+          .select('id', { count: 'exact', head: true })
+          .eq('family_group_id', ownerGroup.id)
+          .eq('status', 'active'),
+      ])
+
+      const ownedGroupHasRealUsage =
+        (ownedMembersResult.count || 0) > 0 ||
+        (ownedInvitesResult.count || 0) > 0 ||
+        (ownedAddonsResult.count || 0) > 0
+
+      if (!ownedGroupHasRealUsage) {
+        effectiveOwnerGroup = null
+      }
+    }
+
     // If owner, fetch active members and pending invites
-    if (ownerGroup) {
+    if (effectiveOwnerGroup) {
+      const ownerGroup = effectiveOwnerGroup
       const { data: members = [], error: membersError } = await supabase
         .from('family_members')
         .select('id, user_id, email, role, seat_type, status, joined_at')

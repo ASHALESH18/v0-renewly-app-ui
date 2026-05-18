@@ -188,9 +188,23 @@ export function SettingsScreen() {
     return familyStatus?.isFamilyOwner === true
   }, [familyStatus?.isFamilyOwner])
 
+  const hasCoveredFamilySubscription = useMemo(() => {
+    return safeSubscriptions.some(
+      (subscription: any) =>
+        subscription?.isSystemManaged === true &&
+        subscription?.systemSource === 'renewly_billing' &&
+        subscription?.managedPlan === 'family' &&
+        subscription?.coveredByFamily === true &&
+        subscription?.status === 'active'
+    )
+  }, [safeSubscriptions])
+
   const isFamilyMember = useMemo(() => {
-    return familyStatus?.membership?.role === 'member' && familyStatus?.isFamilyOwner !== true
-  }, [familyStatus?.membership?.role, familyStatus?.isFamilyOwner])
+    return (
+      (familyStatus?.membership?.role === 'member' && familyStatus?.isFamilyOwner !== true) ||
+      (hasCoveredFamilySubscription && familyStatus?.isFamilyOwner !== true)
+    )
+  }, [familyStatus?.membership?.role, familyStatus?.isFamilyOwner, hasCoveredFamilySubscription])
 
   const wasRemovedFromFamily = useMemo(() => {
     return Boolean(familyStatus?.removedMembership)

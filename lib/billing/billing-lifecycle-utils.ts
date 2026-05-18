@@ -121,6 +121,21 @@ export function shouldDisplayManagedRenewlySubscription(
   if (!managedPlan) return true
 
   const pending = getPendingBillingChange(subscription)
+  const isCoveredFamilySubscription = Boolean(subscription.coveredByFamily || subscription.covered_by_family)
+
+  // If stale owner-style and covered-member rows both exist for the same user,
+  // prefer the covered member row so Family members never see owner pricing.
+  const hasCoveredFamilyRow = allSubscriptions.some(
+    (s) =>
+      isRenewlyManagedSubscription(s) &&
+      (s.status === 'active' || s.status === 'unused') &&
+      getRenewlyManagedPlan(s) === 'family' &&
+      Boolean(s.coveredByFamily || s.covered_by_family)
+  )
+
+  if (managedPlan === 'family' && hasCoveredFamilyRow) {
+    return isCoveredFamilySubscription
+  }
 
   // If this subscription has a pending change with future effective date, show it
   if (pending && pending.effective_at) {

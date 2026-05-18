@@ -22,6 +22,7 @@ export function ProfileMenu({ isOpen, onClose, onNavigate, avatarUrl }: ProfileM
   const [isSigningOut, setIsSigningOut] = useState(false)
   const userProfile = useStore((state) => state.userProfile)
   const currentUserEmail = useStore((state) => state.currentUserEmail)
+  const subscriptions = useStore((state) => state.subscriptions)
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -104,8 +105,20 @@ export function ProfileMenu({ isOpen, onClose, onNavigate, avatarUrl }: ProfileM
     family: 'Renewly Family',
     enterprise: 'Enterprise',
   }
-  const planName = userProfile?.plan ? planNames[userProfile.plan] : 'Free Plan'
-  const isPremium = userProfile?.plan && userProfile.plan !== 'free'
+  const hasCoveredFamilySubscription = Array.isArray(subscriptions) && subscriptions.some(
+    (subscription: any) =>
+      subscription?.isSystemManaged === true &&
+      subscription?.systemSource === 'renewly_billing' &&
+      subscription?.managedPlan === 'family' &&
+      subscription?.coveredByFamily === true &&
+      subscription?.status === 'active'
+  )
+  const planName = hasCoveredFamilySubscription
+    ? 'Renewly Family Member'
+    : userProfile?.plan
+      ? planNames[userProfile.plan]
+      : 'Free Plan'
+  const isPremium = hasCoveredFamilySubscription || (userProfile?.plan && userProfile.plan !== 'free')
 
   const menuItems = [
     {

@@ -250,6 +250,7 @@ export async function POST(request: NextRequest) {
           email: user.email || '',
           plan,
           currentPeriodEnd: periodEndStr,
+          forceFamilyOwner: plan === 'family',
         })
         syncStatus = 'completed'
       } catch (syncError) {

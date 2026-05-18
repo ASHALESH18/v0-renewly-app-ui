@@ -406,93 +406,287 @@ export async function archiveManagedRenewlySubscriptions(params: {
 }
 
 /**
- * Main orchestrator: Sync Renewly subscription based on plan
+ * Fetch active extra-seat add-ons for a family group.
+ */
+async function getActiveSeatAddonsForFamilyGroup(
+  supabase: ReturnType<typeof getSupabaseClient>,
+  familyGroupId: string
+) {
+  const { data, error } = await supabase
+    .from('family_seat_addons')
+    .select('id, quantity, price_inr_per_seat, status, cancel_at_period_end, current_period_end')
+    .eq('family_group_id', familyGroupId)
+    .eq('status', 'active')
+
+  if (error) {
+    console.warn('[renewly-sync] Failed to fetch seat add-ons:', error)
+    return []
+  }
+
+  return data || []
+}
+
+function getSoonestScheduledAddonDate(
+  seatAddons: Array<{ cancel_at_period_end?: boolean | null; current_period_end?: string | null }>,
+  fallbackDate?: string | null
+): string | null {
+  const scheduledAddons = seatAddons.filter((addon) => addon.cancel_at_period_end === true)
+  if (scheduledAddons.length === 0) return null
+
+  const date = scheduledAddons
+    .map((addon) => addon.current_period_end)
+    .filter((date): date is string => Boolean(date))
+    .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())[0]
+
+  return date || fallbackDate || null
+}
+
+/**
+ * When a covered Family member later buys/QA-forces their own Family owner plan,
+ * they cannot stay inside another owner's Family. Remove their old member rows.
+ */
+async function removeUserFromOtherFamiliesForOwnerActivation(params: {
+  supabase: ReturnType<typeof getSupabaseClient>
+  userId: string
+  email?: string | null
+}) {
+  const { supabase, userId, email } = params
+  const now = new Date().toISOString()
+
+  await supabase
+    .from('family_members')
+    .update({ status: 'removed', removed_at: now, updated_at: now })
+    .eq('user_id', userId)
+    .eq('role', 'member')
+    .eq('status', 'active')
+
+  if (email) {
+    await supabase
+      .from('family_invites')
+      .update({ status: 'cancelled', cancelled_at: now, updated_at: now })
+      .ilike('invited_email', email)
+      .eq('status', 'pending')
+  }
+
+  await supabase
+    .from('subscriptions')
+    .update({ status: 'cancelled', updated_at: now })
+    .eq('user_id', userId)
+    .eq('is_system_managed', true)
+    .eq('system_source', 'renewly_billing')
+    .eq('covered_by_family', true)
+}
+
+/**
+ * Clean owner-style Family state that was accidentally created for a covered member
+ * by older profile.plan-based sync logic. Only cancels empty owned groups so real
+ * owner groups with members/invites/add-ons are not touched.
+ */
+async function cleanupEmptyOwnedFamilyGroupsForCoveredMember(params: {
+  supabase: ReturnType<typeof getSupabaseClient>
+  userId: string
+  activeMemberFamilyGroupId: string
+}) {
+  const { supabase, userId, activeMemberFamilyGroupId } = params
+  const now = new Date().toISOString()
+
+  const { data: ownedGroups = [] } = await supabase
+    .from('family_groups')
+    .select('id')
+    .eq('owner_user_id', userId)
+    .in('status', ['active', 'past_due'])
+
+  for (const group of ownedGroups || []) {
+    const groupId = group.id
+    if (!groupId || groupId === activeMemberFamilyGroupId) continue
+
+    const [membersResult, invitesResult, addonsResult] = await Promise.all([
+      supabase
+        .from('family_members')
+        .select('id', { count: 'exact', head: true })
+        .eq('family_group_id', groupId)
+        .eq('status', 'active')
+        .neq('role', 'owner'),
+      supabase
+        .from('family_invites')
+        .select('id', { count: 'exact', head: true })
+        .eq('family_group_id', groupId)
+        .eq('status', 'pending'),
+      supabase
+        .from('family_seat_addons')
+        .select('id', { count: 'exact', head: true })
+        .eq('family_group_id', groupId)
+        .eq('status', 'active'),
+    ])
+
+    const hasRealOwnerUsage =
+      (membersResult.count || 0) > 0 ||
+      (invitesResult.count || 0) > 0 ||
+      (addonsResult.count || 0) > 0
+
+    if (hasRealOwnerUsage) continue
+
+    await supabase
+      .from('family_members')
+      .update({ status: 'removed', removed_at: now, updated_at: now })
+      .eq('family_group_id', groupId)
+      .eq('status', 'active')
+
+    await supabase
+      .from('family_groups')
+      .update({
+        status: 'cancelled',
+        scheduled_action: 'none',
+        scheduled_action_reason: null,
+        updated_at: now,
+      })
+      .eq('id', groupId)
+
+    await supabase
+      .from('subscriptions')
+      .update({ status: 'cancelled', updated_at: now })
+      .eq('family_group_id', groupId)
+      .eq('is_system_managed', true)
+      .eq('system_source', 'renewly_billing')
+  }
+}
+
+/**
+ * Main orchestrator: Sync Renewly subscription based on the user's real relationship.
+ *
+ * forceFamilyOwner is used only from explicit purchase/QA owner activation flows.
+ * Dashboard/background sync must not pass it, otherwise covered members can be
+ * incorrectly converted into owner-style paid Family subscriptions.
  */
 export async function syncRenewlyBillingSubscriptionForPlan(params: {
   userId: string
   email: string
   plan: PlanType
   currentPeriodEnd?: string | null
+  currentPeriodStart?: string | null
+  forceFamilyOwner?: boolean
 }): Promise<void> {
-  const { userId, email, plan, currentPeriodEnd } = params
+  const {
+    userId,
+    email,
+    plan,
+    currentPeriodEnd,
+    currentPeriodStart = null,
+    forceFamilyOwner = false,
+  } = params
   const supabase = getSupabaseClient()
 
   try {
     if (plan === 'pro') {
-      // Sync Pro, archive old Family
       await syncRenewlyProSubscription({ userId, currentPeriodEnd })
       await archiveManagedRenewlySubscriptions({
         userId,
         exceptManagedKeys: [`renewly:pro:${userId}`],
       })
-    } else if (plan === 'family') {
-      // F7.2E-R: Relationship-aware family sync
-      // Check if user is actually an owner or just has profile.plan='family' (old data)
-      const relationship = await getUserFamilyRelationship(userId)
+      return
+    }
 
-      if (relationship.relationship === 'owner' && relationship.familyGroupId) {
-        // F7.2E-R: User owns the family group - sync as owner
-        const familyGroupId = relationship.familyGroupId
-        const currentPeriodEnd = relationship.currentPeriodEnd
+    if (plan === 'family') {
+      if (forceFamilyOwner) {
+        await removeUserFromOtherFamiliesForOwnerActivation({
+          supabase,
+          userId,
+          email,
+        })
 
-        // Fetch seat add-ons for owner
-        const { data: seatAddons } = await supabase
-          .from('family_seat_addons')
-          .select('id, quantity, price_inr_per_seat, status, cancel_at_period_end, current_period_end')
-          .eq('family_group_id', familyGroupId)
-          .eq('status', 'active')
+        const familyGroupId = await ensureFamilyGroupForOwner({
+          ownerUserId: userId,
+          ownerEmail: email,
+          currentPeriodStart,
+          currentPeriodEnd,
+        })
 
-        let currentCycleSeats = 0
-        if (seatAddons && seatAddons.length > 0) {
-          currentCycleSeats = seatAddons.reduce((sum, addon) => sum + (addon.quantity || 0), 0)
-        } else {
-          const { data: familyGroup } = await supabase
-            .from('family_groups')
-            .select('extra_seat_count')
-            .eq('id', familyGroupId)
-            .single()
-          currentCycleSeats = familyGroup?.extra_seat_count ?? 0
-        }
+        const seatAddons = await getActiveSeatAddonsForFamilyGroup(supabase, familyGroupId)
 
         await syncRenewlyFamilyOwnerSubscription({
           ownerUserId: userId,
           familyGroupId,
-          extraSeatCount: currentCycleSeats,
           currentPeriodEnd,
-          seatAddons: seatAddons || [],
+          seatAddons,
         })
 
         await archiveManagedRenewlySubscriptions({
           userId,
           exceptManagedKeys: [`renewly:family:owner:${familyGroupId}:${userId}`],
         })
-      } else if (relationship.relationship === 'member' && relationship.familyGroupId) {
-        // F7.2E-R: User is a member, sync as covered member (not owner)
-        await syncRenewlyFamilyMemberSubscription({
-          memberUserId: userId,
-          ownerUserId: '',
+        return
+      }
+
+      const relationship = await getUserFamilyRelationship(userId)
+
+      if (relationship.relationship === 'owner' && relationship.familyGroupId) {
+        const seatAddons = await getActiveSeatAddonsForFamilyGroup(
+          supabase,
+          relationship.familyGroupId
+        )
+
+        await syncRenewlyFamilyOwnerSubscription({
+          ownerUserId: userId,
           familyGroupId: relationship.familyGroupId,
-          currentPeriodEnd: relationship.currentPeriodEnd,
-          seatType: relationship.seatType as any,
+          currentPeriodEnd: relationship.currentPeriodEnd || currentPeriodEnd,
+          seatAddons,
         })
 
-        // Archive any orphaned owner rows
+        await archiveManagedRenewlySubscriptions({
+          userId,
+          exceptManagedKeys: [`renewly:family:owner:${relationship.familyGroupId}:${userId}`],
+        })
+        return
+      }
+
+      if (relationship.relationship === 'member' && relationship.familyGroupId) {
+        const seatAddons = await getActiveSeatAddonsForFamilyGroup(
+          supabase,
+          relationship.familyGroupId
+        )
+        const accessEndsAt =
+          relationship.seatType === 'extra'
+            ? getSoonestScheduledAddonDate(
+                seatAddons,
+                relationship.currentPeriodEnd || currentPeriodEnd
+              )
+            : null
+
+        const hasScheduledExtraSeatCancellation =
+          relationship.seatType === 'extra' && Boolean(accessEndsAt)
+
+        await syncRenewlyFamilyMemberSubscription({
+          memberUserId: userId,
+          ownerUserId: relationship.ownerUserId || '',
+          familyGroupId: relationship.familyGroupId,
+          currentPeriodEnd: relationship.currentPeriodEnd || currentPeriodEnd,
+          seatType: relationship.seatType as any,
+          hasScheduledExtraSeatCancellation,
+          accessEndsAt,
+        })
+
+        await cleanupEmptyOwnedFamilyGroupsForCoveredMember({
+          supabase,
+          userId,
+          activeMemberFamilyGroupId: relationship.familyGroupId,
+        })
+
         await archiveManagedRenewlySubscriptions({
           userId,
           exceptManagedKeys: [`renewly:family:member:${relationship.familyGroupId}:${userId}`],
         })
-      } else {
-        // F7.2E-R: No family relationship found - profile.plan='family' but not in DB
-        // Archive any old family subscriptions and treat as standalone
-        await archiveManagedRenewlySubscriptions({ userId })
+        return
       }
-    } else if (plan === 'free') {
-      // Archive all system-managed Renewly subscriptions
+
+      await archiveManagedRenewlySubscriptions({ userId })
+      return
+    }
+
+    if (plan === 'free') {
       await archiveManagedRenewlySubscriptions({ userId })
     }
-    // For 'enterprise', do nothing for now
   } catch (error) {
     console.error('[renewly-sync] syncRenewlyBillingSubscriptionForPlan error:', error)
-    // Log but don't throw - we don't want sync failures to break payment flows
+    // Log but don't throw - we don't want sync failures to break payment flows.
   }
 }
