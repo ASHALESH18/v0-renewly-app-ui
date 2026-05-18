@@ -129,6 +129,21 @@ export function SubscriptionCard({
               </p>
             )}
 
+            {/* F7.2E-R: Show scheduled extra-seat cancellation for Renewly Family */}
+            {subscription.name === 'Renewly Family' && subscription.systemMetadata?.has_scheduled_extra_seat_cancellation && (
+              <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
+                Extra seat scheduled to end on {
+                  subscription.systemMetadata.scheduled_cancel_date
+                    ? new Date(subscription.systemMetadata.scheduled_cancel_date).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })
+                    : 'end of period'
+                }
+              </p>
+            )}
+
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
               <div
                 className={cn(

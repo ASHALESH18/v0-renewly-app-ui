@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { getPlanPricing } from '@/lib/plans'
 import type { PlanType } from '@/lib/plans'
 import { computeFamilyBillingState } from '@/lib/billing/family-billing-state'
+import { getUserFamilyRelationship } from '@/lib/family/get-user-family-relationship'
 
 /**
  * Get Supabase client for sync operations
@@ -294,6 +295,17 @@ export async function syncRenewlyFamilyMemberSubscription(params: {
   const supabase = getSupabaseClient()
 
   try {
+    // F7.2E-R: Get owner info from family_groups if not provided
+    let finalOwnerUserId = ownerUserId
+    if (!finalOwnerUserId) {
+      const { data: group } = await supabase
+        .from('family_groups')
+        .select('owner_user_id')
+        .eq('id', familyGroupId)
+        .maybeSingle()
+      finalOwnerUserId = group?.owner_user_id || ''
+    }
+
     const renewalDate = getNextMonthlyRenewalDate(currentPeriodEnd)
     const managedKey = `renewly:family:member:${familyGroupId}:${memberUserId}`
 
@@ -315,7 +327,7 @@ export async function syncRenewlyFamilyMemberSubscription(params: {
           is_system_managed: true,
           managed_plan: 'family',
           system_source: 'renewly_billing',
-          billing_owner_user_id: ownerUserId,
+          billing_owner_user_id: finalOwnerUserId,
           family_group_id: familyGroupId,
           covered_by_family: true,
           system_metadata: {
@@ -414,55 +426,66 @@ export async function syncRenewlyBillingSubscriptionForPlan(params: {
         exceptManagedKeys: [`renewly:pro:${userId}`],
       })
     } else if (plan === 'family') {
-      // Ensure family group, sync Family owner, archive old Pro
-      const familyGroupId = await ensureFamilyGroupForOwner({
-        ownerUserId: userId,
-        ownerEmail: email,
-        currentPeriodEnd,
-      })
+      // F7.2E-R: Relationship-aware family sync
+      // Check if user is actually an owner or just has profile.plan='family' (old data)
+      const relationship = await getUserFamilyRelationship(userId)
 
-      // F7.2D-R: Fetch full addon rows for shared billing state helper
-      const { data: seatAddons, error: addonsError } = await supabase
-        .from('family_seat_addons')
-        .select('id, quantity, price_inr_per_seat, status, cancel_at_period_end, current_period_end')
-        .eq('family_group_id', familyGroupId)
-        .eq('status', 'active')
+      if (relationship.relationship === 'owner' && relationship.familyGroupId) {
+        // F7.2E-R: User owns the family group - sync as owner
+        const familyGroupId = relationship.familyGroupId
+        const currentPeriodEnd = relationship.currentPeriodEnd
 
-      if (addonsError) {
-        console.warn('[renewly-sync] Could not fetch seat addons:', addonsError)
-      }
+        // Fetch seat add-ons for owner
+        const { data: seatAddons } = await supabase
+          .from('family_seat_addons')
+          .select('id, quantity, price_inr_per_seat, status, cancel_at_period_end, current_period_end')
+          .eq('family_group_id', familyGroupId)
+          .eq('status', 'active')
 
-      let currentCycleSeats = 0
-      if (seatAddons && seatAddons.length > 0) {
-        currentCycleSeats = seatAddons.reduce((sum, addon) => sum + (addon.quantity || 0), 0)
-      } else {
-        // Fallback to family_groups.extra_seat_count if no addons
-        const { data: familyGroup, error: fetchError } = await supabase
-          .from('family_groups')
-          .select('extra_seat_count')
-          .eq('id', familyGroupId)
-          .single()
-
-        if (fetchError) {
-          console.warn('[renewly-sync] Could not fetch family group for seat count:', fetchError)
+        let currentCycleSeats = 0
+        if (seatAddons && seatAddons.length > 0) {
+          currentCycleSeats = seatAddons.reduce((sum, addon) => sum + (addon.quantity || 0), 0)
+        } else {
+          const { data: familyGroup } = await supabase
+            .from('family_groups')
+            .select('extra_seat_count')
+            .eq('id', familyGroupId)
+            .single()
+          currentCycleSeats = familyGroup?.extra_seat_count ?? 0
         }
 
-        currentCycleSeats = familyGroup?.extra_seat_count ?? 0
+        await syncRenewlyFamilyOwnerSubscription({
+          ownerUserId: userId,
+          familyGroupId,
+          extraSeatCount: currentCycleSeats,
+          currentPeriodEnd,
+          seatAddons: seatAddons || [],
+        })
+
+        await archiveManagedRenewlySubscriptions({
+          userId,
+          exceptManagedKeys: [`renewly:family:owner:${familyGroupId}:${userId}`],
+        })
+      } else if (relationship.relationship === 'member' && relationship.familyGroupId) {
+        // F7.2E-R: User is a member, sync as covered member (not owner)
+        await syncRenewlyFamilyMemberSubscription({
+          memberUserId: userId,
+          ownerUserId: '',
+          familyGroupId: relationship.familyGroupId,
+          currentPeriodEnd: relationship.currentPeriodEnd,
+          seatType: relationship.seatType as any,
+        })
+
+        // Archive any orphaned owner rows
+        await archiveManagedRenewlySubscriptions({
+          userId,
+          exceptManagedKeys: [`renewly:family:member:${relationship.familyGroupId}:${userId}`],
+        })
+      } else {
+        // F7.2E-R: No family relationship found - profile.plan='family' but not in DB
+        // Archive any old family subscriptions and treat as standalone
+        await archiveManagedRenewlySubscriptions({ userId })
       }
-
-      // F7.2D-R: Pass full addon rows so sync can persist scheduled-cancel metadata.
-      await syncRenewlyFamilyOwnerSubscription({
-        ownerUserId: userId,
-        familyGroupId,
-        extraSeatCount: currentCycleSeats,
-        currentPeriodEnd,
-        seatAddons: seatAddons || [],
-      })
-
-      await archiveManagedRenewlySubscriptions({
-        userId,
-        exceptManagedKeys: [`renewly:family:owner:${familyGroupId}:${userId}`],
-      })
     } else if (plan === 'free') {
       // Archive all system-managed Renewly subscriptions
       await archiveManagedRenewlySubscriptions({ userId })
