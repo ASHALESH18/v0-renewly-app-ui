@@ -375,22 +375,27 @@ export async function syncRenewlyBillingSubscriptionForPlan(params: {
         currentPeriodEnd,
       })
 
-      // F6C.2: Get extra seat count from family_seat_addons (active) first, then fallback to family_groups.extra_seat_count
+      // F7.2B: Get extra seat count from family_seat_addons (active) for CURRENT CYCLE
+      // Include seats scheduled for cancellation (cancel_at_period_end=true) because they're still active until period end
       const { data: seatAddons, error: addonsError } = await supabase
         .from('family_seat_addons')
-        .select('quantity, price_inr_per_seat')
+        .select('quantity, price_inr_per_seat, cancel_at_period_end')
         .eq('family_group_id', familyGroupId)
         .eq('status', 'active')
-        .eq('cancel_at_period_end', false)
 
       if (addonsError) {
         console.warn('[renewly-sync] Could not fetch seat addons:', addonsError)
       }
 
-      // F6C.2: Use active addon quantity as primary source
-      let extraSeats = 0
+      // F7.2B: Use active addon quantity for CURRENT MONTHLY AMOUNT (includes scheduled)
+      // Scheduled cancellations (cancel_at_period_end=true) stay in current cycle
+      let currentCycleSeats = 0
+      let scheduledCancelSeats = 0
       if (seatAddons && seatAddons.length > 0) {
-        extraSeats = seatAddons.reduce((sum, addon) => sum + (addon.quantity || 0), 0)
+        currentCycleSeats = seatAddons.reduce((sum, addon) => sum + (addon.quantity || 0), 0)
+        scheduledCancelSeats = seatAddons
+          .filter(a => a.cancel_at_period_end)
+          .reduce((sum, addon) => sum + (addon.quantity || 0), 0)
       } else {
         // Fallback to family_groups.extra_seat_count if no addons
         const { data: familyGroup, error: fetchError } = await supabase
@@ -403,24 +408,27 @@ export async function syncRenewlyBillingSubscriptionForPlan(params: {
           console.warn('[renewly-sync] Could not fetch family group for seat count:', fetchError)
         }
 
-        extraSeats = familyGroup?.extra_seat_count ?? 0
+        currentCycleSeats = familyGroup?.extra_seat_count ?? 0
       }
 
-      // F6C.2C: Add debug logging in preview/development
+      // F7.2B: Debug logging shows both current and next cycle amounts
       if (process.env.NODE_ENV !== 'production') {
-        console.log('[v0] F6C.2C DEBUG: Renewly Family sync', {
+        const nextCycleSeats = currentCycleSeats - scheduledCancelSeats
+        console.log('[v0] F7.2B DEBUG: Renewly Family sync', {
           familyGroupId,
-          baseAmount: 299,
-          activeAddonQuantity: extraSeats,
-          addonTotal: extraSeats * 99,
-          totalAmount: 299 + extraSeats * 99,
+          currentCycleSeats,
+          scheduledCancelSeats,
+          nextCycleSeats,
+          currentMonthlyAmount: 299 + currentCycleSeats * 99,
+          nextCycleMonthlyAmount: 299 + nextCycleSeats * 99,
         })
       }
 
+      // F7.2B: Use current cycle seats (includes scheduled cancellations)
       await syncRenewlyFamilyOwnerSubscription({
         ownerUserId: userId,
         familyGroupId,
-        extraSeatCount: extraSeats,
+        extraSeatCount: currentCycleSeats,
         currentPeriodEnd,
       })
 
