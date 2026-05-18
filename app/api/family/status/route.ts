@@ -263,7 +263,17 @@ export async function GET() {
           scheduledFor: ownerGroup.current_period_end,
           canScheduleNewInvites: ownerGroup.scheduled_action !== 'cancel_at_period_end',
         },
-        // Blocker #6: Plan & Billing display (F6C)
+        // F7.2B: Billing metadata for Dashboard and Settings display
+        billingMetadata: {
+          currentMonthlyTotal: 299 + (seatUsage.paidActiveExtraSeats * FAMILY_EXTRA_MEMBER_PRICE_INR),
+          nextCycleMonthlyTotal: 299 + (Math.max(0, seatUsage.paidActiveExtraSeats - extraSeatsScheduledToEnd) * FAMILY_EXTRA_MEMBER_PRICE_INR),
+          extraSeatCount: seatUsage.paidActiveExtraSeats,
+          scheduledCancelExtraSeatCount: extraSeatsScheduledToEnd,
+          scheduledCancelDate: seatAddons
+            ?.filter((a: any) => a.cancel_at_period_end)
+            .sort((a: any, b: any) => new Date(b.current_period_end || 0).getTime() - new Date(a.current_period_end || 0).getTime())
+            ?.[0]?.current_period_end || ownerGroup.current_period_end,
+        },
         billingDisplay,
       })
     }
