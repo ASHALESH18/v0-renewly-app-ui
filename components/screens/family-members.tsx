@@ -652,11 +652,26 @@ export function FamilyMembersScreen() {
         throw new Error(data.error || 'Failed to cancel extra seat')
       }
 
-      // F7.2: Determine message based on scenario
+      // F7.2A: Close modal immediately on success before showing toast
+      setShowCancelExtraSeatsModal(false)
+
+      // F7.2A: Clear scenario state
+      setCancelScenario(null)
+      setAffectedMemberName(null)
+      setPeriodEndDate(null)
+
+      // F7.2A: Determine message based on scenario
       const isUnused = data.scenario === 'unused'
-      const successMessage = isUnused
-        ? 'Unused extra seat cancelled successfully'
-        : `Extra seat cancellation scheduled for ${data.affectedMember?.name || 'this member'}`
+      const isAlreadyScheduled = data.alreadyScheduled === true
+      
+      let successMessage = ''
+      if (isAlreadyScheduled) {
+        successMessage = 'Cancellation is already scheduled'
+      } else if (isUnused) {
+        successMessage = 'Unused extra seat cancelled successfully'
+      } else {
+        successMessage = `Extra seat cancellation scheduled for ${data.affectedMember?.name || 'this member'}`
+      }
 
       addToast({
         type: 'success',
@@ -664,9 +679,7 @@ export function FamilyMembersScreen() {
         message: successMessage,
       })
 
-      setShowCancelExtraSeatsModal(false)
-
-      // Refresh to update seat usage
+      // F7.2A: Refresh to update seat usage and show scheduled state
       await refreshFamilyStatus({ silent: true })
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred'
@@ -1035,26 +1048,50 @@ export function FamilyMembersScreen() {
                       <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
+                            <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
                               Extra members +{familyStatus.seatUsage.paidActiveExtraSeats}
                             </p>
                             <p className="text-xs text-emerald-800 dark:text-emerald-300">
                               ₹{familyStatus.seatUsage.extraSeatPriceINR}/month
                             </p>
-                            {/* F7: Show available/used breakdown */}
-                            {familyStatus.extraSeatReuse && (
-                              <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-400">
-                                {familyStatus.extraSeatReuse.reusableExtraSeats} available • {familyStatus.seatUsage.activeExtraMembers} in use
-                              </p>
+                            {/* F7.2A: Show available/used breakdown OR scheduled cancellation state */}
+                            {familyStatus.seatAddons?.some(a => a.cancelAtPeriodEnd) ? (
+                              <div className="mt-2 space-y-1">
+                                <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
+                                  Cancellation scheduled
+                                </p>
+                                {familyStatus.seatAddons
+                                  .filter(a => a.cancelAtPeriodEnd)
+                                  .map(a => (
+                                    <p key={a.id} className="text-xs text-amber-700 dark:text-amber-400">
+                                      Active until {a.currentPeriodEnd ? new Date(a.currentPeriodEnd).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'end of period'}
+                                    </p>
+                                  ))}
+                              </div>
+                            ) : (
+                              familyStatus.extraSeatReuse && (
+                                <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-400">
+                                  {familyStatus.extraSeatReuse.reusableExtraSeats} available • {familyStatus.seatUsage.activeExtraMembers} in use
+                                </p>
+                              )
                             )}
                           </div>
-                          {/* F7.2: Show cancel/manage button for both unused and in-use extra seats */}
+                          {/* F7.2A: Show cancel/manage button - disable if already scheduled */}
                           {familyStatus.extraSeatReuse && familyStatus.extraSeatReuse.paidActiveExtraSeats > 0 && (
                             <button
                               onClick={handleOpenCancelModal}
-                              className="text-xs px-2 py-1 rounded bg-emerald-600/20 text-emerald-700 hover:bg-emerald-600/30 transition-colors font-medium dark:bg-emerald-900/40 dark:text-emerald-300 dark:hover:bg-emerald-900/60 cursor-pointer whitespace-nowrap"
+                              disabled={familyStatus.seatAddons?.some(a => a.cancelAtPeriodEnd) ?? false}
+                              className={`text-xs px-2 py-1 rounded font-medium whitespace-nowrap transition-colors ${
+                                familyStatus.seatAddons?.some(a => a.cancelAtPeriodEnd)
+                                  ? 'bg-amber-600/20 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 cursor-not-allowed opacity-60'
+                                  : 'bg-emerald-600/20 text-emerald-700 hover:bg-emerald-600/30 dark:bg-emerald-900/40 dark:text-emerald-300 dark:hover:bg-emerald-900/60 cursor-pointer'
+                              }`}
                             >
-                              {familyStatus.extraSeatReuse.reusableExtraSeats > 0 ? 'Cancel' : 'Manage add-on'}
+                              {familyStatus.seatAddons?.some(a => a.cancelAtPeriodEnd)
+                                ? 'Cancellation scheduled'
+                                : familyStatus.extraSeatReuse.reusableExtraSeats > 0
+                                ? 'Cancel'
+                                : 'Manage add-on'}
                             </button>
                           )}
                         </div>

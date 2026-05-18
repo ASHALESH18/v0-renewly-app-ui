@@ -141,14 +141,16 @@ export async function POST(request: Request) {
     
     // Check if already scheduled for cancellation - if so, this is idempotent
     if (activeCancelableAddon.cancel_at_period_end) {
-      console.log('[v0] F7.2: Addon already scheduled for cancellation - idempotent', {
+      console.log('[v0] F7.2A: Addon already scheduled for cancellation - idempotent', {
         addonId: activeCancelableAddon.id,
       })
       return NextResponse.json(
         {
           message: 'Extra seat cancellation already scheduled',
+          alreadyScheduled: true,
           scenario: 'in_use', // Was previously scheduled as in-use
           periodEndDate,
+          affectedMember: affectedMemberInfo,
           seatUsage,
         },
         { status: 200 }

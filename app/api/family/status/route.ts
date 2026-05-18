@@ -248,6 +248,14 @@ export async function GET() {
           surplusExtraSeats: extraSeatReuseState.surplusExtraSeats,
           extraSeatsScheduledToEnd,
         },
+        // F7.2A: Seat add-ons with scheduled cancellation state
+        seatAddons: (seatAddons || []).map(addon => ({
+          id: addon.id,
+          quantity: addon.quantity,
+          status: addon.status,
+          cancelAtPeriodEnd: addon.cancel_at_period_end,
+          currentPeriodEnd: addon.current_period_end,
+        })),
         // F8-lite: Lifecycle scheduling
         lifecycle: {
           scheduledAction: ownerGroup.scheduled_action,
