@@ -28,6 +28,7 @@ import { calculateMetrics, getUpcomingRenewals, getDaysUntilRenewal } from '@/li
 import { useExchangeRates } from '@/lib/hooks/use-exchange-rates'
 import { SubscriptionIcon } from '@/lib/brand-icons'
 import { isDisplayableSubscription } from '@/lib/billing/subscription-display-utils'
+import { mapSubscriptionRowToUI } from '@/lib/supabase/mappers'
 
 // Translation helper for dashboard labels
 const dashboardLabels: Record<string, Record<string, string>> = {
@@ -171,6 +172,7 @@ export function DashboardScreen({
   const [viewMode, setViewMode] = useState('cards')
   const [familyStatus, setFamilyStatus] = useState<any>(null)
   const [dismissedInviteId, setDismissedInviteId] = useState<string | null>(null)
+  const setSubscriptions = useStore((state) => state.setSubscriptions)
 
   // Fetch family status to show pending invite banner
   // F6C.2B: Also trigger Renewly subscription sync before Dashboard loads
@@ -196,6 +198,24 @@ export function DashboardScreen({
         // Continue with dashboard even if sync fails
       }
 
+      // Refresh subscription store from a fresh server read after sync.
+      // This prevents the Dashboard card/metrics from rendering stale Redis/Zustand data.
+      try {
+        const subscriptionsRes = await fetch('/api/subscriptions?fresh=1', {
+          cache: 'no-store',
+        })
+
+        if (subscriptionsRes.ok) {
+          const subscriptionsPayload = await subscriptionsRes.json()
+          const freshSubscriptions = Array.isArray(subscriptionsPayload?.subscriptions)
+            ? subscriptionsPayload.subscriptions.map(mapSubscriptionRowToUI)
+            : []
+          setSubscriptions(freshSubscriptions)
+        }
+      } catch (error) {
+        console.error('[v0] Error refreshing subscriptions after Renewly sync:', error)
+      }
+
       // Then fetch family status
       try {
         const res = await fetch('/api/family/status', { cache: 'no-store' })
@@ -217,7 +237,7 @@ export function DashboardScreen({
     }
 
     initializeDashboard()
-  }, [])
+  }, [setSubscriptions])
 
   const rawSubscriptions = useStore((state) => state.subscriptions)
   const subscriptions = useMemo(

@@ -184,6 +184,7 @@ async function handlePaymentCaptured(payment: any) {
           email: profile.email,
           plan: planId,
           currentPeriodEnd: periodEndStr,
+          forceFamilyOwner: planId === 'family',
         })
       }
     } catch (syncError) {

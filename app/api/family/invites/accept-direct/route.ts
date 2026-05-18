@@ -273,6 +273,7 @@ export async function POST(request: Request) {
         ownerUserId: familyGroup.owner_user_id,
         familyGroupId: familyGroup.id,
         currentPeriodEnd: familyGroup.current_period_end,
+        seatType: invite.seat_type,
       })
       syncStatus = 'completed'
     } catch (syncError) {

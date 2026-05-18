@@ -56,6 +56,7 @@ export async function POST() {
         family_group_id,
         role,
         status,
+        seat_type,
         family_groups (
           id,
           owner_user_id,
@@ -84,6 +85,23 @@ export async function POST() {
       )
     }
 
+    const { data: seatAddons = [] } = await supabase
+      .from('family_seat_addons')
+      .select('id, quantity, status, cancel_at_period_end, current_period_end')
+      .eq('family_group_id', familyGroup.id)
+      .eq('status', 'active')
+
+    const scheduledCancelDate =
+      membership.seat_type === 'extra'
+        ? (seatAddons || [])
+            .filter((addon: any) => addon.cancel_at_period_end === true)
+            .map((addon: any) => addon.current_period_end)
+            .filter(Boolean)
+            .sort((a: string, b: string) => new Date(a).getTime() - new Date(b).getTime())[0] ||
+          familyGroup.current_period_end ||
+          null
+        : null
+
     // Sync Renewly Family subscription as covered_by_family
     try {
       await syncRenewlyFamilyMemberSubscription({
@@ -91,6 +109,9 @@ export async function POST() {
         ownerUserId: familyGroup.owner_user_id,
         familyGroupId: familyGroup.id,
         currentPeriodEnd: familyGroup.current_period_end,
+        seatType: membership.seat_type,
+        hasScheduledExtraSeatCancellation: Boolean(scheduledCancelDate),
+        accessEndsAt: scheduledCancelDate,
       })
     } catch (syncError) {
       console.error('[resync-subscription] Sync error:', syncError)

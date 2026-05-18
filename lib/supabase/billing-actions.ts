@@ -224,6 +224,7 @@ export async function processPayment(
             email: profile.email,
             plan: planId,
             currentPeriodEnd: periodEndStr,
+            forceFamilyOwner: planId === 'family',
           })
         }
       } catch (syncError) {

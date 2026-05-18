@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Revalidate user profile cache
-    revalidateTag('user-profile', 'max', 'max')
+    revalidateTag('user-profile', 'max')
 
     return NextResponse.json({ success: true })
   } catch (error) {

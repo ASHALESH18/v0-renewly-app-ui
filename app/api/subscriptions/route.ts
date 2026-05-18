@@ -20,28 +20,34 @@ export async function GET(request: NextRequest) {
     }
 
     const cacheKey = `subscriptions:${user.id}`
+    const forceFresh =
+      request.nextUrl.searchParams.get('fresh') === '1' ||
+      request.nextUrl.searchParams.get('cache') === 'no-store'
 
-    const subscriptions = await withCache(
-      cacheKey,
-      async () => {
-        const { data, error } = await supabase
-          .from('subscriptions')
-          .select('*')
-          .eq('user_id', user.id)
-          .neq('status', 'cancelled')
-          .order('created_at', { ascending: false })
+    const fetchSubscriptions = async () => {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .neq('status', 'cancelled')
+        .order('created_at', { ascending: false })
 
-        if (error) {
-          console.error('[subscriptions] Error fetching:', error)
-          throw error
-        }
+      if (error) {
+        console.error('[subscriptions] Error fetching:', error)
+        throw error
+      }
 
-        return data || []
-      },
-      CACHE_TTL.medium
+      return data || []
+    }
+
+    const subscriptions = forceFresh
+      ? await fetchSubscriptions()
+      : await withCache(cacheKey, fetchSubscriptions, CACHE_TTL.short)
+
+    return NextResponse.json(
+      { subscriptions },
+      { headers: { 'Cache-Control': 'no-store, max-age=0' } }
     )
-
-    return NextResponse.json({ subscriptions })
   } catch (error) {
     console.error('[subscriptions] Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

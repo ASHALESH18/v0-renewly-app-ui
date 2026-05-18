@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
             currentPeriodEnd: familyGroup.current_period_end,
           })
         }
-        revalidateTag(`subscriptions:${user.id}`, 'max', 'max')
+        revalidateTag(`subscriptions:${user.id}`, 'max')
         return NextResponse.json({
           success: true,
           message: 'Already accepted',
@@ -269,6 +269,7 @@ export async function POST(request: NextRequest) {
         ownerUserId: familyGroup.owner_user_id,
         familyGroupId: familyGroup.id,
         currentPeriodEnd: familyGroup.current_period_end,
+        seatType: invite.seat_type,
       })
       syncStatus = 'completed'
     } catch (syncError) {
@@ -280,8 +281,8 @@ export async function POST(request: NextRequest) {
     await invalidateCache(`subscriptions:${user.id}`)
 
     // Invalidate Next.js cache tags
-    revalidateTag(`subscriptions:${user.id}`, 'max', 'max')
-    revalidateTag('profile', 'max', 'max')
+    revalidateTag(`subscriptions:${user.id}`, 'max')
+    revalidateTag('profile', 'max')
 
     return NextResponse.json({
       success: true,

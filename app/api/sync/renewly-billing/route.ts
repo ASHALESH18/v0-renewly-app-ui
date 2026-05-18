@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { getUser } from '@/lib/supabase/server'
 import { getProfile } from '@/lib/supabase/repositories/profile'
 import { syncRenewlyBillingSubscriptionForPlan } from '@/lib/billing/renewly-subscription-sync'
+import { invalidateCache } from '@/lib/redis'
+import { revalidateTag } from 'next/cache'
 
 /**
  * POST /api/sync/renewly-billing
@@ -43,6 +45,14 @@ export async function POST() {
       currentPeriodEnd: profile.current_period_end || undefined,
     })
 
+    try {
+      await invalidateCache(`subscriptions:${user.id}`)
+      revalidateTag(`subscriptions:${user.id}`, 'max')
+      revalidateTag('billing', 'max')
+    } catch (cacheError) {
+      console.warn('[sync] renewly-billing cache invalidation warning:', cacheError)
+    }
+
     // F6C.2C: Add success logging in development
     if (process.env.NODE_ENV !== 'production') {
       console.log('[v0] F6C.2C DEBUG: Sync endpoint completed successfully')
@@ -50,7 +60,10 @@ export async function POST() {
 
     return NextResponse.json(
       { message: 'Renewly subscription synced successfully' },
-      { status: 200 }
+      {
+        status: 200,
+        headers: { 'Cache-Control': 'no-store, max-age=0' },
+      }
     )
   } catch (error) {
     console.error('[sync] renewly-billing error:', error)
