@@ -292,8 +292,8 @@ export async function POST(
     }
 
     // Revalidate Next.js tags for member
-    revalidateTag(`subscriptions:${member.user_id}`)
-    revalidateTag('profile')
+    revalidateTag(`subscriptions:${member.user_id}`, 'max')
+    revalidateTag('profile', 'max')
 
     // Send removal email to member
     let emailSent = false

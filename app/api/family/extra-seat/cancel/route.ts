@@ -61,9 +61,9 @@ export async function POST(request: Request) {
 
     // F7.2: Fetch all data needed to calculate seat usage and affected member
     const [
-      { data: members = [] },
-      { data: pendingInvites = [] },
-      { data: seatAddons = [] },
+      { data: membersData = null },
+      { data: invitesData = null },
+      { data: addonsData = null },
     ] = await Promise.all([
       supabase
         .from('family_members')
@@ -81,6 +81,10 @@ export async function POST(request: Request) {
         .eq('family_group_id', familyGroupId)
         .eq('status', 'active'),
     ])
+
+    const members = membersData ?? []
+    const pendingInvites = invitesData ?? []
+    const seatAddons = addonsData ?? []
 
     // Calculate current seat usage
     const seatUsage = calculateSeatUsage({

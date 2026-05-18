@@ -272,8 +272,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Revalidate Next.js tags
-    revalidateTag(`subscriptions:${user.id}`)
-    revalidateTag('profile')
+    revalidateTag(`subscriptions:${user.id}`, 'max')
+    revalidateTag('profile', 'max')
 
     // Send non-blocking emails (do not block leave on email failure)
     try {

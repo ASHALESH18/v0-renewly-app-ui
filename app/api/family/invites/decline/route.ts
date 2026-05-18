@@ -126,8 +126,8 @@ export async function POST(request: Request) {
     }
 
     // Invalidate cache
-    revalidateTag('family-status')
-    revalidateTag(`subscriptions:${user.id}`)
+    revalidateTag('family-status', 'max')
+    revalidateTag(`subscriptions:${user.id}`, 'max')
 
     // Notify owner (non-blocking - doesn't affect response)
     notifyOwnerOfInviteAction({

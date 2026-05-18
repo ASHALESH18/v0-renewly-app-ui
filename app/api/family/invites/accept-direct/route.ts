@@ -115,7 +115,7 @@ export async function POST(request: Request) {
             currentPeriodEnd: familyGroup.current_period_end,
           })
         }
-        revalidateTag(`subscriptions:${user.id}`)
+        revalidateTag(`subscriptions:${user.id}`, 'max')
         return NextResponse.json({
           success: true,
           message: 'Already accepted',
@@ -284,8 +284,8 @@ export async function POST(request: Request) {
     await invalidateCache(`subscriptions:${user.id}`)
 
     // Invalidate Next.js cache tags
-    revalidateTag(`subscriptions:${user.id}`)
-    revalidateTag('profile')
+    revalidateTag(`subscriptions:${user.id}`, 'max')
+    revalidateTag('profile', 'max')
 
     // Notify owner (non-blocking - doesn't affect response)
     notifyOwnerOfInviteAction({

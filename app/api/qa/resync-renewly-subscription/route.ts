@@ -127,8 +127,8 @@ export async function POST(request: NextRequest) {
 
     // Invalidate cache tags
     const { revalidateTag } = await import('next/cache')
-    revalidateTag(`subscriptions:${user.id}`)
-    revalidateTag('profile')
+    revalidateTag(`subscriptions:${user.id}`, 'max')
+    revalidateTag('profile', 'max')
     
     // Invalidate Redis cache for subscriptions
     await safeCacheDelete(`subscriptions:${user.id}`)
