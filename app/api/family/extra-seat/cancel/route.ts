@@ -136,19 +136,20 @@ export async function POST(request: Request) {
 
     periodEndDate = activeCancelableAddon.current_period_end || familyGroup.current_period_end
 
-    // F7.2: Mark seat addon for cancellation (idempotent - handle already-cancelled)
-    const newQuantity = activeCancelableAddon.quantity - quantity
+    // F7.2C: Keep quantity unchanged until lifecycle processor runs at period_end
+    // Only set cancel_at_period_end flag; don't reduce quantity now
+    // This keeps the extra seat active until the period ends
     
     // Check if already scheduled for cancellation - if so, this is idempotent
     if (activeCancelableAddon.cancel_at_period_end) {
-      console.log('[v0] F7.2A: Addon already scheduled for cancellation - idempotent', {
+      console.log('[v0] F7.2C: Addon already scheduled for cancellation - idempotent', {
         addonId: activeCancelableAddon.id,
       })
       return NextResponse.json(
         {
           message: 'Extra seat cancellation already scheduled',
           alreadyScheduled: true,
-          scenario: 'in_use', // Was previously scheduled as in-use
+          scenario: isUnused ? 'unused' : 'in_use',
           periodEndDate,
           affectedMember: affectedMemberInfo,
           seatUsage,
@@ -157,11 +158,12 @@ export async function POST(request: Request) {
       )
     }
 
+    // F7.2C: Only update cancel_at_period_end flag - DO NOT reduce quantity
+    // Quantity stays the same, lifecycle processor will remove the addon row when period ends
     const { error: updateError } = await supabase
       .from('family_seat_addons')
       .update({
-        quantity: Math.max(0, newQuantity),
-        cancel_at_period_end: true, // F7.2: Always schedule for period end (handles both unused and in-use)
+        cancel_at_period_end: true,
         updated_at: new Date().toISOString(),
       })
       .eq('id', activeCancelableAddon.id)

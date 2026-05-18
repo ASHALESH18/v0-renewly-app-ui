@@ -331,6 +331,17 @@ export async function GET() {
           seatType: membership.seat_type,
           joinedAt: membership.joined_at,
         },
+        // F7.2C: Add scheduled cancellation info for extra members
+        scheduledExtraSeatCancellation:
+          membership.seat_type === 'extra' && seatAddons?.some((a: any) => a.cancel_at_period_end)
+            ? {
+              activeUntil: seatAddons
+                ?.filter((a: any) => a.cancel_at_period_end)
+                .sort((a: any, b: any) => new Date(b.current_period_end || 0).getTime() - new Date(a.current_period_end || 0).getTime())
+                ?.[0]?.current_period_end || memberFamilyGroup?.current_period_end,
+              message: 'This extra seat will be removed after the current billing period',
+            }
+            : null,
       })
     }
 
