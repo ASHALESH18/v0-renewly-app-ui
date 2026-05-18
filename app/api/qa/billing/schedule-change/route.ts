@@ -175,8 +175,8 @@ export async function POST(request: NextRequest) {
 
     // Invalidate Next.js cache tags
     const { revalidateTag } = await import('next/cache')
-    revalidateTag(`subscriptions:${user.id}`)
-    revalidateTag('profile')
+    revalidateTag(`subscriptions:${user.id}`, 'max')
+    revalidateTag('profile', 'max')
 
     // Also schedule Family group action if user is a Family owner
     // This ensures Settings cancellation/downgrade properly flags the family group

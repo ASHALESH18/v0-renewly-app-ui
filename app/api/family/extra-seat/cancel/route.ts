@@ -61,9 +61,9 @@ export async function POST(request: Request) {
 
     // F7.2: Fetch all data needed to calculate seat usage and affected member
     const [
-      { data: members = [] },
-      { data: pendingInvites = [] },
-      { data: seatAddons = [] },
+      { data: membersData = null },
+      { data: invitesData = null },
+      { data: addonsData = null },
     ] = await Promise.all([
       supabase
         .from('family_members')
@@ -81,6 +81,10 @@ export async function POST(request: Request) {
         .eq('family_group_id', familyGroupId)
         .eq('status', 'active'),
     ])
+
+    const members = membersData ?? []
+    const pendingInvites = invitesData ?? []
+    const seatAddons = addonsData ?? []
 
     // Calculate current seat usage
     const seatUsage = calculateSeatUsage({
@@ -123,8 +127,8 @@ export async function POST(request: Request) {
 
     // F7.2: Get period end date from addon for scheduled cancellation message
     const activeCancelableAddon = (seatAddons || [])
-      .filter(a => !a.cancel_at_period_end && a.quantity > 0)
-      .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+      .filter((a: any) => !a.cancel_at_period_end && (a.quantity || 0) > 0)
+      .sort((a: any, b: any) => new Date(b.current_period_end || 0).getTime() - new Date(a.current_period_end || 0).getTime())
       [0]
 
     if (!activeCancelableAddon) {

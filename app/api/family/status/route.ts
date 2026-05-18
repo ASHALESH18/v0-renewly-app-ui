@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js'
 import { FAMILY_INCLUDED_MEMBER_COUNT, FAMILY_EXTRA_MEMBER_PRICE_INR } from '@/lib/family/family-config'
 import { calculateSeatUsage, calculateExtraSeatReuseState } from '@/lib/family/family-seat-utils'
 import { calculateFamilyBillingDisplay, getFamilyBillingCurrency } from '@/lib/billing/family-billing-utils'
+import { computeFamilyBillingState } from '@/lib/billing/family-billing-state'
 import { getPendingFamilyInviteForUserEmail } from '@/lib/family/get-pending-family-invite'
 
 /**
@@ -263,17 +264,25 @@ export async function GET() {
           scheduledFor: ownerGroup.current_period_end,
           canScheduleNewInvites: ownerGroup.scheduled_action !== 'cancel_at_period_end',
         },
-        // F7.2B: Billing metadata for Dashboard and Settings display
-        billingMetadata: {
-          currentMonthlyTotal: 299 + (seatUsage.paidActiveExtraSeats * FAMILY_EXTRA_MEMBER_PRICE_INR),
-          nextCycleMonthlyTotal: 299 + (Math.max(0, seatUsage.paidActiveExtraSeats - extraSeatsScheduledToEnd) * FAMILY_EXTRA_MEMBER_PRICE_INR),
-          extraSeatCount: seatUsage.paidActiveExtraSeats,
-          scheduledCancelExtraSeatCount: extraSeatsScheduledToEnd,
-          scheduledCancelDate: seatAddons
-            ?.filter((a: any) => a.cancel_at_period_end)
-            .sort((a: any, b: any) => new Date(b.current_period_end || 0).getTime() - new Date(a.current_period_end || 0).getTime())
-            ?.[0]?.current_period_end || ownerGroup.current_period_end,
-        },
+        // F7.2D-R: Centralized billing state via shared helper
+        billingMetadata: (() => {
+          const state = computeFamilyBillingState({
+            currentPeriodEnd: ownerGroup.current_period_end,
+            seatAddons: seatAddons || [],
+          })
+          return {
+            currentMonthlyTotal: state.currentMonthlyTotal,
+            nextCycleMonthlyTotal: state.nextCycleMonthlyTotal,
+            extraSeatCount: state.currentExtraSeatCount,
+            currentExtraSeatCount: state.currentExtraSeatCount,
+            scheduledCancelExtraSeatCount: state.scheduledCancelExtraSeatCount,
+            continuingExtraSeatCount: state.continuingExtraSeatCount,
+            scheduledCancelDate: state.scheduledCancelDate,
+            hasScheduledExtraSeatCancellation: state.hasScheduledExtraSeatCancellation,
+            cancellationSummaryText: state.cancellationSummaryText,
+            currency: state.currency,
+          }
+        })(),
         billingDisplay,
       })
     }
@@ -313,6 +322,35 @@ export async function GET() {
         }
       }
 
+      // F7.2D-R: Fetch seat add-ons for member's family group to detect scheduled cancellation
+      const { data: memberSeatAddons } = await supabase
+        .from('family_seat_addons')
+        .select('id, quantity, status, cancel_at_period_end, current_period_end')
+        .eq('family_group_id', membership.family_group_id)
+        .eq('status', 'active')
+
+      const hasScheduledCancel =
+        membership.seat_type === 'extra' &&
+        (memberSeatAddons || []).some((a: any) => a.cancel_at_period_end === true)
+
+      const scheduledCancelDate = hasScheduledCancel
+        ? (memberSeatAddons || [])
+            .filter((a: any) => a.cancel_at_period_end === true)
+            .map((a: any) => a.current_period_end)
+            .filter((d: any) => !!d)
+            .sort((a: string, b: string) => new Date(a).getTime() - new Date(b).getTime())[0] ||
+          memberFamilyGroup?.current_period_end ||
+          null
+        : null
+
+      const formattedDate = scheduledCancelDate
+        ? new Date(scheduledCancelDate).toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+          })
+        : null
+
       return NextResponse.json({
         ...defaultResponse,
         familyGroup: memberFamilyGroup
@@ -331,16 +369,13 @@ export async function GET() {
           seatType: membership.seat_type,
           joinedAt: membership.joined_at,
         },
-        // F7.2C: Add scheduled cancellation info for extra members
+        // F7.2D-R: Scheduled cancellation info for extra members
         scheduledExtraSeatCancellation:
-          membership.seat_type === 'extra' && seatAddons?.some((a: any) => a.cancel_at_period_end)
+          hasScheduledCancel && scheduledCancelDate
             ? {
-              activeUntil: seatAddons
-                ?.filter((a: any) => a.cancel_at_period_end)
-                .sort((a: any, b: any) => new Date(b.current_period_end || 0).getTime() - new Date(a.current_period_end || 0).getTime())
-                ?.[0]?.current_period_end || memberFamilyGroup?.current_period_end,
-              message: 'This extra seat will be removed after the current billing period',
-            }
+                activeUntil: scheduledCancelDate,
+                message: `Your extra-seat access remains active until ${formattedDate}. After that, access will end unless the Family owner keeps or adds another extra seat.`,
+              }
             : null,
       })
     }

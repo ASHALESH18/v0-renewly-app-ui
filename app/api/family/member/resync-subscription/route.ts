@@ -101,8 +101,8 @@ export async function POST() {
     await invalidateCache(`subscriptions:${user.id}`)
 
     // Revalidate cache tags
-    revalidateTag(`subscriptions:${user.id}`)
-    revalidateTag('profile')
+    revalidateTag(`subscriptions:${user.id}`, 'max')
+    revalidateTag('profile', 'max')
 
     return NextResponse.json({
       success: true,

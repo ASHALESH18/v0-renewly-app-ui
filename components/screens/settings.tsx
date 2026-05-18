@@ -1075,6 +1075,21 @@ export function SettingsScreen() {
                   </div>
                 )}
 
+                {/* F7.2D-R: Member-side scheduled cancellation notice */}
+                {familyStatus?.scheduledExtraSeatCancellation && (
+                  <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+                    <p className="text-xs font-semibold text-amber-700 dark:text-amber-300 mb-1">
+                      Family access ending soon
+                    </p>
+                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                      Active until {new Date(familyStatus.scheduledExtraSeatCancellation.activeUntil).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}.
+                    </p>
+                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                      {familyStatus.scheduledExtraSeatCancellation.message}
+                    </p>
+                  </div>
+                )}
+
                 <p className="text-xs text-muted-foreground text-center pt-2">
                   Only the Family owner manages billing.
                 </p>
@@ -1125,6 +1140,25 @@ export function SettingsScreen() {
                       </>
                     ) : (
                       <p className="text-sm text-muted-foreground">Base Family plan ₹299/month</p>
+                    )}
+
+                    {/* F7.2D-R: Show next-cycle total when extra-seat cancellation is scheduled */}
+                    {familyStatus.billingMetadata?.hasScheduledExtraSeatCancellation && (
+                      <div className="pt-3 border-t border-amber-500/30">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+                            After {familyStatus.billingMetadata.scheduledCancelDate
+                              ? new Date(familyStatus.billingMetadata.scheduledCancelDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                              : 'next renewal'}
+                          </span>
+                          <span className="text-sm font-semibold text-foreground">
+                            ₹{familyStatus.billingMetadata.nextCycleMonthlyTotal}/month
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {familyStatus.billingMetadata.scheduledCancelExtraSeatCount} extra seat{familyStatus.billingMetadata.scheduledCancelExtraSeatCount === 1 ? '' : 's'} scheduled to end. Visit Family to undo.
+                        </p>
+                      </div>
                     )}
                   </div>
                 )}
