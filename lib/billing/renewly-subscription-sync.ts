@@ -3,6 +3,7 @@ import 'server-only'
 import { createClient } from '@supabase/supabase-js'
 import { getPlanPricing } from '@/lib/plans'
 import type { PlanType } from '@/lib/plans'
+import { computeFamilyBillingState } from '@/lib/billing/family-billing-state'
 
 /**
  * Get Supabase client for sync operations
@@ -179,22 +180,46 @@ export async function syncRenewlyProSubscription(params: {
 
 /**
  * Sync Renewly Family subscription for owner
+ * F7.2D-R: Persists current vs next-cycle billing metadata when extra seats are scheduled to cancel.
  */
 export async function syncRenewlyFamilyOwnerSubscription(params: {
   ownerUserId: string
   familyGroupId: string
   extraSeatCount?: number
   currentPeriodEnd?: string | null
+  /** F7.2D-R: optional active seat addon rows for scheduled-cancel metadata */
+  seatAddons?: Array<{
+    id?: string
+    quantity?: number | null
+    status?: string | null
+    cancel_at_period_end?: boolean | null
+    current_period_end?: string | null
+  }>
 }): Promise<void> {
-  const { ownerUserId, familyGroupId, extraSeatCount = 0, currentPeriodEnd } = params
+  const { ownerUserId, familyGroupId, extraSeatCount = 0, currentPeriodEnd, seatAddons } = params
   const supabase = getSupabaseClient()
 
   try {
     const renewalDate = getNextMonthlyRenewalDate(currentPeriodEnd)
     const basePricing = getPlanPricing('family', 'INR')
     const baseAmount = basePricing?.amount ?? 299
-    const extraAmount = extraSeatCount * 99
-    const totalAmount = baseAmount + extraAmount
+
+    // F7.2D-R: Compute centralized billing state from add-ons when provided.
+    const billingState = computeFamilyBillingState({
+      currentPeriodEnd,
+      seatAddons: seatAddons || [],
+      baseAmount,
+    })
+
+    // Fall back to extraSeatCount-based math if no addons were supplied.
+    const currentExtraSeats = seatAddons ? billingState.currentExtraSeatCount : extraSeatCount
+    const extraAmount = currentExtraSeats * 99
+    const currentMonthlyTotal = seatAddons
+      ? billingState.currentMonthlyTotal
+      : baseAmount + extraAmount
+    const nextCycleMonthlyTotal = seatAddons
+      ? billingState.nextCycleMonthlyTotal
+      : currentMonthlyTotal
 
     const managedKey = `renewly:family:owner:${familyGroupId}:${ownerUserId}`
 
@@ -206,7 +231,7 @@ export async function syncRenewlyFamilyOwnerSubscription(params: {
           user_id: ownerUserId,
           name: 'Renewly Family',
           category: 'Productivity',
-          amount: totalAmount,
+          amount: currentMonthlyTotal,
           currency: 'INR',
           billing_cycle: 'monthly',
           status: 'active',
@@ -216,15 +241,19 @@ export async function syncRenewlyFamilyOwnerSubscription(params: {
           is_system_managed: true,
           managed_plan: 'family',
           system_source: 'renewly_billing',
-          managed_subscription_key: managedKey,
           billing_owner_user_id: ownerUserId,
           family_group_id: familyGroupId,
           covered_by_family: false,
           system_metadata: {
             synced_at: new Date().toISOString(),
             base_amount: baseAmount,
-            extra_seats: extraSeatCount,
+            extra_seats: currentExtraSeats,
             extra_amount: extraAmount,
+            current_monthly_total: currentMonthlyTotal,
+            next_cycle_monthly_total: nextCycleMonthlyTotal,
+            scheduled_cancel_extra_seats: billingState.scheduledCancelExtraSeatCount,
+            scheduled_cancel_date: billingState.scheduledCancelDate,
+            has_scheduled_extra_seat_cancellation: billingState.hasScheduledExtraSeatCancellation,
           },
         },
         { onConflict: 'managed_subscription_key' }
@@ -242,14 +271,26 @@ export async function syncRenewlyFamilyOwnerSubscription(params: {
 
 /**
  * Sync Renewly Family subscription for family member
+ * F7.2D-R: Persists seat type + scheduled-cancel metadata for extra-seat members.
  */
 export async function syncRenewlyFamilyMemberSubscription(params: {
   memberUserId: string
   ownerUserId: string
   familyGroupId: string
   currentPeriodEnd?: string | null
+  seatType?: 'included' | 'extra' | 'owner' | null
+  hasScheduledExtraSeatCancellation?: boolean
+  accessEndsAt?: string | null
 }): Promise<void> {
-  const { memberUserId, ownerUserId, familyGroupId, currentPeriodEnd } = params
+  const {
+    memberUserId,
+    ownerUserId,
+    familyGroupId,
+    currentPeriodEnd,
+    seatType,
+    hasScheduledExtraSeatCancellation = false,
+    accessEndsAt = null,
+  } = params
   const supabase = getSupabaseClient()
 
   try {
@@ -277,7 +318,12 @@ export async function syncRenewlyFamilyMemberSubscription(params: {
           billing_owner_user_id: ownerUserId,
           family_group_id: familyGroupId,
           covered_by_family: true,
-          system_metadata: { synced_at: new Date().toISOString() },
+          system_metadata: {
+            synced_at: new Date().toISOString(),
+            seat_type: seatType ?? null,
+            has_scheduled_extra_seat_cancellation: hasScheduledExtraSeatCancellation,
+            access_ends_at: accessEndsAt,
+          },
         },
         { onConflict: 'managed_subscription_key' }
       )
@@ -375,11 +421,10 @@ export async function syncRenewlyBillingSubscriptionForPlan(params: {
         currentPeriodEnd,
       })
 
-      // F7.2B: Get extra seat count from family_seat_addons (active) for CURRENT CYCLE
-      // Include seats scheduled for cancellation (cancel_at_period_end=true) because they're still active until period end
+      // F7.2D-R: Fetch full addon rows for shared billing state helper
       const { data: seatAddons, error: addonsError } = await supabase
         .from('family_seat_addons')
-        .select('quantity, price_inr_per_seat, cancel_at_period_end')
+        .select('id, quantity, price_inr_per_seat, status, cancel_at_period_end, current_period_end')
         .eq('family_group_id', familyGroupId)
         .eq('status', 'active')
 
@@ -387,15 +432,9 @@ export async function syncRenewlyBillingSubscriptionForPlan(params: {
         console.warn('[renewly-sync] Could not fetch seat addons:', addonsError)
       }
 
-      // F7.2B: Use active addon quantity for CURRENT MONTHLY AMOUNT (includes scheduled)
-      // Scheduled cancellations (cancel_at_period_end=true) stay in current cycle
       let currentCycleSeats = 0
-      let scheduledCancelSeats = 0
       if (seatAddons && seatAddons.length > 0) {
         currentCycleSeats = seatAddons.reduce((sum, addon) => sum + (addon.quantity || 0), 0)
-        scheduledCancelSeats = seatAddons
-          .filter(a => a.cancel_at_period_end)
-          .reduce((sum, addon) => sum + (addon.quantity || 0), 0)
       } else {
         // Fallback to family_groups.extra_seat_count if no addons
         const { data: familyGroup, error: fetchError } = await supabase
@@ -411,25 +450,13 @@ export async function syncRenewlyBillingSubscriptionForPlan(params: {
         currentCycleSeats = familyGroup?.extra_seat_count ?? 0
       }
 
-      // F7.2B: Debug logging shows both current and next cycle amounts
-      if (process.env.NODE_ENV !== 'production') {
-        const nextCycleSeats = currentCycleSeats - scheduledCancelSeats
-        console.log('[v0] F7.2B DEBUG: Renewly Family sync', {
-          familyGroupId,
-          currentCycleSeats,
-          scheduledCancelSeats,
-          nextCycleSeats,
-          currentMonthlyAmount: 299 + currentCycleSeats * 99,
-          nextCycleMonthlyAmount: 299 + nextCycleSeats * 99,
-        })
-      }
-
-      // F7.2B: Use current cycle seats (includes scheduled cancellations)
+      // F7.2D-R: Pass full addon rows so sync can persist scheduled-cancel metadata.
       await syncRenewlyFamilyOwnerSubscription({
         ownerUserId: userId,
         familyGroupId,
         extraSeatCount: currentCycleSeats,
         currentPeriodEnd,
+        seatAddons: seatAddons || [],
       })
 
       await archiveManagedRenewlySubscriptions({

@@ -79,6 +79,8 @@ export function FamilyMembersScreen() {
   const [showCancelExtraSeatsModal, setShowCancelExtraSeatsModal] = useState(false)
   const [isCancellingExtraSeats, setIsCancellingExtraSeats] = useState(false)
   const [cancelScenario, setCancelScenario] = useState<'unused' | 'in_use' | null>(null)
+  // F7.2D-R: Undo state for scheduled cancellation reversal
+  const [isUndoingCancel, setIsUndoingCancel] = useState(false)
   const [affectedMemberName, setAffectedMemberName] = useState<string | null>(null)
   const [periodEndDate, setPeriodEndDate] = useState<string | null>(null)
 
@@ -693,6 +695,38 @@ export function FamilyMembersScreen() {
     }
   }
 
+  // F7.2D-R: Reverse a previously scheduled extra-seat cancellation
+  const handleUndoCancelExtraSeat = async () => {
+    if (!familyStatus?.familyGroupId) return
+    setIsUndoingCancel(true)
+    try {
+      const res = await fetch('/api/family/extra-seat/undo-cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ familyGroupId: familyStatus.familyGroupId }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data?.error || 'Failed to undo cancellation')
+      }
+      addToast({
+        type: 'success',
+        title: 'Cancellation reversed',
+        message: 'Your extra seat will continue past the current period.',
+      })
+      await refreshFamilyStatus({ silent: true })
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+      addToast({
+        type: 'error',
+        title: 'Could not undo cancellation',
+        message: errorMessage,
+      })
+    } finally {
+      setIsUndoingCancel(false)
+    }
+  }
+
   // Safe array access
   const maxMembers = familyStatus?.maxMembers ?? 4
   const currentMemberCount = familyStatus?.currentMemberCount ?? members.length
@@ -1090,23 +1124,26 @@ export function FamilyMembersScreen() {
                               )
                             )}
                           </div>
-                          {/* F7.2A: Show cancel/manage button - disable if already scheduled */}
+                          {/* F7.2A/F7.2D-R: Show cancel/manage or undo button depending on scheduled state */}
                           {familyStatus.extraSeatReuse && familyStatus.extraSeatReuse.paidActiveExtraSeats > 0 && (
-                            <button
-                              onClick={handleOpenCancelModal}
-                              disabled={familyStatus.seatAddons?.some(a => a.cancelAtPeriodEnd) ?? false}
-                              className={`text-xs px-2 py-1 rounded font-medium whitespace-nowrap transition-colors ${
-                                familyStatus.seatAddons?.some(a => a.cancelAtPeriodEnd)
-                                  ? 'bg-amber-600/20 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 cursor-not-allowed opacity-60'
-                                  : 'bg-emerald-600/20 text-emerald-700 hover:bg-emerald-600/30 dark:bg-emerald-900/40 dark:text-emerald-300 dark:hover:bg-emerald-900/60 cursor-pointer'
-                              }`}
-                            >
-                              {familyStatus.seatAddons?.some(a => a.cancelAtPeriodEnd)
-                                ? 'Cancellation scheduled'
-                                : familyStatus.extraSeatReuse.reusableExtraSeats > 0
-                                ? 'Cancel'
-                                : 'Manage add-on'}
-                            </button>
+                            (familyStatus.seatAddons?.some(a => a.cancelAtPeriodEnd) ?? false) ? (
+                              <button
+                                onClick={handleUndoCancelExtraSeat}
+                                disabled={isUndoingCancel}
+                                className="text-xs px-2 py-1 rounded font-medium whitespace-nowrap transition-colors bg-emerald-600/20 text-emerald-700 hover:bg-emerald-600/30 dark:bg-emerald-900/40 dark:text-emerald-300 dark:hover:bg-emerald-900/60 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                              >
+                                {isUndoingCancel ? 'Undoing…' : 'Undo cancel'}
+                              </button>
+                            ) : (
+                              <button
+                                onClick={handleOpenCancelModal}
+                                className="text-xs px-2 py-1 rounded font-medium whitespace-nowrap transition-colors bg-emerald-600/20 text-emerald-700 hover:bg-emerald-600/30 dark:bg-emerald-900/40 dark:text-emerald-300 dark:hover:bg-emerald-900/60 cursor-pointer"
+                              >
+                                {familyStatus.extraSeatReuse.reusableExtraSeats > 0
+                                  ? 'Cancel'
+                                  : 'Manage add-on'}
+                              </button>
+                            )
                           )}
                         </div>
                       </div>

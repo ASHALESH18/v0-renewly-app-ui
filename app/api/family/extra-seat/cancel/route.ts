@@ -123,8 +123,8 @@ export async function POST(request: Request) {
 
     // F7.2: Get period end date from addon for scheduled cancellation message
     const activeCancelableAddon = (seatAddons || [])
-      .filter(a => !a.cancel_at_period_end && a.quantity > 0)
-      .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+      .filter((a: any) => !a.cancel_at_period_end && (a.quantity || 0) > 0)
+      .sort((a: any, b: any) => new Date(b.current_period_end || 0).getTime() - new Date(a.current_period_end || 0).getTime())
       [0]
 
     if (!activeCancelableAddon) {

@@ -555,6 +555,43 @@ export function DashboardScreen({
           </div>
         </div>
 
+        {/* F7.2D-R: Scheduled extra-seat cancellation banner (owner) */}
+        {familyStatus?.isFamilyOwner && familyStatus?.billingMetadata?.hasScheduledExtraSeatCancellation && (
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 dark:bg-amber-500/10 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                Extra-seat cancellation scheduled
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                Current cycle: ₹{familyStatus.billingMetadata.currentMonthlyTotal}/month · Next cycle: ₹{familyStatus.billingMetadata.nextCycleMonthlyTotal}/month
+                {familyStatus.billingMetadata.scheduledCancelDate
+                  ? ` · Takes effect ${new Date(familyStatus.billingMetadata.scheduledCancelDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                  : ''}
+              </p>
+            </div>
+            <button
+              onClick={() => onNavigateTab?.('family')}
+              className="self-start sm:self-auto inline-flex items-center gap-2 rounded-lg bg-amber-600/20 text-amber-800 dark:text-amber-200 px-3 py-1.5 text-xs font-medium hover:bg-amber-600/30 transition-colors cursor-pointer whitespace-nowrap"
+            >
+              Manage seats
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+        {/* F7.2D-R: Scheduled extra-seat cancellation banner (member) */}
+        {!familyStatus?.isFamilyOwner && familyStatus?.scheduledExtraSeatCancellation && (
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
+            <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+              Family access ending soon
+            </p>
+            <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+              Active until {new Date(familyStatus.scheduledExtraSeatCancellation.activeUntil).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}.
+              {' '}{familyStatus.scheduledExtraSeatCancellation.message}
+            </p>
+          </div>
+        )}
+
         <StaggerList className="grid grid-cols-2 gap-4">
           <MetricCard
             title="Monthly Recurring"
