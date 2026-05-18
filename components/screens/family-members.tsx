@@ -840,6 +840,20 @@ export function FamilyMembersScreen() {
                       <p className="text-emerald-700 dark:text-emerald-300">
                         <span className="font-medium">Seat Type:</span> {familyStatus.membership.seatType === 'included' ? 'Included' : 'Extra'}
                       </p>
+                      {/* F7.2C: Show scheduled cancellation warning for extra members */}
+                      {familyStatus.membership.seatType === 'extra' && familyStatus.scheduledExtraSeatCancellation && (
+                        <div className="mt-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                          <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">
+                            ⏰ Seat ending after current period
+                          </p>
+                          <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                            Active until {new Date(familyStatus.scheduledExtraSeatCancellation.activeUntil).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </p>
+                          <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                            {familyStatus.scheduledExtraSeatCancellation.message}
+                          </p>
+                        </div>
+                      )}
                       {/* Refresh Family Access Button */}
                       <button
                         onClick={handleResyncFamily}
@@ -1146,6 +1160,18 @@ export function FamilyMembersScreen() {
                               {member.seatType === 'extra' ? 'Extra seat' : 'Included seat'}
                               {member.joinedAt ? ` • Joined ${new Date(member.joinedAt).toLocaleDateString()}` : ''}
                             </p>
+                            {/* F7.2C: Show scheduled cancellation for extra members */}
+                            {member.seatType === 'extra' && familyStatus?.seatAddons?.some((a: any) => a.cancelAtPeriodEnd) && (
+                              <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                                Active until {familyStatus.seatAddons
+                                  ?.filter((a: any) => a.cancelAtPeriodEnd)
+                                  .sort((a: any, b: any) => new Date(b.currentPeriodEnd || 0).getTime() - new Date(a.currentPeriodEnd || 0).getTime())
+                                  ?.[0]?.currentPeriodEnd ? new Date(familyStatus.seatAddons
+                                  ?.filter((a: any) => a.cancelAtPeriodEnd)
+                                  .sort((a: any, b: any) => new Date(b.currentPeriodEnd || 0).getTime() - new Date(a.currentPeriodEnd || 0).getTime())
+                                  ?.[0]?.currentPeriodEnd).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'end of period'}
+                              </p>
+                            )}
                           </div>
                         </div>
                         {familyStatus?.isFamilyOwner && (
