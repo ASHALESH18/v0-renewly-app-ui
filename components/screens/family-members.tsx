@@ -78,6 +78,9 @@ export function FamilyMembersScreen() {
   const [isLeavingFamily, setIsLeavingFamily] = useState(false)
   const [showCancelExtraSeatsModal, setShowCancelExtraSeatsModal] = useState(false)
   const [isCancellingExtraSeats, setIsCancellingExtraSeats] = useState(false)
+  const [cancelScenario, setCancelScenario] = useState<'unused' | 'in_use' | null>(null)
+  const [affectedMemberName, setAffectedMemberName] = useState<string | null>(null)
+  const [periodEndDate, setPeriodEndDate] = useState<string | null>(null)
 
   // Helper to refresh family status
   const refreshFamilyStatus = async (options?: { silent?: boolean }) => {
@@ -597,7 +600,37 @@ export function FamilyMembersScreen() {
     }
   }
 
-  // F7: Handle cancelling unused extra seats
+  // F7.2: Handle opening cancel modal with scenario detection
+  const handleOpenCancelModal = () => {
+    // F7.2: Determine scenario based on available vs active extra members
+    const availableExtraSeats = familyStatus?.extraSeatReuse?.reusableExtraSeats ?? 0
+    const activeExtraMembers = familyStatus?.seatUsage?.activeExtraMembers ?? 0
+    
+    const isUnused = availableExtraSeats > 0
+    const scenario = isUnused ? 'unused' : (activeExtraMembers > 0 ? 'in_use' : 'unused')
+    
+    setCancelScenario(scenario)
+    
+    // F7.2: For in-use scenario, find the member name to show impact
+    if (!isUnused && activeExtraMembers > 0) {
+      // Members array should contain the extra members
+      const extraMembers = members.filter(m => m.seatType === 'extra')
+      if (extraMembers.length > 0) {
+        // Get the most recently added extra member
+        const newestExtraMember = extraMembers.sort(
+          (a, b) => new Date(b.joinedAt || 0).getTime() - new Date(a.joinedAt || 0).getTime()
+        )[0]
+        setAffectedMemberName(newestExtraMember.email)
+      }
+    }
+    
+    // F7.2: Set period end date for scheduled cancellation display
+    if (familyStatus?.familyGroup?.current_period_end) {
+      setPeriodEndDate(familyStatus.familyGroup.current_period_end)
+    }
+    
+    setShowCancelExtraSeatsModal(true)
+  }
   const handleCancelExtraSeats = async () => {
     if (!familyStatus?.familyGroupId) return
 
@@ -619,10 +652,16 @@ export function FamilyMembersScreen() {
         throw new Error(data.error || 'Failed to cancel extra seat')
       }
 
+      // F7.2: Determine message based on scenario
+      const isUnused = data.scenario === 'unused'
+      const successMessage = isUnused
+        ? 'Unused extra seat cancelled successfully'
+        : `Extra seat cancellation scheduled for ${data.affectedMember?.name || 'this member'}`
+
       addToast({
         type: 'success',
         title: 'Extra seat cancelled',
-        message: 'Your billing will be reduced at the end of the period.',
+        message: successMessage,
       })
 
       setShowCancelExtraSeatsModal(false)
@@ -1009,13 +1048,13 @@ export function FamilyMembersScreen() {
                               </p>
                             )}
                           </div>
-                          {/* F7: Show cancel button if extra seats available */}
-                          {familyStatus.extraSeatReuse && familyStatus.extraSeatReuse.reusableExtraSeats > 0 && (
+                          {/* F7.2: Show cancel/manage button for both unused and in-use extra seats */}
+                          {familyStatus.extraSeatReuse && familyStatus.extraSeatReuse.paidActiveExtraSeats > 0 && (
                             <button
-                              onClick={() => setShowCancelExtraSeatsModal(true)}
+                              onClick={handleOpenCancelModal}
                               className="text-xs px-2 py-1 rounded bg-emerald-600/20 text-emerald-700 hover:bg-emerald-600/30 transition-colors font-medium dark:bg-emerald-900/40 dark:text-emerald-300 dark:hover:bg-emerald-900/60 cursor-pointer whitespace-nowrap"
                             >
-                              Cancel
+                              {familyStatus.extraSeatReuse.reusableExtraSeats > 0 ? 'Cancel' : 'Manage add-on'}
                             </button>
                           )}
                         </div>
@@ -1408,7 +1447,7 @@ export function FamilyMembersScreen() {
         )}
       </AnimatePresence>
 
-      {/* F7: Cancel Extra Seats Confirmation Modal */}
+      {/* F7.2: Cancel Extra Seats Confirmation Modal - Different content for unused vs in-use */}
       <AnimatePresence mode="wait">
         {showCancelExtraSeatsModal && (
           <>
@@ -1436,7 +1475,9 @@ export function FamilyMembersScreen() {
               >
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-white/10">
-                  <h2 className="text-xl font-semibold text-white">Cancel unused extra seat?</h2>
+                  <h2 className="text-xl font-semibold text-white">
+                    {cancelScenario === 'in_use' ? 'Schedule cancellation?' : 'Cancel unused extra seat?'}
+                  </h2>
                   {!isCancellingExtraSeats && (
                     <button
                       onClick={() => setShowCancelExtraSeatsModal(false)}
@@ -1451,12 +1492,28 @@ export function FamilyMembersScreen() {
                 {/* Content */}
                 <div className="p-6 space-y-6">
                   <div className="space-y-3">
-                    <p className="text-sm text-slate-300">
-                      This will stop billing for one unused extra seat. Your active Family members will not be removed.
-                    </p>
-                    <p className="text-sm text-slate-300">
-                      The billing change will take effect at the end of your current period.
-                    </p>
+                    {cancelScenario === 'in_use' ? (
+                      <>
+                        <p className="text-sm text-slate-300">
+                          <span className="font-medium text-slate-200">{affectedMemberName}</span> is currently using this extra seat.
+                        </p>
+                        <p className="text-sm text-slate-300">
+                          Cancellation will take effect at the end of your current billing period ({periodEndDate ? new Date(periodEndDate).toLocaleDateString() : 'end of period'}).
+                        </p>
+                        <p className="text-sm text-slate-400">
+                          {affectedMemberName} will keep access through the end of the period, then the seat will be cancelled.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm text-slate-300">
+                          This will stop billing for one unused extra seat. Your active Family members will not be removed.
+                        </p>
+                        <p className="text-sm text-slate-300">
+                          The billing change will take effect at the end of your current period.
+                        </p>
+                      </>
+                    )}
                   </div>
 
                   <div className="flex gap-3 justify-end">
@@ -1472,7 +1529,11 @@ export function FamilyMembersScreen() {
                       disabled={isCancellingExtraSeats}
                       className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                      {isCancellingExtraSeats ? 'Cancelling...' : 'Cancel Extra Seat'}
+                      {isCancellingExtraSeats ? (
+                        cancelScenario === 'in_use' ? 'Scheduling...' : 'Cancelling...'
+                      ) : (
+                        cancelScenario === 'in_use' ? 'Schedule Cancellation' : 'Cancel Extra Seat'
+                      )}
                     </button>
                   </div>
                 </div>

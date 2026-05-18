@@ -8,10 +8,13 @@ import { calculateSeatUsage } from '@/lib/family/family-seat-utils'
 
 /**
  * POST /api/family/extra-seat/cancel
- * F7: Owner cancels unused paid extra seats
+ * F7.2: Owner cancels paid extra seat add-ons (unused or in-use)
  * 
- * Marks family_seat_addons for cancellation and triggers Renewly resync
- * Only allows cancellation if extra seats are unused (availablePaidExtraSeats > 0)
+ * Marks family_seat_addons for scheduled cancellation:
+ * - Unused extra seats: cancel immediately (availablePaidExtraSeats > 0)
+ * - In-use extra seats: schedule cancellation at period end (cancel_at_period_end=true)
+ * 
+ * Returns scenario and member info for UI display
  */
 export async function POST(request: Request) {
   try {
@@ -43,7 +46,7 @@ export async function POST(request: Request) {
     // Verify ownership
     const { data: familyGroup, error: groupError } = await supabase
       .from('family_groups')
-      .select('id, owner_user_id, status')
+      .select('id, owner_user_id, status, current_period_end')
       .eq('id', familyGroupId)
       .eq('owner_user_id', user.id)
       .eq('status', 'active')
@@ -56,7 +59,7 @@ export async function POST(request: Request) {
       )
     }
 
-    // F7: Fetch all data needed to calculate available seats
+    // F7.2: Fetch all data needed to calculate seat usage and affected member
     const [
       { data: members = [] },
       { data: pendingInvites = [] },
@@ -74,7 +77,7 @@ export async function POST(request: Request) {
         .eq('status', 'pending'),
       supabase
         .from('family_seat_addons')
-        .select('id, quantity, status, cancel_at_period_end')
+        .select('id, quantity, status, cancel_at_period_end, current_period_end')
         .eq('family_group_id', familyGroupId)
         .eq('status', 'active'),
     ])
@@ -87,21 +90,38 @@ export async function POST(request: Request) {
       seatAddons,
     })
 
-    // F7: Check if we have available (unused) paid seats to cancel
+    // F7.2: Determine scenario (unused or in-use)
     const availablePaidExtraSeats = seatUsage.paidActiveExtraSeats - seatUsage.activeExtraMembers
-    if (availablePaidExtraSeats < quantity) {
-      return NextResponse.json(
-        {
-          error: 'Cannot cancel: not enough unused extra seats',
-          available: availablePaidExtraSeats,
-          requested: quantity,
-        },
-        { status: 409 }
-      )
+    const isUnused = availablePaidExtraSeats >= quantity
+    let affectedMemberInfo = null
+    let periodEndDate = null
+
+    console.log('[v0] F7.2: Cancel request', {
+      quantity,
+      paidActiveExtraSeats: seatUsage.paidActiveExtraSeats,
+      activeExtraMembers: seatUsage.activeExtraMembers,
+      availablePaidExtraSeats,
+      isUnused,
+    })
+
+    // F7.2: For in-use scenario, find which member is using the seat being cancelled
+    if (!isUnused && seatUsage.activeExtraMembers > 0) {
+      // Find extra members by their seat_type
+      const extraMembers = (members || []).filter(m => m.seat_type === 'extra' && m.status === 'active')
+      if (extraMembers.length > 0) {
+        // Get the most recently added extra member
+        const newestExtraMember = extraMembers.sort(
+          (a, b) => new Date(b.joined_at || 0).getTime() - new Date(a.joined_at || 0).getTime()
+        )[0]
+        
+        affectedMemberInfo = {
+          name: newestExtraMember.email || 'Unknown',
+          email: newestExtraMember.email,
+        }
+      }
     }
 
-    // F7: Mark seat addon for cancellation
-    // Strategy: Mark the most recent addon with cancel_at_period_end=true
+    // F7.2: Get period end date from addon for scheduled cancellation message
     const activeCancelableAddon = (seatAddons || [])
       .filter(a => !a.cancel_at_period_end && a.quantity > 0)
       .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
@@ -114,13 +134,32 @@ export async function POST(request: Request) {
       )
     }
 
-    // Reduce quantity or mark for full cancellation
+    periodEndDate = activeCancelableAddon.current_period_end || familyGroup.current_period_end
+
+    // F7.2: Mark seat addon for cancellation (idempotent - handle already-cancelled)
     const newQuantity = activeCancelableAddon.quantity - quantity
+    
+    // Check if already scheduled for cancellation - if so, this is idempotent
+    if (activeCancelableAddon.cancel_at_period_end) {
+      console.log('[v0] F7.2: Addon already scheduled for cancellation - idempotent', {
+        addonId: activeCancelableAddon.id,
+      })
+      return NextResponse.json(
+        {
+          message: 'Extra seat cancellation already scheduled',
+          scenario: 'in_use', // Was previously scheduled as in-use
+          periodEndDate,
+          seatUsage,
+        },
+        { status: 200 }
+      )
+    }
+
     const { error: updateError } = await supabase
       .from('family_seat_addons')
       .update({
         quantity: Math.max(0, newQuantity),
-        cancel_at_period_end: newQuantity === 0,
+        cancel_at_period_end: true, // F7.2: Always schedule for period end (handles both unused and in-use)
         updated_at: new Date().toISOString(),
       })
       .eq('id', activeCancelableAddon.id)
@@ -133,7 +172,7 @@ export async function POST(request: Request) {
       )
     }
 
-    // F7: Trigger Renewly subscription resync
+    // F7.2: Trigger Renewly subscription resync
     try {
       await syncRenewlyBillingSubscriptionForPlan({
         userId: user.id,
@@ -146,16 +185,21 @@ export async function POST(request: Request) {
       // Don't fail the cancel if sync fails - it will resync on next Dashboard load
     }
 
-    // Return updated seat usage with reduced paid seats
-    const updatedSeatUsage = {
-      ...seatUsage,
-      paidActiveExtraSeats: Math.max(0, seatUsage.paidActiveExtraSeats - quantity),
-    }
+    console.log('[v0] F7.2: Cancellation scheduled', {
+      scenario: isUnused ? 'unused' : 'in_use',
+      affectedMemberInfo,
+      periodEndDate,
+    })
 
+    // Return with scenario info for UI
     return NextResponse.json(
       {
-        message: 'Extra seat(s) cancelled successfully',
-        seatUsage: updatedSeatUsage,
+        message: isUnused 
+          ? 'Unused extra seat cancelled successfully'
+          : 'Extra seat cancellation scheduled at period end',
+        scenario: isUnused ? 'unused' : 'in_use',
+        affectedMember: affectedMemberInfo,
+        periodEndDate,
         cancelledQuantity: quantity,
       },
       { status: 200 }
