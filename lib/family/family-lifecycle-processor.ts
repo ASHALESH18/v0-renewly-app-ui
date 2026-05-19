@@ -270,7 +270,100 @@ async function processGroupCancellation(
       }
     }
 
-    // 6. Set owner and members to Free (protecting independent paid plans)
+    // 6. Process extra-seat addons with cancel_at_period_end (COMBO-1/F7.3)
+    // Find addons that were scheduled to cancel at period end
+    const { data: addonsToCancel } = await supabase
+      .from('family_seat_addons')
+      .select('id, quantity, status')
+      .eq('family_group_id', groupId)
+      .eq('cancel_at_period_end', true)
+      .eq('status', 'active')
+
+    if (addonsToCancel && addonsToCancel.length > 0) {
+      for (const addon of addonsToCancel) {
+        const { error: addonError } = await supabase
+          .from('family_seat_addons')
+          .update({
+            status: 'cancelled',
+            updated_at: nowIso,
+          })
+          .eq('id', addon.id)
+
+        if (addonError) {
+          console.warn(`[family-lifecycle] Failed to mark addon ${addon.id} as cancelled:`, addonError)
+        }
+      }
+
+      // If there are members on those extra seats, remove them
+      const removedExtraSeats = addonsToCancel.reduce((sum, a) => sum + (a.quantity || 0), 0)
+      const { data: extraMembers } = await supabase
+        .from('family_members')
+        .select('id, user_id')
+        .eq('family_group_id', groupId)
+        .eq('seat_type', 'extra')
+        .eq('status', 'active')
+        .limit(removedExtraSeats)
+
+      if (extraMembers && extraMembers.length > 0) {
+        const { error: removeError } = await supabase
+          .from('family_members')
+          .update({
+            status: 'removed',
+            removed_at: nowIso,
+            removal_reason: 'extra_seat_cancelled',
+            updated_at: nowIso,
+          })
+          .in('id', extraMembers.map(m => m.id))
+
+        if (removeError) {
+          console.warn(`[family-lifecycle] Failed to remove extra members:`, removeError)
+        }
+
+        console.log(
+          `[family-lifecycle] Removed ${extraMembers.length} members from cancelled extra seats`
+        )
+      }
+
+      // Update owner's subscription to reflect no extra seats if all are cancelled
+      const { data: remainingAddons } = await supabase
+        .from('family_seat_addons')
+        .select('quantity')
+        .eq('family_group_id', groupId)
+        .eq('status', 'active')
+
+      const totalRemainingSeats = remainingAddons?.reduce((sum, a) => sum + (a.quantity || 0), 0) || 0
+      
+      // Update the owner's Renewly Family subscription to reflect new seat count
+      const { data: ownerFamilySub } = await supabase
+        .from('subscriptions')
+        .select('id')
+        .eq('user_id', ownerId)
+        .eq('managed_plan', 'family')
+        .eq('family_group_id', groupId)
+        .eq('is_system_managed', true)
+        .maybeSingle()
+
+      if (ownerFamilySub) {
+        const { error: subError } = await supabase
+          .from('subscriptions')
+          .update({
+            system_metadata: {
+              extra_seats: totalRemainingSeats,
+            },
+            updated_at: nowIso,
+          })
+          .eq('id', ownerFamilySub.id)
+
+        if (subError) {
+          console.warn(`[family-lifecycle] Failed to update family subscription:`, subError)
+        }
+      }
+
+      // If all extra seats are cancelled, owner goes back to ₹299 base
+      if (totalRemainingSeats === 0) {
+        console.log(`[family-lifecycle] All extra seats cancelled for family ${groupId}, owner back to base ₹299`)
+      }
+    }
     const memberIds = members ? members.map((m: any) => m.user_id) : []
     const allUserIds = [ownerId, ...memberIds]
 
