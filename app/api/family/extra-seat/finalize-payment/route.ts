@@ -354,7 +354,10 @@ export async function POST(request: NextRequest) {
       seatAddons: seatAddons || [],
     })
 
-    const reservedExtraSeats = seatUsage.activeExtraMembers + seatUsage.pendingExtraInvites
+    const reservedExtraSeats = Math.min(
+      seatUsage.reservedExtraSeats ?? (seatUsage.activeExtraMembers + seatUsage.pendingExtraInvites),
+      FAMILY_MAX_EXTRA_MEMBER_COUNT
+    )
     if (reservedExtraSeats >= FAMILY_MAX_EXTRA_MEMBER_COUNT) {
       return NextResponse.json(
         {
@@ -468,6 +471,7 @@ export async function POST(request: NextRequest) {
         extraSeatCount: totalPaidSeats,
         currentPeriodEnd: familyGroup.current_period_end,
         seatAddons: activeAddons || [],
+        reservedExtraSeatCount: Math.min(reservedExtraSeats + 1, FAMILY_MAX_EXTRA_MEMBER_COUNT),
       })
     } catch (syncError) {
       // Log but don't fail - payment is recorded, just warn about sync
