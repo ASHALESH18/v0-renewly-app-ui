@@ -21,6 +21,9 @@ import {
   checkOwnerCannotInviteSelf,
   checkNoDuplicatePendingInvite,
   checkNotAlreadyActiveMember,
+  checkTargetNotOwner,
+  checkTargetNotActiveMember,
+  checkNoPendingInvitesAcrossAll,
 } from '@/lib/family/family-abuse-prevention'
 import {
   calculateSeatUsage,
@@ -137,6 +140,32 @@ export async function POST(request: NextRequest) {
     const activeCheck = await checkNotAlreadyActiveMember(supabase, familyGroup.id, invitedEmail)
     if (!activeCheck.valid) {
       return NextResponse.json({ error: activeCheck.error }, { status: 409 })
+    }
+
+    // F7.4-A: Check target is not the family owner
+    const notOwnerCheck = await checkTargetNotOwner(supabase, familyGroup.id, invitedEmail)
+    if (!notOwnerCheck.valid) {
+      return NextResponse.json({ error: notOwnerCheck.error }, { status: 400 })
+    }
+
+    // F7.4-C: Check no pending invites across ALL families
+    const noPendingCheck = await checkNoPendingInvitesAcrossAll(supabase, invitedEmail)
+    if (!noPendingCheck.valid) {
+      return NextResponse.json({ error: noPendingCheck.error }, { status: 409 })
+    }
+
+    // F7.4-B: Get target user ID and check not already active member (using user_id)
+    const { data: targetProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .ilike('email', invitedEmail)
+      .single()
+
+    if (targetProfile) {
+      const targetNotActiveMemberCheck = await checkTargetNotActiveMember(supabase, familyGroup.id, targetProfile.id)
+      if (!targetNotActiveMemberCheck.valid) {
+        return NextResponse.json({ error: targetNotActiveMemberCheck.error }, { status: 409 })
+      }
     }
 
     const { data: activeMembers = [] } = await supabase
