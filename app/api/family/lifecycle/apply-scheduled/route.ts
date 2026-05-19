@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/supabase/server'
 import { applyDueFamilyLifecycleActions } from '@/lib/family/family-lifecycle-processor'
-import { processExtraSeatPeriodEnd } from '@/lib/family/process-extra-seat-period-end'
+import { processExtraSeatPeriodEnd, processExtraSeatPeriodEndRepair } from '@/lib/family/process-extra-seat-period-end'
 
 /**
  * POST /api/family/lifecycle/apply-scheduled
  * 
- * QA/Admin only endpoint to apply due Family lifecycle actions (cancellation, downgrade, extra-seat period-end).
+ * QA/Admin only endpoint to apply due Family lifecycle actions (cancellation, downgrade, extra-seat period-end, repair).
  * 
  * Protected by QA_PLAN_OVERRIDE_ENABLED + QA_PLAN_OVERRIDE_EMAILS
  * 
@@ -14,7 +14,7 @@ import { processExtraSeatPeriodEnd } from '@/lib/family/process-extra-seat-perio
  * {
  *   familyGroupId?: string     // Process only this group
  *   dryRun?: boolean           // Simulate without persisting
- *   mode?: 'lifecycle' | 'extra_seat_period_end'  // Which processor to use
+ *   mode?: 'lifecycle' | 'extra_seat_period_end' | 'extra_seat_period_end_repair'  // Which processor to use
  * }
  */
 export async function POST(request: NextRequest) {
@@ -60,6 +60,19 @@ export async function POST(request: NextRequest) {
       { familyGroupId, dryRun, mode }
     )
 
+    // F7.3R4: Support extra_seat_period_end_repair mode
+    if (mode === 'extra_seat_period_end_repair') {
+      const result = await processExtraSeatPeriodEndRepair({
+        familyGroupId,
+        dryRun,
+      })
+
+      return NextResponse.json(
+        result,
+        { status: result.success ? 200 : 207 }
+      )
+    }
+
     // F7.3R: Support extra_seat_period_end mode
     if (mode === 'extra_seat_period_end') {
       const result = await processExtraSeatPeriodEnd({
@@ -70,18 +83,7 @@ export async function POST(request: NextRequest) {
       const success = result.errors.length === 0
 
       return NextResponse.json(
-        {
-          success,
-          dryRun: result.dryRun,
-          mode: result.mode,
-          processedAddonIds: result.processedAddonIds,
-          processedGroupIds: result.processedGroupIds,
-          removedMemberEmails: result.removedMemberEmails,
-          updatedOwnerSubscriptionIds: result.updatedOwnerSubscriptionIds,
-          updatedMemberSubscriptionIds: result.updatedMemberSubscriptionIds,
-          skippedAddonIds: result.skippedAddonIds,
-          errors: result.errors,
-        },
+        result,
         { status: success ? 200 : 207 }
       )
     }

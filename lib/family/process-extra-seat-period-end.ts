@@ -20,8 +20,11 @@ interface ExtraSeatProcessorResult {
   processedAddonIds: string[]
   processedGroupIds: string[]
   removedMemberEmails: string[]
+  staleRemovedMemberEmails: string[]
   updatedOwnerSubscriptionIds: string[]
   updatedMemberSubscriptionIds: string[]
+  archivedMemberSubscriptionIds: string[]
+  profilePlansUpdated: string[]
   skippedAddonIds: string[]
   errors: Array<{ message: string; addonId?: string }>
 }
@@ -46,8 +49,11 @@ export async function processExtraSeatPeriodEnd(
     processedAddonIds: [],
     processedGroupIds: [],
     removedMemberEmails: [],
+    staleRemovedMemberEmails: [],
     updatedOwnerSubscriptionIds: [],
     updatedMemberSubscriptionIds: [],
+    archivedMemberSubscriptionIds: [],
+    profilePlansUpdated: [],
     skippedAddonIds: [],
     errors: [],
   }
@@ -202,38 +208,73 @@ export async function processExtraSeatPeriodEnd(
           }
         }
 
-        // Step 4 - Sync owner's Family subscription to base plan amount
-        const { data: remainingAddons } = await supabase
-          .from('family_seat_addons')
-          .select('quantity')
-          .eq('family_group_id', groupId)
-          .eq('status', 'active')
-          .neq('id', addonId) // Exclude current addon being processed
+        // Step 4a - F7.3R4: Post-sync removed extra members' profiles and subscriptions
+        // Only sync members who were actually removed in Step 2
+        if (extraMembers && extraMembers.length > 0) {
+          for (const member of extraMembers) {
+            // Check if member has any other active paid plan or active family_members row
+            const { data: otherPlans } = await supabase
+              .from('subscriptions')
+              .select('id')
+              .eq('user_id', member.user_id)
+              .eq('status', 'active')
+              .neq('managed_plan', 'family')
+              .neq('family_group_id', groupId)
+              .limit(1)
 
-        const totalRemainingSeats = remainingAddons?.reduce((sum, a) => sum + (a.quantity || 0), 0) || 0
+            const { data: activeFamilyMembers } = await supabase
+              .from('family_members')
+              .select('id')
+              .eq('user_id', member.user_id)
+              .eq('status', 'active')
+              .neq('family_group_id', groupId)
+              .limit(1)
 
-        const { data: ownerFamilySub } = await supabase
-          .from('subscriptions')
-          .select('id')
-          .eq('user_id', ownerId)
-          .eq('managed_plan', 'family')
-          .eq('family_group_id', groupId)
-          .eq('is_system_managed', true)
-          .single()
+            // If no other active paid plan and no active family membership, set to free
+            if (!otherPlans?.length && !activeFamilyMembers?.length) {
+              const { error: profileError } = await supabase
+                .from('profiles')
+                .update({ plan: 'free', updated_at: nowIso })
+                .eq('id', member.user_id)
+
+              if (!profileError) {
+                result.profilePlansUpdated.push(member.email || member.user_id)
+              }
+            }
+          }
+        }
+
+        // Step 4b - F7.3R4: Recalculate and update owner's subscription to base amount
+        // Only update amount and system_metadata to reflect base ₹299 + remaining add-ons
+        const baseAmount = 299
+        const extraSeatAmount = totalRemainingSeats > 0 ? (totalRemainingSeats * 99) : 0
+        const totalAmount = baseAmount + extraSeatAmount
 
         if (ownerFamilySub) {
-          const { error: syncError } = await supabase
+          const { error: amountError } = await supabase
             .from('subscriptions')
             .update({
+              amount: totalAmount,
               system_metadata: {
+                base_amount: baseAmount,
                 extra_seats: totalRemainingSeats,
+                extra_amount: extraSeatAmount,
+                current_monthly_total: totalAmount,
+                next_cycle_monthly_total: totalAmount,
+                has_scheduled_extra_seat_cancellation: false,
+                scheduled_cancel_extra_seats: 0,
               },
               updated_at: nowIso,
             })
             .eq('id', ownerFamilySub.id)
 
-          if (!syncError) {
+          if (!amountError) {
             result.updatedOwnerSubscriptionIds.push(ownerFamilySub.id)
+          } else {
+            result.errors.push({
+              message: `Failed to update owner subscription amount: ${amountError.message}`,
+              addonId,
+            })
           }
         }
 
@@ -275,6 +316,210 @@ export async function processExtraSeatPeriodEnd(
     return result
   } catch (error) {
     console.error('[extra-seat-period-end] Unexpected error:', error)
+    result.success = false
+    result.errors.push({
+      message: `Fatal error: ${error instanceof Error ? error.message : String(error)}`,
+    })
+    return result
+  }
+}
+
+/**
+ * F7.3R4: Repair mode for extra-seat period-end
+ * 
+ * Repairs partially-applied state where addon is already cancelled and member removed,
+ * but profiles and subscriptions are stale/out-of-sync.
+ */
+export async function processExtraSeatPeriodEndRepair(
+  options?: ExtraSeatProcessorOptions
+): Promise<ExtraSeatProcessorResult> {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+    { auth: { persistSession: false } }
+  )
+
+  const now = options?.now ? new Date(options.now) : new Date()
+  const nowIso = now.toISOString()
+  const dryRun = options?.dryRun || false
+  const targetFamilyGroupId = options?.familyGroupId
+
+  const result: ExtraSeatProcessorResult = {
+    success: true,
+    dryRun,
+    mode: 'extra_seat_period_end_repair',
+    processedAddonIds: [],
+    processedGroupIds: [],
+    removedMemberEmails: [],
+    staleRemovedMemberEmails: [],
+    updatedOwnerSubscriptionIds: [],
+    updatedMemberSubscriptionIds: [],
+    archivedMemberSubscriptionIds: [],
+    profilePlansUpdated: [],
+    skippedAddonIds: [],
+    errors: [],
+  }
+
+  if (!targetFamilyGroupId) {
+    result.errors.push({
+      message: 'familyGroupId required for repair mode',
+    })
+    result.success = false
+    return result
+  }
+
+  try {
+    // Find the family group and verify ownership
+    const { data: group, error: groupError } = await supabase
+      .from('family_groups')
+      .select('id, owner_user_id')
+      .eq('id', targetFamilyGroupId)
+      .single()
+
+    if (groupError || !group) {
+      result.errors.push({
+        message: `Family group not found: ${targetFamilyGroupId}`,
+      })
+      result.success = false
+      return result
+    }
+
+    const ownerId = group.owner_user_id
+
+    // Find all REMOVED extra members for this group (status = 'removed')
+    const { data: removedMembers } = await supabase
+      .from('family_members')
+      .select('id, user_id, email')
+      .eq('family_group_id', targetFamilyGroupId)
+      .eq('seat_type', 'extra')
+      .eq('status', 'removed')
+
+    if (removedMembers && removedMembers.length > 0) {
+      result.staleRemovedMemberEmails.push(
+        ...removedMembers.map(m => m.email).filter(Boolean)
+      )
+
+      if (!dryRun) {
+        // Repair: Archive covered-by-family subscriptions for removed members
+        for (const member of removedMembers) {
+          const { data: memberSubs } = await supabase
+            .from('subscriptions')
+            .select('id')
+            .eq('user_id', member.user_id)
+            .eq('managed_plan', 'family')
+            .eq('family_group_id', targetFamilyGroupId)
+            .eq('status', 'active')
+
+          if (memberSubs && memberSubs.length > 0) {
+            const { error: archiveError } = await supabase
+              .from('subscriptions')
+              .update({
+                status: 'archived',
+                updated_at: nowIso,
+              })
+              .in('id', memberSubs.map(s => s.id))
+
+            if (!archiveError) {
+              result.archivedMemberSubscriptionIds.push(...memberSubs.map(s => s.id))
+            }
+          }
+
+          // Check if member has any other active paid plan or active family_members row
+          const { data: otherPlans } = await supabase
+            .from('subscriptions')
+            .select('id')
+            .eq('user_id', member.user_id)
+            .eq('status', 'active')
+            .neq('managed_plan', 'family')
+            .neq('family_group_id', targetFamilyGroupId)
+            .limit(1)
+
+          const { data: activeFamilyMembers } = await supabase
+            .from('family_members')
+            .select('id')
+            .eq('user_id', member.user_id)
+            .eq('status', 'active')
+            .neq('family_group_id', targetFamilyGroupId)
+            .limit(1)
+
+          // If no other active paid plan and no active family membership, set to free
+          if (!otherPlans?.length && !activeFamilyMembers?.length) {
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .update({ plan: 'free', updated_at: nowIso })
+              .eq('id', member.user_id)
+
+            if (!profileError) {
+              result.profilePlansUpdated.push(member.email || member.user_id)
+            }
+          }
+        }
+      }
+    }
+
+    // Find owner's active Family subscription
+    const { data: ownerFamilySub } = await supabase
+      .from('subscriptions')
+      .select('id, amount, system_metadata')
+      .eq('user_id', ownerId)
+      .eq('managed_plan', 'family')
+      .eq('family_group_id', targetFamilyGroupId)
+      .eq('is_system_managed', true)
+      .eq('status', 'active')
+      .single()
+
+    if (ownerFamilySub) {
+      // Calculate remaining extra seats
+      const { data: activeAddons } = await supabase
+        .from('family_seat_addons')
+        .select('quantity')
+        .eq('family_group_id', targetFamilyGroupId)
+        .eq('status', 'active')
+
+      const totalRemainingSeats = activeAddons?.reduce((sum, a) => sum + (a.quantity || 0), 0) || 0
+      const baseAmount = 299
+      const extraSeatAmount = totalRemainingSeats > 0 ? (totalRemainingSeats * 99) : 0
+      const targetAmount = baseAmount + extraSeatAmount
+
+      // Only record update if amount is different (optimization)
+      if (ownerFamilySub.amount !== targetAmount) {
+        if (!dryRun) {
+          const { error: updateError } = await supabase
+            .from('subscriptions')
+            .update({
+              amount: targetAmount,
+              system_metadata: {
+                base_amount: baseAmount,
+                extra_seats: totalRemainingSeats,
+                extra_amount: extraSeatAmount,
+                current_monthly_total: targetAmount,
+                next_cycle_monthly_total: targetAmount,
+                has_scheduled_extra_seat_cancellation: false,
+                scheduled_cancel_extra_seats: 0,
+              },
+              updated_at: nowIso,
+            })
+            .eq('id', ownerFamilySub.id)
+
+          if (!updateError) {
+            result.updatedOwnerSubscriptionIds.push(ownerFamilySub.id)
+          } else {
+            result.errors.push({
+              message: `Failed to update owner subscription: ${updateError.message}`,
+            })
+          }
+        } else {
+          // Dry-run: record what would be updated
+          result.updatedOwnerSubscriptionIds.push(ownerFamilySub.id)
+        }
+      }
+    }
+
+    result.processedGroupIds.push(targetFamilyGroupId)
+    result.success = result.errors.length === 0
+    return result
+  } catch (error) {
+    console.error('[extra-seat-period-end-repair] Unexpected error:', error)
     result.success = false
     result.errors.push({
       message: `Fatal error: ${error instanceof Error ? error.message : String(error)}`,
