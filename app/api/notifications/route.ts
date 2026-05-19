@@ -259,21 +259,38 @@ export async function GET() {
     }
 
     // F8-lite: Fetch persistent notifications from DB first
-    const persistentNotifications = await getUserNotifications(user.id, { limit: 50, status: undefined })
+    let persistentNotifications: any[] = []
+    try {
+      persistentNotifications = await getUserNotifications(user.id, { limit: 50, status: undefined })
+    } catch (err) {
+      console.warn('[v0] Failed to fetch persistent notifications:', err)
+      // Continue with empty list, don't crash the endpoint
+    }
 
     // Get user email for family invite lookup
-    const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('email')
-      .eq('id', user.id)
-      .single()
+    let userProfile: any = null
+    try {
+      const result = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', user.id)
+        .single()
+      userProfile = result.data
+    } catch (err) {
+      console.warn('[v0] Failed to fetch user profile:', err)
+    }
 
     // Use shared helper to fetch pending family invite (source-of-truth)
     // Fallback to auth email if profile email is missing
-    const userEmail = userProfile?.email || user.email || ''
-    const pendingInvite = userEmail
-      ? await getPendingFamilyInviteForUserEmail(supabase, userEmail)
-      : null
+    let pendingInvite = null
+    try {
+      const userEmail = userProfile?.email || user.email || ''
+      if (userEmail) {
+        pendingInvite = await getPendingFamilyInviteForUserEmail(supabase, userEmail)
+      }
+    } catch (err) {
+      console.warn('[v0] Failed to fetch pending family invite:', err)
+    }
 
     // Convert helper result to buildNotifications format
     const familyInvites = pendingInvite
@@ -288,13 +305,24 @@ export async function GET() {
       }]
       : []
 
-    const subscriptions = (await getUserSubscriptions()) as SubscriptionRow[]
+    let subscriptions: SubscriptionRow[] = []
+    try {
+      subscriptions = (await getUserSubscriptions()) as SubscriptionRow[]
+    } catch (err) {
+      console.warn('[v0] Failed to fetch subscriptions:', err)
+    }
+
     const generatedNotifications = buildNotifications(subscriptions, familyInvites)
-    const stateMap = await readNotificationStates(
-      supabase,
-      user.id,
-      generatedNotifications.map((item) => item.id)
-    )
+    let stateMap: Map<string, NotificationStateRow> = new Map()
+    try {
+      stateMap = await readNotificationStates(
+        supabase,
+        user.id,
+        generatedNotifications.map((item) => item.id)
+      )
+    } catch (err) {
+      console.warn('[v0] Failed to read notification states:', err)
+    }
 
     const calculatedNotifications = applyNotificationState(generatedNotifications, stateMap)
 
@@ -324,7 +352,11 @@ export async function GET() {
     })
   } catch (error) {
     console.error('[v0] Notifications API error:', error)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    // F7.3R: Return safe empty response on any error instead of 500
+    return NextResponse.json({
+      notifications: [],
+      unreadCount: 0,
+    })
   }
 }
 
