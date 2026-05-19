@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/supabase/server'
 import { applyDueFamilyLifecycleActions } from '@/lib/family/family-lifecycle-processor'
+import { processExtraSeatPeriodEnd } from '@/lib/family/process-extra-seat-period-end'
 
 /**
  * POST /api/family/lifecycle/apply-scheduled
  * 
- * QA/Admin only endpoint to apply due Family lifecycle actions (cancellation, downgrade).
+ * QA/Admin only endpoint to apply due Family lifecycle actions (cancellation, downgrade, extra-seat period-end).
  * 
  * Protected by QA_PLAN_OVERRIDE_ENABLED + QA_PLAN_OVERRIDE_EMAILS
  * 
  * Body (optional):
  * {
- *   familyGroupId?: string  // Process only this group
- *   dryRun?: boolean         // Simulate without persisting
+ *   familyGroupId?: string     // Process only this group
+ *   dryRun?: boolean           // Simulate without persisting
+ *   mode?: 'lifecycle' | 'extra_seat_period_end'  // Which processor to use
  * }
  */
 export async function POST(request: NextRequest) {
@@ -51,14 +53,40 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}))
-    const { familyGroupId, dryRun } = body
+    const { familyGroupId, dryRun, mode = 'lifecycle' } = body
 
     console.log(
       `[apply-scheduled] QA user ${user.email} requesting lifecycle enforcement`,
-      { familyGroupId, dryRun }
+      { familyGroupId, dryRun, mode }
     )
 
-    // Apply due actions
+    // F7.3R: Support extra_seat_period_end mode
+    if (mode === 'extra_seat_period_end') {
+      const result = await processExtraSeatPeriodEnd({
+        familyGroupId,
+        dryRun,
+      })
+
+      const success = result.errors.length === 0
+
+      return NextResponse.json(
+        {
+          success,
+          dryRun: result.dryRun,
+          mode: result.mode,
+          processedAddonIds: result.processedAddonIds,
+          processedGroupIds: result.processedGroupIds,
+          removedMemberEmails: result.removedMemberEmails,
+          updatedOwnerSubscriptionIds: result.updatedOwnerSubscriptionIds,
+          updatedMemberSubscriptionIds: result.updatedMemberSubscriptionIds,
+          skippedAddonIds: result.skippedAddonIds,
+          errors: result.errors,
+        },
+        { status: success ? 200 : 207 }
+      )
+    }
+
+    // Default: family_groups lifecycle mode
     const result = await applyDueFamilyLifecycleActions({
       familyGroupId,
       dryRun,
