@@ -133,26 +133,7 @@ export async function processExtraSeatPeriodEnd(
           continue
         }
 
-        // ACTUAL APPLY: Mark addon as cancelled
-        const { error: updateAddonError } = await supabase
-          .from('family_seat_addons')
-          .update({
-            status: 'cancelled',
-            cancel_at_period_end: false,
-            updated_at: nowIso,
-          })
-          .eq('id', addonId)
-
-        if (updateAddonError) {
-          result.errors.push({
-            message: `Failed to mark addon as cancelled: ${updateAddonError.message}`,
-            addonId,
-          })
-          result.skippedAddonIds.push(addonId)
-          continue
-        }
-
-        // Find and remove extra members occupying these seats
+        // ACTUAL APPLY: Step 1 - Find extra members occupying these seats BEFORE marking addon cancelled
         const { data: extraMembers, error: membersError } = await supabase
           .from('family_members')
           .select('id, user_id, email')
@@ -166,17 +147,18 @@ export async function processExtraSeatPeriodEnd(
             message: `Failed to fetch extra members: ${membersError.message}`,
             addonId,
           })
+          result.skippedAddonIds.push(addonId)
           continue
         }
 
+        // Step 2 - Remove extra members using only schema-stable fields (status, removed_at)
+        // F7.3R3: Part A - Remove removed_reason/removal_reason dependency, Part B - Fix mutation order
         if (extraMembers && extraMembers.length > 0) {
-          // Mark members as removed
           const { error: removeError } = await supabase
             .from('family_members')
             .update({
               status: 'removed',
               removed_at: nowIso,
-              removal_reason: 'extra_seat_cancelled',
               updated_at: nowIso,
             })
             .in('id', extraMembers.map(m => m.id))
@@ -186,6 +168,7 @@ export async function processExtraSeatPeriodEnd(
               message: `Failed to remove members: ${removeError.message}`,
               addonId,
             })
+            result.skippedAddonIds.push(addonId)
             continue
           }
 
@@ -193,7 +176,7 @@ export async function processExtraSeatPeriodEnd(
             ...extraMembers.map(m => m.email).filter(Boolean)
           )
 
-          // For each removed member, archive their covered-by-family subscription
+          // Step 3 - Archive removed members' covered-by-family subscriptions
           for (const member of extraMembers) {
             const { data: memberSubs } = await supabase
               .from('subscriptions')
@@ -219,12 +202,13 @@ export async function processExtraSeatPeriodEnd(
           }
         }
 
-        // Update owner's Family subscription to sync new seat count
+        // Step 4 - Sync owner's Family subscription to base plan amount
         const { data: remainingAddons } = await supabase
           .from('family_seat_addons')
           .select('quantity')
           .eq('family_group_id', groupId)
           .eq('status', 'active')
+          .neq('id', addonId) // Exclude current addon being processed
 
         const totalRemainingSeats = remainingAddons?.reduce((sum, a) => sum + (a.quantity || 0), 0) || 0
 
@@ -251,6 +235,26 @@ export async function processExtraSeatPeriodEnd(
           if (!syncError) {
             result.updatedOwnerSubscriptionIds.push(ownerFamilySub.id)
           }
+        }
+
+        // Step 5 - Only AFTER successful member removal, sync owner subscription, mark addon as cancelled
+        // F7.3R3: Part B - Only mark addon cancelled AFTER all other operations succeed
+        const { error: updateAddonError } = await supabase
+          .from('family_seat_addons')
+          .update({
+            status: 'cancelled',
+            cancel_at_period_end: false,
+            updated_at: nowIso,
+          })
+          .eq('id', addonId)
+
+        if (updateAddonError) {
+          result.errors.push({
+            message: `Failed to mark addon as cancelled: ${updateAddonError.message}`,
+            addonId,
+          })
+          result.skippedAddonIds.push(addonId)
+          continue
         }
 
         result.processedAddonIds.push(addonId)
