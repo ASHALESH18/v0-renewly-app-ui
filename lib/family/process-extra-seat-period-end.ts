@@ -44,13 +44,16 @@ export async function processExtraSeatPeriodEnd(
     dryRun,
     mode: 'extra_seat_period_end',
     processedAddonIds: [],
-    processedGroupIds: Set(),
+    processedGroupIds: [],
     removedMemberEmails: [],
     updatedOwnerSubscriptionIds: [],
     updatedMemberSubscriptionIds: [],
     skippedAddonIds: [],
     errors: [],
   }
+
+  // Track unique group IDs separately since we need to convert to array at end
+  const processedGroupIdSet = new Set<string>()
 
   try {
     // 1. Find extra-seat addons due for expiry
@@ -126,7 +129,7 @@ export async function processExtraSeatPeriodEnd(
           }
 
           result.processedAddonIds.push(addonId)
-          result.processedGroupIds.add(groupId)
+          processedGroupIdSet.add(groupId)
           continue
         }
 
@@ -251,7 +254,7 @@ export async function processExtraSeatPeriodEnd(
         }
 
         result.processedAddonIds.push(addonId)
-        result.processedGroupIds.add(groupId)
+        processedGroupIdSet.add(groupId)
         console.log(`[extra-seat-period-end] Processed addon ${addonId} for group ${groupId}`)
       } catch (err) {
         result.errors.push({
@@ -263,7 +266,7 @@ export async function processExtraSeatPeriodEnd(
     }
 
     // Convert Set to array for response
-    result.processedGroupIds = Array.from(result.processedGroupIds)
+    result.processedGroupIds = Array.from(processedGroupIdSet)
     result.success = result.errors.length === 0
     return result
   } catch (error) {
