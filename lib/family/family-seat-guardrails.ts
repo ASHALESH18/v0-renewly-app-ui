@@ -2,7 +2,7 @@
 // Validation rules for seat capacity, invites, cancellations
 
 import { calculateSeatUsage, calculateExtraSeatReuseState, type SeatUsage, type ExtraSeatReuseState } from './family-seat-utils'
-import { FAMILY_INCLUDED_MEMBER_COUNT, FAMILY_MAX_EXTRA_SEATS } from './family-config'
+import { FAMILY_INCLUDED_MEMBER_COUNT, FAMILY_MAX_EXTRA_MEMBER_COUNT } from './family-config'
 import type { SeatMember, SeatInvite, SeatAddon, SeatFamilyGroup } from './family-seat-utils'
 
 export interface SeatCapacityError {
@@ -89,7 +89,7 @@ export function validateExtraSeatPurchase(
   currentExtraSeats: number,
   quantityToPurchase: number
 ): { valid: boolean; error?: SeatCapacityError } {
-  const maxAllowedExtraSeats = FAMILY_MAX_EXTRA_SEATS || 4
+  const maxAllowedExtraSeats = FAMILY_MAX_EXTRA_MEMBER_COUNT || 4
   const totalAfterPurchase = currentExtraSeats + quantityToPurchase
 
   if (totalAfterPurchase > maxAllowedExtraSeats) {

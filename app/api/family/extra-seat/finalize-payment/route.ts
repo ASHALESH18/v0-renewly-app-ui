@@ -15,6 +15,8 @@ import {
   checkTargetNotActiveMember,
   checkNoPendingInvitesAcrossAll,
 } from '@/lib/family/family-abuse-prevention'
+import { validateExtraSeatPurchase } from '@/lib/family/family-seat-guardrails'
+import { syncRenewlyFamilyOwnerSubscription } from '@/lib/billing/renewly-subscription-sync'
 
 type IntentMetadata = Record<string, any>
 
@@ -300,6 +302,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: noPendingCheck.error }, { status: 409 })
     }
 
+    // F7.4-S: Validate that this purchase won't exceed max extra-seat cap (4)
+    const currentExtraSeats = familyGroup.extra_seat_count || 0
+    const purchaseValidation = validateExtraSeatPurchase(currentExtraSeats, 1)
+    if (!purchaseValidation.valid) {
+      return NextResponse.json(
+        { error: purchaseValidation.error?.message || 'Extra-seat limit reached' },
+        { status: 409 }
+      )
+    }
+
     const { data: duplicatePending } = await supabase
       .from('family_invites')
       .select('id')
@@ -371,6 +383,28 @@ export async function POST(request: NextRequest) {
       intentMetadata: intent.metadata,
       currentPeriodEnd: familyGroup.current_period_end,
     })
+
+    // F7.4-S: Sync owner's Family subscription billing amount after payment recorded
+    try {
+      const { data: activeAddons } = await supabase
+        .from('family_seat_addons')
+        .select('quantity')
+        .eq('family_group_id', familyGroup.id)
+        .eq('status', 'active')
+
+      const totalPaidSeats = activeAddons?.reduce((sum, addon) => sum + (addon.quantity || 0), 0) || 0
+
+      await syncRenewlyFamilyOwnerSubscription({
+        ownerUserId: user.id,
+        familyGroupId: familyGroup.id,
+        extraSeatCount: totalPaidSeats,
+        currentPeriodEnd: familyGroup.current_period_end,
+        seatAddons: activeAddons || [],
+      })
+    } catch (syncError) {
+      // Log but don't fail - payment is recorded, just warn about sync
+      console.warn('[finalize-payment] Warning: Failed to sync subscription after payment:', syncError)
+    }
 
     if (intent.status === 'paid' && !intent.paid_at) {
       const { error: paidAtError } = await supabase
