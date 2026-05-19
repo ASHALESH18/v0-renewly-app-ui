@@ -10,6 +10,11 @@ import {
 import { sendFamilyInviteEmail } from '@/lib/email/family-invite-email'
 import { resolveEffectiveEntitlement } from '@/lib/entitlements/effective-plan'
 import { FAMILY_EXTRA_MEMBER_PRICE_INR } from '@/lib/family/family-config'
+import {
+  checkTargetNotOwner,
+  checkTargetNotActiveMember,
+  checkNoPendingInvitesAcrossAll,
+} from '@/lib/family/family-abuse-prevention'
 
 type IntentMetadata = Record<string, any>
 
@@ -272,6 +277,27 @@ export async function POST(request: NextRequest) {
         { error: 'This email is already a member of the family group' },
         { status: 409 }
       )
+    }
+
+    const notOwnerCheck = await checkTargetNotOwner(supabase, familyGroup.id, intent.invited_email)
+    if (!notOwnerCheck.valid) {
+      return NextResponse.json({ error: notOwnerCheck.error }, { status: 409 })
+    }
+
+    if (notOwnerCheck.targetUserId) {
+      const targetNotActiveMemberCheck = await checkTargetNotActiveMember(
+        supabase,
+        familyGroup.id,
+        notOwnerCheck.targetUserId
+      )
+      if (!targetNotActiveMemberCheck.valid) {
+        return NextResponse.json({ error: targetNotActiveMemberCheck.error }, { status: 409 })
+      }
+    }
+
+    const noPendingCheck = await checkNoPendingInvitesAcrossAll(supabase, intent.invited_email, familyGroup.id)
+    if (!noPendingCheck.valid) {
+      return NextResponse.json({ error: noPendingCheck.error }, { status: 409 })
     }
 
     const { data: duplicatePending } = await supabase

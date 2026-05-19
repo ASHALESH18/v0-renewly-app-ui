@@ -41,6 +41,7 @@ export interface SeatUsage {
   pendingExtraInvites: number
   totalSeatsUsed: number
   paidActiveExtraSeats: number
+  paidReusableExtraSeats: number
   extraSeatsEndingAtPeriodEnd: number
   currentPeriodEnd: string | null
 }
@@ -70,9 +71,26 @@ export function getExtraSeatPriceINR(): number {
   return FAMILY_EXTRA_MEMBER_PRICE_INR
 }
 
+function isFutureOrOpenPeriod(addon: SeatAddon): boolean {
+  if (!addon.current_period_end) return true
+  const end = new Date(addon.current_period_end).getTime()
+  return Number.isFinite(end) && end > Date.now()
+}
+
 export function getActiveAddonSeatQuantity(seatAddons: SeatAddon[] = []): number {
   return seatAddons
-    .filter((addon) => (addon.status || 'active') === 'active')
+    .filter((addon) => (addon.status || 'active') === 'active' && isFutureOrOpenPeriod(addon))
+    .reduce((sum, addon) => sum + Math.max(0, Number(addon.quantity || 0)), 0)
+}
+
+export function getReusableAddonSeatQuantity(seatAddons: SeatAddon[] = []): number {
+  return seatAddons
+    .filter(
+      (addon) =>
+        (addon.status || 'active') === 'active' &&
+        addon.cancel_at_period_end !== true &&
+        isFutureOrOpenPeriod(addon)
+    )
     .reduce((sum, addon) => sum + Math.max(0, Number(addon.quantity || 0)), 0)
 }
 
@@ -137,15 +155,12 @@ export function calculateSeatUsage(input: SeatCalculationInput): SeatUsage {
   const includedSeatsUsed = activeIncludedMembers + pendingIncludedInvites
   const availableIncludedSeats = Math.max(0, includedLimit - includedSeatsUsed)
 
-  const fallbackExtraSeatCount = Math.max(
-    0,
-    Number(familyGroup?.extra_seat_count || 0)
-  )
-
-  const paidFromAddons = getActiveAddonSeatQuantity(seatAddons)
-
-  const paidActiveExtraSeats =
-    paidFromAddons > 0 ? paidFromAddons : fallbackExtraSeatCount
+  // Paid extra-seat capacity must come from active family_seat_addons only.
+  // Do not fall back to family_groups.extra_seat_count for invite/payment decisions:
+  // that summary can become stale after lifecycle cleanup and previously allowed
+  // unpaid 5th/6th invites.
+  const paidActiveExtraSeats = getActiveAddonSeatQuantity(seatAddons)
+  const paidReusableExtraSeats = getReusableAddonSeatQuantity(seatAddons)
 
   const extraSeatsEndingAtPeriodEnd = getEndingAddonSeatQuantity(seatAddons)
 
@@ -166,6 +181,7 @@ export function calculateSeatUsage(input: SeatCalculationInput): SeatUsage {
     pendingExtraInvites,
     totalSeatsUsed,
     paidActiveExtraSeats,
+    paidReusableExtraSeats,
     extraSeatsEndingAtPeriodEnd,
     currentPeriodEnd: getLatestCurrentPeriodEnd(familyGroup, seatAddons),
   }
@@ -194,7 +210,8 @@ export function calculateExtraSeatReuseState(
 ): ExtraSeatReuseState {
   const requiredExtraSeats = calculateRequiredExtraSeats(seatUsage)
   const paidActiveExtraSeats = seatUsage.paidActiveExtraSeats
-  const reusableExtraSeats = Math.max(0, paidActiveExtraSeats - requiredExtraSeats)
+  const paidReusableExtraSeats = seatUsage.paidReusableExtraSeats
+  const reusableExtraSeats = Math.max(0, paidReusableExtraSeats - requiredExtraSeats)
   const surplusExtraSeats = reusableExtraSeats
 
   return {
@@ -211,5 +228,5 @@ export function canReusePaidExtraSeatForNextInvite(
   seatUsage: SeatUsage
 ): boolean {
   const requiredAfterInvite = calculateRequiredExtraSeatsAfterNextInvite(seatUsage)
-  return seatUsage.paidActiveExtraSeats >= requiredAfterInvite
+  return seatUsage.paidReusableExtraSeats >= requiredAfterInvite
 }
