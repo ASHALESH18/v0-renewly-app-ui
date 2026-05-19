@@ -1,3 +1,5 @@
+import { FAMILY_MAX_EXTRA_MEMBER_COUNT } from '@/lib/family/family-config'
+
 /**
  * Billing display utilities for Renewly Family plan
  * Supports base family + extra-seat pricing display
@@ -42,9 +44,14 @@ export function calculateFamilyBillingDisplay(info: FamilyBillingInfo): FamilyBi
   const extraSeatPrice = isINR ? FAMILY_EXTRA_SEAT_PRICE_INR : FAMILY_EXTRA_SEAT_PRICE_USD
   const currencySymbol = isINR ? '₹' : '$'
 
-  // Calculate totals (1 owner + members + extra members)
+  // Calculate totals (1 owner + members + extra members).
+  // Guardrail: historical bugs may leave more than four active add-on units in DB.
+  // Never display or bill more than the supported max of four extra invited members.
   const totalMembers = 1 + activeMemberCount // owner + active invited members
-  const totalExtraMembers = activeExtraMembers
+  const totalExtraMembers = Math.min(
+    Math.max(0, Number(activeExtraMembers || 0)),
+    FAMILY_MAX_EXTRA_MEMBER_COUNT
+  )
 
   // Calculate pricing
   const basePriceTotal = basePrice

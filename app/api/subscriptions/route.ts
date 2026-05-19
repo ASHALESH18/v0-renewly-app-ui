@@ -2,6 +2,47 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { withCache, CACHE_TTL, invalidateCache } from '@/lib/redis'
 import { canAddSubscription } from '@/lib/supabase/plan-validation'
+import { FAMILY_MAX_EXTRA_MEMBER_COUNT, FAMILY_EXTRA_MEMBER_PRICE_INR } from '@/lib/family/family-config'
+
+
+const FAMILY_BASE_PRICE_INR = 299
+
+function normalizeRenewlyFamilySubscriptionRow(row: any) {
+  const isManagedFamily =
+    row?.name === 'Renewly Family' &&
+    row?.is_system_managed === true &&
+    row?.managed_plan === 'family' &&
+    row?.covered_by_family !== true
+
+  if (!isManagedFamily) return row
+
+  const metadata = row.system_metadata && typeof row.system_metadata === 'object'
+    ? row.system_metadata
+    : {}
+
+  const amount = Math.max(0, Number(row.amount || 0))
+  const rawExtraFromAmount = amount > FAMILY_BASE_PRICE_INR
+    ? Math.round((amount - FAMILY_BASE_PRICE_INR) / FAMILY_EXTRA_MEMBER_PRICE_INR)
+    : 0
+  const metadataExtraSeats = Number(metadata.extra_seats ?? metadata.raw_extra_seats ?? 0)
+  const rawExtraSeats = Math.max(0, metadataExtraSeats, rawExtraFromAmount)
+  const extraSeats = Math.min(rawExtraSeats, FAMILY_MAX_EXTRA_MEMBER_COUNT)
+  const correctedAmount = FAMILY_BASE_PRICE_INR + extraSeats * FAMILY_EXTRA_MEMBER_PRICE_INR
+
+  return {
+    ...row,
+    amount: correctedAmount,
+    system_metadata: {
+      ...metadata,
+      extra_seats: extraSeats,
+      raw_extra_seats: rawExtraSeats,
+      extra_seat_overflow_clamped:
+        rawExtraSeats > FAMILY_MAX_EXTRA_MEMBER_COUNT || amount > correctedAmount,
+      current_monthly_total: correctedAmount,
+      extra_amount: extraSeats * FAMILY_EXTRA_MEMBER_PRICE_INR,
+    },
+  }
+}
 
 /**
  * GET /api/subscriptions
@@ -37,7 +78,7 @@ export async function GET(request: NextRequest) {
         throw error
       }
 
-      return data || []
+      return (data || []).map(normalizeRenewlyFamilySubscriptionRow)
     }
 
     const subscriptions = forceFresh

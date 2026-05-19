@@ -5,6 +5,7 @@ import { getPlanPricing } from '@/lib/plans'
 import type { PlanType } from '@/lib/plans'
 import { computeFamilyBillingState } from '@/lib/billing/family-billing-state'
 import { getUserFamilyRelationship } from '@/lib/family/get-user-family-relationship'
+import { FAMILY_MAX_EXTRA_MEMBER_COUNT } from '@/lib/family/family-config'
 
 /**
  * Get Supabase client for sync operations
@@ -213,7 +214,10 @@ export async function syncRenewlyFamilyOwnerSubscription(params: {
     })
 
     // Fall back to extraSeatCount-based math if no addons were supplied.
-    const currentExtraSeats = seatAddons ? billingState.currentExtraSeatCount : extraSeatCount
+    // Clamp to the supported max so stale DB state can never sync +5/+6 seats to UI.
+    const currentExtraSeats = seatAddons
+      ? billingState.currentExtraSeatCount
+      : Math.min(Math.max(0, Number(extraSeatCount || 0)), FAMILY_MAX_EXTRA_MEMBER_COUNT)
     const extraAmount = currentExtraSeats * 99
     const currentMonthlyTotal = seatAddons
       ? billingState.currentMonthlyTotal
@@ -255,6 +259,8 @@ export async function syncRenewlyFamilyOwnerSubscription(params: {
             scheduled_cancel_extra_seats: billingState.scheduledCancelExtraSeatCount,
             scheduled_cancel_date: billingState.scheduledCancelDate,
             has_scheduled_extra_seat_cancellation: billingState.hasScheduledExtraSeatCancellation,
+            raw_extra_seats: billingState.rawCurrentExtraSeatCount,
+            extra_seat_overflow_clamped: billingState.hasExtraSeatOverflow,
           },
         },
         { onConflict: 'managed_subscription_key' }

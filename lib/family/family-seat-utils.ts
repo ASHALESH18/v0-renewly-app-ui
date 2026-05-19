@@ -1,6 +1,7 @@
 import {
   FAMILY_INCLUDED_MEMBER_COUNT,
   FAMILY_EXTRA_MEMBER_PRICE_INR,
+  FAMILY_MAX_EXTRA_MEMBER_COUNT,
 } from './family-config'
 
 export type SeatType = 'owner' | 'included' | 'extra'
@@ -77,31 +78,50 @@ function isFutureOrOpenPeriod(addon: SeatAddon): boolean {
   return Number.isFinite(end) && end > Date.now()
 }
 
-export function getActiveAddonSeatQuantity(seatAddons: SeatAddon[] = []): number {
-  return seatAddons
-    .filter((addon) => (addon.status || 'active') === 'active' && isFutureOrOpenPeriod(addon))
-    .reduce((sum, addon) => sum + Math.max(0, Number(addon.quantity || 0)), 0)
+export function clampExtraSeatQuantity(quantity: number): number {
+  const safeQuantity = Math.max(0, Number.isFinite(quantity) ? quantity : 0)
+  return Math.min(safeQuantity, FAMILY_MAX_EXTRA_MEMBER_COUNT)
 }
 
-export function getReusableAddonSeatQuantity(seatAddons: SeatAddon[] = []): number {
-  return seatAddons
-    .filter(
+function sumAddonSeatQuantity(seatAddons: SeatAddon[] = []): number {
+  return seatAddons.reduce((sum, addon) => sum + Math.max(0, Number(addon.quantity || 0)), 0)
+}
+
+export function getRawActiveAddonSeatQuantity(seatAddons: SeatAddon[] = []): number {
+  return sumAddonSeatQuantity(
+    seatAddons.filter((addon) => (addon.status || 'active') === 'active' && isFutureOrOpenPeriod(addon))
+  )
+}
+
+export function getActiveAddonSeatQuantity(seatAddons: SeatAddon[] = []): number {
+  return clampExtraSeatQuantity(getRawActiveAddonSeatQuantity(seatAddons))
+}
+
+export function getRawReusableAddonSeatQuantity(seatAddons: SeatAddon[] = []): number {
+  return sumAddonSeatQuantity(
+    seatAddons.filter(
       (addon) =>
         (addon.status || 'active') === 'active' &&
         addon.cancel_at_period_end !== true &&
         isFutureOrOpenPeriod(addon)
     )
-    .reduce((sum, addon) => sum + Math.max(0, Number(addon.quantity || 0)), 0)
+  )
+}
+
+export function getReusableAddonSeatQuantity(seatAddons: SeatAddon[] = []): number {
+  return clampExtraSeatQuantity(getRawReusableAddonSeatQuantity(seatAddons))
 }
 
 export function getEndingAddonSeatQuantity(seatAddons: SeatAddon[] = []): number {
-  return seatAddons
-    .filter(
-      (addon) =>
-        (addon.status || 'active') === 'active' &&
-        addon.cancel_at_period_end === true
+  return clampExtraSeatQuantity(
+    sumAddonSeatQuantity(
+      seatAddons.filter(
+        (addon) =>
+          (addon.status || 'active') === 'active' &&
+          addon.cancel_at_period_end === true
+      )
     )
-    .reduce((sum, addon) => sum + Math.max(0, Number(addon.quantity || 0)), 0)
+  )
 }
 
 export function getLatestCurrentPeriodEnd(

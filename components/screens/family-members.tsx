@@ -784,7 +784,7 @@ export function FamilyMembersScreen() {
                   </p>
                   <a
                     href="/app/upgrade?plan=family"
-                    className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-blue-700 dark:text-blue-300 hover:underline"
+                    className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-br from-gold to-gold/90 text-white font-medium text-sm hover:from-gold/90 hover:to-gold/80 transition-all shadow-sm hover:shadow-md"
                   >
                     Start your own plan
                     <ExternalLink className="h-4 w-4" />
@@ -947,7 +947,7 @@ export function FamilyMembersScreen() {
                             window.location.href = '/app/upgrade?from=family_member&intent=start_own_plan'
                           }
                         }}
-                        className="inline-flex items-center gap-2 rounded-lg bg-blue-600/20 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-600/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-2 ml-2 dark:text-blue-300 dark:bg-blue-900/40 dark:hover:bg-blue-900/60"
+                        className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-br from-gold to-gold/90 px-3 py-1.5 text-xs font-medium text-white hover:from-gold/90 hover:to-gold/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md mt-2 ml-2"
                       >
                         Start your own plan
                       </button>
