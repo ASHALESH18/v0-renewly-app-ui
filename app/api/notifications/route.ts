@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getUserSubscriptions } from '@/lib/supabase/repositories/subscriptions'
-import { getUserNotifications, markNotificationRead, markAllNotificationsRead } from '@/lib/supabase/repositories/notifications'
+import { getUserNotifications as getLegacyNotifications, markNotificationRead as legacyMark, markAllNotificationsRead as legacyMarkAll } from '@/lib/supabase/repositories/notifications'
+import { getUserNotifications, markNotificationRead, markAllNotificationsRead } from '@/lib/notifications/notification-service'
 import { formatCurrencyAmount } from '@/lib/currency'
 import type { NotificationStateRow, SubscriptionRow } from '@/lib/supabase/database.types'
 import { getPendingFamilyInviteForUserEmail } from '@/lib/family/get-pending-family-invite'
@@ -258,10 +259,10 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // F8-lite: Fetch persistent notifications from DB first
+    // F8-lite: Fetch persistent notifications from DB first using new service
     let persistentNotifications: any[] = []
     try {
-      persistentNotifications = await getUserNotifications(user.id, { limit: 50, status: undefined })
+      persistentNotifications = await getUserNotifications(user.id, { limit: 50 })
     } catch (err) {
       console.warn('[v0] Failed to fetch persistent notifications:', err)
       // Continue with empty list, don't crash the endpoint
@@ -388,12 +389,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true })
     }
 
-    // F8-lite: Try to handle persistent notifications first
+    // F8-lite: Try to handle persistent notifications first using new service
     if (action === 'mark_all_read') {
       try {
         await markAllNotificationsRead(user.id)
       } catch (e) {
         console.warn('[v0] Failed to mark persistent notifications as read:', e)
+      }
+      // Also handle legacy
+      try {
+        await legacyMarkAll(user.id)
+      } catch (e) {
+        console.warn('[v0] Failed to mark legacy notifications as read:', e)
       }
     } else if (ids.length > 0) {
       // Try persistent notifications
@@ -402,6 +409,12 @@ export async function POST(request: Request) {
           await markNotificationRead(id)
         } catch (e) {
           console.warn(`[v0] Failed to mark persistent notification ${id} as read:`, e)
+        }
+        // Also try legacy
+        try {
+          await legacyMark(id)
+        } catch (e) {
+          console.warn(`[v0] Failed to mark legacy notification ${id} as read:`, e)
         }
       }
     }
