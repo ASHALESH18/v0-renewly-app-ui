@@ -9,13 +9,17 @@ import {
 } from '@/lib/family/family-invite-utils'
 import { sendFamilyInviteEmail } from '@/lib/email/family-invite-email'
 import { resolveEffectiveEntitlement } from '@/lib/entitlements/effective-plan'
-import { FAMILY_EXTRA_MEMBER_PRICE_INR } from '@/lib/family/family-config'
+import {
+  FAMILY_EXTRA_MEMBER_PRICE_INR,
+  FAMILY_MAX_EXTRA_MEMBER_COUNT,
+} from '@/lib/family/family-config'
 import {
   checkTargetNotOwner,
   checkTargetNotActiveMember,
   checkNoPendingInvitesAcrossAll,
 } from '@/lib/family/family-abuse-prevention'
 import { validateExtraSeatPurchase } from '@/lib/family/family-seat-guardrails'
+import { calculateSeatUsage } from '@/lib/family/family-seat-utils'
 import { syncRenewlyFamilyOwnerSubscription } from '@/lib/billing/renewly-subscription-sync'
 
 type IntentMetadata = Record<string, any>
@@ -47,20 +51,28 @@ async function ensurePaidExtraSeatRecorded(params: {
     metadata.current_period_end ||
     addMonthsLikeBillingPeriod(now).toISOString()
 
-  const { data: existingAddon, error: addonFetchError } = await supabase
+  const { data: existingAddons = [], error: addonFetchError } = await supabase
     .from('family_seat_addons')
     .select('id, quantity')
     .eq('family_group_id', familyGroupId)
     .eq('status', 'active')
     .order('created_at', { ascending: true })
-    .limit(1)
-    .maybeSingle()
 
   if (addonFetchError) {
     console.error('[finalize-payment] Failed to fetch seat addon:', addonFetchError)
     throw new Error('Failed to fetch extra-seat billing state')
   }
 
+  const currentPaidSeats = (existingAddons || []).reduce(
+    (sum: number, addon: any) => sum + Math.max(0, Number(addon.quantity || 0)),
+    0
+  )
+
+  if (currentPaidSeats >= FAMILY_MAX_EXTRA_MEMBER_COUNT) {
+    throw new Error(`Extra-seat limit reached. Renewly Family supports up to ${FAMILY_MAX_EXTRA_MEMBER_COUNT} paid extra members.`)
+  }
+
+  const existingAddon = existingAddons?.[0] || null
   let newPaidQuantity = 1
 
   if (existingAddon) {
@@ -110,9 +122,10 @@ async function ensurePaidExtraSeatRecorded(params: {
     console.warn('[finalize-payment] Failed to recalc addon quantity:', activeAddonError)
   }
 
-  const totalPaidSeats =
+  const rawTotalPaidSeats =
     activeAddons?.reduce((sum: number, addon: any) => sum + Math.max(0, Number(addon.quantity || 0)), 0) ??
     newPaidQuantity
+  const totalPaidSeats = Math.min(rawTotalPaidSeats, FAMILY_MAX_EXTRA_MEMBER_COUNT)
 
   const { error: groupUpdateError } = await supabase
     .from('family_groups')
@@ -135,6 +148,7 @@ async function ensurePaidExtraSeatRecorded(params: {
         extra_seat_recorded: true,
         extra_seat_recorded_at: nowIso,
         extra_seat_quantity_after_recording: totalPaidSeats,
+        raw_extra_seat_quantity_after_recording: rawTotalPaidSeats,
       },
       updated_at: nowIso,
     })
@@ -212,7 +226,7 @@ export async function POST(request: NextRequest) {
 
     const { data: familyGroup, error: groupError } = await supabase
       .from('family_groups')
-      .select('id, owner_user_id, status, current_period_end, scheduled_action')
+      .select('id, owner_user_id, status, included_member_limit, current_period_end, scheduled_action')
       .eq('id', intent.family_group_id)
       .maybeSingle()
 
@@ -302,9 +316,60 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: noPendingCheck.error }, { status: 409 })
     }
 
-    // F7.4-S: Validate that this purchase won't exceed max extra-seat cap (4)
-    const currentExtraSeats = familyGroup.extra_seat_count || 0
-    const purchaseValidation = validateExtraSeatPurchase(currentExtraSeats, 1)
+    // F7.4-S: Validate against real members, pending invites, and paid add-on rows.
+    // Do not trust family_groups.extra_seat_count because it can be stale after older bugs.
+    const [{ data: activeMembers = [] }, { data: pendingInvites = [] }, { data: seatAddons = [] }] = await Promise.all([
+      supabase
+        .from('family_members')
+        .select('id, role, seat_type')
+        .eq('family_group_id', familyGroup.id)
+        .eq('status', 'active'),
+      supabase
+        .from('family_invites')
+        .select('id, seat_type, expires_at')
+        .eq('family_group_id', familyGroup.id)
+        .eq('status', 'pending'),
+      supabase
+        .from('family_seat_addons')
+        .select('id, quantity, status, cancel_at_period_end, current_period_end')
+        .eq('family_group_id', familyGroup.id)
+        .eq('status', 'active'),
+    ])
+
+    const nowMs = Date.now()
+    const reservingPendingInvites = (pendingInvites || []).filter((invite: any) => {
+      if (!invite.expires_at) return true
+      const expiresAtMs = new Date(invite.expires_at).getTime()
+      return Number.isFinite(expiresAtMs) && expiresAtMs > nowMs
+    })
+
+    const seatUsage = calculateSeatUsage({
+      activeMembers: activeMembers || [],
+      pendingInvites: reservingPendingInvites,
+      familyGroup: {
+        included_member_limit: familyGroup.included_member_limit,
+        extra_seat_count: 0,
+        current_period_end: familyGroup.current_period_end,
+      },
+      seatAddons: seatAddons || [],
+    })
+
+    const reservedExtraSeats = seatUsage.activeExtraMembers + seatUsage.pendingExtraInvites
+    if (reservedExtraSeats >= FAMILY_MAX_EXTRA_MEMBER_COUNT) {
+      return NextResponse.json(
+        {
+          error: 'extra_member_limit_reached',
+          message: `Family plan maximum reached. Renewly Family supports up to ${FAMILY_MAX_EXTRA_MEMBER_COUNT} paid extra members in this MVP.`,
+        },
+        { status: 409 }
+      )
+    }
+
+    const rawPaidExtraSeats = (seatAddons || []).reduce(
+      (sum: number, addon: any) => sum + Math.max(0, Number(addon.quantity || 0)),
+      0
+    )
+    const purchaseValidation = validateExtraSeatPurchase(rawPaidExtraSeats, 1)
     if (!purchaseValidation.valid) {
       return NextResponse.json(
         { error: purchaseValidation.error?.message || 'Extra-seat limit reached' },
@@ -388,11 +453,14 @@ export async function POST(request: NextRequest) {
     try {
       const { data: activeAddons } = await supabase
         .from('family_seat_addons')
-        .select('quantity')
+        .select('id, quantity, status, cancel_at_period_end, current_period_end')
         .eq('family_group_id', familyGroup.id)
         .eq('status', 'active')
 
-      const totalPaidSeats = activeAddons?.reduce((sum, addon) => sum + (addon.quantity || 0), 0) || 0
+      const totalPaidSeats = Math.min(
+        activeAddons?.reduce((sum: number, addon: any) => sum + Math.max(0, Number(addon.quantity || 0)), 0) || 0,
+        FAMILY_MAX_EXTRA_MEMBER_COUNT
+      )
 
       await syncRenewlyFamilyOwnerSubscription({
         ownerUserId: user.id,

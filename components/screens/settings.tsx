@@ -1116,7 +1116,7 @@ export function SettingsScreen() {
                       window.location.href = '/app/upgrade?from=family_member&intent=start_own_plan'
                     }
                   }}
-                  className="w-full mt-4 inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+                  className="w-full mt-4 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-br from-gold to-gold/90 px-4 py-2 text-sm font-medium text-white hover:from-gold/90 hover:to-gold/80 transition-all shadow-sm hover:shadow-md"
                 >
                   Start your own plan
                 </button>

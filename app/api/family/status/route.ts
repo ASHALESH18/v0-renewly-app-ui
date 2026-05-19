@@ -208,7 +208,12 @@ export async function GET() {
       // Calculate extra-seat reuse state (F7)
       const extraSeatReuseState = calculateExtraSeatReuseState(seatUsage)
 
-      const totalActiveExtraSeats = seatUsage.paidActiveExtraSeats
+      const billingState = computeFamilyBillingState({
+        currentPeriodEnd: ownerGroup.current_period_end,
+        seatAddons: seatAddons || [],
+      })
+
+      const totalActiveExtraSeats = billingState.currentExtraSeatCount
       const extraSeatsScheduledToEnd = seatUsage.extraSeatsEndingAtPeriodEnd
 
       // Separate active members for display
@@ -302,24 +307,20 @@ export async function GET() {
           canScheduleNewInvites: ownerGroup.scheduled_action !== 'cancel_at_period_end',
         },
         // F7.2D-R: Centralized billing state via shared helper
-        billingMetadata: (() => {
-          const state = computeFamilyBillingState({
-            currentPeriodEnd: ownerGroup.current_period_end,
-            seatAddons: seatAddons || [],
-          })
-          return {
-            currentMonthlyTotal: state.currentMonthlyTotal,
-            nextCycleMonthlyTotal: state.nextCycleMonthlyTotal,
-            extraSeatCount: state.currentExtraSeatCount,
-            currentExtraSeatCount: state.currentExtraSeatCount,
-            scheduledCancelExtraSeatCount: state.scheduledCancelExtraSeatCount,
-            continuingExtraSeatCount: state.continuingExtraSeatCount,
-            scheduledCancelDate: state.scheduledCancelDate,
-            hasScheduledExtraSeatCancellation: state.hasScheduledExtraSeatCancellation,
-            cancellationSummaryText: state.cancellationSummaryText,
-            currency: state.currency,
-          }
-        })(),
+        billingMetadata: {
+          currentMonthlyTotal: billingState.currentMonthlyTotal,
+          nextCycleMonthlyTotal: billingState.nextCycleMonthlyTotal,
+          extraSeatCount: billingState.currentExtraSeatCount,
+          currentExtraSeatCount: billingState.currentExtraSeatCount,
+          rawCurrentExtraSeatCount: billingState.rawCurrentExtraSeatCount,
+          hasExtraSeatOverflow: billingState.hasExtraSeatOverflow,
+          scheduledCancelExtraSeatCount: billingState.scheduledCancelExtraSeatCount,
+          continuingExtraSeatCount: billingState.continuingExtraSeatCount,
+          scheduledCancelDate: billingState.scheduledCancelDate,
+          hasScheduledExtraSeatCancellation: billingState.hasScheduledExtraSeatCancellation,
+          cancellationSummaryText: billingState.cancellationSummaryText,
+          currency: billingState.currency,
+        },
         billingDisplay,
       })
     }

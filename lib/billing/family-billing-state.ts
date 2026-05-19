@@ -1,3 +1,5 @@
+import { FAMILY_MAX_EXTRA_MEMBER_COUNT } from '@/lib/family/family-config'
+
 /**
  * F7.2D-R: Shared Family billing state helper
  *
@@ -28,6 +30,8 @@ export type FamilyBillingState = {
   baseAmount: number
   extraSeatUnitAmount: number
   currentExtraSeatCount: number
+  rawCurrentExtraSeatCount: number
+  hasExtraSeatOverflow: boolean
   scheduledCancelExtraSeatCount: number
   continuingExtraSeatCount: number
   currentMonthlyTotal: number
@@ -71,20 +75,30 @@ export function computeFamilyBillingState(
     (a) => (a?.status ?? 'active') === 'active'
   )
 
-  const currentExtraSeatCount = activeAddons.reduce(
+  const rawCurrentExtraSeatCount = activeAddons.reduce(
     (sum, a) => sum + Math.max(0, a.quantity ?? 0),
     0
   )
+
+  const currentExtraSeatCount = Math.min(
+    rawCurrentExtraSeatCount,
+    FAMILY_MAX_EXTRA_MEMBER_COUNT
+  )
+  const hasExtraSeatOverflow = rawCurrentExtraSeatCount > FAMILY_MAX_EXTRA_MEMBER_COUNT
 
   const scheduledAddons = activeAddons.filter((a) => a.cancel_at_period_end === true)
-  const scheduledCancelExtraSeatCount = scheduledAddons.reduce(
+  const rawScheduledCancelExtraSeatCount = scheduledAddons.reduce(
     (sum, a) => sum + Math.max(0, a.quantity ?? 0),
     0
   )
+  const scheduledCancelExtraSeatCount = Math.min(
+    rawScheduledCancelExtraSeatCount,
+    currentExtraSeatCount
+  )
 
-  const continuingExtraSeatCount = Math.max(
-    0,
-    currentExtraSeatCount - scheduledCancelExtraSeatCount
+  const continuingExtraSeatCount = Math.min(
+    FAMILY_MAX_EXTRA_MEMBER_COUNT,
+    Math.max(0, currentExtraSeatCount - scheduledCancelExtraSeatCount)
   )
 
   const currentMonthlyTotal = baseAmount + currentExtraSeatCount * extraSeatUnitAmount
@@ -118,6 +132,8 @@ export function computeFamilyBillingState(
     baseAmount,
     extraSeatUnitAmount,
     currentExtraSeatCount,
+    rawCurrentExtraSeatCount,
+    hasExtraSeatOverflow,
     scheduledCancelExtraSeatCount,
     continuingExtraSeatCount,
     currentMonthlyTotal,
