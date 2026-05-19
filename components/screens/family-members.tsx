@@ -87,10 +87,24 @@ export function FamilyMembersScreen() {
   // Helper to refresh family status
   const refreshFamilyStatus = async (options?: { silent?: boolean }) => {
     try {
-      const res = await fetch('/api/family/status', { cache: 'no-store' })
-      if (!res.ok) throw new Error('Failed to fetch family status')
-      const data = await res.json()
+      // F7.2F: Preload both family status and subscriptions in parallel
+      const [statusRes, subscriptionsRes] = await Promise.all([
+        fetch('/api/family/status?fresh=1', { cache: 'no-store' }),
+        fetch('/api/subscriptions?fresh=1', { cache: 'no-store' })
+      ])
+      
+      if (!statusRes.ok) throw new Error('Failed to fetch family status')
+      const data = await statusRes.json()
       setFamilyStatus(data)
+      
+      // F7.2F: Preload subscriptions to eliminate delayed state on dashboard
+      if (subscriptionsRes.ok) {
+        const subscriptionsData = await subscriptionsRes.json()
+        // Preload into browser cache, used by dashboard when navigating
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+          window.sessionStorage.setItem('_preloaded_subscriptions', JSON.stringify(subscriptionsData))
+        }
+      }
     } catch (error) {
       if (!options?.silent) {
         console.error('[v0] Error refreshing family status:', error)
@@ -923,6 +937,19 @@ export function FamilyMembersScreen() {
                         className="inline-flex items-center gap-2 rounded-lg bg-red-600/20 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-600/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-2 ml-2 dark:text-red-300 dark:bg-red-900/40 dark:hover:bg-red-900/60"
                       >
                         Leave Family
+                      </button>
+
+                      {/* F7.2F: Start your own plan CTA */}
+                      <button
+                        onClick={() => {
+                          const confirmed = window.confirm("You'll leave when your plan becomes active. Family access remains unchanged until then. Continue to choose a plan?")
+                          if (confirmed) {
+                            window.location.href = '/app/upgrade?from=family_member&intent=start_own_plan'
+                          }
+                        }}
+                        className="inline-flex items-center gap-2 rounded-lg bg-blue-600/20 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-600/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-2 ml-2 dark:text-blue-300 dark:bg-blue-900/40 dark:hover:bg-blue-900/60"
+                      >
+                        Start your own plan
                       </button>
                     </div>
                   )}
