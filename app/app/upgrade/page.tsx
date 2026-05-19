@@ -95,6 +95,9 @@ function UpgradeContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const requestedPlan = searchParams.get('plan') as PaidPlanId | null
+  // F7.2F: Read from and intent query params for context
+  const fromParam = searchParams.get('from')
+  const intentParam = searchParams.get('intent')
   const plans = getAllPlans().filter((plan) => plan.id !== 'free')
   const notificationSettings = useStore((state) => state.notificationSettings)
   const selectedCurrency = getEffectiveCurrency(
