@@ -32,6 +32,9 @@ export type FamilyBillingState = {
   currentExtraSeatCount: number
   rawCurrentExtraSeatCount: number
   hasExtraSeatOverflow: boolean
+  reservedExtraSeatCount: number
+  hasUnpaidReservedExtraSeats: boolean
+  unpaidReservedExtraSeatCount: number
   scheduledCancelExtraSeatCount: number
   continuingExtraSeatCount: number
   currentMonthlyTotal: number
@@ -54,6 +57,8 @@ export type ComputeFamilyBillingStateInput = {
   baseAmount?: number
   /** Optional override for per-seat amount (defaults to ₹99) */
   extraSeatUnitAmount?: number
+  /** Active extra members + pending extra-seat invites that already reserve capacity */
+  reservedExtraSeatCount?: number
 }
 
 function formatINR(amount: number): string {
@@ -80,11 +85,21 @@ export function computeFamilyBillingState(
     0
   )
 
+  const reservedExtraSeatCount = Math.min(
+    Math.max(0, Number(input.reservedExtraSeatCount || 0)),
+    FAMILY_MAX_EXTRA_MEMBER_COUNT
+  )
+
+  // If pending extra invites already exist, they reserve capacity even if an older
+  // build failed to persist the matching add-on quantity. This keeps Dashboard,
+  // Calendar, Settings, and Family page consistent during reconciliation.
   const currentExtraSeatCount = Math.min(
-    rawCurrentExtraSeatCount,
+    Math.max(rawCurrentExtraSeatCount, reservedExtraSeatCount),
     FAMILY_MAX_EXTRA_MEMBER_COUNT
   )
   const hasExtraSeatOverflow = rawCurrentExtraSeatCount > FAMILY_MAX_EXTRA_MEMBER_COUNT
+  const unpaidReservedExtraSeatCount = Math.max(0, reservedExtraSeatCount - rawCurrentExtraSeatCount)
+  const hasUnpaidReservedExtraSeats = unpaidReservedExtraSeatCount > 0
 
   const scheduledAddons = activeAddons.filter((a) => a.cancel_at_period_end === true)
   const rawScheduledCancelExtraSeatCount = scheduledAddons.reduce(
@@ -134,6 +149,9 @@ export function computeFamilyBillingState(
     currentExtraSeatCount,
     rawCurrentExtraSeatCount,
     hasExtraSeatOverflow,
+    reservedExtraSeatCount,
+    hasUnpaidReservedExtraSeats,
+    unpaidReservedExtraSeatCount,
     scheduledCancelExtraSeatCount,
     continuingExtraSeatCount,
     currentMonthlyTotal,

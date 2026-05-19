@@ -211,6 +211,10 @@ export async function GET() {
       const billingState = computeFamilyBillingState({
         currentPeriodEnd: ownerGroup.current_period_end,
         seatAddons: seatAddons || [],
+        // Pending extra invites reserve seats until accepted/cancelled/expired.
+        // This reconciles older QA states where pending extra invites existed but
+        // the add-on quantity was lower than the reserved extra-seat count.
+        reservedExtraSeatCount: seatUsage.reservedExtraSeats,
       })
 
       const totalActiveExtraSeats = billingState.currentExtraSeatCount
@@ -275,8 +279,13 @@ export async function GET() {
           includedLimit: seatUsage.includedLimit,
           includedSeatsUsed: seatUsage.includedSeatsUsed,
           availableIncludedSeats: seatUsage.availableIncludedSeats,
-          extraSeatCount: seatUsage.extraSeatCount,
-          paidActiveExtraSeats: seatUsage.paidActiveExtraSeats,
+          extraSeatCount: billingState.currentExtraSeatCount,
+          paidActiveExtraSeats: billingState.currentExtraSeatCount,
+          actualPaidActiveExtraSeats: seatUsage.paidActiveExtraSeats,
+          reconciledExtraSeatCount: billingState.currentExtraSeatCount,
+          reservedExtraSeats: seatUsage.reservedExtraSeats,
+          availableExtraSeats: Math.max(0, billingState.currentExtraSeatCount - seatUsage.reservedExtraSeats),
+          unpaidReservedExtraSeats: billingState.unpaidReservedExtraSeatCount,
           activeExtraMembers: seatUsage.activeExtraMembers,
           pendingExtraInvites: seatUsage.pendingExtraInvites,
           extraSeatPriceINR: FAMILY_EXTRA_MEMBER_PRICE_INR,
@@ -287,8 +296,12 @@ export async function GET() {
         extraSeatReuse: {
           requiredExtraSeats: extraSeatReuseState.requiredExtraSeats,
           paidActiveExtraSeats: totalActiveExtraSeats,
-          reusableExtraSeats: extraSeatReuseState.reusableExtraSeats,
-          surplusExtraSeats: extraSeatReuseState.surplusExtraSeats,
+          actualPaidActiveExtraSeats: seatUsage.paidActiveExtraSeats,
+          reusableExtraSeats: Math.max(0, totalActiveExtraSeats - seatUsage.reservedExtraSeats),
+          surplusExtraSeats: Math.max(0, totalActiveExtraSeats - seatUsage.reservedExtraSeats),
+          reservedExtraSeats: seatUsage.reservedExtraSeats,
+          reconciledExtraSeatCount: totalActiveExtraSeats,
+          unpaidReservedExtraSeats: billingState.unpaidReservedExtraSeatCount,
           extraSeatsScheduledToEnd,
         },
         // F7.2A: Seat add-ons with scheduled cancellation state
@@ -314,6 +327,9 @@ export async function GET() {
           currentExtraSeatCount: billingState.currentExtraSeatCount,
           rawCurrentExtraSeatCount: billingState.rawCurrentExtraSeatCount,
           hasExtraSeatOverflow: billingState.hasExtraSeatOverflow,
+          reservedExtraSeatCount: billingState.reservedExtraSeatCount,
+          hasUnpaidReservedExtraSeats: billingState.hasUnpaidReservedExtraSeats,
+          unpaidReservedExtraSeatCount: billingState.unpaidReservedExtraSeatCount,
           scheduledCancelExtraSeatCount: billingState.scheduledCancelExtraSeatCount,
           continuingExtraSeatCount: billingState.continuingExtraSeatCount,
           scheduledCancelDate: billingState.scheduledCancelDate,

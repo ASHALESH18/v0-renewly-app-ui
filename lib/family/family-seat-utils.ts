@@ -43,6 +43,14 @@ export interface SeatUsage {
   totalSeatsUsed: number
   paidActiveExtraSeats: number
   paidReusableExtraSeats: number
+  /** Active extra members + pending extra-seat invites. Pending extra invites reserve paid capacity. */
+  reservedExtraSeats: number
+  /** Extra-seat count to show/bill after reconciling active add-ons with reserved extra seats. */
+  reconciledExtraSeatCount: number
+  /** Positive when active/pending extra members exceed the stored paid add-on quantity. */
+  unpaidReservedExtraSeats: number
+  /** Paid/reconciled capacity still available for another extra invite. */
+  availableExtraSeats: number
   extraSeatsEndingAtPeriodEnd: number
   currentPeriodEnd: string | null
 }
@@ -52,6 +60,14 @@ export interface ExtraSeatReuseState {
   paidActiveExtraSeats: number
   reusableExtraSeats: number
   surplusExtraSeats: number
+  /** Active extra members + pending extra-seat invites. */
+  reservedExtraSeats: number
+  /** Extra-seat count after reconciling paid capacity with reserved usage. */
+  reconciledExtraSeatCount: number
+  /** Active paid capacity still available after reserved usage. */
+  availableExtraSeats: number
+  /** Positive when pending/active extra usage is higher than actual paid add-on rows. */
+  unpaidReservedExtraSeats: number
   extraSeatsEndingAtPeriodEnd: number
   currentPeriodEnd: string | null
 }
@@ -164,23 +180,47 @@ export function calculateSeatUsage(input: SeatCalculationInput): SeatUsage {
     (member) => member.seat_type === 'extra'
   ).length
 
-  const pendingIncludedInvites = pendingInvites.filter(
-    (invite) => (invite.seat_type || 'included') === 'included'
-  ).length
-
-  const pendingExtraInvites = pendingInvites.filter(
+  const explicitPendingExtraInvites = pendingInvites.filter(
     (invite) => invite.seat_type === 'extra'
   ).length
+
+  const pendingInvitesWithoutExplicitExtra = Math.max(
+    0,
+    pendingInvites.length - explicitPendingExtraInvites
+  )
+
+  // Older builds sometimes created the 5th+ pending invite without seat_type='extra'.
+  // Count only the invites that still fit into remaining included capacity as included;
+  // any overflow must reserve extra-seat capacity.
+  const includedCapacityAfterActiveMembers = Math.max(0, includedLimit - activeIncludedMembers)
+  const pendingIncludedInvites = Math.min(
+    pendingInvitesWithoutExplicitExtra,
+    includedCapacityAfterActiveMembers
+  )
+  const overflowPendingInvites = Math.max(
+    0,
+    pendingInvitesWithoutExplicitExtra - pendingIncludedInvites
+  )
+  const pendingExtraInvites = clampExtraSeatQuantity(
+    explicitPendingExtraInvites + overflowPendingInvites
+  )
 
   const includedSeatsUsed = activeIncludedMembers + pendingIncludedInvites
   const availableIncludedSeats = Math.max(0, includedLimit - includedSeatsUsed)
 
-  // Paid extra-seat capacity must come from active family_seat_addons only.
-  // Do not fall back to family_groups.extra_seat_count for invite/payment decisions:
-  // that summary can become stale after lifecycle cleanup and previously allowed
-  // unpaid 5th/6th invites.
+  // Paid extra-seat capacity must come from active family_seat_addons for payment decisions,
+  // but display/billing also needs to account for already-created pending extra invites.
+  // Older QA builds allowed extra invites without consistently updating add-on quantity,
+  // so active + pending extra seats is the safest reservation count to show.
   const paidActiveExtraSeats = getActiveAddonSeatQuantity(seatAddons)
   const paidReusableExtraSeats = getReusableAddonSeatQuantity(seatAddons)
+
+  const reservedExtraSeats = clampExtraSeatQuantity(activeExtraMembers + pendingExtraInvites)
+  const reconciledExtraSeatCount = clampExtraSeatQuantity(
+    Math.max(paidActiveExtraSeats, reservedExtraSeats)
+  )
+  const unpaidReservedExtraSeats = Math.max(0, reservedExtraSeats - paidActiveExtraSeats)
+  const availableExtraSeats = Math.max(0, reconciledExtraSeatCount - reservedExtraSeats)
 
   const extraSeatsEndingAtPeriodEnd = getEndingAddonSeatQuantity(seatAddons)
 
@@ -202,6 +242,10 @@ export function calculateSeatUsage(input: SeatCalculationInput): SeatUsage {
     totalSeatsUsed,
     paidActiveExtraSeats,
     paidReusableExtraSeats,
+    reservedExtraSeats,
+    reconciledExtraSeatCount,
+    unpaidReservedExtraSeats,
+    availableExtraSeats,
     extraSeatsEndingAtPeriodEnd,
     currentPeriodEnd: getLatestCurrentPeriodEnd(familyGroup, seatAddons),
   }
@@ -231,7 +275,13 @@ export function calculateExtraSeatReuseState(
   const requiredExtraSeats = calculateRequiredExtraSeats(seatUsage)
   const paidActiveExtraSeats = seatUsage.paidActiveExtraSeats
   const paidReusableExtraSeats = seatUsage.paidReusableExtraSeats
-  const reusableExtraSeats = Math.max(0, paidReusableExtraSeats - requiredExtraSeats)
+  const reservedExtraSeats = seatUsage.reservedExtraSeats
+  const reconciledExtraSeatCount = seatUsage.reconciledExtraSeatCount
+
+  // Available capacity should never ignore pending extra invites. Older builds could
+  // create pending extra invites after payment, so reserve those seats until accepted,
+  // cancelled, or expired.
+  const reusableExtraSeats = Math.max(0, reconciledExtraSeatCount - reservedExtraSeats)
   const surplusExtraSeats = reusableExtraSeats
 
   return {
@@ -239,6 +289,10 @@ export function calculateExtraSeatReuseState(
     paidActiveExtraSeats,
     reusableExtraSeats,
     surplusExtraSeats,
+    reservedExtraSeats,
+    reconciledExtraSeatCount,
+    availableExtraSeats: reusableExtraSeats,
+    unpaidReservedExtraSeats: Math.max(0, reservedExtraSeats - paidActiveExtraSeats),
     extraSeatsEndingAtPeriodEnd: seatUsage.extraSeatsEndingAtPeriodEnd,
     currentPeriodEnd: seatUsage.currentPeriodEnd,
   }

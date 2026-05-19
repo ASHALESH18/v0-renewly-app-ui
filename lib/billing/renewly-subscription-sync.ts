@@ -197,8 +197,10 @@ export async function syncRenewlyFamilyOwnerSubscription(params: {
     cancel_at_period_end?: boolean | null
     current_period_end?: string | null
   }>
+  /** Active extra members + pending extra-seat invites already reserving seats */
+  reservedExtraSeatCount?: number
 }): Promise<void> {
-  const { ownerUserId, familyGroupId, extraSeatCount = 0, currentPeriodEnd, seatAddons } = params
+  const { ownerUserId, familyGroupId, extraSeatCount = 0, currentPeriodEnd, seatAddons, reservedExtraSeatCount = 0 } = params
   const supabase = getSupabaseClient()
 
   try {
@@ -211,6 +213,7 @@ export async function syncRenewlyFamilyOwnerSubscription(params: {
       currentPeriodEnd,
       seatAddons: seatAddons || [],
       baseAmount,
+      reservedExtraSeatCount,
     })
 
     // Fall back to extraSeatCount-based math if no addons were supplied.
@@ -261,6 +264,9 @@ export async function syncRenewlyFamilyOwnerSubscription(params: {
             has_scheduled_extra_seat_cancellation: billingState.hasScheduledExtraSeatCancellation,
             raw_extra_seats: billingState.rawCurrentExtraSeatCount,
             extra_seat_overflow_clamped: billingState.hasExtraSeatOverflow,
+            reserved_extra_seats: billingState.reservedExtraSeatCount,
+            unpaid_reserved_extra_seats: billingState.unpaidReservedExtraSeatCount,
+            has_unpaid_reserved_extra_seats: billingState.hasUnpaidReservedExtraSeats,
           },
         },
         { onConflict: 'managed_subscription_key' }
@@ -447,6 +453,64 @@ async function getActiveSeatAddonsForFamilyGroup(
   return data || []
 }
 
+
+/**
+ * Active extra members and pending extra-seat invites reserve extra-seat capacity.
+ * Used to reconcile old QA states where the add-on quantity was lower than the
+ * already-created extra invitations.
+ */
+async function getReservedExtraSeatCountForFamilyGroup(
+  supabase: ReturnType<typeof getSupabaseClient>,
+  familyGroupId: string
+): Promise<number> {
+  const [extraMembersResult, explicitExtraInvitesResult, pendingInvitesResult] = await Promise.all([
+    supabase
+      .from('family_members')
+      .select('id', { count: 'exact', head: true })
+      .eq('family_group_id', familyGroupId)
+      .eq('status', 'active')
+      .eq('role', 'member')
+      .eq('seat_type', 'extra'),
+    supabase
+      .from('family_invites')
+      .select('id', { count: 'exact', head: true })
+      .eq('family_group_id', familyGroupId)
+      .eq('status', 'pending')
+      .eq('seat_type', 'extra'),
+    supabase
+      .from('family_invites')
+      .select('id, seat_type')
+      .eq('family_group_id', familyGroupId)
+      .eq('status', 'pending'),
+  ])
+
+  const activeExtraMembers = extraMembersResult.count || 0
+  const explicitPendingExtraInvites = explicitExtraInvitesResult.count || 0
+
+  // If older pending invites have missing/null seat_type, any pending invite beyond
+  // the four included seats must be treated as extra/reserved. We intentionally keep
+  // this helper conservative because it is used only for display/sync reconciliation.
+  const pendingRows = pendingInvitesResult.data || []
+  const nonExplicitExtraPending = pendingRows.filter((invite: any) => invite.seat_type !== 'extra').length
+
+  const includedMembersResult = await supabase
+    .from('family_members')
+    .select('id', { count: 'exact', head: true })
+    .eq('family_group_id', familyGroupId)
+    .eq('status', 'active')
+    .eq('role', 'member')
+    .neq('seat_type', 'extra')
+
+  const includedActive = includedMembersResult.count || 0
+  const includedCapacityLeft = Math.max(0, 4 - includedActive)
+  const overflowPending = Math.max(0, nonExplicitExtraPending - includedCapacityLeft)
+
+  return Math.min(
+    Math.max(0, activeExtraMembers + explicitPendingExtraInvites + overflowPending),
+    FAMILY_MAX_EXTRA_MEMBER_COUNT
+  )
+}
+
 function getSoonestScheduledAddonDate(
   seatAddons: Array<{ cancel_at_period_end?: boolean | null; current_period_end?: string | null }>,
   fallbackDate?: string | null
@@ -622,13 +686,17 @@ export async function syncRenewlyBillingSubscriptionForPlan(params: {
           currentPeriodEnd,
         })
 
-        const seatAddons = await getActiveSeatAddonsForFamilyGroup(supabase, familyGroupId)
+        const [seatAddons, reservedExtraSeatCount] = await Promise.all([
+          getActiveSeatAddonsForFamilyGroup(supabase, familyGroupId),
+          getReservedExtraSeatCountForFamilyGroup(supabase, familyGroupId),
+        ])
 
         await syncRenewlyFamilyOwnerSubscription({
           ownerUserId: userId,
           familyGroupId,
           currentPeriodEnd,
           seatAddons,
+          reservedExtraSeatCount,
         })
 
         await archiveManagedRenewlySubscriptions({
@@ -641,16 +709,23 @@ export async function syncRenewlyBillingSubscriptionForPlan(params: {
       const relationship = await getUserFamilyRelationship(userId)
 
       if (relationship.relationship === 'owner' && relationship.familyGroupId) {
-        const seatAddons = await getActiveSeatAddonsForFamilyGroup(
-          supabase,
-          relationship.familyGroupId
-        )
+        const [seatAddons, reservedExtraSeatCount] = await Promise.all([
+          getActiveSeatAddonsForFamilyGroup(
+            supabase,
+            relationship.familyGroupId
+          ),
+          getReservedExtraSeatCountForFamilyGroup(
+            supabase,
+            relationship.familyGroupId
+          ),
+        ])
 
         await syncRenewlyFamilyOwnerSubscription({
           ownerUserId: userId,
           familyGroupId: relationship.familyGroupId,
           currentPeriodEnd: relationship.currentPeriodEnd || currentPeriodEnd,
           seatAddons,
+          reservedExtraSeatCount,
         })
 
         await archiveManagedRenewlySubscriptions({
