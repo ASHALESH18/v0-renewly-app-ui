@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 import { getUser } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
 import { FAMILY_INCLUDED_MEMBER_COUNT, FAMILY_EXTRA_MEMBER_PRICE_INR } from '@/lib/family/family-config'
-import { calculateSeatUsage, calculateExtraSeatReuseState } from '@/lib/family/family-seat-utils'
+import { calculateSeatUsage, calculateExtraSeatReuseState, canReusePaidExtraSeatForNextInvite } from '@/lib/family/family-seat-utils'
 import { calculateFamilyBillingDisplay, getFamilyBillingCurrency } from '@/lib/billing/family-billing-utils'
 import { computeFamilyBillingState } from '@/lib/billing/family-billing-state'
 import { getPendingFamilyInviteForUserEmail } from '@/lib/family/get-pending-family-invite'
@@ -275,6 +275,8 @@ export async function GET() {
           activeExtraMembers: seatUsage.activeExtraMembers,
           pendingExtraInvites: seatUsage.pendingExtraInvites,
           extraSeatPriceINR: FAMILY_EXTRA_MEMBER_PRICE_INR,
+          // F7.4: Indicate if next invite would require payment
+          requiresPaymentForNextInvite: !canReusePaidExtraSeatForNextInvite(seatUsage),
         },
         // F7: Extra-seat reuse and surplus state
         extraSeatReuse: {

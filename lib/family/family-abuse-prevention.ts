@@ -214,3 +214,102 @@ export function isUserCreatedSubscription(
 ): boolean {
   return !isManagedSubscription(subscription)
 }
+
+/**
+ * F7.4-A: Target user cannot be the family owner
+ * Prevents owner from inviting themselves (different from F10-1 which checks email)
+ */
+export async function checkTargetNotOwner(
+  supabase: any,
+  familyGroupId: string,
+  targetEmail: string
+): Promise<{ valid: boolean; error?: string }> {
+  const { data: group } = await supabase
+    .from('family_groups')
+    .select('owner_user_id')
+    .eq('id', familyGroupId)
+    .single()
+
+  if (!group) {
+    return {
+      valid: false,
+      error: 'Family group not found',
+    }
+  }
+
+  // Get owner email
+  const { data: ownerProfile } = await supabase
+    .from('profiles')
+    .select('email')
+    .eq('id', group.owner_user_id)
+    .single()
+
+  if (ownerProfile?.email?.toLowerCase() === targetEmail.toLowerCase()) {
+    return {
+      valid: false,
+      error: 'Cannot invite the family owner',
+    }
+  }
+
+  return { valid: true }
+}
+
+/**
+ * F7.4-B: Target user cannot already be an active member of this family
+ * Stronger version of F10-3 using user_id instead of just email
+ */
+export async function checkTargetNotActiveMember(
+  supabase: any,
+  familyGroupId: string,
+  targetUserId: string
+): Promise<{ valid: boolean; error?: string }> {
+  const { data: existing } = await supabase
+    .from('family_members')
+    .select('id')
+    .eq('family_group_id', familyGroupId)
+    .eq('user_id', targetUserId)
+    .eq('status', 'active')
+    .single()
+
+  if (existing) {
+    return {
+      valid: false,
+      error: 'This user is already an active member of the family group',
+    }
+  }
+
+  return { valid: true }
+}
+
+/**
+ * F7.4-C: Target user cannot have a pending invite in ANY family group
+ * Prevents same user from having multiple pending invites across different families
+ */
+export async function checkNoPendingInvitesAcrossAll(
+  supabase: any,
+  targetEmail: string
+): Promise<{ valid: boolean; error?: string }> {
+  const { data: existing } = await supabase
+    .from('family_invites')
+    .select('id, family_group_id, expires_at')
+    .ilike('invited_email', targetEmail)
+    .eq('status', 'pending')
+
+  if (existing && existing.length > 0) {
+    // Check if any are not expired
+    const now = new Date()
+    const pendingInvites = existing.filter(inv => {
+      const expiresAt = new Date(inv.expires_at)
+      return expiresAt > now
+    })
+
+    if (pendingInvites.length > 0) {
+      return {
+        valid: false,
+        error: 'This email already has a pending invite to join another family. Please accept or decline it first.',
+      }
+    }
+  }
+
+  return { valid: true }
+}
