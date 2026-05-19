@@ -14,12 +14,14 @@ let notificationsFetchCache = {
   data: null as any,
   fetchedAt: 0,
   inFlight: null as Promise<any> | null,
+  controller: null as AbortController | null,
 }
 
 let familyStatusFetchCache = {
   data: null as any,
   fetchedAt: 0,
   inFlight: null as Promise<any> | null,
+  controller: null as AbortController | null,
 }
 
 export function useCalendarEvents() {
@@ -156,6 +158,7 @@ export function useNotifications() {
   const [error, setError] = useState<any>(null)
 
   // S5B.4-R: Fetch with throttling and deduplication to prevent 504 storm
+  // F8-lite: Added AbortController for canceling stale requests
   const fetchNotificationsThrottled = useCallback(async (
     force = false,
     ttl = REQUEST_CACHE_TTL
@@ -169,10 +172,20 @@ export function useNotifications() {
       return notificationsFetchCache.inFlight
     }
 
+    // F8-lite: Abort previous stale request before starting new one
+    if (notificationsFetchCache.controller && isForceRefresh) {
+      notificationsFetchCache.controller.abort()
+      notificationsFetchCache.inFlight = null
+    }
+
     // If cache is fresh and not forced, use cached data
     if (!cacheExpired && !isForceRefresh && notificationsFetchCache.data) {
       return notificationsFetchCache.data
     }
+
+    // F8-lite: Create AbortController for this fetch
+    const controller = new AbortController()
+    notificationsFetchCache.controller = controller
 
     // Create the actual fetch promise
     const fetchPromise = (async () => {
@@ -185,9 +198,11 @@ export function useNotifications() {
           fetch('/api/notifications', {
             method: 'GET',
             cache: 'no-store',
+            signal: controller.signal,
           }),
           fetch('/api/family/status', {
             cache: 'no-store',
+            signal: controller.signal,
           }),
         ])
 
@@ -244,6 +259,10 @@ export function useNotifications() {
         setError(null)
         return mergedJson
       } catch (err) {
+        // F8-lite: Don't log abort errors
+        if (err instanceof Error && err.name === 'AbortError') {
+          return notificationsFetchCache.data
+        }
         console.error('[notifications] fetch error:', err)
         setError(err)
         // Return last cached state on error
@@ -254,6 +273,7 @@ export function useNotifications() {
       } finally {
         setIsLoading(false)
         notificationsFetchCache.inFlight = null
+        notificationsFetchCache.controller = null
       }
     })()
 

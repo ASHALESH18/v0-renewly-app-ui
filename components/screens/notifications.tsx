@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils'
 import { StaggerList } from '@/components/motion'
 import { useNotifications } from '@/lib/hooks/use-remote-data'
 import { NotificationsListSkeleton } from '@/components/skeletons'
+import { getCategoryLabel } from '@/lib/notifications/notification-types'
+import type { NotificationCategory } from '@/lib/notifications/notification-types'
 
 interface Notification {
   id: string
@@ -17,6 +19,7 @@ interface Notification {
   read: boolean
   subscriptionId?: string
   actionHref?: string
+  category?: NotificationCategory
 }
 
 type NotificationMutationAction = 'mark_read' | 'mark_all_read' | 'dismiss'
@@ -43,6 +46,8 @@ export function NotificationsScreen() {
   const { notifications: apiNotifications, isLoading, error } = useNotifications()
   const [items, setItems] = useState<Notification[]>([])
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
+  // N2: Add category filter support
+  const [categoryFilter, setCategoryFilter] = useState<NotificationCategory | 'all'>('all')
   const [pendingIds, setPendingIds] = useState<string[]>([])
   const [isMarkingAll, setIsMarkingAll] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -57,8 +62,22 @@ export function NotificationsScreen() {
   )
 
   const filteredItems = useMemo(
-    () => (filter === 'all' ? items : items.filter((notification) => !notification.read)),
-    [filter, items]
+    () => {
+      let result = items
+      
+      // Apply read/unread filter
+      if (filter === 'unread') {
+        result = result.filter((notification) => !notification.read)
+      }
+      
+      // N2: Apply category filter
+      if (categoryFilter !== 'all') {
+        result = result.filter((notification) => notification.category === categoryFilter)
+      }
+      
+      return result
+    },
+    [filter, categoryFilter, items]
   )
 
   const isPending = (id: string) => pendingIds.includes(id)
@@ -225,6 +244,27 @@ export function NotificationsScreen() {
                 type="button"
               >
                 {tab === 'all' ? 'All' : `Unread (${unreadCount})`}
+              </motion.button>
+            ))}
+          </div>
+
+          {/* N2: Category filter tabs */}
+          <div className="flex gap-2 flex-wrap">
+            {(['all', 'billing', 'family', 'renewals', 'security', 'system'] as const).map((cat) => (
+              <motion.button
+                key={cat}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setCategoryFilter(cat === 'all' ? 'all' : (cat as NotificationCategory))}
+                className={cn(
+                  'px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer',
+                  categoryFilter === cat
+                    ? 'bg-gold/20 border border-gold/50 text-gold'
+                    : 'bg-card/40 border border-border/50 text-muted-foreground hover:text-foreground hover:border-gold/30'
+                )}
+                type="button"
+              >
+                {cat === 'all' ? 'All' : getCategoryLabel(cat)}
               </motion.button>
             ))}
           </div>
