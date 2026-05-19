@@ -19,6 +19,8 @@ const buttonVariants = cva(
         ghost:
           'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
         link: 'text-primary underline-offset-4 hover:underline',
+        // G1: Glass theme buttons with frosted glass effect
+        glass: 'bg-glass/88 backdrop-blur-lg border border-glass-border text-foreground hover:bg-glass hover:shadow-md transition-all dark:bg-glass/10 dark:border-white/8 dark:hover:bg-white/15',
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',
