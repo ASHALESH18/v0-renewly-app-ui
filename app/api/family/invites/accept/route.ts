@@ -7,7 +7,7 @@ import { hashInviteToken, isInviteExpired, normalizeInviteEmail } from '@/lib/fa
 import { syncRenewlyFamilyMemberSubscription } from '@/lib/billing/renewly-subscription-sync'
 import { invalidateCache } from '@/lib/redis'
 import { revalidateTag } from 'next/cache'
-import { checkUserNotInMultipleFamilies, checkUserNotOwnerOfOtherFamily } from '@/lib/family/family-abuse-prevention'
+import { checkUserNotInMultipleFamilies, checkUserNotOwnerOfOtherFamily, checkTargetNotActiveMember } from '@/lib/family/family-abuse-prevention'
 
 /**
  * POST /api/family/invites/accept
@@ -195,6 +195,16 @@ export async function POST(request: NextRequest) {
     if (duplicateMember) {
       return NextResponse.json(
         { error: 'You are already a member of this family group' },
+        { status: 409 }
+      )
+    }
+
+    // F7.4: Re-validate eligibility at acceptance time
+    // F7.4-B: Check not already active member using user_id (stronger check)
+    const targetActiveMemberCheck = await checkTargetNotActiveMember(supabase, invite.family_group_id, user.id)
+    if (!targetActiveMemberCheck.valid) {
+      return NextResponse.json(
+        { error: targetActiveMemberCheck.error },
         { status: 409 }
       )
     }
