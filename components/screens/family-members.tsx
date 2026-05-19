@@ -786,7 +786,7 @@ export function FamilyMembersScreen() {
                     href="/app/upgrade?plan=family"
                     className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-blue-700 dark:text-blue-300 hover:underline"
                   >
-                    Start your plan
+                    Start your own plan
                     <ExternalLink className="h-4 w-4" />
                   </a>
                 </div>
