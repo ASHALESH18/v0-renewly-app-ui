@@ -62,14 +62,14 @@ export function validateInviteCapacity(
     const reuseState = calculateExtraSeatReuseState(seatUsage)
     const nextRequiredSeats = Math.max(0, seatUsage.totalSeatsUsed + 1 - seatUsage.includedLimit)
     
-    if (nextRequiredSeats > seatUsage.paidActiveExtraSeats) {
+    if (nextRequiredSeats > seatUsage.paidReusableExtraSeats) {
       return {
         valid: false,
         error: {
           code: 'insufficient_reusable',
           message: `Not enough extra seats for this invite (${reuseState.reusableExtraSeats} reusable available)`,
           data: {
-            extraLimit: seatUsage.paidActiveExtraSeats,
+            extraLimit: seatUsage.paidReusableExtraSeats,
             extraUsed: reuseState.requiredExtraSeats,
             reusableSeats: reuseState.reusableExtraSeats,
           },

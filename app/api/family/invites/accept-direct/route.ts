@@ -7,7 +7,7 @@ import { normalizeInviteEmail, isInviteExpired } from '@/lib/family/family-invit
 import { syncRenewlyFamilyMemberSubscription } from '@/lib/billing/renewly-subscription-sync'
 import { invalidateCache } from '@/lib/redis'
 import { revalidateTag } from 'next/cache'
-import { checkUserNotInMultipleFamilies } from '@/lib/family/family-abuse-prevention'
+import { checkUserNotInMultipleFamilies, checkUserNotOwnerOfOtherFamily } from '@/lib/family/family-abuse-prevention'
 import { notifyOwnerOfInviteAction } from '@/lib/family/send-owner-notifications'
 
 /**
@@ -216,6 +216,14 @@ export async function POST(request: Request) {
     if (!multiFamilyCheck.valid) {
       return NextResponse.json(
         { error: multiFamilyCheck.error },
+        { status: 409 }
+      )
+    }
+
+    const ownerConflictCheck = await checkUserNotOwnerOfOtherFamily(supabase, user.id, invite.family_group_id)
+    if (!ownerConflictCheck.valid) {
+      return NextResponse.json(
+        { error: ownerConflictCheck.error },
         { status: 409 }
       )
     }

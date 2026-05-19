@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
 
     const { data: familyGroup, error: groupError } = await supabase
       .from('family_groups')
-      .select('id, status, included_member_limit, scheduled_action')
+      .select('id, status, included_member_limit, extra_seat_count, current_period_end, scheduled_action')
       .eq('owner_user_id', user.id)
       .in('status', ['active', 'past_due'])
       .maybeSingle()
@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
     }
 
     // F7.4-C: Check no pending invites across ALL families
-    const noPendingCheck = await checkNoPendingInvitesAcrossAll(supabase, invitedEmail)
+    const noPendingCheck = await checkNoPendingInvitesAcrossAll(supabase, invitedEmail, familyGroup.id)
     if (!noPendingCheck.valid) {
       return NextResponse.json({ error: noPendingCheck.error }, { status: 409 })
     }
@@ -157,9 +157,9 @@ export async function POST(request: NextRequest) {
     // F7.4-B: Get target user ID and check not already active member (using user_id)
     const { data: targetProfile } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, plan')
       .ilike('email', invitedEmail)
-      .single()
+      .maybeSingle()
 
     if (targetProfile) {
       const targetNotActiveMemberCheck = await checkTargetNotActiveMember(supabase, familyGroup.id, targetProfile.id)
@@ -176,9 +176,16 @@ export async function POST(request: NextRequest) {
 
     const { data: pendingInvites = [] } = await supabase
       .from('family_invites')
-      .select('id, seat_type')
+      .select('id, seat_type, expires_at')
       .eq('family_group_id', familyGroup.id)
       .eq('status', 'pending')
+
+    const nowMs = Date.now()
+    const reservingPendingInvites = (pendingInvites || []).filter((invite: any) => {
+      if (!invite.expires_at) return true
+      const expiresAtMs = new Date(invite.expires_at).getTime()
+      return Number.isFinite(expiresAtMs) && expiresAtMs > nowMs
+    })
 
     // F7.1D-R: Fetch active paid extra-seat add-ons with full details
     const { data: seatAddons = [], error: addonsError } = await supabase
@@ -193,16 +200,18 @@ export async function POST(request: NextRequest) {
     // F7.1D-R: Use seat calculation utility for accurate seat usage
     const seatUsage = calculateSeatUsage({
       activeMembers: activeMembers || [],
-      pendingInvites: pendingInvites || [],
+      pendingInvites: reservingPendingInvites,
       familyGroup: {
         included_member_limit: familyGroup.included_member_limit,
-        extra_seat_count: familyGroup.included_member_limit, // fallback
-        current_period_end: null, // will be updated from addons
+        // Extra-seat payment truth is family_seat_addons, not this stale summary.
+        extra_seat_count: 0,
+        current_period_end: familyGroup.current_period_end,
       },
       seatAddons: seatAddons || [],
     })
 
-    const invitedPeopleCount = (activeMembers?.length || 0) + (pendingInvites?.length || 0)
+    const activeInvitedMemberCount = (activeMembers || []).filter((member: any) => member.role !== 'owner').length
+    const invitedPeopleCount = activeInvitedMemberCount + reservingPendingInvites.length
 
     if (invitedPeopleCount >= FAMILY_MAX_INVITED_MEMBER_COUNT) {
       return NextResponse.json(

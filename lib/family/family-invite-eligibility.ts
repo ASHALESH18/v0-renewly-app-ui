@@ -52,7 +52,7 @@ export function requiresExtraSeatPayment(
 
   // Would need extra seat - check if we have paid capacity
   const requiredAfterInvite = calculateRequiredExtraSeatsAfterNextInvite(seatUsage)
-  const hasPaidCapacity = seatUsage.paidActiveExtraSeats >= requiredAfterInvite
+  const hasPaidCapacity = seatUsage.paidReusableExtraSeats >= requiredAfterInvite
 
   // Need payment if no paid capacity available
   return !hasPaidCapacity
@@ -95,6 +95,7 @@ export async function validateInviteEligibility(
           pendingExtraInvites: 0,
           totalSeatsUsed: 0,
           paidActiveExtraSeats: 0,
+          paidReusableExtraSeats: 0,
           extraSeatsEndingAtPeriodEnd: 0,
           currentPeriodEnd: null,
         },

@@ -27,6 +27,9 @@ import {
   checkOwnerCannotInviteSelf,
   checkNoDuplicatePendingInvite,
   checkNotAlreadyActiveMember,
+  checkTargetNotOwner,
+  checkTargetNotActiveMember,
+  checkNoPendingInvitesAcrossAll,
 } from '@/lib/family/family-abuse-prevention'
 
 /**
@@ -117,6 +120,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: activeCheck.error }, { status: 409 })
     }
 
+    const notOwnerCheck = await checkTargetNotOwner(supabase, familyGroup.id, invitedEmail)
+    if (!notOwnerCheck.valid) {
+      return NextResponse.json({ error: notOwnerCheck.error }, { status: 409 })
+    }
+
+    const noPendingCheck = await checkNoPendingInvitesAcrossAll(supabase, invitedEmail, familyGroup.id)
+    if (!noPendingCheck.valid) {
+      return NextResponse.json({ error: noPendingCheck.error }, { status: 409 })
+    }
+
+    if (notOwnerCheck.targetUserId) {
+      const targetNotActiveMemberCheck = await checkTargetNotActiveMember(
+        supabase,
+        familyGroup.id,
+        notOwnerCheck.targetUserId
+      )
+      if (!targetNotActiveMemberCheck.valid) {
+        return NextResponse.json({ error: targetNotActiveMemberCheck.error }, { status: 409 })
+      }
+    }
+
     const { data: activeMembers = [] } = await supabase
       .from('family_members')
       .select('id, role, seat_type')
@@ -125,9 +149,16 @@ export async function POST(request: NextRequest) {
 
     const { data: pendingInvites = [] } = await supabase
       .from('family_invites')
-      .select('id, seat_type')
+      .select('id, seat_type, expires_at')
       .eq('family_group_id', familyGroup.id)
       .eq('status', 'pending')
+
+    const nowMs = Date.now()
+    const reservingPendingInvites = (pendingInvites || []).filter((invite: any) => {
+      if (!invite.expires_at) return true
+      const expiresAtMs = new Date(invite.expires_at).getTime()
+      return Number.isFinite(expiresAtMs) && expiresAtMs > nowMs
+    })
 
     const { data: seatAddons = [] } = await supabase
       .from('family_seat_addons')
@@ -137,8 +168,12 @@ export async function POST(request: NextRequest) {
 
     const seatUsage = calculateSeatUsage({
       activeMembers: activeMembers || [],
-      pendingInvites: pendingInvites || [],
-      familyGroup,
+      pendingInvites: reservingPendingInvites,
+      familyGroup: {
+        ...familyGroup,
+        // Extra-seat payment truth is family_seat_addons, not this stale summary.
+        extra_seat_count: 0,
+      },
       seatAddons: seatAddons || [],
     })
 

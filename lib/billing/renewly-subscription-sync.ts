@@ -344,6 +344,21 @@ export async function syncRenewlyFamilyMemberSubscription(params: {
       console.error('[renewly-sync] Error syncing family member subscription:', error)
       throw error
     }
+
+    // A Pro user is allowed to join a Family. Once they accept, Renewly should
+    // show only the covered-by-Family row and should stop showing/renewing the
+    // individual managed Pro/owner Family row in our subscription tracker.
+    const { error: archiveOtherManagedError } = await supabase
+      .from('subscriptions')
+      .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+      .eq('user_id', memberUserId)
+      .eq('is_system_managed', true)
+      .eq('system_source', 'renewly_billing')
+      .neq('managed_subscription_key', managedKey)
+
+    if (archiveOtherManagedError) {
+      console.warn('[renewly-sync] Failed to archive previous managed subscriptions for covered member:', archiveOtherManagedError)
+    }
   } catch (error) {
     console.error('[renewly-sync] syncRenewlyFamilyMemberSubscription error:', error)
     throw error
