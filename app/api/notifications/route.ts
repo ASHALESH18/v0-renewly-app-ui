@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getUserSubscriptions } from '@/lib/supabase/repositories/subscriptions'
+import { getUserNotifications, markNotificationRead, markAllNotificationsRead } from '@/lib/supabase/repositories/notifications'
 import { formatCurrencyAmount } from '@/lib/currency'
 import type { NotificationStateRow, SubscriptionRow } from '@/lib/supabase/database.types'
 import { getPendingFamilyInviteForUserEmail } from '@/lib/family/get-pending-family-invite'
@@ -257,6 +258,9 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // F8-lite: Fetch persistent notifications from DB first
+    const persistentNotifications = await getUserNotifications(user.id, { limit: 50, status: undefined })
+
     // Get user email for family invite lookup
     const { data: userProfile } = await supabase
       .from('profiles')
@@ -292,11 +296,31 @@ export async function GET() {
       generatedNotifications.map((item) => item.id)
     )
 
-    const notifications = applyNotificationState(generatedNotifications, stateMap)
+    const calculatedNotifications = applyNotificationState(generatedNotifications, stateMap)
+
+    // F8-lite: Convert persistent notifications to API format and merge
+    const persistentAsApiNotifications: Notification[] = persistentNotifications
+      .filter(n => n.status !== 'archived')
+      .map(n => ({
+        id: n.id,
+        type: n.type === 'family_invite' ? 'info' : 'reminder' as const,
+        title: n.title,
+        message: n.message,
+        date: n.created_at,
+        read: n.status === 'read',
+        actionHref: n.action_url,
+      }))
+
+    // Merge persistent + calculated notifications, with persistent taking precedence
+    const persistentIds = new Set(persistentAsApiNotifications.map(n => n.id))
+    const mergedNotifications = [
+      ...persistentAsApiNotifications,
+      ...calculatedNotifications.filter(n => !persistentIds.has(n.id))
+    ]
 
     return NextResponse.json({
-      notifications,
-      unreadCount: notifications.filter((item) => !item.read).length,
+      notifications: sortNotifications(mergedNotifications),
+      unreadCount: mergedNotifications.filter((item) => !item.read).length,
     })
   } catch (error) {
     console.error('[v0] Notifications API error:', error)
@@ -328,10 +352,29 @@ export async function POST(request: Request) {
         ? [String(body.id)]
         : []
 
-    if (!ids.length) {
+    if (!ids.length && action !== 'mark_all_read') {
       return NextResponse.json({ success: true })
     }
 
+    // F8-lite: Try to handle persistent notifications first
+    if (action === 'mark_all_read') {
+      try {
+        await markAllNotificationsRead(user.id)
+      } catch (e) {
+        console.warn('[v0] Failed to mark persistent notifications as read:', e)
+      }
+    } else if (ids.length > 0) {
+      // Try persistent notifications
+      for (const id of ids) {
+        try {
+          await markNotificationRead(id)
+        } catch (e) {
+          console.warn(`[v0] Failed to mark persistent notification ${id} as read:`, e)
+        }
+      }
+    }
+
+    // Also handle legacy notification_state for backward compatibility
     await persistNotificationState(supabase, user.id, action, ids)
 
     return NextResponse.json({ success: true })
