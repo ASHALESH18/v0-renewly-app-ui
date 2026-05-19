@@ -183,56 +183,109 @@ export async function processExtraSeatPeriodEnd(
             ...extraMembers.map(m => m.email).filter(Boolean)
           )
 
-          // Step 3 - Archive removed members' covered-by-family subscriptions
+          // Step 3 - Archive removed members' covered-by-family subscriptions.
+          // Use a broad user + group lookup and filter in JS so stale flag mismatches do not block cleanup.
           for (const member of extraMembers) {
-            const { data: memberSubs } = await supabase
+            const { data: memberSubs, error: memberSubsError } = await supabase
               .from('subscriptions')
-              .select('id')
+              .select('id, status, amount, covered_by_family, is_system_managed, managed_plan, managed_subscription_key, system_metadata')
               .eq('user_id', member.user_id)
-              .eq('managed_plan', 'family')
               .eq('family_group_id', groupId)
-              .eq('is_system_managed', true)
 
-            if (memberSubs && memberSubs.length > 0) {
+            if (memberSubsError) {
+              result.errors.push({
+                message: `Failed to fetch member subscriptions for ${member.email || member.user_id}: ${memberSubsError.message}`,
+                addonId,
+              })
+              continue
+            }
+
+            const coveredSubs = (memberSubs || []).filter((sub) => {
+              const managedKey = String(sub.managed_subscription_key || '')
+              return (
+                sub.status === 'active' &&
+                sub.is_system_managed === true &&
+                sub.managed_plan === 'family' &&
+                (
+                  sub.covered_by_family === true ||
+                  Number(sub.amount || 0) === 0 ||
+                  managedKey.startsWith(`renewly:family:member:${groupId}:`)
+                )
+              )
+            })
+
+            for (const sub of coveredSubs) {
+              const existingMetadata = (sub.system_metadata || {}) as Record<string, unknown>
               const { error: archiveError } = await supabase
                 .from('subscriptions')
                 .update({
-                  status: 'archived',
+                  status: 'cancelled',
+                  covered_by_family: false,
+                  system_metadata: {
+                    ...existingMetadata,
+                    access_ended_at: nowIso,
+                    access_ended_reason: 'extra_seat_period_end',
+                  },
                   updated_at: nowIso,
                 })
-                .in('id', memberSubs.map(s => s.id))
+                .eq('id', sub.id)
 
               if (!archiveError) {
-                result.updatedMemberSubscriptionIds.push(...memberSubs.map(s => s.id))
+                result.archivedMemberSubscriptionIds.push(sub.id)
+                result.updatedMemberSubscriptionIds.push(sub.id)
+              } else {
+                result.errors.push({
+                  message: `Failed to archive member subscription ${sub.id}: ${archiveError.message}`,
+                  addonId,
+                })
               }
             }
           }
         }
 
-        // Step 4a - F7.3R4: Post-sync removed extra members' profiles and subscriptions
-        // Only sync members who were actually removed in Step 2
+        // Step 4a - Post-sync removed extra members' profiles.
         if (extraMembers && extraMembers.length > 0) {
           for (const member of extraMembers) {
-            // Check if member has any other active paid plan or active family_members row
-            const { data: otherPlans } = await supabase
+            const { data: allActiveSubs, error: activeSubsError } = await supabase
               .from('subscriptions')
-              .select('id')
+              .select('id, amount, covered_by_family, managed_plan, family_group_id')
               .eq('user_id', member.user_id)
               .eq('status', 'active')
-              .neq('managed_plan', 'family')
-              .neq('family_group_id', groupId)
-              .limit(1)
 
-            const { data: activeFamilyMembers } = await supabase
+            if (activeSubsError) {
+              result.errors.push({
+                message: `Failed to check active paid plans for ${member.email || member.user_id}: ${activeSubsError.message}`,
+                addonId,
+              })
+              continue
+            }
+
+            const hasOwnActivePaidPlan = (allActiveSubs || []).some((sub) => {
+              const isTargetCoveredFamily =
+                sub.managed_plan === 'family' && sub.family_group_id === groupId
+              return (
+                !isTargetCoveredFamily &&
+                sub.covered_by_family !== true &&
+                Number(sub.amount || 0) > 0
+              )
+            })
+
+            const { data: activeFamilyMembers, error: activeFamilyError } = await supabase
               .from('family_members')
               .select('id')
               .eq('user_id', member.user_id)
               .eq('status', 'active')
-              .neq('family_group_id', groupId)
               .limit(1)
 
-            // If no other active paid plan and no active family membership, set to free
-            if (!otherPlans?.length && !activeFamilyMembers?.length) {
+            if (activeFamilyError) {
+              result.errors.push({
+                message: `Failed to check active memberships for ${member.email || member.user_id}: ${activeFamilyError.message}`,
+                addonId,
+              })
+              continue
+            }
+
+            if (!hasOwnActivePaidPlan && !(activeFamilyMembers && activeFamilyMembers.length > 0)) {
               const { error: profileError } = await supabase
                 .from('profiles')
                 .update({ plan: 'free', updated_at: nowIso })
@@ -240,23 +293,72 @@ export async function processExtraSeatPeriodEnd(
 
               if (!profileError) {
                 result.profilePlansUpdated.push(member.email || member.user_id)
+              } else {
+                result.errors.push({
+                  message: `Failed to update profile for ${member.email || member.user_id}: ${profileError.message}`,
+                  addonId,
+                })
               }
             }
           }
         }
 
-        // Step 4b - F7.3R4: Recalculate and update owner's subscription to base amount
-        // Only update amount and system_metadata to reflect base ₹299 + remaining add-ons
+        // Step 4b - Recalculate owner subscription excluding the add-on currently ending.
+        // The ending add-on is still status='active' until Step 5, so it must be excluded here.
+        const { data: remainingAddons, error: remainingAddonsError } = await supabase
+          .from('family_seat_addons')
+          .select('id, quantity')
+          .eq('family_group_id', groupId)
+          .eq('status', 'active')
+          .neq('id', addonId)
+
+        if (remainingAddonsError) {
+          result.errors.push({
+            message: `Failed to fetch remaining add-ons: ${remainingAddonsError.message}`,
+            addonId,
+          })
+          result.skippedAddonIds.push(addonId)
+          continue
+        }
+
+        const totalRemainingSeats = (remainingAddons || []).reduce(
+          (sum, remainingAddon) => sum + Number(remainingAddon.quantity || 0),
+          0
+        )
         const baseAmount = 299
-        const extraSeatAmount = totalRemainingSeats > 0 ? (totalRemainingSeats * 99) : 0
+        const extraSeatAmount = totalRemainingSeats * 99
         const totalAmount = baseAmount + extraSeatAmount
 
+        const { data: ownerFamilySubs, error: ownerSubError } = await supabase
+          .from('subscriptions')
+          .select('id, amount, covered_by_family, system_metadata, updated_at')
+          .eq('user_id', ownerId)
+          .eq('managed_plan', 'family')
+          .eq('family_group_id', groupId)
+          .eq('is_system_managed', true)
+          .eq('status', 'active')
+          .order('updated_at', { ascending: false })
+
+        if (ownerSubError) {
+          result.errors.push({
+            message: `Failed to fetch owner subscription: ${ownerSubError.message}`,
+            addonId,
+          })
+          result.skippedAddonIds.push(addonId)
+          continue
+        }
+
+        const ownerFamilySub = (ownerFamilySubs || []).find((sub) => sub.covered_by_family !== true)
+          || (ownerFamilySubs || [])[0]
+
         if (ownerFamilySub) {
+          const existingMetadata = (ownerFamilySub.system_metadata || {}) as Record<string, unknown>
           const { error: amountError } = await supabase
             .from('subscriptions')
             .update({
               amount: totalAmount,
               system_metadata: {
+                ...existingMetadata,
                 base_amount: baseAmount,
                 extra_seats: totalRemainingSeats,
                 extra_amount: extraSeatAmount,
@@ -362,15 +464,12 @@ export async function processExtraSeatPeriodEndRepair(
   }
 
   if (!targetFamilyGroupId) {
-    result.errors.push({
-      message: 'familyGroupId required for repair mode',
-    })
+    result.errors.push({ message: 'familyGroupId required for repair mode' })
     result.success = false
     return result
   }
 
   try {
-    // Find the family group and verify ownership
     const { data: group, error: groupError } = await supabase
       .from('family_groups')
       .select('id, owner_user_id')
@@ -379,7 +478,7 @@ export async function processExtraSeatPeriodEndRepair(
 
     if (groupError || !group) {
       result.errors.push({
-        message: `Family group not found: ${targetFamilyGroupId}`,
+        message: `Family group not found: ${targetFamilyGroupId}${groupError ? ` (${groupError.message})` : ''}`,
       })
       result.success = false
       return result
@@ -387,9 +486,7 @@ export async function processExtraSeatPeriodEndRepair(
 
     const ownerId = group.owner_user_id
 
-    // Part A: Find all REMOVED extra members for this group (status = 'removed')
-    // F7.3R5: Dedupe by user_id, not email string
-    const { data: removedMembers } = await supabase
+    const { data: removedMembers, error: removedMembersError } = await supabase
       .from('family_members')
       .select('id, user_id, email')
       .eq('family_group_id', targetFamilyGroupId)
@@ -397,115 +494,163 @@ export async function processExtraSeatPeriodEndRepair(
       .eq('seat_type', 'extra')
       .eq('status', 'removed')
 
-    // F7.3R5: Dedupe by user_id to avoid duplicate emails
-    const seenUserIds = new Set<string>()
-    const deduplicatedMembers: Array<{ id: string; user_id: string; email: string }> = []
+    if (removedMembersError) {
+      result.errors.push({
+        message: `Failed to fetch removed extra members: ${removedMembersError.message}`,
+      })
+      result.success = false
+      return result
+    }
 
-    if (removedMembers) {
-      for (const member of removedMembers) {
-        if (!seenUserIds.has(member.user_id)) {
-          seenUserIds.add(member.user_id)
-          deduplicatedMembers.push(member)
-          result.staleRemovedMemberEmails.push(member.email)
-        }
+    const membersByUserId = new Map<string, { id: string; user_id: string; email: string }>()
+    for (const member of removedMembers || []) {
+      if (member.user_id && !membersByUserId.has(member.user_id)) {
+        membersByUserId.set(member.user_id, member)
       }
     }
 
-    // Part B: For each stale removed member, find covered subscriptions to archive
-    // F7.3R5: Detect before mutation (for dry-run visibility)
-    const memberSubsToArchive: Array<{ userId: string; subId: string }> = []
+    const deduplicatedMembers = Array.from(membersByUserId.values())
+    result.staleRemovedMemberEmails = deduplicatedMembers
+      .map((member) => member.email)
+      .filter(Boolean)
+
+    const memberSubsToArchive: Array<{ subId: string; existingMetadata: Record<string, unknown> }> = []
     const profilesNeedingUpdate: Array<{ userId: string; email: string }> = []
 
     for (const member of deduplicatedMembers) {
-      // Find active covered-by-family ₹0 subscriptions
-      const { data: memberSubs } = await supabase
+      // Use a broad user + family group query and filter in JS. This avoids missing stale rows
+      // when one DB flag is out of sync, while still limiting repair to the target group/user.
+      const { data: memberSubs, error: memberSubsError } = await supabase
         .from('subscriptions')
-        .select('id, user_id, covered_by_family, amount')
+        .select('id, status, amount, covered_by_family, is_system_managed, managed_plan, managed_subscription_key, family_group_id, system_metadata')
         .eq('user_id', member.user_id)
         .eq('family_group_id', targetFamilyGroupId)
-        .eq('is_system_managed', true)
-        .eq('managed_plan', 'family')
-        .eq('status', 'active')
-        .eq('covered_by_family', true)
 
-      if (memberSubs && memberSubs.length > 0) {
-        for (const sub of memberSubs) {
-          memberSubsToArchive.push({ userId: member.user_id, subId: sub.id })
-          result.archivedMemberSubscriptionIds.push(sub.id)
-        }
+      if (memberSubsError) {
+        result.errors.push({
+          message: `Failed to fetch covered subscriptions for ${member.email}: ${memberSubsError.message}`,
+        })
+        continue
       }
 
-      // Part C: Check if profile should be updated to free
-      // Only if no other active paid plan and no active family membership
-      const { data: otherPlans } = await supabase
+      const coveredSubs = (memberSubs || []).filter((sub) => {
+        const managedKey = String(sub.managed_subscription_key || '')
+        return (
+          sub.status === 'active' &&
+          sub.is_system_managed === true &&
+          sub.managed_plan === 'family' &&
+          (
+            sub.covered_by_family === true ||
+            Number(sub.amount || 0) === 0 ||
+            managedKey.startsWith(`renewly:family:member:${targetFamilyGroupId}:`)
+          )
+        )
+      })
+
+      for (const sub of coveredSubs) {
+        memberSubsToArchive.push({
+          subId: sub.id,
+          existingMetadata: (sub.system_metadata || {}) as Record<string, unknown>,
+        })
+        result.archivedMemberSubscriptionIds.push(sub.id)
+      }
+
+      const { data: allActiveSubs, error: activeSubsError } = await supabase
         .from('subscriptions')
-        .select('id')
+        .select('id, amount, status, covered_by_family, managed_plan, family_group_id')
         .eq('user_id', member.user_id)
         .eq('status', 'active')
-        .neq('managed_plan', 'family')
-        .neq('family_group_id', targetFamilyGroupId)
-        .limit(1)
 
-      const { data: activeFamilyMembers } = await supabase
+      if (activeSubsError) {
+        result.errors.push({
+          message: `Failed to check active paid plans for ${member.email}: ${activeSubsError.message}`,
+        })
+        continue
+      }
+
+      const hasOwnActivePaidPlan = (allActiveSubs || []).some((sub) => {
+        const isTargetCoveredFamily =
+          sub.managed_plan === 'family' && sub.family_group_id === targetFamilyGroupId
+        return (
+          !isTargetCoveredFamily &&
+          sub.covered_by_family !== true &&
+          Number(sub.amount || 0) > 0
+        )
+      })
+
+      const { data: activeFamilyMembers, error: activeFamilyError } = await supabase
         .from('family_members')
         .select('id')
         .eq('user_id', member.user_id)
         .eq('status', 'active')
-        .neq('family_group_id', targetFamilyGroupId)
         .limit(1)
 
-      if (!otherPlans?.length && !activeFamilyMembers?.length) {
+      if (activeFamilyError) {
+        result.errors.push({
+          message: `Failed to check active memberships for ${member.email}: ${activeFamilyError.message}`,
+        })
+        continue
+      }
+
+      if (!hasOwnActivePaidPlan && !(activeFamilyMembers && activeFamilyMembers.length > 0)) {
         profilesNeedingUpdate.push({ userId: member.user_id, email: member.email })
         result.profilePlansUpdated.push(member.email)
       }
     }
 
-    // Part D: Calculate owner subscription target amount
-    // F7.3R5: Must detect amount change even in dry-run
-    const { data: activeAddons } = await supabase
+    const { data: activeAddons, error: addonsError } = await supabase
       .from('family_seat_addons')
       .select('quantity')
       .eq('family_group_id', targetFamilyGroupId)
       .eq('status', 'active')
 
-    const totalRemainingSeats = activeAddons?.reduce((sum, a) => sum + (a.quantity || 0), 0) || 0
-    const baseAmount = 299
-    const extraSeatAmount = totalRemainingSeats > 0 ? (totalRemainingSeats * 99) : 0
-    const targetOwnerAmount = baseAmount + extraSeatAmount
+    if (addonsError) {
+      result.errors.push({ message: `Failed to fetch active add-ons: ${addonsError.message}` })
+    }
 
-    // Set targetOwnerAmount in response for debugging
+    const totalRemainingSeats = (activeAddons || []).reduce(
+      (sum, addon) => sum + Number(addon.quantity || 0),
+      0
+    )
+    const baseAmount = 299
+    const extraSeatAmount = totalRemainingSeats * 99
+    const targetOwnerAmount = baseAmount + extraSeatAmount
     result.targetOwnerAmount = targetOwnerAmount
 
-    // Find owner's active Family subscription
-    const { data: ownerFamilySub } = await supabase
+    const { data: ownerSubs, error: ownerSubsError } = await supabase
       .from('subscriptions')
-      .select('id, amount, system_metadata')
+      .select('id, amount, status, covered_by_family, is_system_managed, managed_plan, managed_subscription_key, family_group_id, system_metadata, updated_at')
       .eq('user_id', ownerId)
-      .eq('managed_plan', 'family')
       .eq('family_group_id', targetFamilyGroupId)
-      .eq('is_system_managed', true)
       .eq('status', 'active')
-      .single()
+      .eq('is_system_managed', true)
+      .eq('managed_plan', 'family')
+      .order('updated_at', { ascending: false })
 
-    // Add owner sub to update if amount is different
-    if (ownerFamilySub && ownerFamilySub.amount !== targetOwnerAmount) {
+    if (ownerSubsError) {
+      result.errors.push({ message: `Failed to fetch owner subscription: ${ownerSubsError.message}` })
+    }
+
+    const ownerFamilySub = (ownerSubs || []).find((sub) => sub.covered_by_family !== true)
+      || (ownerSubs || [])[0]
+
+    if (ownerFamilySub && Number(ownerFamilySub.amount || 0) !== targetOwnerAmount) {
       result.updatedOwnerSubscriptionIds.push(ownerFamilySub.id)
     }
 
-    // Now apply mutations if not dry-run
     if (!dryRun) {
-      // Archive covered-by-family subscriptions
-      for (const { subId } of memberSubsToArchive) {
+      for (const { subId, existingMetadata } of memberSubsToArchive) {
         const { error: archiveError } = await supabase
           .from('subscriptions')
           .update({
             status: 'cancelled',
             covered_by_family: false,
-            updated_at: nowIso,
             system_metadata: {
+              ...existingMetadata,
               access_ended_at: nowIso,
-              access_ended_reason: 'extra_seat_removed',
+              access_ended_reason: 'extra_seat_period_end',
             },
+            updated_at: nowIso,
           })
           .eq('id', subId)
 
@@ -516,7 +661,6 @@ export async function processExtraSeatPeriodEndRepair(
         }
       }
 
-      // Update member profiles to free
       for (const { userId, email } of profilesNeedingUpdate) {
         const { error: profileError } = await supabase
           .from('profiles')
@@ -530,13 +674,14 @@ export async function processExtraSeatPeriodEndRepair(
         }
       }
 
-      // Update owner subscription to correct amount
-      if (ownerFamilySub && ownerFamilySub.amount !== targetOwnerAmount) {
+      if (ownerFamilySub && Number(ownerFamilySub.amount || 0) !== targetOwnerAmount) {
+        const existingMetadata = (ownerFamilySub.system_metadata || {}) as Record<string, unknown>
         const { error: updateError } = await supabase
           .from('subscriptions')
           .update({
             amount: targetOwnerAmount,
             system_metadata: {
+              ...existingMetadata,
               base_amount: baseAmount,
               extra_seats: totalRemainingSeats,
               extra_amount: extraSeatAmount,
