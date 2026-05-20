@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { X, User, Globe, DollarSign, RefreshCw } from 'lucide-react'
 import useStore from '@/lib/store'
 import { generateAvatar } from '@/lib/avatar-utils'
+import { getStableProfileAvatar } from '@/lib/profile/avatar-source'
 import { countries, currencies, getCountryName, getCurrencyName } from '@/lib/locale-utils'
 import { cn } from '@/lib/utils'
 
@@ -26,9 +27,17 @@ export function ProfileSheet({ isOpen, onClose, onSave }: ProfileSheetProps) {
 
   const avatarUrl = useMemo(() => {
     if (!userProfile) return null
-    const seed = userProfile.avatarSeed || userProfile.email || 'default'
-    return generateAvatar({ seed, size: 256 })
-  }, [userProfile?.email, userProfile?.avatarSeed])
+    return getStableProfileAvatar({
+      profileAvatarUrl: userProfile.avatarUrl || null,
+      avatarSource: userProfile.avatarSource || null,
+      authAvatarUrl: userProfile.picture || null,
+      authPicture: userProfile.picture || null,
+      avatarSeed: userProfile.avatarSeed || null,
+      email: userProfile.email || null,
+      generateAvatar,
+      size: 256,
+    })
+  }, [userProfile?.email, userProfile?.avatarSeed, userProfile?.avatarUrl, userProfile?.avatarSource, userProfile?.picture])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

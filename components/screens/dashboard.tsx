@@ -24,6 +24,7 @@ import useStore from '@/lib/store'
 import { cn } from '@/lib/utils'
 import type { Subscription } from '@/lib/types'
 import { formatMoney, formatSubscriptionMoney } from '@/lib/preferences-format'
+import { formatRenewlyMonthlyAmount } from '@/lib/pricing-display'
 import { calculateMetrics, getUpcomingRenewals, getDaysUntilRenewal } from '@/lib/subscription-math'
 import { useExchangeRates } from '@/lib/hooks/use-exchange-rates'
 import { SubscriptionIcon } from '@/lib/brand-icons'
@@ -583,7 +584,7 @@ export function DashboardScreen({
                 Extra-seat cancellation scheduled
               </p>
               <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                Current cycle: ₹{familyStatus.billingMetadata.currentMonthlyTotal}/month · Next cycle: ₹{familyStatus.billingMetadata.nextCycleMonthlyTotal}/month
+                Current cycle: {familyStatus.billingMetadata.currentCycleLabel || formatRenewlyMonthlyAmount(familyStatus.billingMetadata.currentMonthlyTotal, preferredCurrency, preferredLanguage)} · Next cycle: {familyStatus.billingMetadata.nextCycleLabel || formatRenewlyMonthlyAmount(familyStatus.billingMetadata.nextCycleMonthlyTotal, preferredCurrency, preferredLanguage)}
                 {familyStatus.billingMetadata.scheduledCancelDate
                   ? ` · Takes effect ${new Date(familyStatus.billingMetadata.scheduledCancelDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
                   : ''}

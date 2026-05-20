@@ -1,4 +1,5 @@
 import { FAMILY_MAX_EXTRA_MEMBER_COUNT } from '@/lib/family/family-config'
+import { formatRenewlyMoney, formatRenewlyMonthlyAmount } from '@/lib/pricing-display'
 
 /**
  * Billing display utilities for Renewly Family plan
@@ -42,7 +43,6 @@ export function calculateFamilyBillingDisplay(info: FamilyBillingInfo): FamilyBi
   const isINR = currency === 'INR'
   const basePrice = isINR ? FAMILY_BASE_PRICE_INR : FAMILY_BASE_PRICE_USD
   const extraSeatPrice = isINR ? FAMILY_EXTRA_SEAT_PRICE_INR : FAMILY_EXTRA_SEAT_PRICE_USD
-  const currencySymbol = isINR ? '₹' : '$'
 
   // Calculate totals (1 owner + members + extra members).
   // Guardrail: historical bugs may leave more than four active add-on units in DB.
@@ -73,7 +73,7 @@ export function calculateFamilyBillingDisplay(info: FamilyBillingInfo): FamilyBi
   const billingItems: FamilyBillingDisplay['billingItems'] = [
     {
       label: 'Base Family plan',
-      amount: `${currencySymbol}${basePriceTotal}${isINR ? '' : '.00'}/month`,
+      amount: formatRenewlyMonthlyAmount(basePriceTotal, currency),
       type: 'base',
     },
   ]
@@ -85,14 +85,14 @@ export function calculateFamilyBillingDisplay(info: FamilyBillingInfo): FamilyBi
   if (totalExtraMembers > 0) {
     extraMembersLabel = `Extra members: +${totalExtraMembers}`
     if (isINR) {
-      extraMembersPrice = `${totalExtraMembers} × ₹${extraSeatPrice}/month`
+      extraMembersPrice = `${totalExtraMembers} × ${formatRenewlyMoney(extraSeatPrice, currency)}/month`
     } else {
-      extraMembersPrice = `${totalExtraMembers} × $${extraSeatPrice}/month`
+      extraMembersPrice = `${totalExtraMembers} × ${formatRenewlyMoney(extraSeatPrice, currency)}/month`
     }
 
     billingItems.push({
       label: `Extra members: +${totalExtraMembers}`,
-      amount: `${currencySymbol}${extraPriceTotal}${isINR ? '' : '.00'}/month`,
+      amount: formatRenewlyMonthlyAmount(extraPriceTotal, currency),
       type: 'extra',
     })
   }
@@ -104,7 +104,7 @@ export function calculateFamilyBillingDisplay(info: FamilyBillingInfo): FamilyBi
     extraMembersLabel,
     extraMembersPrice,
     billingItems,
-    totalMonthlyRenewal: `${currencySymbol}${totalMonthly}${isINR ? '' : '.00'}/month`,
+    totalMonthlyRenewal: formatRenewlyMonthlyAmount(totalMonthly, currency),
   }
 }
 

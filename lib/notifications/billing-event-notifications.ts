@@ -2,6 +2,7 @@
 // Called after successful billing operations to create persistent notifications
 
 import { createNotification } from './notification-service'
+import { formatCurrencyAmount } from '@/lib/currency'
 
 export async function notifySubscriptionRenewal(
   userId: string,
@@ -13,7 +14,7 @@ export async function notifySubscriptionRenewal(
     userId,
     type: 'subscription_renewed',
     title: `${subscriptionName} renewed successfully`,
-    message: `Charged ₹${amountInr} for your subscription renewal`,
+    message: `Charged ${formatCurrencyAmount(amountInr, 'INR')} for your subscription renewal`,
     category: 'billing',
     severity: 'info',
     actionUrl: '/app/subscriptions',
@@ -78,7 +79,7 @@ export async function notifyPlanUpgraded(
     userId,
     type: 'plan_upgraded',
     title: `Upgraded from ${previousPlan} to ${newPlan}`,
-    message: `New billing amount: ₹${amountInr}/month`,
+    message: `New billing amount: ${formatCurrencyAmount(amountInr, 'INR')}/month`,
     category: 'billing',
     severity: 'info',
     actionUrl: '/app/settings',

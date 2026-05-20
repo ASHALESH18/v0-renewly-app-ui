@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, Calendar, AlertTriangle, Info, Check, Trash2 } from 'lucide-react'
+import { Bell, Calendar, AlertTriangle, Info, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { StaggerList } from '@/components/motion'
 import { useNotifications } from '@/lib/hooks/use-remote-data'
@@ -394,15 +394,6 @@ export function NotificationsScreen() {
                             <Check className="w-4 h-4 text-muted-foreground" />
                           </button>
                         )}
-
-                        <button
-                          onClick={() => void dismissNotification(notification.id)}
-                          disabled={pending}
-                          className="p-1.5 rounded-full hover:bg-crimson/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                          type="button"
-                        >
-                          <Trash2 className="w-4 h-4 text-muted-foreground hover:text-crimson" />
-                        </button>
                       </div>
                     </div>
                   </motion.div>

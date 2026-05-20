@@ -1,3 +1,4 @@
+import { formatCurrencyAmount } from '@/lib/currency'
 // N2: Notification type registry with categories and templates
 
 export type NotificationCategory = 'billing' | 'family' | 'renewals' | 'security' | 'system' | 'info'
@@ -25,6 +26,11 @@ export type NotificationType =
   | 'feature_released'
   | 'maintenance_scheduled'
 
+
+function moneyFromMetadata(m: Record<string, any>): string {
+  return formatCurrencyAmount(Number(m.amount ?? m.amountInr ?? 0), m.currency || 'INR')
+}
+
 export interface NotificationTemplate {
   type: NotificationType
   category: NotificationCategory
@@ -42,7 +48,7 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, NotificationTempla
     type: 'renewal_7day',
     category: 'renewals',
     title: (m) => `${m.name} renews in 7 days`,
-    message: (m) => `Your subscription will renew for ₹${m.amount}/month on ${m.renewalDate}`,
+    message: (m) => `Your subscription will renew for ${moneyFromMetadata(m)}/month on ${m.renewalDate}`,
     icon: 'bell',
     priority: 'normal',
     actionUrl: () => '/app/subscriptions',
@@ -52,7 +58,7 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, NotificationTempla
     type: 'renewal_3day',
     category: 'renewals',
     title: (m) => `${m.name} renews in 3 days`,
-    message: (m) => `Your subscription will renew for ₹${m.amount}/month on ${m.renewalDate}`,
+    message: (m) => `Your subscription will renew for ${moneyFromMetadata(m)}/month on ${m.renewalDate}`,
     icon: 'bell',
     priority: 'normal',
     actionUrl: () => '/app/subscriptions',
@@ -62,7 +68,7 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, NotificationTempla
     type: 'renewal_1day',
     category: 'renewals',
     title: (m) => `${m.name} renews tomorrow`,
-    message: (m) => `Your subscription will renew for ₹${m.amount}/month tomorrow`,
+    message: (m) => `Your subscription will renew for ${moneyFromMetadata(m)}/month tomorrow`,
     icon: 'bell',
     priority: 'high',
     actionUrl: () => '/app/subscriptions',
@@ -72,7 +78,7 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, NotificationTempla
     type: 'renewal_today',
     category: 'renewals',
     title: (m) => `${m.name} renewing today`,
-    message: (m) => `Your subscription is renewing today for ₹${m.amount}/month`,
+    message: (m) => `Your subscription is renewing today for ${moneyFromMetadata(m)}/month`,
     icon: 'bell',
     priority: 'high',
     actionUrl: () => '/app/subscriptions',
@@ -112,7 +118,7 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, NotificationTempla
     type: 'subscription_renewed',
     category: 'billing',
     title: (m) => `${m.name} renewed successfully`,
-    message: (m) => `Charged ₹${m.amount} for your subscription renewal`,
+    message: (m) => `Charged ${moneyFromMetadata(m)} for your subscription renewal`,
     icon: 'check-circle',
     priority: 'normal',
     actionUrl: () => '/app/subscriptions',
@@ -192,7 +198,7 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, NotificationTempla
     type: 'extra_seat_added',
     category: 'billing',
     title: () => 'Extra seat added to your Family',
-    message: (m) => `Now ₹${m.amount}/month for the extra seat`,
+    message: (m) => `Now ${moneyFromMetadata(m)}/month for the extra seat`,
     icon: 'plus-circle',
     priority: 'normal',
     actionUrl: () => '/app/family',

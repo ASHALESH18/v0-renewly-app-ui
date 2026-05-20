@@ -2,6 +2,7 @@
 // Called after successful family operations to create persistent notifications
 
 import { createNotification } from './notification-service'
+import { formatCurrencyAmount } from '@/lib/currency'
 
 export async function notifyFamilyInviteReceived(
   recipientUserId: string | null,
@@ -153,7 +154,7 @@ export async function notifyExtraSeatPurchased(
     userId: ownerUserId,
     type: 'extra_seat_added',
     title: `${quantity} extra seat(s) added to your Family`,
-    message: `Now ₹${amountInr}/month for ${quantity} additional seat(s)`,
+    message: `Now ${formatCurrencyAmount(amountInr, 'INR')}/month for ${quantity} additional seat(s)`,
     category: 'billing',
     severity: 'info',
     actionUrl: '/app/family',

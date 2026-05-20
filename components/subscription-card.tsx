@@ -12,6 +12,7 @@ import { useExchangeRates } from '@/lib/hooks/use-exchange-rates'
 import { formatSubscriptionMoney } from '@/lib/preferences-format'
 import { isRenewlyManagedSubscription } from '@/lib/billing/managed-subscription-utils'
 import { getPendingBillingBadgeText } from '@/lib/billing/billing-lifecycle-utils'
+import { getRenewlyExtraMemberMonthlyAmount, formatRenewlyMoney } from '@/lib/pricing-display'
 
 interface SubscriptionCardProps {
   subscription: Subscription
@@ -125,7 +126,7 @@ export function SubscriptionCard({
             {/* F6C.2: Show extra-seat addon breakdown for Renewly Family */}
             {subscription.name === 'Renewly Family' && subscription.systemMetadata?.extra_seats > 0 && (
               <p className="mt-2 text-xs text-muted-foreground">
-                Includes Extra members +{subscription.systemMetadata.extra_seats} × ₹99/month
+                Includes Extra members +{Math.min(Number(subscription.systemMetadata.extra_seats || 0), 4)} × {formatRenewlyMoney(getRenewlyExtraMemberMonthlyAmount(preferredCurrency), preferredCurrency, preferredLanguage)}/month
               </p>
             )}
 
