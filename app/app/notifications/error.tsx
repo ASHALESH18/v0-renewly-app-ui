@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { AlertTriangle, RefreshCcw } from 'lucide-react'
 
-export default function DashboardError({
+export default function NotificationsError({
   error,
   reset,
 }: {
@@ -12,7 +12,7 @@ export default function DashboardError({
   reset: () => void
 }) {
   useEffect(() => {
-    console.error('[v0] Dashboard page error:', error)
+    console.error('[v0] Notifications page error:', error)
   }, [error])
 
   return (
@@ -28,10 +28,10 @@ export default function DashboardError({
         
         <div className="space-y-2">
           <h2 className="text-xl font-semibold text-foreground">
-            Unable to load dashboard
+            Notifications could not be loaded
           </h2>
           <p className="text-muted-foreground text-sm">
-            Some data could not be loaded. Try refreshing to get back on track.
+            There was an issue loading your notifications. Try refreshing.
           </p>
         </div>
 
@@ -40,7 +40,7 @@ export default function DashboardError({
           className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors"
         >
           <RefreshCcw className="w-4 h-4" />
-          Refresh
+          Try again
         </button>
 
         {process.env.NODE_ENV === 'development' && error.message && (
