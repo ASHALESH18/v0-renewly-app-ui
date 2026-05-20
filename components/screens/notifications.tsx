@@ -202,8 +202,8 @@ export function NotificationsScreen() {
         animate={{ opacity: 1, y: 0 }}
         className="sticky top-0 z-10 glass-premium border-b border-gold/10"
       >
-        <div className="px-4 pt-12 pb-4">
-          <div className="flex items-center justify-between mb-4 gap-4">
+        <div className="px-4 pt-12 pb-6">
+          <div className="flex items-center justify-between mb-6 gap-4">
             <div>
               <h1 className="text-2xl font-bold text-foreground tracking-tight">Notifications</h1>
               {unreadCount > 0 && (
@@ -228,7 +228,8 @@ export function NotificationsScreen() {
             )}
           </div>
 
-          <div className="flex gap-2">
+          {/* Primary filter: All/Unread */}
+          <div className="flex gap-3 mb-6">
             {(['all', 'unread'] as const).map((tab) => (
               <motion.button
                 key={tab}
@@ -236,7 +237,7 @@ export function NotificationsScreen() {
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setFilter(tab)}
                 className={cn(
-                  'px-4 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer',
+                  'px-5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer whitespace-nowrap',
                   filter === tab
                     ? 'bg-gradient-to-r from-gold to-gold/80 text-obsidian shadow-[0_4px_12px_-4px_rgba(199,163,106,0.4)]'
                     : 'bg-card/60 border border-border text-muted-foreground hover:text-foreground hover:border-gold/20'
@@ -248,8 +249,8 @@ export function NotificationsScreen() {
             ))}
           </div>
 
-          {/* N2: Category filter tabs */}
-          <div className="flex gap-2 flex-wrap">
+          {/* Category filter: separate row with better spacing */}
+          <div className="flex gap-3 flex-wrap">
             {(['all', 'billing', 'family', 'renewals', 'security', 'system'] as const).map((cat) => (
               <motion.button
                 key={cat}
@@ -257,7 +258,7 @@ export function NotificationsScreen() {
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setCategoryFilter(cat === 'all' ? 'all' : (cat as NotificationCategory))}
                 className={cn(
-                  'px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer',
+                  'px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer',
                   categoryFilter === cat
                     ? 'bg-gold/20 border border-gold/50 text-gold'
                     : 'bg-card/40 border border-border/50 text-muted-foreground hover:text-foreground hover:border-gold/30'
@@ -270,7 +271,7 @@ export function NotificationsScreen() {
           </div>
 
           {actionError && (
-            <div className="mt-3 rounded-xl border border-crimson/20 bg-crimson/10 px-3 py-2 text-sm text-crimson">
+            <div className="mt-4 rounded-xl border border-crimson/20 bg-crimson/10 px-3 py-2 text-sm text-crimson">
               {actionError}
             </div>
           )}

@@ -981,33 +981,35 @@ export function FamilyMembersScreen() {
                       </p>
                     </div>
                   </div>
-                  {availableSeats > 0 && (
+                  <div className="flex items-center gap-3">
+                    {availableSeats > 0 && (
+                      <button
+                        onClick={() => setShowInviteForm(!showInviteForm)}
+                        className="flex items-center gap-2 rounded-lg bg-gold px-4 py-2 text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Invite Member
+                      </button>
+                    )}
+                    {availableSeats <= 0 && (
+                      <button
+                        onClick={() => setShowInviteForm(!showInviteForm)}
+                        className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-white font-medium hover:bg-emerald-700 transition-colors cursor-pointer"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add Extra Seat
+                      </button>
+                    )}
                     <button
-                      onClick={() => setShowInviteForm(!showInviteForm)}
-                      className="flex items-center gap-2 rounded-lg bg-gold px-4 py-2 text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
+                      onClick={handleManualRefresh}
+                      disabled={isRefreshingStatus}
+                      title="Refresh family members and invites"
+                      className="flex items-center gap-2 rounded-lg bg-slate-700 px-3 py-2 text-sm text-slate-100 font-medium hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                     >
-                      <Plus className="h-4 w-4" />
-                      Invite Member
+                      <RefreshCw className={`h-4 w-4 ${isRefreshingStatus ? 'animate-spin' : ''}`} />
+                      {!isRefreshingStatus && 'Refresh'}
                     </button>
-                  )}
-                  {availableSeats <= 0 && (
-                    <button
-                      onClick={() => setShowInviteForm(!showInviteForm)}
-                      className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-white font-medium hover:bg-emerald-700 transition-colors cursor-pointer"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add Extra Seat
-                    </button>
-                  )}
-                  <button
-                    onClick={handleManualRefresh}
-                    disabled={isRefreshingStatus}
-                    title="Refresh family members and invites"
-                    className="flex items-center gap-2 rounded-lg bg-slate-700 px-3 py-2 text-sm text-slate-100 font-medium hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                  >
-                    <RefreshCw className={`h-4 w-4 ${isRefreshingStatus ? 'animate-spin' : ''}`} />
-                    {!isRefreshingStatus && 'Refresh'}
-                  </button>
+                  </div>
                 </div>
 
                 {/* Full-seat info panel */}
