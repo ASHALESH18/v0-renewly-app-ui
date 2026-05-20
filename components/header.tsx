@@ -4,12 +4,11 @@ import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, Search, Settings, Check } from 'lucide-react'
+import { Bell, Search, Settings, Check, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from './motion'
 import useStore from '@/lib/store'
 import { generateAvatar } from '@/lib/avatar-utils'
-import { getStableProfileAvatar } from '@/lib/profile/avatar-source'
 import { ProfileMenu } from './profile-menu'
 import { useNotifications } from '@/lib/hooks/use-remote-data'
 
@@ -82,17 +81,17 @@ export function Header({
   const avatarUrl = useMemo(() => {
     if (!userProfile) return null
 
-    return getStableProfileAvatar({
-      profileAvatarUrl: userProfile.avatarUrl || null,
-      avatarSource: userProfile.avatarSource || null,
-      authAvatarUrl: userProfile.picture || null,
-      authPicture: userProfile.picture || null,
-      avatarSeed: userProfile.avatarSeed || null,
-      email: userProfile.email || null,
-      generateAvatar,
-      size: 256,
-    })
-  }, [userProfile?.email, userProfile?.avatarSeed, userProfile?.avatarUrl, userProfile?.avatarSource, userProfile?.picture])
+    if (userProfile.avatarUrl) {
+      return userProfile.avatarUrl
+    }
+
+    const seed =
+      userProfile.avatarSeed ||
+      [userProfile.name, userProfile.email].filter(Boolean).join('::') ||
+      'default'
+
+    return generateAvatar({ seed, size: 256 })
+  }, [userProfile?.name, userProfile?.email, userProfile?.avatarSeed, userProfile?.avatarUrl])
 
   useEffect(() => {
     if (!isNotificationsOpen) return
@@ -375,6 +374,14 @@ export function Header({
                                   <Check className="w-4 h-4 text-muted-foreground" />
                                 </button>
                               )}
+
+                              <button
+                                type="button"
+                                onClick={() => void handleDismiss(notification.id)}
+                                className="p-1.5 rounded-lg hover:bg-crimson/10 transition-colors cursor-pointer"
+                              >
+                                <Trash2 className="w-4 h-4 text-muted-foreground hover:text-crimson" />
+                              </button>
                             </div>
                           </div>
                         ))}

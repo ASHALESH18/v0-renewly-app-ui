@@ -132,8 +132,6 @@ export interface UserProfile {
   timeZone?: string
   avatarSeed?: string
   avatarUrl?: string
-  avatarSource?: 'provider' | 'user' | 'generated' | null
-  picture?: string
 }
 
 export interface NotificationSettings {
@@ -338,10 +336,6 @@ const useStore = create<AppState>()(
                 email: profile.email,
                 plan: profile.plan,
                 avatarUrl: profile.avatar_url || undefined,
-                avatarSeed: profile.avatar_seed || undefined,
-                avatarSource: profile.avatar_source || undefined,
-                countryCode: profile.country_code || settings?.country_code || undefined,
-                locale: profile.locale || settings?.locale || undefined,
                 timeZone: savedTimeZone || profile.time_zone || undefined,
               },
             })
@@ -635,7 +629,6 @@ const useStore = create<AppState>()(
               ...currentProfile,
               name: nextName,
               avatarUrl: profileData.avatarUrl ?? currentProfile.avatarUrl,
-              avatarSource: profileData.avatarUrl ? 'user' : currentProfile.avatarSource,
             },
           })
         }

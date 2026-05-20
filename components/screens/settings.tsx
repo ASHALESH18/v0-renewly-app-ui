@@ -24,7 +24,6 @@ import { signOutAndRedirectHome } from '@/lib/auth/sign-out'
 import { currencies } from '@/lib/locale-utils'
 import { ThemeSelectorCards } from '@/components/theme-selector-cards'
 import { languageNames, type SupportedLanguage } from '@/lib/i18n'
-import { formatRenewlyMonthlyAmount } from '@/lib/pricing-display'
 
 function SettingsSheet({
   isOpen,
@@ -225,7 +224,7 @@ export function SettingsScreen() {
       authPicture: userProfile?.picture || null,
       avatarSeed: userProfile?.avatarSeed || null,
       email: userProfile?.email || null,
-      generateAvatar,
+      generateAvatar: (args) => generateAvatar(args.seed, args.size),
       size: 128,
     })
   }, [
@@ -1167,7 +1166,7 @@ export function SettingsScreen() {
                         )}
                       </>
                     ) : (
-                      <p className="text-sm text-muted-foreground">Base Family plan {formatRenewlyMonthlyAmount(299, safeNotificationSettings.currencyCode, safeNotificationSettings.language)}</p>
+                      <p className="text-sm text-muted-foreground">Base Family plan ₹299/month</p>
                     )}
 
                     {/* F7.2D-R: Show next-cycle total when extra-seat cancellation is scheduled */}
@@ -1180,7 +1179,7 @@ export function SettingsScreen() {
                               : 'next renewal'}
                           </span>
                           <span className="text-sm font-semibold text-foreground">
-                            {familyStatus.billingMetadata.nextCycleLabel || formatRenewlyMonthlyAmount(familyStatus.billingMetadata.nextCycleMonthlyTotal, safeNotificationSettings.currencyCode, safeNotificationSettings.language)}
+                            ₹{familyStatus.billingMetadata.nextCycleMonthlyTotal}/month
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground">
@@ -1200,7 +1199,7 @@ export function SettingsScreen() {
                       onClick={handleChangePlan}
                       className="w-full py-3 rounded-xl bg-gold text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
                     >
-                      Start your plan
+                      View Upgrade Options
                     </button>
                   </>
                 )}

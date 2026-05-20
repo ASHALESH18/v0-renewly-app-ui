@@ -6,8 +6,6 @@ import { motion } from 'framer-motion'
 import useStore from '@/lib/store'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { generateAvatar } from '@/lib/avatar-utils'
-import { getStableProfileAvatar } from '@/lib/profile/avatar-source'
 
 export function ProfileAvatar() {
   const userProfile = useStore((state) => state.userProfile)
@@ -19,18 +17,18 @@ export function ProfileAvatar() {
   // Use store email if available, fall back to auth session
   const email = storeEmail || authUser?.email
 
+  // Priority for avatar source:
+  // 1. userProfile.avatarUrl (from store)
+  // 2. Supabase auth user_metadata.avatar_url or picture
+  // 3. Initials fallback
   const avatarUrl = useMemo(() => {
-    return getStableProfileAvatar({
-      profileAvatarUrl: userProfile?.avatarUrl || null,
-      avatarSource: userProfile?.avatarSource || null,
-      authAvatarUrl: authUser?.user_metadata?.avatar_url || null,
-      authPicture: authUser?.user_metadata?.picture || null,
-      avatarSeed: userProfile?.avatarSeed || null,
-      email: email || null,
-      generateAvatar,
-      size: 128,
-    })
-  }, [userProfile?.avatarUrl, userProfile?.avatarSource, userProfile?.avatarSeed, authUser?.user_metadata, email])
+    if (userProfile?.avatarUrl) return userProfile.avatarUrl
+    
+    if (authUser?.user_metadata?.avatar_url) return authUser.user_metadata.avatar_url
+    if (authUser?.user_metadata?.picture) return authUser.user_metadata.picture
+    
+    return null
+  }, [userProfile?.avatarUrl, authUser?.user_metadata])
 
   const initials = useMemo(() => {
     const name = userProfile?.name || authUser?.user_metadata?.full_name || authUser?.email?.split('@')[0]

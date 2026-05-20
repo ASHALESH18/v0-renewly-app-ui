@@ -7,7 +7,6 @@ import { Header } from '@/components/header'
 import { PageTransition } from '@/components/motion'
 import useStore from '@/lib/store'
 import { cn } from '@/lib/utils'
-import { formatRenewlyExtraMemberMonthly } from '@/lib/pricing-display'
 
 interface FamilyStatus {
   profilePlan: string
@@ -44,7 +43,6 @@ function getInviteId(invite: any): string {
 
 export function FamilyMembersScreen() {
   const userProfile = useStore((state) => state.userProfile)
-  const notificationSettings = useStore((state) => state.notificationSettings)
   const addToast = useStore((state) => state.addToast)
   const [familyStatus, setFamilyStatus] = useState<FamilyStatus | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -267,7 +265,7 @@ export function FamilyMembersScreen() {
       addToast({
         type: 'success',
         title: 'Intent created',
-        message: `Ready to add ${extraSeatsModalEmail} at ${formatRenewlyExtraMemberMonthly(notificationSettings?.currencyCode || 'INR', notificationSettings?.language || 'en')}. Payment required.`,
+        message: `Ready to add ${extraSeatsModalEmail} at ₹99/month. Payment required.`,
       })
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred'
@@ -1022,7 +1020,7 @@ export function FamilyMembersScreen() {
                   >
                     <h4 className="font-semibold text-amber-900">All included seats are used</h4>
                     <p className="text-sm text-amber-800">
-                      Your Family plan includes 4 members. To invite another member, you&apos;ll need an extra seat for <span className="font-semibold">{formatRenewlyExtraMemberMonthly(notificationSettings?.currencyCode || 'INR', notificationSettings?.language || 'en')}</span>.
+                      Your Family plan includes 4 members. To invite another member, you&apos;ll need an extra seat for <span className="font-semibold">₹99/month</span>.
                     </p>
                     <p className="text-xs text-amber-700 mt-3">
                       Pending invitations reserve seats until accepted, cancelled, or expired.
@@ -1071,7 +1069,7 @@ export function FamilyMembersScreen() {
                               You&apos;ve used all 4 included Family seats.
                             </p>
                             <p className="text-sm text-amber-800 dark:text-amber-200">
-                              Extra seats are billed as add-ons per member each month.
+                              Extra seats for ₹99/member/month are coming soon.
                             </p>
                           </div>
                         ) : (
@@ -1139,7 +1137,7 @@ export function FamilyMembersScreen() {
                               Extra members +{familyStatus.seatUsage.paidActiveExtraSeats}
                             </p>
                             <p className="text-xs text-emerald-800 dark:text-emerald-300">
-                              {formatRenewlyExtraMemberMonthly(notificationSettings?.currencyCode || 'INR', notificationSettings?.language || 'en')}
+                              ₹{familyStatus.seatUsage.extraSeatPriceINR}/month
                             </p>
                             {/* F7.2A: Show available/used breakdown OR scheduled cancellation state */}
                             {familyStatus.seatAddons?.some(a => a.cancelAtPeriodEnd) ? (
@@ -1158,7 +1156,7 @@ export function FamilyMembersScreen() {
                             ) : (
                               familyStatus.extraSeatReuse && (
                                 <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-400">
-                                  {familyStatus.seatUsage.availableExtraSeats ?? familyStatus.extraSeatReuse.reusableExtraSeats} available • {familyStatus.seatUsage.reservedExtraSeats ?? familyStatus.seatUsage.activeExtraMembers} in use/reserved
+                                  {familyStatus.extraSeatReuse.reusableExtraSeats} available • {familyStatus.seatUsage.activeExtraMembers} in use
                                 </p>
                               )
                             )}
@@ -1729,7 +1727,7 @@ export function FamilyMembersScreen() {
                       Your Family plan includes 4 members. You&apos;ve used all included seats.
                     </p>
                     <p className="text-sm text-slate-300">
-                      To invite <span className="font-medium text-white">{extraSeatsModalEmail}</span>, you&apos;ll need to add an extra seat for <span className="font-medium text-emerald-400">{formatRenewlyExtraMemberMonthly(notificationSettings?.currencyCode || 'INR', notificationSettings?.language || 'en')}</span>.
+                      To invite <span className="font-medium text-white">{extraSeatsModalEmail}</span>, you&apos;ll need to add an extra seat for <span className="font-medium text-emerald-400">₹99/month</span>.
                     </p>
                     <p className="text-xs text-slate-400 mt-4">
                       Pending invitations reserve included seats until they are accepted, cancelled, or expired.
@@ -1803,7 +1801,7 @@ export function FamilyMembersScreen() {
                 <div className="p-6 space-y-6">
                   <div className="space-y-3">
                     <p className="text-sm text-slate-300">
-                      To invite <span className="font-medium text-white">{paymentIntent.email}</span>, add one extra Family seat for <span className="font-medium text-emerald-400">{formatRenewlyExtraMemberMonthly(notificationSettings?.currencyCode || 'INR', notificationSettings?.language || 'en')}</span>.
+                      To invite <span className="font-medium text-white">{paymentIntent.email}</span>, add one extra Family seat for <span className="font-medium text-emerald-400">₹99/month</span>.
                     </p>
                     <div className="mt-4 p-3 bg-slate-800 rounded-lg border border-slate-700">
                       <p className="text-xs text-slate-400 font-medium">Status</p>
