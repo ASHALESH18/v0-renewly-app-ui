@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createNotification } from '@/lib/notifications/notification-service'
-import type { NotificationType, NotificationCategory } from '@/lib/notifications/notification-types'
-
-const ALLOWED_QA_EMAILS = ['test@renewly.in', 'qa@renewly.in', 'preview@renewly.in']
 
 type ScenarioType =
   | 'family_invite_received'
@@ -41,7 +38,7 @@ function isPreviewOrDev(): boolean {
 
 export async function POST(request: NextRequest): Promise<NextResponse<QANotificationResponse>> {
   try {
-    // PART B: Only allow in preview/dev
+    // Only allow in preview/dev
     if (!isPreviewOrDev()) {
       return NextResponse.json(
         {
@@ -116,7 +113,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<QANotific
     const notificationIds: string[] = []
     const errors: string[] = []
 
-    // PART C: Generate notifications based on scenario with idempotency keys
+    // Generate notifications based on scenario with source/sourceId for idempotency
     const now = new Date()
     const dateStr = now.toISOString().split('T')[0]
 
@@ -124,18 +121,17 @@ export async function POST(request: NextRequest): Promise<NextResponse<QANotific
       if (scenario === 'family_invite_received') {
         const notif = await createNotification({
           userId: targetUser.id,
-          type: 'family_invite' as NotificationType,
+          type: 'family_invite',
           title: `${ownerEmail || 'Family owner'} invited you to their Family`,
-          message: 'Review your Family invitation.',
-          category: 'family' as NotificationCategory,
-          severity: 'info',
+          message: 'Review your Family invitation and join their Renewly Family plan.',
+          source: 'family_invite',
+          sourceId: `qa-invite-${targetUser.id}-${dateStr}`,
           actionUrl: '/app/family',
-          entityType: 'family_invite',
-          entityId: `qa-invite-${targetUser.id}-${dateStr}`,
+          actionLabel: 'View Invitation',
           metadata: { ownerEmail, ...metadata },
-          idempotencyKey: `family_invite_received:qa:${targetUser.id}:${dateStr}`,
         })
         if (notif) notificationIds.push(notif.id)
+        else errors.push('Failed to create family_invite_received notification')
       }
 
       if (scenario === 'family_invite_accepted') {
@@ -144,18 +140,17 @@ export async function POST(request: NextRequest): Promise<NextResponse<QANotific
         } else {
           const notif = await createNotification({
             userId: ownerUser.id,
-            type: 'family_member_joined' as NotificationType,
+            type: 'family_member_joined',
             title: `${targetEmail} accepted your Family invitation`,
-            message: 'They now have access to your subscription.',
-            category: 'family' as NotificationCategory,
-            severity: 'info',
+            message: 'They now have access to your Family plan and subscriptions.',
+            source: 'family_invite',
+            sourceId: `qa-accepted-${ownerUser.id}-${targetUser.id}-${dateStr}`,
             actionUrl: '/app/family',
-            entityType: 'family_member',
-            entityId: targetUser.id,
+            actionLabel: 'View Family',
             metadata: { memberEmail: targetEmail, ...metadata },
-            idempotencyKey: `family_invite_accepted:qa:${ownerUser.id}:${targetUser.id}:${dateStr}`,
           })
           if (notif) notificationIds.push(notif.id)
+          else errors.push('Failed to create family_invite_accepted notification')
         }
       }
 
@@ -165,18 +160,17 @@ export async function POST(request: NextRequest): Promise<NextResponse<QANotific
         } else {
           const notif = await createNotification({
             userId: ownerUser.id,
-            type: 'family_member_left' as NotificationType,
+            type: 'family_member_left',
             title: `${targetEmail} declined your Family invitation`,
-            message: 'They did not accept your invitation.',
-            category: 'family' as NotificationCategory,
-            severity: 'info',
+            message: 'They did not accept your invitation to join.',
+            source: 'family_invite',
+            sourceId: `qa-declined-${ownerUser.id}-${targetUser.id}-${dateStr}`,
             actionUrl: '/app/family',
-            entityType: 'family_invite',
-            entityId: `qa-invite-${ownerUser.id}-${dateStr}`,
+            actionLabel: 'View Family',
             metadata: { memberEmail: targetEmail, ...metadata },
-            idempotencyKey: `family_invite_declined:qa:${ownerUser.id}:${targetUser.id}:${dateStr}`,
           })
           if (notif) notificationIds.push(notif.id)
+          else errors.push('Failed to create family_invite_declined notification')
         }
       }
 
@@ -186,16 +180,17 @@ export async function POST(request: NextRequest): Promise<NextResponse<QANotific
         } else {
           const notif = await createNotification({
             userId: ownerUser.id,
-            type: 'extra_seat_removed' as NotificationType,
+            type: 'subscription_reminder',
             title: 'Extra seat cancellation scheduled',
             message: 'One extra seat will be removed at the end of your billing period.',
-            category: 'billing' as NotificationCategory,
-            severity: 'warning',
+            source: 'billing',
+            sourceId: `qa-seat-cancel-${ownerUser.id}-${dateStr}`,
             actionUrl: '/app/family',
-            metadata: { targetEmail, ...metadata },
-            idempotencyKey: `extra_seat_cancel_scheduled:qa:${ownerUser.id}:${dateStr}`,
+            actionLabel: 'View Family',
+            metadata: { ...metadata },
           })
           if (notif) notificationIds.push(notif.id)
+          else errors.push('Failed to create extra_seat_cancel_scheduled notification')
         }
       }
 
@@ -205,92 +200,103 @@ export async function POST(request: NextRequest): Promise<NextResponse<QANotific
         } else {
           const notif = await createNotification({
             userId: ownerUser.id,
-            type: 'extra_seat_added' as NotificationType,
+            type: 'subscription_reminder',
             title: 'Extra seat cancellation undone',
             message: 'The extra seat will continue at the end of your billing period.',
-            category: 'billing' as NotificationCategory,
-            severity: 'info',
+            source: 'billing',
+            sourceId: `qa-seat-undo-${ownerUser.id}-${dateStr}`,
             actionUrl: '/app/family',
-            metadata: { targetEmail, ...metadata },
-            idempotencyKey: `extra_seat_cancel_undone:qa:${ownerUser.id}:${dateStr}`,
+            actionLabel: 'View Family',
+            metadata: { ...metadata },
           })
           if (notif) notificationIds.push(notif.id)
+          else errors.push('Failed to create extra_seat_cancel_undone notification')
         }
       }
 
       if (scenario === 'billing_amount_changed') {
+        const amount = metadata?.newAmount || '299'
         const notif = await createNotification({
           userId: targetUser.id,
-          type: 'subscription_renewed' as NotificationType,
+          type: 'payment_issue',
           title: 'Your billing amount has changed',
-          message: `New amount: ₹${metadata.newAmount || '299'}/month`,
-          category: 'billing' as NotificationCategory,
-          severity: 'info',
+          message: `New amount: ₹${amount}/month`,
+          source: 'billing',
+          sourceId: `qa-billing-${targetUser.id}-${amount}-${dateStr}`,
           actionUrl: '/app/settings',
-          metadata: { ...metadata },
-          idempotencyKey: `billing_amount_changed:qa:${targetUser.id}:${metadata.newAmount}:${dateStr}`,
+          actionLabel: 'View Billing',
+          metadata: { amount, ...metadata },
         })
         if (notif) notificationIds.push(notif.id)
+        else errors.push('Failed to create billing_amount_changed notification')
       }
 
       if (scenario === 'renewal_due_soon') {
+        const daysUntil = metadata?.daysUntil || 7
         const notif = await createNotification({
           userId: targetUser.id,
-          type: 'renewal_7day' as NotificationType,
+          type: 'subscription_reminder',
           title: 'Subscription renewal coming up',
-          message: `Your subscription renews in ${metadata.daysUntil || 7} days.`,
-          category: 'renewals' as NotificationCategory,
-          severity: 'info',
+          message: `Your subscription renews in ${daysUntil} days.`,
+          source: 'subscription',
+          sourceId: `qa-renewal-soon-${targetUser.id}-${daysUntil}-${dateStr}`,
           actionUrl: '/app/subscriptions',
-          metadata: { ...metadata },
-          idempotencyKey: `renewal_due_soon:qa:${targetUser.id}:${metadata.daysUntil || 7}:${dateStr}`,
+          actionLabel: 'View Subscriptions',
+          metadata: { daysUntil, ...metadata },
         })
         if (notif) notificationIds.push(notif.id)
+        else errors.push('Failed to create renewal_due_soon notification')
       }
 
       if (scenario === 'renewal_due_today') {
         const notif = await createNotification({
           userId: targetUser.id,
-          type: 'renewal_today' as NotificationType,
+          type: 'subscription_reminder',
           title: 'Subscription renewing today',
           message: 'Your subscription will renew today.',
-          category: 'renewals' as NotificationCategory,
-          severity: 'high',
+          source: 'subscription',
+          sourceId: `qa-renewal-today-${targetUser.id}-${dateStr}`,
           actionUrl: '/app/subscriptions',
+          actionLabel: 'View Subscriptions',
           metadata: { ...metadata },
-          idempotencyKey: `renewal_due_today:qa:${targetUser.id}:${dateStr}`,
         })
         if (notif) notificationIds.push(notif.id)
+        else errors.push('Failed to create renewal_due_today notification')
       }
 
       if (scenario === 'system_test') {
+        const timestamp = now.getTime()
         const notif = await createNotification({
           userId: targetUser.id,
-          type: 'feature_released' as NotificationType,
+          type: 'family_invite',
           title: 'QA Test Notification',
-          message: 'This is a test notification from the QA API.',
-          category: 'system' as NotificationCategory,
-          severity: 'info',
+          message: 'This is a test notification from the QA trigger API.',
+          source: 'system',
+          sourceId: `qa-test-${targetUser.id}-${timestamp}`,
           actionUrl: '/app/notifications',
+          actionLabel: 'View Notifications',
           metadata: { qaTest: true, ...metadata },
-          idempotencyKey: `system_test:qa:${targetUser.id}:${now.getTime()}`,
         })
         if (notif) notificationIds.push(notif.id)
+        else errors.push('Failed to create system_test notification')
       }
     } catch (error) {
-      errors.push(`Failed to create notification: ${error instanceof Error ? error.message : 'unknown error'}`)
+      errors.push(
+        `Failed to create notification: ${error instanceof Error ? error.message : 'unknown error'}`
+      )
     }
 
+    const success = notificationIds.length > 0 && errors.length === 0
     return NextResponse.json(
       {
-        success: notificationIds.length > 0 && errors.length === 0,
+        success,
         scenario,
         notificationIds,
         targetUserId: targetUser.id,
         ownerUserId: ownerUser?.id,
-        errors,
+        errors: success ? [] : errors,
       } as QANotificationResponse,
-      { status: errors.length > 0 && notificationIds.length === 0 ? 400 : 200 }
+      { status: success ? 200 : 400 }
     )
   } catch (error) {
     console.error('[qa/notifications] Error:', error)
