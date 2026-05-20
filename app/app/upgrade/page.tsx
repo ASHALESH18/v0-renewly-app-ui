@@ -31,7 +31,7 @@ const comparisonRows: Array<{ label: string; pro: string; family: string; enterp
   { label: 'Advanced analytics', pro: 'Included', family: 'Included', enterprise: 'Advanced reporting' },
   { label: 'Renewal calendar', pro: 'Included', family: 'Shared calendar', enterprise: 'Team calendar' },
   { label: 'Members', pro: '1 user', family: 'Owner + 4 invited members', enterprise: 'Custom seats' },
-  { label: 'Extra members', pro: 'Not available', family: 'Up to 4 extra members at ₹99/month or $1.49/month each', enterprise: 'Custom seats' },
+  { label: 'Extra members', pro: 'Not available', family: 'Up to 4 extra members at ₹99/month (INR) or $1.49/month (USD) each', enterprise: 'Custom seats' },
   { label: 'Support', pro: 'Priority', family: 'Priority', enterprise: 'Dedicated' },
 ]
 

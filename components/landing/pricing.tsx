@@ -11,6 +11,8 @@ import { getUpgradeDestination, getStartedDestination } from '@/lib/upgrade-flow
 import { springs, staggerContainer, staggerItem, useMotionPreferences } from '../motion'
 import { useAuth } from '@/lib/hooks/use-auth'
 import useStore from '@/lib/store'
+import { useCurrencyPreference } from '@/lib/hooks/use-currency-preference'
+import type { RenewlyCurrency } from '@/lib/renewly-pricing-constants'
 
 export function Pricing() {
   const ref = useRef(null)
@@ -18,11 +20,14 @@ export function Pricing() {
   const { isAuthenticated } = useAuth()
   const { shouldReduceAnimations } = useMotionPreferences()
   const notificationSettings = useStore((state) => state.notificationSettings)
+  const preferenceCurrency = useCurrencyPreference() as RenewlyCurrency
   const selectedCurrency = getEffectiveCurrency(
     notificationSettings?.currencyCode,
     notificationSettings?.locale
   )
-  const currencySymbol = getCurrencySymbol(selectedCurrency)
+  const currencySymbol = preferenceCurrency === 'USD'
+    ? '$'
+    : getCurrencySymbol(selectedCurrency)
   const plans = getAllPlans()
 
   const getCtaHref = (planId: string): string => {
