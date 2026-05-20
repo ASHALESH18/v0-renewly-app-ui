@@ -24,6 +24,9 @@ import { signOutAndRedirectHome } from '@/lib/auth/sign-out'
 import { currencies } from '@/lib/locale-utils'
 import { ThemeSelectorCards } from '@/components/theme-selector-cards'
 import { languageNames, type SupportedLanguage } from '@/lib/i18n'
+import { useCurrencyPreference } from '@/lib/hooks/use-currency-preference'
+import { formatMonthlyLabel } from '@/lib/renewly-pricing-constants'
+import type { RenewlyCurrency } from '@/lib/renewly-pricing-constants'
 
 function SettingsSheet({
   isOpen,
@@ -115,6 +118,7 @@ export function SettingsScreen() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const section = searchParams.get('section')
+  const preferenceCurrency = useCurrencyPreference() as RenewlyCurrency
 
   const [activeSheet, setActiveSheet] = useState<string | null>(null)
   const [showPlanSheet, setShowPlanSheet] = useState(false)
@@ -1166,7 +1170,7 @@ export function SettingsScreen() {
                         )}
                       </>
                     ) : (
-                      <p className="text-sm text-muted-foreground">Base Family plan ₹299/month</p>
+                      <p className="text-sm text-muted-foreground">Base Family plan {formatMonthlyLabel(299, 8.99, preferenceCurrency)}</p>
                     )}
 
                     {/* F7.2D-R: Show next-cycle total when extra-seat cancellation is scheduled */}
