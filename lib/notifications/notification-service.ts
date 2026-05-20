@@ -1,22 +1,20 @@
 // Combo 5: Notification service with idempotent creation
 // Server-side only - handles persistent notification creation and management
+// Uses source/source_id for idempotency (UNIQUE constraint on table)
 
 import { createClient } from '@supabase/supabase-js'
-import type { NotificationType, NotificationCategory } from './notification-types'
 
 export interface CreateNotificationInput {
   userId: string
-  type: NotificationType
+  type: 'family_invite' | 'family_member_joined' | 'family_member_left' | 'subscription_reminder' | 'payment_issue'
   title: string
   message: string
-  category?: NotificationCategory
-  severity?: 'info' | 'warning' | 'critical'
   actionUrl?: string
-  entityType?: string
-  entityId?: string
+  actionLabel?: string
+  source: 'family_invite' | 'subscription' | 'billing' | 'system'
+  sourceId: string
   metadata?: Record<string, any>
   expiresAt?: Date
-  idempotencyKey?: string
 }
 
 export interface Notification {
@@ -25,23 +23,20 @@ export interface Notification {
   type: string
   title: string
   message: string
-  category: string
-  severity: string
   action_url?: string
-  entity_type?: string
-  entity_id?: string
-  idempotency_key?: string
-  read_at?: string
-  archived_at?: string
-  expires_at?: string
+  action_label?: string
+  source: string
+  source_id: string
+  status: 'unread' | 'read' | 'archived'
   metadata: Record<string, any>
   created_at: string
   updated_at: string
+  expires_at?: string
 }
 
 /**
- * Create a notification, guaranteed idempotent using idempotency_key
- * If the same key is used twice, the first notification is returned
+ * Create a notification, guaranteed idempotent using source/source_id
+ * If the same source/source_id pair already exists, return the existing notification
  */
 export async function createNotification(
   input: CreateNotificationInput
@@ -52,6 +47,7 @@ export async function createNotification(
   )
 
   try {
+    // Try to insert - will fail with unique constraint if exists
     const { data, error } = await supabase
       .from('notifications')
       .insert({
@@ -59,12 +55,11 @@ export async function createNotification(
         type: input.type,
         title: input.title,
         message: input.message,
-        category: input.category || 'system',
-        severity: input.severity || 'info',
         action_url: input.actionUrl,
-        entity_type: input.entityType,
-        entity_id: input.entityId,
-        idempotency_key: input.idempotencyKey,
+        action_label: input.actionLabel,
+        source: input.source,
+        source_id: input.sourceId,
+        status: 'unread',
         metadata: input.metadata || {},
         expires_at: input.expiresAt?.toISOString(),
       })
@@ -72,10 +67,11 @@ export async function createNotification(
       .single()
 
     if (error) {
-      if (error.code === '23505' && input.idempotencyKey) {
-        // Unique violation on idempotency_key - get existing
-        console.log(`[notifications] Idempotent notification exists: ${input.idempotencyKey}`)
-        return await getNotificationByIdempotencyKey(input.idempotencyKey)
+      if (error.code === '23505') {
+        // Unique constraint violation - notification already exists
+        // Fetch the existing one
+        console.log(`[notifications] Idempotent notification exists: ${input.source}:${input.sourceId}`)
+        return await getNotificationBySource(input.userId, input.source, input.sourceId)
       }
       console.error('[notifications] Failed to create notification:', error)
       return null
@@ -89,9 +85,13 @@ export async function createNotification(
 }
 
 /**
- * Get a notification by idempotency key (for idempotency check)
+ * Get a notification by source/source_id (for idempotency check)
  */
-async function getNotificationByIdempotencyKey(key: string): Promise<Notification | null> {
+async function getNotificationBySource(
+  userId: string,
+  source: string,
+  sourceId: string
+): Promise<Notification | null> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || '',
     process.env.SUPABASE_SERVICE_ROLE_KEY || ''
@@ -101,7 +101,9 @@ async function getNotificationByIdempotencyKey(key: string): Promise<Notificatio
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
-      .eq('idempotency_key', key)
+      .eq('user_id', userId)
+      .eq('source', source)
+      .eq('source_id', sourceId)
       .single()
 
     if (error) {
@@ -109,17 +111,16 @@ async function getNotificationByIdempotencyKey(key: string): Promise<Notificatio
         // Not found
         return null
       }
-      console.error('[notifications] Failed to fetch by idempotency key:', error)
+      console.error('[notifications] Failed to fetch by source:', error)
       return null
     }
 
     return data as Notification
   } catch (error) {
-    console.error('[notifications] Unexpected error fetching by idempotency key:', error)
+    console.error('[notifications] Unexpected error fetching by source:', error)
     return null
   }
 }
-
 /**
  * Get user's notifications with optional filtering
  */
@@ -128,7 +129,6 @@ export async function getUserNotifications(
   options?: {
     limit?: number
     unreadOnly?: boolean
-    category?: string
   }
 ): Promise<Notification[]> {
   const supabase = createClient(
@@ -141,15 +141,11 @@ export async function getUserNotifications(
       .from('notifications')
       .select('*')
       .eq('user_id', userId)
-      .is('archived_at', null)
+      .neq('status', 'archived')
       .order('created_at', { ascending: false })
 
     if (options?.unreadOnly) {
-      query = query.is('read_at', null)
-    }
-
-    if (options?.category) {
-      query = query.eq('category', options.category)
+      query = query.eq('status', 'unread')
     }
 
     if (options?.limit) {
@@ -184,8 +180,7 @@ export async function getUnreadCount(userId: string): Promise<number> {
       .from('notifications')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
-      .is('read_at', null)
-      .is('archived_at', null)
+      .eq('status', 'unread')
 
     if (error) {
       console.error('[notifications] Failed to get unread count:', error)
@@ -212,7 +207,7 @@ export async function markNotificationRead(notificationId: string): Promise<bool
     const { error } = await supabase
       .from('notifications')
       .update({
-        read_at: new Date().toISOString(),
+        status: 'read',
         updated_at: new Date().toISOString(),
       })
       .eq('id', notificationId)
@@ -242,11 +237,11 @@ export async function markAllNotificationsRead(userId: string): Promise<boolean>
     const { error } = await supabase
       .from('notifications')
       .update({
-        read_at: new Date().toISOString(),
+        status: 'read',
         updated_at: new Date().toISOString(),
       })
       .eq('user_id', userId)
-      .is('read_at', null)
+      .eq('status', 'unread')
 
     if (error) {
       console.error('[notifications] Failed to mark all notifications read:', error)
@@ -273,7 +268,7 @@ export async function archiveNotification(notificationId: string): Promise<boole
     const { error } = await supabase
       .from('notifications')
       .update({
-        archived_at: new Date().toISOString(),
+        status: 'archived',
         updated_at: new Date().toISOString(),
       })
       .eq('id', notificationId)
