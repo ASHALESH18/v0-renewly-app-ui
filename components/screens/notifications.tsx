@@ -43,7 +43,7 @@ const typeConfig = {
 }
 
 export function NotificationsScreen() {
-  const { notifications: apiNotifications, isLoading, error } = useNotifications()
+  const { notifications: apiNotifications, isLoading, error, refresh } = useNotifications()
   const [items, setItems] = useState<Notification[]>([])
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
   // N2: Add category filter support
@@ -51,10 +51,27 @@ export function NotificationsScreen() {
   const [pendingIds, setPendingIds] = useState<string[]>([])
   const [isMarkingAll, setIsMarkingAll] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [localLoading, setLocalLoading] = useState(true)
 
   useEffect(() => {
     setItems((apiNotifications as Notification[]) || [])
+    // Always stop loading after API data arrives
+    setLocalLoading(false)
   }, [apiNotifications])
+
+  // Initial fetch on mount
+  useEffect(() => {
+    const init = async () => {
+      try {
+        await refresh(false)
+      } catch (e) {
+        console.error('[notifications] Failed to refresh on mount:', e)
+      } finally {
+        setLocalLoading(false)
+      }
+    }
+    void init()
+  }, [])
 
   const unreadCount = useMemo(
     () => items.filter((notification) => !notification.read).length,
@@ -255,7 +272,7 @@ export function NotificationsScreen() {
       </motion.div>
 
       <div className="px-4 py-4">
-        {isLoading ? (
+        {localLoading ? (
           <NotificationsListSkeleton />
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-16">
@@ -290,9 +307,11 @@ export function NotificationsScreen() {
                       if (!notification.read) {
                         void markAsRead(notification.id)
                       }
-                      // S5B.3-R: Navigate to actionHref if provided
+                      // S5B.3-R: Navigate to actionHref if provided, otherwise to /app/notifications
                       if ((notification as any).actionHref) {
                         window.location.href = (notification as any).actionHref
+                      } else {
+                        // No action URL, stay on page
                       }
                     }}
                     onKeyDown={(event) => {
