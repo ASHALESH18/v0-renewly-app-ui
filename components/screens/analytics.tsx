@@ -7,6 +7,7 @@ import {
   TrendingDown,
   PieChart as PieChartIcon,
   BarChart3,
+  Sparkles,
 } from 'lucide-react'
 import {
   AreaChart,
@@ -250,6 +251,9 @@ export function AnalyticsScreen({
             <p className="mt-1 text-sm text-muted-foreground">
               Track trends, category concentration, and projected annual spend.
             </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              <span className="font-medium">Note:</span> If you&apos;re a covered Family member, your free subscriptions aren&apos;t included in these totals.
+            </p>
           </div>
 
           <SegmentedControl
@@ -288,6 +292,44 @@ export function AnalyticsScreen({
             value={String(subscriptions.length)}
             icon={BarChart3}
           />
+        </div>
+
+        <div className="mt-6 rounded-3xl border border-emerald/15 bg-emerald/5 p-5 shadow-card">
+          <div className="flex items-start gap-4">
+            <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-emerald/20">
+              <Sparkles className="h-5 w-5 text-emerald" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-foreground">Smart Insights</h3>
+              <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
+                {subscriptions.some(s => s.status === 'unused') && (
+                  <li className="flex gap-2">
+                    <span>•</span>
+                    <span>You have {subscriptions.filter(s => s.status === 'unused').length} unused subscription{subscriptions.filter(s => s.status === 'unused').length !== 1 ? 's' : ''}. Check Leak Report to find savings.</span>
+                  </li>
+                )}
+                <li className="flex gap-2">
+                  <span>•</span>
+                  <span><strong>{pieData[0]?.name || 'Your top category'}</strong> is your biggest spending area at {pieData[0]?.percentage || '0'}% of your total.</span>
+                </li>
+                {subscriptions.filter(s => {
+                  const daysUntil = Math.ceil((new Date(s.renewalDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                  return daysUntil <= 7 && daysUntil > 0
+                }).length > 0 && (
+                  <li className="flex gap-2">
+                    <span>•</span>
+                    <span>{subscriptions.filter(s => {
+                      const daysUntil = Math.ceil((new Date(s.renewalDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                      return daysUntil <= 7 && daysUntil > 0
+                    }).length} subscription{subscriptions.filter(s => {
+                      const daysUntil = Math.ceil((new Date(s.renewalDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                      return daysUntil <= 7 && daysUntil > 0
+                    }).length !== 1 ? 's renew' : ' renews'} in the next week. Check Calendar for details.</span>
+                  </li>
+                )}
+              </ul>
+            </div>
+          </div>
         </div>
 
         <div className="mt-6 grid gap-6 xl:grid-cols-[1.6fr_1fr]">
