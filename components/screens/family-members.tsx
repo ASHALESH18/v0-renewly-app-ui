@@ -974,16 +974,23 @@ export function FamilyMembersScreen() {
                     <h2 className="text-2xl font-semibold text-foreground">Your Family Plan</h2>
                     {/* F6C.2: Show clear seat breakdown instead of confusing "5 of 4" */}
                     <div className="mt-2 space-y-1">
-                      <p className="text-sm text-muted-foreground">
-                        {familyStatus?.seatUsage ? (
-                          <>
-                            {familyStatus.seatUsage.activeIncludedCount}/{familyStatus.seatUsage.maxIncludedSeats} included,{' '}
-                            {familyStatus.seatUsage.activeExtraCount} extra seat{familyStatus.seatUsage.activeExtraCount !== 1 ? 's' : ''}
-                          </>
-                        ) : (
-                          'Loading seats...'
-                        )}
-                      </p>
+                      {familyStatus?.seatUsage ? (
+                        <>
+                          <p className="text-sm text-muted-foreground">
+                            {familyStatus.seatUsage.includedSeatsUsed}/{familyStatus.seatUsage.includedLimit} included
+                            {familyStatus.seatUsage.activeExtraMembers > 0 ? (
+                              <> + {familyStatus.seatUsage.activeExtraMembers} extra = {familyStatus.seatUsage.includedSeatsUsed + familyStatus.seatUsage.activeExtraMembers} active</>
+                            ) : null}
+                          </p>
+                          {familyStatus.seatUsage.pendingExtraInvites > 0 && (
+                            <p className="text-xs text-amber-600 dark:text-amber-400">
+                              {familyStatus.seatUsage.pendingExtraInvites} pending extra invite{familyStatus.seatUsage.pendingExtraInvites !== 1 ? 's' : ''} reserve seat{familyStatus.seatUsage.pendingExtraInvites !== 1 ? 's' : ''}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Loading seats...</p>
+                      )}
                     </div>
                   </div>
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-2">
@@ -1167,9 +1174,12 @@ export function FamilyMembersScreen() {
                                   ))}
                               </div>
                             ) : (
-                              familyStatus.extraSeatReuse && (
+                              familyStatus.seatUsage && (
                                 <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-400">
-                                  {familyStatus.extraSeatReuse.reusableExtraSeats} available • {familyStatus.seatUsage.activeExtraMembers} in use
+                                  {familyStatus.seatUsage.availableExtraSeats} available • {familyStatus.seatUsage.activeExtraMembers} active
+                                  {familyStatus.seatUsage.pendingExtraInvites > 0 ? (
+                                    <> • {familyStatus.seatUsage.pendingExtraInvites} pending</>
+                                  ) : null}
                                 </p>
                               )
                             )}
