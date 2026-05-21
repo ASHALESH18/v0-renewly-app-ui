@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const success = await markNotificationRead(body.notificationId)
+    const success = await markNotificationRead(body.notificationId, user.id)
     return NextResponse.json({
       success,
       message: success ? 'Notification marked read' : 'Failed to mark as read',
