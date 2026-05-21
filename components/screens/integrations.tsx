@@ -379,21 +379,21 @@ export function IntegrationsScreen() {
           transition={fastTransition}
         >
           <h1 className="text-2xl font-semibold text-foreground">Integrations</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Connect your email and notification sources for automatic subscription detection
+          <p className="text-sm text-muted-foreground mt-2">
+            Connect your email, calendar, and other sources. Renewly looks for subscription signals and never adds anything without your review.
           </p>
         </motion.div>
 
-        {/* Sync stats */}
-        <SyncStats stats={stats} />
-
-        {/* Email integrations */}
+        {/* Data Sources section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ ...fastTransition, delay: 0.15 }}
+          transition={{ ...fastTransition, delay: 0.1 }}
         >
-          <h2 className="text-lg font-semibold text-foreground mb-4">Email Sources</h2>
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-foreground mb-2">Data Sources</h2>
+            <p className="text-sm text-muted-foreground">Connect your email and calendar to detect subscription signals automatically.</p>
+          </div>
           <div className="grid md:grid-cols-2 gap-4">
             {integrations
               .filter((i) => i.icon === 'mail')
@@ -411,13 +411,16 @@ export function IntegrationsScreen() {
           </div>
         </motion.div>
 
-        {/* System integrations */}
+        {/* Intelligence Systems */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ ...fastTransition, delay: 0.2 }}
+          transition={{ ...fastTransition, delay: 0.15 }}
         >
-          <h2 className="text-lg font-semibold text-foreground mb-4">System</h2>
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-foreground mb-2">Intelligence Systems</h2>
+            <p className="text-sm text-muted-foreground">Automatic systems that power Smart Capture, renewal detection, and notifications.</p>
+          </div>
           <div className="grid md:grid-cols-2 gap-4">
             {integrations
               .filter((i) => i.icon !== 'mail')
@@ -435,43 +438,16 @@ export function IntegrationsScreen() {
           </div>
         </motion.div>
 
-        {/* Quick links */}
+        {/* Privacy & Safety note */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ ...fastTransition, delay: 0.25 }}
-          className="rounded-2xl bg-card border border-border p-5"
+          transition={{ ...fastTransition, delay: 0.2 }}
+          className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-4"
         >
-          <h3 className="font-semibold text-foreground mb-4">Quick Actions</h3>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <a
-              href="/app/inbox"
-              className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border hover:border-gold/30 transition-all group"
-            >
-              <div className="flex items-center gap-3">
-                <Mail className="w-5 h-5 text-gold" />
-                <div>
-                  <p className="font-medium text-foreground">View Inbox</p>
-                  <p className="text-xs text-muted-foreground">Review detected candidates</p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-gold transition-colors" />
-            </a>
-
-            <a
-              href="/app/labs/notification-capture"
-              className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border hover:border-gold/30 transition-all group"
-            >
-              <div className="flex items-center gap-3">
-                <FlaskConical className="w-5 h-5 text-purple-400" />
-                <div>
-                  <p className="font-medium text-foreground">Notification Lab</p>
-                  <p className="text-xs text-muted-foreground">Test notification parsing</p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-gold transition-colors" />
-            </a>
-          </div>
+          <p className="text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">Privacy:</span> Renewly only scans for subscription-related signals. Your full email content and sensitive data are never shared or stored.
+          </p>
         </motion.div>
       </div>
     </PageTransition>

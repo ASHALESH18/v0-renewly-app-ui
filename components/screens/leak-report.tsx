@@ -200,7 +200,7 @@ export function LeakReportScreen({
     <PageTransition className="min-h-screen bg-transparent">
       <Header
         title="Leak Report"
-        subtitle="Your financial health snapshot"
+        subtitle="Subscription exposure and security risk overview"
         showSearch={false}
         showNotifications={false}
       />
@@ -326,6 +326,18 @@ export function LeakReportScreen({
               </div>
             </div>
           </div>
+        </motion.div>
+
+        {/* Honest capability notice */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, ...springs.gentle }}
+          className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-4"
+        >
+          <p className="text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">Current report:</span> Based on your subscription and account signals. Breach monitoring can be connected later for real-time protection.
+          </p>
         </motion.div>
 
         {/* Spend overview section */}
