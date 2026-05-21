@@ -20,6 +20,8 @@ import { SubscriptionCard, SubscriptionCardCompact } from '@/components/subscrip
 import { FilterChips, SegmentedControl } from '@/components/filter-chips'
 import { PageTransition, StaggerList, staggerItem } from '@/components/motion'
 import { MotionSection } from '@/components/motion-section'
+import { InsightBoard } from '@/components/insights/insight-board'
+import { useInsights } from '@/lib/hooks/use-insights'
 import useStore from '@/lib/store'
 import { cn } from '@/lib/utils'
 import type { Subscription } from '@/lib/types'
@@ -248,6 +250,7 @@ export function DashboardScreen({
   const preferredLanguage = notificationSettings.language || 'en'
   const preferredCurrency = notificationSettings.currencyCode || 'INR'
   const { rates } = useExchangeRates()
+  const { insights } = useInsights({ maxInsights: 3 })
 
   const metrics = useMemo(() => {
     const m = calculateMetrics(subscriptions, preferredCurrency, rates)
@@ -765,6 +768,22 @@ export function DashboardScreen({
             <p className="text-muted-foreground">
               {subscriptions.length === 0 ? getDashboardLabel('noSubscriptionsYet', preferredLanguage) : getDashboardLabel('noSubscriptionsMatch', preferredLanguage)}
             </p>
+          </motion.div>
+        )}
+
+        {/* Renewly Intelligence Board */}
+        {insights.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="pt-4"
+          >
+            <InsightBoard 
+              insights={insights} 
+              title="Renewly Intelligence"
+              maxInsights={3}
+            />
           </motion.div>
         )}
 
