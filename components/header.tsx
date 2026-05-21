@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, Search, Settings, Check } from 'lucide-react'
@@ -37,6 +37,9 @@ interface NotificationItem {
   read: boolean
   subscriptionId?: string
   actionHref?: string
+  actionUrl?: string
+  category?: string
+  severity?: string
 }
 
 export function Header({
@@ -274,9 +277,9 @@ export function Header({
                     transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
                     className="absolute right-0 top-14 z-50 w-[360px] max-w-[calc(100vw-2rem)] rounded-2xl border border-gold/25 overflow-hidden"
                     style={{
-                      background: 'rgba(12, 17, 28, 0.94)',
-                      backdropFilter: 'blur(20px)',
-                      boxShadow: '0 24px 80px rgba(0, 0, 0, 0.45)',
+                      background: 'rgba(8, 12, 22, 0.985)',
+                      backdropFilter: 'blur(26px) saturate(130%)',
+                      boxShadow: '0 28px 90px rgba(0, 0, 0, 0.72)',
                     }}
                   >
                     {/* Top gradient accent */}
@@ -326,18 +329,17 @@ export function Header({
                           >
                             <button
                               type="button"
-                              onClick={() => {
-                                // Navigate to actionHref if provided
-                                if (notification.actionHref) {
-                                  setIsNotificationsOpen(false)
-                                  window.location.href = notification.actionHref
-                                } else {
-                                  // If no actionHref, navigate to /app/notifications
-                                  setIsNotificationsOpen(false)
-                                  window.location.href = '/app/notifications'
+                              onClick={async (event) => {
+                                event.preventDefault()
+                                event.stopPropagation()
+
+                                if (!notification.read) {
+                                  await handleMarkRead(notification.id, notification.read)
                                 }
-                                // Mark as read after navigation
-                                void handleMarkRead(notification.id, notification.read)
+
+                                setIsNotificationsOpen(false)
+                                const href = notification.actionHref || notification.actionUrl || '/app/notifications'
+                                router.push(href)
                               }}
                               className="w-full text-left cursor-pointer"
                             >
@@ -390,7 +392,7 @@ export function Header({
                     <Link
                       href="/app/notifications"
                       onClick={() => setIsNotificationsOpen(false)}
-                      className="mt-3 flex items-center justify-center rounded-xl border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-card/60 transition-colors"
+                      className="mt-3 flex items-center justify-center rounded-xl border border-gold/15 bg-white/5 px-3 py-2 text-sm font-medium text-foreground hover:bg-gold/10 hover:text-gold transition-colors"
                     >
                       View all notifications
                     </Link>
@@ -444,7 +446,7 @@ export function Header({
 }
 
 interface HeaderButtonProps {
-  children: React.ReactNode
+  children: ReactNode
   onClick?: () => void
   badge?: number
   ariaLabel?: string

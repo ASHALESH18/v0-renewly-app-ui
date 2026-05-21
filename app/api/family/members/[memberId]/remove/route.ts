@@ -5,6 +5,7 @@ import { invalidateCache } from '@/lib/redis'
 import { sendFamilyMemberRemovedEmail } from '@/lib/email/family-member-removed-email'
 import { revalidateTag } from 'next/cache'
 import { calculateSeatUsage, calculateExtraSeatReuseState } from '@/lib/family/family-seat-utils'
+import { notifyFamilyMemberRemoved } from '@/lib/notifications/family-event-notifications'
 
 /**
  * POST /api/family/members/[memberId]/remove
@@ -311,6 +312,12 @@ export async function POST(
 
       const ownerEmail = ownerProfile?.email || 'contact@renewly.in'
       const ownerName = ownerProfile?.full_name || 'Family owner'
+
+      try {
+        await notifyFamilyMemberRemoved(member.user_id || null, memberEmail, ownerName, member.family_group_id)
+      } catch (notificationError) {
+        console.warn('[family-members-remove] Notification warning:', notificationError)
+      }
 
       const emailResult = await sendFamilyMemberRemovedEmail({
         memberEmail,

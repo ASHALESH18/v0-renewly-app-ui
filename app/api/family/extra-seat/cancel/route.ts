@@ -7,6 +7,7 @@ import { syncRenewlyFamilyOwnerSubscription } from '@/lib/billing/renewly-subscr
 import { invalidateCache } from '@/lib/redis'
 import { revalidateTag } from 'next/cache'
 import { calculateSeatUsage } from '@/lib/family/family-seat-utils'
+import { notifyExtraSeatCancellationScheduled } from '@/lib/notifications/family-event-notifications'
 
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return Promise.race([
@@ -227,6 +228,17 @@ export async function POST(request: Request) {
       affectedMemberInfo,
       periodEndDate,
     })
+
+    try {
+      await notifyExtraSeatCancellationScheduled(
+        user.id,
+        quantity,
+        periodEndDate || familyGroup.current_period_end || new Date().toISOString(),
+        familyGroupId
+      )
+    } catch (notificationError) {
+      console.warn('[extra-seat-cancel] Notification warning:', notificationError)
+    }
 
     // Return with scenario info for UI
     return NextResponse.json(

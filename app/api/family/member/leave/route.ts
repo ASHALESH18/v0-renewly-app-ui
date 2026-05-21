@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { invalidateCache } from '@/lib/redis'
 import { revalidateTag } from 'next/cache'
 import { calculateSeatUsage, calculateExtraSeatReuseState } from '@/lib/family/family-seat-utils'
+import { notifyFamilyMemberLeft } from '@/lib/notifications/family-event-notifications'
 
 /**
  * POST /api/family/member/leave
@@ -275,7 +276,18 @@ export async function POST(request: NextRequest) {
     revalidateTag(`subscriptions:${user.id}`, 'max')
     revalidateTag('profile', 'max')
 
-    // Send non-blocking emails (do not block leave on email failure)
+    // Send non-blocking notifications/emails (do not block leave on delivery failure)
+    try {
+      await notifyFamilyMemberLeft(
+        familyGroup.owner_user_id,
+        memberProfile?.full_name || memberEmail || 'Family member',
+        memberEmail,
+        membership.family_group_id
+      )
+    } catch (notificationError) {
+      console.warn('[family-member-leave] Notification warning:', notificationError)
+    }
+
     try {
       const { sendFamilyMemberLeftEmail } = await import('@/lib/email/family-member-left-email')
       await sendFamilyMemberLeftEmail({

@@ -21,6 +21,7 @@ import {
 import { validateExtraSeatPurchase } from '@/lib/family/family-seat-guardrails'
 import { calculateSeatUsage } from '@/lib/family/family-seat-utils'
 import { syncRenewlyFamilyOwnerSubscription } from '@/lib/billing/renewly-subscription-sync'
+import { notifyFamilyInviteReceived, notifyExtraSeatPurchased } from '@/lib/notifications/family-event-notifications'
 
 type IntentMetadata = Record<string, any>
 
@@ -501,6 +502,20 @@ export async function POST(request: NextRequest) {
       undefined
 
     const inviteUrl = buildFamilyInviteUrl(rawToken, requestOrigin)
+
+    try {
+      await notifyFamilyInviteReceived(
+        notOwnerCheck.targetUserId || null,
+        intent.invited_email,
+        ownerProfile?.full_name || ownerProfile?.email || 'Family owner',
+        ownerProfile?.email || user.email || 'contact@renewly.in',
+        familyGroup.id,
+        newInvite.id
+      )
+      await notifyExtraSeatPurchased(user.id, 1, FAMILY_EXTRA_MEMBER_PRICE_INR, familyGroup.id)
+    } catch (notificationError) {
+      console.warn('[finalize-payment] Extra-seat notifications failed:', notificationError)
+    }
 
     const emailResult = await sendFamilyInviteEmail({
       invitedEmail: intent.invited_email,

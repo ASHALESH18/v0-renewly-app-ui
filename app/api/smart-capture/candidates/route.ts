@@ -46,9 +46,13 @@ export async function GET(request: NextRequest) {
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
 
-      // Apply filters
+      // Apply filters. Treat older `confirmed` rows as `added` so the Added tab stays correct.
       if (status !== 'all') {
-        query = query.eq('status', status)
+        if (status === 'added') {
+          query = query.in('status', ['added', 'confirmed'])
+        } else {
+          query = query.eq('status', status)
+        }
       }
 
       if (source !== 'all') {
