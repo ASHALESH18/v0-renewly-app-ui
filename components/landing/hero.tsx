@@ -198,7 +198,7 @@ export function Hero() {
             {/* Static gold dot - no pulse animation */}
             <div className="w-2 h-2 rounded-full bg-gold" />
             <span className="text-sm text-foreground/90 font-medium tracking-wide">
-              Now available on iOS and Android
+              Android and iOS app coming soon
             </span>
           </div>
         </motion.div>
