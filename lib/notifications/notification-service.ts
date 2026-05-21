@@ -70,8 +70,13 @@ export async function createNotification(
       if (error.code === '23505') {
         // Unique constraint violation - notification already exists
         // Fetch the existing one
-        console.log(`[notifications] Idempotent notification exists: ${input.source}:${input.sourceId}`)
+        console.debug(`[notifications] Idempotent notification exists: ${input.source}:${input.sourceId}`)
         return await getNotificationBySource(input.userId, input.source, input.sourceId)
+      }
+      // Table might not exist yet - table creation is safe to defer
+      if (error.code === 'PGRST116' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
+        console.debug('[notifications] Notifications table may not exist yet. Notification creation deferred. Run migrations to enable persistence.')
+        return null
       }
       console.error('[notifications] Failed to create notification:', error)
       return null
@@ -155,6 +160,11 @@ export async function getUserNotifications(
     const { data, error } = await query
 
     if (error) {
+      // Table might not exist yet, return empty gracefully
+      if (error.code === 'PGRST116' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
+        console.debug('[notifications] Table may not exist yet, returning empty list:', error.message)
+        return []
+      }
       console.error('[notifications] Failed to fetch user notifications:', error)
       return []
     }
