@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, Calendar, AlertTriangle, Info, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -19,7 +20,9 @@ interface Notification {
   read: boolean
   subscriptionId?: string
   actionHref?: string
+  actionUrl?: string
   category?: NotificationCategory
+  severity?: string
 }
 
 type NotificationMutationAction = 'mark_read' | 'mark_all_read' | 'dismiss'
@@ -43,6 +46,7 @@ const typeConfig = {
 }
 
 export function NotificationsScreen() {
+  const router = useRouter()
   const { notifications: apiNotifications, isLoading, error, refresh } = useNotifications()
   const [items, setItems] = useState<Notification[]>([])
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
@@ -54,7 +58,13 @@ export function NotificationsScreen() {
   const [localLoading, setLocalLoading] = useState(true)
 
   useEffect(() => {
-    setItems((apiNotifications as Notification[]) || [])
+    const normalized = ((apiNotifications as Notification[]) || []).map((item: any) => ({
+      ...item,
+      actionHref: item.actionHref || item.action_url || item.actionUrl,
+      category: item.category || 'system',
+      read: Boolean(item.read),
+    }))
+    setItems(normalized)
     // Always stop loading after API data arrives
     setLocalLoading(false)
   }, [apiNotifications])
@@ -307,22 +317,21 @@ export function NotificationsScreen() {
                       if (!notification.read) {
                         void markAsRead(notification.id)
                       }
-                      // S5B.3-R: Navigate to actionHref if provided, otherwise to /app/notifications
-                      if ((notification as any).actionHref) {
-                        window.location.href = (notification as any).actionHref
-                      } else {
-                        // No action URL, stay on page
+                      const href = notification.actionHref || notification.actionUrl
+                      if (href && href !== '/app/notifications') {
+                        router.push(href)
                       }
                     }}
                     onKeyDown={(event) => {
-                      if (!notification.read && (event.key === 'Enter' || event.key === ' ')) {
+                      if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault()
-                        void markAsRead(notification.id)
-                      }
-                      // S5B.3-R: Navigate on Enter/Space if actionHref provided
-                      if ((event.key === 'Enter' || event.key === ' ') && (notification as any).actionHref) {
-                        event.preventDefault()
-                        window.location.href = (notification as any).actionHref
+                        if (!notification.read) {
+                          void markAsRead(notification.id)
+                        }
+                        const href = notification.actionHref || notification.actionUrl
+                        if (href && href !== '/app/notifications') {
+                          router.push(href)
+                        }
                       }
                     }}
                     role="button"
@@ -382,7 +391,11 @@ export function NotificationsScreen() {
                       >
                         {!notification.read && (
                           <button
-                            onClick={() => void markAsRead(notification.id)}
+                            onClick={(event) => {
+                              event.preventDefault()
+                              event.stopPropagation()
+                              void markAsRead(notification.id)
+                            }}
                             disabled={pending}
                             className="p-1.5 rounded-full hover:bg-secondary/50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             type="button"

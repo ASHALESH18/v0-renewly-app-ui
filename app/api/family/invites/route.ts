@@ -30,6 +30,7 @@ import {
   canReusePaidExtraSeatForNextInvite,
   canInviteWithIncludedSeat,
 } from '@/lib/family/family-seat-utils'
+import { notifyFamilyInviteReceived } from '@/lib/notifications/family-event-notifications'
 
 /**
  * POST /api/family/invites
@@ -231,7 +232,7 @@ export async function POST(request: NextRequest) {
       const tokenHash = hashInviteToken(rawToken)
       const expiryDate = getInviteExpiryDate()
 
-      const { error: insertError } = await supabase
+      const { data: insertedInvite, error: insertError } = await supabase
         .from('family_invites')
         .insert({
           family_group_id: familyGroup.id,
@@ -242,8 +243,10 @@ export async function POST(request: NextRequest) {
           seat_type: 'included',
           expires_at: expiryDate.toISOString(),
         })
+        .select('id')
+        .single()
 
-      if (insertError) {
+      if (insertError || !insertedInvite) {
         console.error('[family-invites] F7.1D-R: Insert error for included seat:', {
           email: invitedEmail,
           error: insertError.message,
@@ -265,6 +268,19 @@ export async function POST(request: NextRequest) {
           invitedEmail,
           baseUrl: getInviteBaseUrl(requestOrigin),
         })
+      }
+
+      try {
+        await notifyFamilyInviteReceived(
+          targetProfile?.id || null,
+          invitedEmail,
+          ownerProfile?.full_name || ownerProfile?.email || 'Family owner',
+          ownerProfile?.email || user.email || 'contact@renewly.in',
+          familyGroup.id,
+          insertedInvite.id
+        )
+      } catch (notificationError) {
+        console.warn('[family-invites] Included invite notification failed:', notificationError)
       }
 
       const emailResult = await sendFamilyInviteEmail({
@@ -370,6 +386,19 @@ export async function POST(request: NextRequest) {
         status: insertedData?.[0]?.status,
         email: invitedEmail,
       })
+
+      try {
+        await notifyFamilyInviteReceived(
+          targetProfile?.id || null,
+          invitedEmail,
+          ownerProfile?.full_name || ownerProfile?.email || 'Family owner',
+          ownerProfile?.email || user.email || 'contact@renewly.in',
+          familyGroup.id,
+          insertedData?.[0]?.id
+        )
+      } catch (notificationError) {
+        console.warn('[family-invites] Extra-seat invite notification failed:', notificationError)
+      }
 
       const requestOrigin =
         request.headers.get('origin') ||

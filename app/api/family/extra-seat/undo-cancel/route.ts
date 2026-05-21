@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js'
 import { syncRenewlyFamilyOwnerSubscription } from '@/lib/billing/renewly-subscription-sync'
 import { invalidateCache } from '@/lib/redis'
 import { revalidateTag } from 'next/cache'
+import { notifyExtraSeatCancellationReversed } from '@/lib/notifications/family-event-notifications'
 
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return Promise.race([
@@ -166,6 +167,12 @@ export async function POST(request: Request) {
       restoredAddonIds: idsToRestore,
       restoredQuantity,
     })
+
+    try {
+      await notifyExtraSeatCancellationReversed(user.id, restoredQuantity, familyGroupId)
+    } catch (notificationError) {
+      console.warn('[extra-seat-undo-cancel] Notification warning:', notificationError)
+    }
 
     return NextResponse.json(
       {

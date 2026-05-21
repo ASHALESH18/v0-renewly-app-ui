@@ -234,13 +234,18 @@ export function useNotifications() {
         let allNotifications = notifJson.notifications || []
         let totalUnreadCount = notifJson.unreadCount || 0
 
-        // Add derived Family invite notification if it exists
+        // Add derived Family invite notification only if the API did not already
+        // return a persistent notification for the same invite. This prevents the
+        // bell from showing one stored invite plus one client-derived duplicate.
         if (derivedFamilyNotif) {
-          // Check if we already have this notification in the API response
-          const alreadyExists = allNotifications.some((n: any) => n.id === derivedFamilyNotif.id)
+          const inviteId = familyStatus?.pendingInvite?.id
+          const alreadyExists = allNotifications.some((n: any) =>
+            n.id === derivedFamilyNotif.id ||
+            (inviteId && (n.entityId === inviteId || n.entity_id === inviteId || n.metadata?.inviteId === inviteId))
+          )
           
           if (!alreadyExists) {
-            allNotifications = [derivedFamilyNotif, ...allNotifications]
+            allNotifications = [{ ...derivedFamilyNotif, category: 'family', severity: 'info' }, ...allNotifications]
             if (!derivedFamilyNotif.read) {
               totalUnreadCount += 1
             }

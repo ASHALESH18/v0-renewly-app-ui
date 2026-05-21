@@ -16,6 +16,12 @@ interface Notification {
   read: boolean
   subscriptionId?: string
   actionHref?: string
+  category?: string
+  severity?: string
+  readAt?: string | null
+  entityType?: string | null
+  entityId?: string | null
+  metadata?: Record<string, any>
 }
 
 type NotificationAction = 'mark_read' | 'mark_all_read' | 'dismiss'
@@ -62,6 +68,10 @@ function buildNotifications(subscriptions: SubscriptionRow[], familyInvites?: an
           date: invite.created_at || new Date().toISOString(),
           read: false,
           actionHref: '/app/family',
+          category: 'family',
+          severity: 'info',
+          entityType: 'family_invite',
+          entityId: invite.id,
         })
       }
     }
@@ -91,6 +101,11 @@ function buildNotifications(subscriptions: SubscriptionRow[], familyInvites?: an
           date: today.toISOString(),
           read: false,
           subscriptionId: sub.id,
+          actionHref: '/app/calendar',
+          category: 'renewals',
+          severity: 'critical',
+          entityType: 'subscription',
+          entityId: sub.id,
         })
       } else if (daysUntilRenewal === 1) {
         notifications.push({
@@ -101,6 +116,11 @@ function buildNotifications(subscriptions: SubscriptionRow[], familyInvites?: an
           date: today.toISOString(),
           read: false,
           subscriptionId: sub.id,
+          actionHref: '/app/calendar',
+          category: 'renewals',
+          severity: 'warning',
+          entityType: 'subscription',
+          entityId: sub.id,
         })
       } else if (daysUntilRenewal <= 3) {
         notifications.push({
@@ -111,6 +131,11 @@ function buildNotifications(subscriptions: SubscriptionRow[], familyInvites?: an
           date: today.toISOString(),
           read: false,
           subscriptionId: sub.id,
+          actionHref: '/app/calendar',
+          category: 'renewals',
+          severity: 'warning',
+          entityType: 'subscription',
+          entityId: sub.id,
         })
       } else {
         // 4-7 days away - info notification
@@ -122,6 +147,11 @@ function buildNotifications(subscriptions: SubscriptionRow[], familyInvites?: an
           date: today.toISOString(),
           read: false,
           subscriptionId: sub.id,
+          actionHref: '/app/calendar',
+          category: 'renewals',
+          severity: 'info',
+          entityType: 'subscription',
+          entityId: sub.id,
         })
       }
     }
@@ -136,6 +166,11 @@ function buildNotifications(subscriptions: SubscriptionRow[], familyInvites?: an
         date: renewalDate.toISOString(),
         read: true,
         subscriptionId: sub.id,
+        actionHref: '/app/calendar',
+        category: 'renewals',
+        severity: 'info',
+        entityType: 'subscription',
+        entityId: sub.id,
       })
     }
   }
@@ -198,7 +233,7 @@ async function persistNotificationState(
 
   if (existingError) throw existingError
 
-  const existingMap = new Map(
+  const existingMap = new Map<string, any>(
     (existingRows ?? []).map((row: any) => [row.notification_key, row])
   )
 
@@ -327,24 +362,53 @@ export async function GET() {
 
     const calculatedNotifications = applyNotificationState(generatedNotifications, stateMap)
 
-    // F8-lite: Convert persistent notifications to API format and merge
+    // Convert persistent notifications to the UI contract.
+    // Keep category/severity/action metadata intact so category chips and deep links work.
     const persistentAsApiNotifications: Notification[] = persistentNotifications
-      .filter(n => !n.archived_at)
-      .map(n => ({
-        id: n.id,
-        type: n.type === 'family_invite' ? 'info' : 'reminder' as const,
-        title: n.title,
-        message: n.message,
-        date: n.created_at,
-        read: !!n.read_at,
-        actionHref: n.action_url,
-      }))
+      .filter((n) => !n.archived_at)
+      .map((n) => {
+        const normalizedCategory = n.category || 'system'
+        const normalizedSeverity = n.severity || 'info'
+        const normalizedType: Notification['type'] =
+          normalizedSeverity === 'critical' || normalizedSeverity === 'warning'
+            ? 'alert'
+            : normalizedCategory === 'renewals' || normalizedCategory === 'billing'
+              ? 'reminder'
+              : 'info'
 
-    // Merge persistent + calculated notifications, with persistent taking precedence
-    const persistentIds = new Set(persistentAsApiNotifications.map(n => n.id))
+        return {
+          id: n.id,
+          type: normalizedType,
+          title: n.title,
+          message: n.message,
+          date: n.created_at,
+          read: Boolean(n.read_at),
+          readAt: n.read_at || null,
+          actionHref: n.action_url || n.actionUrl || undefined,
+          category: normalizedCategory,
+          severity: normalizedSeverity,
+          entityType: n.entity_type || null,
+          entityId: n.entity_id || null,
+          metadata: n.metadata || {},
+        }
+      })
+
+    // Merge persistent + calculated notifications, with persistent taking precedence.
+    // Dedupe both by physical id and by entity reference so a stored Family invite
+    // does not appear again as a derived pending-invite notification.
+    const persistentIds = new Set(persistentAsApiNotifications.map((n) => n.id))
+    const persistentEntityKeys = new Set(
+      persistentAsApiNotifications
+        .map((n) => (n.entityType && n.entityId ? `${n.entityType}:${n.entityId}` : null))
+        .filter(Boolean) as string[]
+    )
     const mergedNotifications = [
       ...persistentAsApiNotifications,
-      ...calculatedNotifications.filter(n => !persistentIds.has(n.id))
+      ...calculatedNotifications.filter((n) => {
+        if (persistentIds.has(n.id)) return false
+        const entityKey = n.entityType && n.entityId ? `${n.entityType}:${n.entityId}` : null
+        return !entityKey || !persistentEntityKeys.has(entityKey)
+      })
     ]
 
     return NextResponse.json({
