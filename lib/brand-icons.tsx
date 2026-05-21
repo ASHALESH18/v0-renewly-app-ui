@@ -212,11 +212,11 @@ const brandEntries: BrandEntry[] = [
 ]
 
 const makeLogoUrls = (entry: BrandEntry) => {
-  const urls: string[] = []
-  if (entry.simpleIcon) urls.push(simpleIcon(entry.simpleIcon))
-  if (entry.domain) urls.push(clearbit(entry.domain))
-  entry.domains?.forEach((domain) => urls.push(clearbit(domain)))
-  return Array.from(new Set(urls))
+  // Removed remote logo dependencies (Clearbit, Simple Icons) for reliability
+  // These services can fail with 404 or DNS errors, causing console spam
+  // Local fallback icons (color badge with initials) are more reliable
+  // If needed in future, these can be added back with proper error suppression
+  return []
 }
 
 const brandMap: Record<string, BrandConfig> = {}
