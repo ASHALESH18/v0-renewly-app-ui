@@ -329,14 +329,14 @@ export async function GET() {
 
     // F8-lite: Convert persistent notifications to API format and merge
     const persistentAsApiNotifications: Notification[] = persistentNotifications
-      .filter(n => n.status !== 'archived')
+      .filter(n => !n.archived_at)
       .map(n => ({
         id: n.id,
         type: n.type === 'family_invite' ? 'info' : 'reminder' as const,
         title: n.title,
         message: n.message,
         date: n.created_at,
-        read: n.status === 'read',
+        read: !!n.read_at,
         actionHref: n.action_url,
       }))
 
