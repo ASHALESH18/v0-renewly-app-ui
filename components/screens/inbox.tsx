@@ -318,7 +318,7 @@ function EmptyState({ status }: { status: CandidateStatus | 'all' }) {
   const messages: Record<string, { title: string; description: string }> = {
     all: {
       title: 'No candidates yet',
-      description: 'Connect your email or use the Notification Lab to detect subscriptions.',
+      description: 'Connect Gmail or add candidates manually. Renewly will never add subscriptions without your review.',
     },
     new: {
       title: 'No new candidates',
@@ -460,22 +460,51 @@ export function InboxScreen({ onReviewCandidate }: InboxScreenProps) {
 
   return (
     <PageTransition>
-      <Header title="Smart Capture Inbox" />
+      <Header title="Smart Inbox" />
 
       <div className="px-4 lg:px-6 pb-8 space-y-6">
-        {/* Page header with sync status */}
+        {/* Page header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={fastTransition}
+        >
+          <div className="mb-4">
+            <h1 className="text-2xl font-semibold text-foreground">Smart Inbox</h1>
+            <p className="text-sm text-muted-foreground mt-2">
+              Renewly reviews emails for subscription signals. You decide what gets added.
+            </p>
+          </div>
+
+          {/* Premium summary strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="rounded-xl bg-emerald/10 border border-emerald/20 p-3">
+              <p className="text-xs text-muted-foreground font-medium mb-1">Ready to add</p>
+              <p className="text-xl font-semibold text-foreground">{counts.new}</p>
+            </div>
+            <div className="rounded-xl bg-gold/10 border border-gold/20 p-3">
+              <p className="text-xs text-muted-foreground font-medium mb-1">Needs review</p>
+              <p className="text-xl font-semibold text-foreground">{counts.review_needed}</p>
+            </div>
+            <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3">
+              <p className="text-xs text-muted-foreground font-medium mb-1">Added</p>
+              <p className="text-xl font-semibold text-foreground">{counts.confirmed}</p>
+            </div>
+            <div className="rounded-xl bg-muted/50 border border-border p-3">
+              <p className="text-xs text-muted-foreground font-medium mb-1">Total</p>
+              <p className="text-xl font-semibold text-foreground">{counts.total}</p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Page controls */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={fastTransition}
           className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
         >
-          <div>
-            <h1 className="text-2xl font-semibold text-foreground">Inbox</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Review and manage detected subscription candidates
-            </p>
-          </div>
+          <div />
 
           <div className="flex items-center gap-3">
             {/* Sync status */}
