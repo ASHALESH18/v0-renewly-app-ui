@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -52,6 +53,7 @@ export function Header({
   transparent = false,
   className,
 }: HeaderProps) {
+  const router = useRouter()
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [isUpdatingNotifications, setIsUpdatingNotifications] = useState(false)
@@ -69,6 +71,19 @@ export function Header({
     refresh: refreshNotifications,
     refreshForBellOpen,
   } = useNotifications()
+
+  // Close notification popover on route change to prevent blocking navigation
+  useEffect(() => {
+    const handleRouteChange = () => {
+      setIsNotificationsOpen(false)
+    }
+    // Note: useRouter doesn't provide route change listeners in Next.js 13+
+    // Instead, we'll use the window popstate event as a fallback
+    window.addEventListener('popstate', handleRouteChange)
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange)
+    }
+  }, [])
 
   const recentNotifications = useMemo<NotificationItem[]>(
     () => ((notifications || []) as NotificationItem[]).slice(0, 3),
@@ -257,7 +272,12 @@ export function Header({
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 6, scale: 0.98 }}
                     transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-                    className="absolute right-0 top-14 z-50 w-[360px] max-w-[calc(100vw-2rem)] rounded-2xl border border-gold/10 bg-card/99 backdrop-blur-lg shadow-lg overflow-hidden"
+                    className="absolute right-0 top-14 z-50 w-[360px] max-w-[calc(100vw-2rem)] rounded-2xl border border-gold/25 overflow-hidden"
+                    style={{
+                      background: 'rgba(12, 17, 28, 0.94)',
+                      backdropFilter: 'blur(20px)',
+                      boxShadow: '0 24px 80px rgba(0, 0, 0, 0.45)',
+                    }}
                   >
                     {/* Top gradient accent */}
                     <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
@@ -307,11 +327,17 @@ export function Header({
                             <button
                               type="button"
                               onClick={() => {
-                                void handleMarkRead(notification.id, notification.read)
                                 // Navigate to actionHref if provided
                                 if (notification.actionHref) {
+                                  setIsNotificationsOpen(false)
                                   window.location.href = notification.actionHref
+                                } else {
+                                  // If no actionHref, navigate to /app/notifications
+                                  setIsNotificationsOpen(false)
+                                  window.location.href = '/app/notifications'
                                 }
+                                // Mark as read after navigation
+                                void handleMarkRead(notification.id, notification.read)
                               }}
                               className="w-full text-left cursor-pointer"
                             >
@@ -345,9 +371,11 @@ export function Header({
                               {!notification.read && (
                                 <button
                                   type="button"
-                                  onClick={() =>
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
                                     void handleMarkRead(notification.id, notification.read)
-                                  }
+                                  }}
                                   className="p-1.5 rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer"
                                 >
                                   <Check className="w-4 h-4 text-muted-foreground" />
