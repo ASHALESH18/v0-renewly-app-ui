@@ -969,7 +969,7 @@ export function FamilyMembersScreen() {
                 animate={{ opacity: 1, y: 0 }}
                 className="rounded-2xl border border-border bg-card p-6"
               >
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-8">
                   <div>
                     <h2 className="text-2xl font-semibold text-foreground">Your Family Plan</h2>
                     {/* F6C.2: Show clear seat breakdown instead of confusing "5 of 4" */}
@@ -977,42 +977,49 @@ export function FamilyMembersScreen() {
                       <p className="text-sm text-muted-foreground">
                         {familyStatus?.seatUsage ? (
                           <>
-                            {familyStatus.seatUsage.includedSeatsUsed} included + {familyStatus.seatUsage.activeExtraMembers} extra = {familyStatus.seatUsage.includedSeatsUsed + familyStatus.seatUsage.activeExtraMembers} active members
+                            {familyStatus.seatUsage.activeIncludedCount}/{familyStatus.seatUsage.maxIncludedSeats} included,{' '}
+                            {familyStatus.seatUsage.activeExtraCount} extra seat{familyStatus.seatUsage.activeExtraCount !== 1 ? 's' : ''}
                           </>
                         ) : (
-                          `${currentMemberCount} members`
+                          'Loading seats...'
                         )}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-2">
                     {availableSeats > 0 && (
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => setShowInviteForm(!showInviteForm)}
-                        className="flex items-center gap-2 rounded-lg bg-gold px-4 py-2 text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
+                        className="flex items-center justify-center sm:justify-start gap-2 rounded-lg bg-gold px-4 py-3 sm:py-2 text-obsidian font-medium hover:bg-gold/90 transition-colors cursor-pointer"
                       >
                         <Plus className="h-4 w-4" />
-                        Invite Member
-                      </button>
+                        <span>Invite Member</span>
+                      </motion.button>
                     )}
                     {availableSeats <= 0 && (
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => setShowInviteForm(!showInviteForm)}
-                        className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-white font-medium hover:bg-emerald-700 transition-colors cursor-pointer"
+                        className="flex items-center justify-center sm:justify-start gap-2 rounded-lg bg-emerald-600 px-4 py-3 sm:py-2 text-white font-medium hover:bg-emerald-700 transition-colors cursor-pointer"
                       >
                         <Plus className="h-4 w-4" />
-                        Add Extra Seat
-                      </button>
+                        <span>Add Extra Seat</span>
+                      </motion.button>
                     )}
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={handleManualRefresh}
                       disabled={isRefreshingStatus}
                       title="Refresh family members and invites"
-                      className="flex items-center gap-2 rounded-lg bg-slate-700 px-3 py-2 text-sm text-slate-100 font-medium hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                      className="flex items-center justify-center sm:justify-start gap-2 rounded-lg bg-muted/60 border border-border px-4 py-3 sm:py-2 text-sm text-foreground font-medium hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                     >
                       <RefreshCw className={`h-4 w-4 ${isRefreshingStatus ? 'animate-spin' : ''}`} />
-                      {!isRefreshingStatus && 'Refresh'}
-                    </button>
+                      {!isRefreshingStatus && <span>Refresh</span>}
+                    </motion.button>
                   </div>
                 </div>
 

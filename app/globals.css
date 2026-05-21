@@ -381,6 +381,55 @@ html.dark[data-appearance="glass"] .border-border {
   border-color: rgba(180, 200, 255, 0.10);
 }
 
+/* Premium glass button: Apple-style frosted button for Glass theme */
+html.dark[data-appearance="glass"] .btn-glass-premium {
+  background: rgba(199, 163, 106, 0.12);
+  border: 1px solid rgba(199, 163, 106, 0.25);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+  color: rgba(199, 163, 106, 0.95);
+  transition: all 0.2s ease-out;
+}
+
+html.dark[data-appearance="glass"] .btn-glass-premium:hover {
+  background: rgba(199, 163, 106, 0.18);
+  border-color: rgba(199, 163, 106, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 8px 20px rgba(199, 163, 106, 0.2);
+}
+
+html.dark[data-appearance="glass"] .btn-glass-premium:active {
+  background: rgba(199, 163, 106, 0.15);
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Glass red destructive button */
+html.dark[data-appearance="glass"] .btn-glass-red {
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+  color: rgba(220, 38, 38, 0.95);
+  transition: all 0.2s ease-out;
+}
+
+html.dark[data-appearance="glass"] .btn-glass-red:hover {
+  background: rgba(220, 38, 38, 0.18);
+  border-color: rgba(220, 38, 38, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 8px 20px rgba(220, 38, 38, 0.15);
+}
+
 @theme inline {
   --font-sans: 'Inter', 'Inter Fallback', system-ui, sans-serif;
   --font-serif: 'Playfair Display', 'Times New Roman', serif;
