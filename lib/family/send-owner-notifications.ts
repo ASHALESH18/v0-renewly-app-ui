@@ -93,10 +93,20 @@ export async function notifyOwnerOfInviteAction(data: InviteAction) {
       .from('notifications')
       .insert({
         user_id: group.owner_user_id,
-        type: 'info',
+        type: data.action === 'accepted' ? 'family_member_joined' : 'family_member_left',
+        category: 'family',
+        severity: 'info',
         title: notificationTitle,
         message: emailBody,
-        notification_key: `family-invite-${data.action}-${data.inviteId}`,
+        entity_type: 'family_invite',
+        entity_id: data.inviteId,
+        idempotency_key: `family-invite-${data.action}-${data.inviteId}`,
+        metadata: {
+          source: 'family_invite',
+          action: data.action,
+          inviteId: data.inviteId,
+          memberEmail: data.invitedEmail,
+        },
       })
       .catch((error) => {
         console.warn('[family-notifications] Failed to create notification:', error)

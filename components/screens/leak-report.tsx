@@ -524,6 +524,7 @@ export function LeakReportScreen({
                 title="Review Unused Subscriptions"
                 description={`You have ${unusedSubs.length} unused service${unusedSubs.length > 1 ? 's' : ''} that could be cancelled`}
                 action="Review"
+                onClick={() => onNavigateTab?.('dashboard')}
               />
             )}
             {upcoming.length > 3 && (
@@ -531,6 +532,7 @@ export function LeakReportScreen({
                 title="Cluster of Renewals"
                 description={`${upcoming.length} subscriptions renew in the next 30 days`}
                 action="View Calendar"
+                onClick={() => onNavigateTab?.('calendar')}
               />
             )}
             {topCategoryCount > 2 && (
@@ -538,12 +540,17 @@ export function LeakReportScreen({
                 title="Category Concentration"
                 description={`${topCategoryCount} ${topCategoryName} subscriptions might have overlaps`}
                 action="Optimize"
+                onClick={() => onNavigateTab?.('dashboard')}
               />
             )}
             <ActionCard
               title="Enable Leak Alerts"
               description="Get notified when new potential savings are detected"
               action="Enable"
+              onClick={() => {
+                // Navigate to settings with notifications section
+                window.location.href = '/app/settings?section=notifications'
+              }}
             />
           </div>
         </motion.div>
@@ -630,16 +637,26 @@ function SpendCard({
 function ActionCard({
   title,
   description,
-  action
+  action,
+  onClick
 }: {
   title: string
   description: string
   action: string
+  onClick?: () => void
 }) {
   return (
-    <motion.div
+    <motion.button
+      type="button"
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && onClick) {
+          e.preventDefault()
+          onClick()
+        }
+      }}
       whileHover={{ x: 4 }}
-      className="flex items-start justify-between p-4 rounded-xl glass-strong border border-gold/20 hover:border-gold/40 transition-colors cursor-pointer group"
+      className="flex items-start justify-between p-4 rounded-xl glass-strong border border-gold/20 hover:border-gold/40 transition-colors cursor-pointer group w-full text-left"
     >
       <div>
         <p className="font-semibold text-foreground mb-1">{title}</p>
@@ -652,7 +669,7 @@ function ActionCard({
         <span className="text-sm font-medium">{action}</span>
         <ArrowRight className="w-4 h-4" />
       </motion.div>
-    </motion.div>
+    </motion.button>
   )
 }
 

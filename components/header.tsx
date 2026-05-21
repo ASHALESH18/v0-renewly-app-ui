@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, Search, Settings, Check, Trash2 } from 'lucide-react'
+import { Bell, Search, Settings, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from './motion'
 import useStore from '@/lib/store'
@@ -142,27 +142,6 @@ export function Header({
       } else {
         // Regular API notification
         await persistNotificationAction({ action: 'mark_read', id })
-      }
-      
-      await refreshNotifications()
-    } finally {
-      setIsUpdatingNotifications(false)
-    }
-  }
-
-  const handleDismiss = async (id: string) => {
-    if (isUpdatingNotifications) return
-
-    try {
-      setIsUpdatingNotifications(true)
-      
-      // S5B.3-R: Handle derived Family invite notifications stored in localStorage
-      if (id.startsWith('family-invite-')) {
-        const { markDerivedNotificationRead } = await import('@/lib/notifications/derive-family-invite-notification')
-        markDerivedNotificationRead(id)
-      } else {
-        // Regular API notification
-        await persistNotificationAction({ action: 'dismiss', id })
       }
       
       await refreshNotifications()
@@ -374,14 +353,6 @@ export function Header({
                                   <Check className="w-4 h-4 text-muted-foreground" />
                                 </button>
                               )}
-
-                              <button
-                                type="button"
-                                onClick={() => void handleDismiss(notification.id)}
-                                className="p-1.5 rounded-lg hover:bg-crimson/10 transition-colors cursor-pointer"
-                              >
-                                <Trash2 className="w-4 h-4 text-muted-foreground hover:text-crimson" />
-                              </button>
                             </div>
                           </div>
                         ))}

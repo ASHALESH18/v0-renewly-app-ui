@@ -174,6 +174,7 @@ export function DashboardScreen({
   const [viewMode, setViewMode] = useState('cards')
   const [familyStatus, setFamilyStatus] = useState<any>(null)
   const [dismissedInviteId, setDismissedInviteId] = useState<string | null>(null)
+  const renewlyIntelligenceRef = React.useRef<HTMLDivElement | null>(null)
   const setSubscriptions = useStore((state) => state.setSubscriptions)
 
   // Fetch family status to show pending invite banner
@@ -663,12 +664,22 @@ export function DashboardScreen({
         </StaggerList>
 
         <MotionSection>
-          <motion.div
+          <motion.button
+            onClick={() => {
+              renewlyIntelligenceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                renewlyIntelligenceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }
+            }}
             whileInView={{ opacity: 1, y: 0 }}
             initial={{ opacity: 0, y: 24 }}
             transition={{ duration: 0.65, ease: 'easeOut' }}
             whileHover={{ y: -2, boxShadow: '0 20px 40px -12px rgba(199, 163, 106, 0.15)' }}
-            className="relative rounded-2xl overflow-hidden group"
+            className="relative rounded-2xl overflow-hidden group w-full text-left border-0 bg-transparent cursor-pointer"
+            type="button"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-gold/8 via-card to-emerald/5 dark:from-gold/10 dark:via-graphite dark:to-emerald/5" />
 
@@ -705,8 +716,25 @@ export function DashboardScreen({
                 </motion.div>
               </div>
             </div>
-          </motion.div>
+          </motion.button>
         </MotionSection>
+
+        {/* Renewly Intelligence Board - moved above Your Subscriptions */}
+        {insights.length > 0 && (
+          <motion.div
+            ref={renewlyIntelligenceRef}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="pt-4"
+          >
+            <InsightBoard 
+              insights={insights} 
+              title="Renewly Intelligence"
+              maxInsights={3}
+            />
+          </motion.div>
+        )}
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -768,22 +796,6 @@ export function DashboardScreen({
             <p className="text-muted-foreground">
               {subscriptions.length === 0 ? getDashboardLabel('noSubscriptionsYet', preferredLanguage) : getDashboardLabel('noSubscriptionsMatch', preferredLanguage)}
             </p>
-          </motion.div>
-        )}
-
-        {/* Renewly Intelligence Board */}
-        {insights.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            className="pt-4"
-          >
-            <InsightBoard 
-              insights={insights} 
-              title="Renewly Intelligence"
-              maxInsights={3}
-            />
           </motion.div>
         )}
 
