@@ -74,23 +74,30 @@ export async function createNotification(
     }
 
     // Try to insert new notification
+    const insertData: Record<string, any> = {
+      user_id: input.userId,
+      type: input.type,
+      category: input.category || 'system',
+      severity: input.severity || 'info',
+      title: input.title,
+      message: input.message,
+      action_url: input.actionUrl,
+      entity_type: input.entityType,
+      entity_id: input.entityId,
+      idempotency_key: input.idempotencyKey,
+      expires_at: input.expiresAt?.toISOString(),
+    }
+
+    // Store actionLabel in metadata if provided
+    const metadata = input.metadata || {}
+    if (input.actionLabel) {
+      metadata.action_label = input.actionLabel
+    }
+    insertData.metadata = metadata
+
     const { data, error } = await supabase
       .from('notifications')
-      .insert({
-        user_id: input.userId,
-        type: input.type,
-        category: input.category || 'system',
-        severity: input.severity || 'info',
-        title: input.title,
-        message: input.message,
-        action_url: input.actionUrl,
-        action_label: input.actionLabel,
-        entity_type: input.entityType,
-        entity_id: input.entityId,
-        idempotency_key: input.idempotencyKey,
-        metadata: input.metadata || {},
-        expires_at: input.expiresAt?.toISOString(),
-      })
+      .insert(insertData)
       .select()
       .single()
 

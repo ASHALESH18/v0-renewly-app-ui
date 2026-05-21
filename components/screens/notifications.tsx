@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, Calendar, AlertTriangle, Info, Check, Trash2 } from 'lucide-react'
+import { Bell, Calendar, AlertTriangle, Info, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { StaggerList } from '@/components/motion'
 import { useNotifications } from '@/lib/hooks/use-remote-data'
@@ -154,30 +154,6 @@ export function NotificationsScreen() {
       setActionError('Could not mark all notifications as read. Please try again.')
     } finally {
       setIsMarkingAll(false)
-    }
-  }
-
-  const dismissNotification = async (id: string) => {
-    if (isPending(id)) return
-
-    const previousItems = items
-    setActionError(null)
-    setPendingIds((prev) => [...prev, id])
-    setItems((prev) => prev.filter((item) => item.id !== id))
-
-    try {
-      // S5B.3-R: Handle derived Family invite notifications
-      if (id.startsWith('family-invite-')) {
-        const { markDerivedNotificationRead } = await import('@/lib/notifications/derive-family-invite-notification')
-        markDerivedNotificationRead(id)
-      } else {
-        await persistAction({ action: 'dismiss', id })
-      }
-    } catch {
-      setItems(previousItems)
-      setActionError('Could not remove that notification. Please try again.')
-    } finally {
-      setPendingIds((prev) => prev.filter((itemId) => itemId !== id))
     }
   }
 
@@ -395,15 +371,6 @@ export function NotificationsScreen() {
                             <Check className="w-4 h-4 text-muted-foreground" />
                           </button>
                         )}
-
-                        <button
-                          onClick={() => void dismissNotification(notification.id)}
-                          disabled={pending}
-                          className="p-1.5 rounded-full hover:bg-crimson/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                          type="button"
-                        >
-                          <Trash2 className="w-4 h-4 text-muted-foreground hover:text-crimson" />
-                        </button>
                       </div>
                     </div>
                   </motion.div>

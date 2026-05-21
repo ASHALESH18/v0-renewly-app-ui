@@ -406,13 +406,13 @@ export async function POST(request: Request) {
       // Try persistent notifications
       for (const id of ids) {
         try {
-          await markNotificationRead(id)
+          await markNotificationRead(id, user.id)
         } catch (e) {
           console.warn(`[v0] Failed to mark persistent notification ${id} as read:`, e)
         }
         // Also try legacy
         try {
-          await legacyMark(id)
+          await legacyMark(id, user.id)
         } catch (e) {
           console.warn(`[v0] Failed to mark legacy notification ${id} as read:`, e)
         }

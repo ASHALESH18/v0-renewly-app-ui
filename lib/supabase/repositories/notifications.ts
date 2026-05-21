@@ -4,14 +4,16 @@ export interface Notification {
   id: string
   user_id: string
   type: 'family_invite' | 'family_member_joined' | 'family_member_left' | 'subscription_reminder' | 'payment_issue'
-  source: 'family_invite' | 'subscription' | 'billing' | 'system'
-  source_id: string
+  category?: string
+  severity?: string
   title: string
   message: string
   action_url?: string
-  action_label?: string
-  status: 'unread' | 'read' | 'archived'
+  entity_type?: string
+  entity_id?: string
   metadata?: Record<string, any>
+  read_at?: string
+  archived_at?: string
   created_at: string
   expires_at?: string
   updated_at: string
@@ -26,14 +28,27 @@ export async function createNotification(
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
+  // Map old fields to actual schema columns
+  const metadata = notification.metadata || {}
+  const idempotencyKey = metadata.source_id ? `${metadata.source}:${metadata.source_id}` : undefined
+
   const { data, error } = await supabase
     .from('notifications')
-    .upsert(
+    .insert(
       {
         user_id: userId,
-        ...notification,
-      },
-      { onConflict: 'user_id,source,source_id' }
+        type: notification.type,
+        category: notification.category || 'system',
+        severity: notification.severity || 'info',
+        title: notification.title,
+        message: notification.message,
+        action_url: notification.action_url,
+        entity_type: notification.entity_type,
+        entity_id: notification.entity_id,
+        idempotency_key: idempotencyKey,
+        metadata: metadata,
+        expires_at: notification.expires_at,
+      }
     )
     .select()
     .single()
@@ -47,7 +62,6 @@ export async function getUserNotifications(
   options?: {
     limit?: number
     offset?: number
-    status?: 'unread' | 'read' | 'archived'
   }
 ): Promise<Notification[]> {
   const supabase = createClient(
@@ -59,11 +73,8 @@ export async function getUserNotifications(
     .from('notifications')
     .select('*')
     .eq('user_id', userId)
+    .is('archived_at', null)
     .order('created_at', { ascending: false })
-
-  if (options?.status) {
-    query = query.eq('status', options.status)
-  }
 
   if (options?.limit) {
     query = query.limit(options.limit)
@@ -79,7 +90,7 @@ export async function getUserNotifications(
   return data || []
 }
 
-export async function markNotificationRead(notificationId: string): Promise<Notification> {
+export async function markNotificationRead(notificationId: string, userId: string): Promise<Notification> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -87,8 +98,9 @@ export async function markNotificationRead(notificationId: string): Promise<Noti
 
   const { data, error } = await supabase
     .from('notifications')
-    .update({ status: 'read', updated_at: new Date().toISOString() })
+    .update({ read_at: new Date().toISOString() })
     .eq('id', notificationId)
+    .eq('user_id', userId)
     .select()
     .single()
 
@@ -102,17 +114,18 @@ export async function markAllNotificationsRead(userId: string): Promise<number> 
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  const { data, error } = await supabase
+  const { data, error, count } = await supabase
     .from('notifications')
-    .update({ status: 'read', updated_at: new Date().toISOString() })
+    .update({ read_at: new Date().toISOString() })
     .eq('user_id', userId)
-    .eq('status', 'unread')
+    .is('read_at', null)
+    .select('id', { count: 'exact' })
 
   if (error) throw error
-  return data?.length || 0
+  return count || 0
 }
 
-export async function archiveNotification(notificationId: string): Promise<Notification> {
+export async function archiveNotification(notificationId: string, userId: string): Promise<Notification> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -120,8 +133,9 @@ export async function archiveNotification(notificationId: string): Promise<Notif
 
   const { data, error } = await supabase
     .from('notifications')
-    .update({ status: 'archived', updated_at: new Date().toISOString() })
+    .update({ archived_at: new Date().toISOString() })
     .eq('id', notificationId)
+    .eq('user_id', userId)
     .select()
     .single()
 
@@ -135,12 +149,14 @@ export async function cleanupExpiredNotifications(userId: string): Promise<numbe
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  const { data, error } = await supabase
+  const { data, error, count } = await supabase
     .from('notifications')
-    .update({ status: 'archived' })
+    .update({ archived_at: new Date().toISOString() })
     .eq('user_id', userId)
     .lt('expires_at', new Date().toISOString())
+    .is('archived_at', null)
+    .select('id', { count: 'exact' })
 
   if (error) throw error
-  return data?.length || 0
+  return count || 0
 }
