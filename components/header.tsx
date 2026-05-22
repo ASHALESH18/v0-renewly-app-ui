@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, Search, Settings, Check } from 'lucide-react'
+import { Bell, Search, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from './motion'
 import useStore from '@/lib/store'
@@ -60,6 +60,7 @@ export function Header({
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [isUpdatingNotifications, setIsUpdatingNotifications] = useState(false)
+  const [isBellLoading, setIsBellLoading] = useState(false)
 
   const notificationPanelRef = useRef<HTMLDivElement | null>(null)
 
@@ -87,6 +88,37 @@ export function Header({
       window.removeEventListener('popstate', handleRouteChange)
     }
   }, [])
+
+  // Handle bell popup loading with timeout safety
+  useEffect(() => {
+    if (!isNotificationsOpen) {
+      setIsBellLoading(false)
+      return
+    }
+
+    setIsBellLoading(true)
+    
+    // When bell opens, always fetch fresh data
+    const fetchData = async () => {
+      try {
+        await refreshForBellOpen?.()
+      } catch (e) {
+        console.error('[header] Failed to refresh notifications on bell open:', e)
+      } finally {
+        // Always stop loading after fetch completes
+        setIsBellLoading(false)
+      }
+    }
+
+    void fetchData()
+
+    // Safety timeout: force loading off after 5 seconds to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      setIsBellLoading(false)
+    }, 5000)
+
+    return () => clearTimeout(timeoutId)
+  }, [isNotificationsOpen, refreshForBellOpen])
 
   const recentNotifications = useMemo<NotificationItem[]>(
     () => ((notifications || []) as NotificationItem[]).slice(0, 3),
@@ -258,8 +290,6 @@ export function Header({
             <div className="relative" ref={notificationPanelRef}>
               <HeaderButton
                 onClick={() => {
-                  // S5B.4-R: Refresh with shorter TTL (10s) when opening bell
-                  refreshForBellOpen?.().catch(() => {})
                   setIsNotificationsOpen((prev) => !prev)
                   onNotificationClick?.()
                 }}
@@ -307,13 +337,13 @@ export function Header({
                       </div>
                     </div>
 
-                    {notificationsLoading ? (
+                    {isBellLoading ? (
                       <div className="rounded-xl border border-border bg-card/60 p-4 text-sm text-muted-foreground">
                         Loading notifications...
                       </div>
                     ) : recentNotifications.length === 0 ? (
                       <div className="rounded-xl border border-border bg-card/60 p-4 text-sm text-muted-foreground">
-                        You’re all caught up.
+                        You're all caught up.
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -369,21 +399,7 @@ export function Header({
                               </div>
                             </button>
 
-                            <div className="flex items-center justify-end gap-2 mt-2">
-                              {!notification.read && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                    void handleMarkRead(notification.id, notification.read)
-                                  }}
-                                  className="p-1.5 rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer"
-                                >
-                                  <Check className="w-4 h-4 text-muted-foreground" />
-                                </button>
-                              )}
-                            </div>
+
                           </div>
                         ))}
                       </div>

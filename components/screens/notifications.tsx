@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, Calendar, AlertTriangle, Info, Check } from 'lucide-react'
+import { Bell, Calendar, AlertTriangle, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { StaggerList } from '@/components/motion'
 import { useNotifications } from '@/lib/hooks/use-remote-data'
@@ -383,26 +383,6 @@ export function NotificationsScreen() {
                             {formatTimeAgo(notification.date)}
                           </span>
                         </div>
-                      </div>
-
-                      <div
-                        className="flex flex-col gap-2"
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        {!notification.read && (
-                          <button
-                            onClick={(event) => {
-                              event.preventDefault()
-                              event.stopPropagation()
-                              void markAsRead(notification.id)
-                            }}
-                            disabled={pending}
-                            className="p-1.5 rounded-full hover:bg-secondary/50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                            type="button"
-                          >
-                            <Check className="w-4 h-4 text-muted-foreground" />
-                          </button>
-                        )}
                       </div>
                     </div>
                   </motion.div>
