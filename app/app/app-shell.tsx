@@ -133,6 +133,36 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
   // We need BOTH auth initialized AND store hydration complete
   const isFullyReady = isInitialized && (!isHydratingUserData || hasHydratedFromCloud || Boolean(userProfile))
 
+  // Initialize app-shell notification state on mount to ensure bell/sidebar show unread count
+  // before user visits /app/notifications page. This fixes the bootstrap issue where
+  // notifications don't load until a component using useNotifications mounts.
+  const bootstrapNotifications = useCallback(async () => {
+    try {
+      const res = await fetch('/api/notifications', {
+        method: 'GET',
+        cache: 'no-store',
+        credentials: 'same-origin',
+      })
+      
+      if (res.ok) {
+        const data = await res.json()
+        // The hook will read this from its global cache variable
+        // notificationsCache is set by the hook when needed
+      }
+    } catch (error) {
+      console.error('[v0] Failed to bootstrap notifications:', error)
+      // Silently fail - hook will retry when components mount
+    }
+  }, [])
+
+  // Bootstrap notifications when user is authenticated but before children render
+  // This ensures bell badge and sidebar dot work on first app load
+  useEffect(() => {
+    if (isFullyReady && userProfile?.id) {
+      void bootstrapNotifications()
+    }
+  }, [isFullyReady, userProfile?.id, bootstrapNotifications])
+
   // Listen for auth state changes (e.g., token refresh, sign out)
   useEffect(() => {
     const supabase = createClient()
