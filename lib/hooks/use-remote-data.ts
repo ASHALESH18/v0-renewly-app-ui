@@ -301,12 +301,9 @@ export function useNotifications() {
 
     const load = async () => {
       try {
-        if (!notificationsCache) {
-          await fetchNotificationsThrottled(false, REQUEST_CACHE_TTL)
-        } else if (active) {
-          setData(notificationsCache)
-          setIsLoading(false)
-        }
+        // Always fetch on first mount to bootstrap app-shell notification state
+        // Use force=true to ensure fresh fetch, not stale cache
+        await fetchNotificationsThrottled(true, REQUEST_CACHE_TTL)
       } catch {
         // handled in fetchNotificationsThrottled
       }
